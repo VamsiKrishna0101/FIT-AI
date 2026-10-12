@@ -1,0 +1,1 @@
+Vector geometry from https://github.com/HichamELBSI/react-native-body-highlighter (MIT, ELABBASSI Hicham). Imported 6 October 2026. Used as an anatomical training guide; it is not measured user anatomy. Primary muscle data and UI are implemented separately in FitAI.

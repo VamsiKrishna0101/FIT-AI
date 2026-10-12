@@ -1,0 +1,354 @@
+import '../../../core/components/content_transition.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../../core/cache/cache_scope.dart';
+import '../../../core/localization/fitness_text.dart';
+import '../../../core/theme/fitness_theme.dart';
+import '../repositories/weekly_plan_repository.dart';
+
+class WeeklyPlanHistoryView extends StatefulWidget {
+  final WeeklyPlanRepository repository;
+
+  const WeeklyPlanHistoryView({super.key, required this.repository});
+
+  @override
+  State<WeeklyPlanHistoryView> createState() => _WeeklyPlanHistoryViewState();
+}
+
+class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
+  List<Map<String, dynamic>> _plans = [];
+  String? _nextCursor;
+  String? _error;
+  String? _openingId;
+  bool _loading = true;
+  bool _loadingMore = false;
+  int _requestNumber = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _load(reset: true);
+  }
+
+  String _message(Object error) {
+    final data = error is DioException ? error.response?.data : null;
+    return data is Map && data['error'] is String
+        ? data['error'] as String
+        : 'Couldn’t load your saved weeks. Please try again.';
+  }
+
+  Future<bool> _sameOwner(String? owner) async {
+    final currentOwner = await CacheScope.userId();
+    if (!mounted) return false;
+    if (currentOwner != owner) {
+      setState(() {
+        _plans = [];
+        _nextCursor = null;
+        _loading = false;
+        _loadingMore = false;
+        _error = 'Your account changed. Reopen plan history.';
+      });
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _load({bool reset = false}) async {
+    if (_loadingMore && !reset) return;
+    final request = ++_requestNumber;
+    final owner = await CacheScope.userId();
+    if (!mounted || request != _requestNumber) return;
+    setState(() {
+      _loadingMore = !reset;
+      _error = null;
+    });
+
+    try {
+      final page =
+          await widget.repository.history(cursor: reset ? null : _nextCursor);
+      if (request != _requestNumber || !await _sameOwner(owner)) return;
+      final items = (page['items'] as List? ?? [])
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+      setState(() {
+        _plans = reset ? items : [..._plans, ...items];
+        _nextCursor = page['nextCursor'] as String?;
+        _loading = false;
+        _loadingMore = false;
+      });
+    } catch (error) {
+      if (request != _requestNumber || !await _sameOwner(owner)) return;
+      setState(() {
+        _loading = false;
+        _loadingMore = false;
+        _error = _message(error);
+      });
+    }
+  }
+
+  Future<void> _openPlan(String id) async {
+    if (_openingId != null) return;
+    setState(() {
+      _openingId = id;
+      _error = null;
+    });
+    final owner = await CacheScope.userId();
+    try {
+      final plan = await widget.repository.savedPlan(id);
+      if (!await _sameOwner(owner)) return;
+      if (mounted) Navigator.of(context).pop(plan);
+    } catch (error) {
+      if (await _sameOwner(owner) && mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_message(error))));
+      }
+    } finally {
+      if (mounted) setState(() => _openingId = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => FitnessTheme(
+          child: Scaffold(
+        appBar: AppBar(
+          title:
+              const FitnessText('Plan history', style: TextStyle(fontSize: 17)),
+          backgroundColor: FitnessTheme.canvas,
+          surfaceTintColor: Colors.transparent,
+        ),
+        body: SafeArea(
+            top: false,
+            child: RefreshIndicator(
+              onRefresh: () => _load(reset: true),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 26),
+                    sliver: SliverToBoxAdapter(
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .055),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: FitnessTheme.line),
+                          ),
+                          child: const Icon(CupertinoIcons.clock,
+                              color: FitnessTheme.silver, size: 23),
+                        ),
+                        const SizedBox(height: 22),
+                        const FitnessText('YOUR TRAINING ARCHIVE',
+                            style: TextStyle(
+                                fontSize: 10,
+                                letterSpacing: 2,
+                                color: FitnessTheme.muted,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 10),
+                        const FitnessText('Your saved weeks',
+                            style: TextStyle(
+                                fontSize: 30,
+                                letterSpacing: -.8,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 10),
+                        const FitnessText(
+                            'Revisit the workouts and meals you’ve saved.',
+                            style: TextStyle(
+                                color: FitnessTheme.muted,
+                                fontSize: 13,
+                                height: 1.5)),
+                        if (_plans.isNotEmpty) ...[
+                          const SizedBox(height: 26),
+                          const FitnessText('LATEST FIRST',
+                              style: TextStyle(
+                                  color: FitnessTheme.muted,
+                                  fontSize: 10,
+                                  letterSpacing: 1.7)),
+                        ],
+                      ],
+                    )),
+                  ),
+                  if (!_loading && _plans.isEmpty && _error == null)
+                    const SliverToBoxAdapter(
+                        child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 44),
+                      child: Column(children: [
+                        Icon(CupertinoIcons.calendar,
+                            size: 36, color: FitnessTheme.muted),
+                        SizedBox(height: 20),
+                        FitnessText('No saved weeks yet',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500)),
+                        SizedBox(height: 10),
+                        FitnessText(
+                            'Generate a weekly plan and it will appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: FitnessTheme.muted,
+                                fontSize: 13,
+                                height: 1.5)),
+                      ]),
+                    )),
+                  if (_loading)
+                    const SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      sliver: SliverToBoxAdapter(
+                          child: LoadingPlaceholder(cards: 2)),
+                    ),
+                  SliverAnimatedOpacity(
+                    opacity: _loading ? 0 : 1,
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : ContentTransition.duration,
+                    curve: Curves.easeOutCubic,
+                    sliver: SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      sliver: SliverList.builder(
+                        itemCount: _plans.length,
+                        itemBuilder: (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _planCard(_plans[index]),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                      child: Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 8, 22, 28),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_error != null) ...[
+                            Text(_error!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: FitnessTheme.coral,
+                                    fontSize: 13,
+                                    height: 1.5)),
+                            const SizedBox(height: 10),
+                            TextButton(
+                                onPressed: () => _load(reset: _plans.isEmpty),
+                                child: const FitnessText('Try again')),
+                          ] else if (_nextCursor != null)
+                            OutlinedButton(
+                              onPressed: _loadingMore ? null : () => _load(),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: FitnessTheme.silver,
+                                side:
+                                    const BorderSide(color: FitnessTheme.line),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: _loadingMore
+                                  ? const CupertinoActivityIndicator()
+                                  : const FitnessText('See older weeks'),
+                            ),
+                        ]),
+                  )),
+                ],
+              ),
+            )),
+      ));
+
+  Widget _planCard(Map<String, dynamic> plan) {
+    final start = DateTime.tryParse(plan['weekStart'] as String? ?? '');
+    final end = start?.add(const Duration(days: 6));
+    final dateRange = start == null || end == null
+        ? 'Saved week'
+        : '${DateFormat.MMMd().format(start)} – ${DateFormat.MMMd().add_y().format(end)}';
+    final label = plan['synthetic'] == true
+        ? 'Test'
+        : switch (plan['status']) {
+            'ACTIVE' => 'Active',
+            'ARCHIVED' => 'Archived',
+            _ => 'Saved',
+          };
+    final color = label == 'Test'
+        ? FitnessTheme.coral
+        : label == 'Active'
+            ? const Color(0xFF93C8B5)
+            : FitnessTheme.silver;
+    final trainingDays = plan['trainingDays'] as int? ?? 0;
+    final opening = _openingId == plan['id'];
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: .1)),
+        gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: .07),
+              Colors.white.withValues(alpha: .025)
+            ]),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap:
+              _openingId != null ? null : () => _openPlan(plan['id'] as String),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Expanded(
+                    child: Text(dateRange,
+                        style: const TextStyle(
+                            fontSize: 18,
+                            letterSpacing: -.4,
+                            fontWeight: FontWeight.w600))),
+                const SizedBox(width: 12),
+                if (opening)
+                  const CupertinoActivityIndicator()
+                else
+                  const Icon(CupertinoIcons.arrow_up_right,
+                      size: 18, color: FitnessTheme.muted),
+              ]),
+              const SizedBox(height: 14),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: .09),
+                    borderRadius: BorderRadius.circular(8)),
+                child: FitnessText(label,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(height: 18),
+              FitnessText(
+                  '$trainingDays ${trainingDays == 1 ? 'training day' : 'training days'}',
+                  style: const TextStyle(
+                      color: FitnessTheme.silver, fontSize: 13)),
+              const SizedBox(height: 6),
+              FitnessText(
+                  plan['foodPlanIncluded'] == true
+                      ? 'Food plan included'
+                      : 'Food plan not included',
+                  style:
+                      const TextStyle(color: FitnessTheme.muted, fontSize: 12)),
+              const SizedBox(height: 18),
+              const Divider(color: FitnessTheme.line, height: 1),
+              const SizedBox(height: 14),
+              const FitnessText('Review week',
+                  style: TextStyle(color: FitnessTheme.silver, fontSize: 12)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}

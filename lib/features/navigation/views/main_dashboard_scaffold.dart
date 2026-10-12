@@ -1,0 +1,166 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+
+import '../../../core/components/animated_tab_stack.dart';
+import '../../../core/components/liquid_silver_bottom_bar.dart';
+import '../../../core/localization/fitai_copy.dart';
+import '../../../core/theme/ds_colors.dart';
+import '../../../core/cache/app_data_mode.dart';
+import '../../../core/health/health_sync_service.dart';
+import '../../../core/health/phone_sleep_service.dart';
+import '../../wellness/repositories/wellness_repository.dart';
+import '../../body_scan/views/body_view.dart';
+import '../../history/views/progress_view.dart';
+import '../../profile/views/profile_view.dart';
+import '../../today/views/today_home_view.dart';
+import '../../train/views/train_view.dart';
+
+class MainDashboardScaffold extends StatefulWidget {
+  final int initialIndex;
+
+  const MainDashboardScaffold({super.key, this.initialIndex = 0});
+
+  @override
+  State<MainDashboardScaffold> createState() => _MainDashboardScaffoldState();
+}
+
+class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
+    with WidgetsBindingObserver {
+  late int _currentIndex;
+  final Set<int> _visitedTabs = {0};
+  bool _modeReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(
+        HealthSyncService.shared.syncIfEnabled().catchError((Object _) {}));
+    unawaited(_resumePhoneSleep());
+    _currentIndex = widget.initialIndex.clamp(0, 3);
+    _visitedTabs.add(_currentIndex);
+    AppDataMode.shared.addListener(_datasetChanged);
+    unawaited(_initializeMode());
+  }
+
+  @override
+  void dispose() {
+    AppDataMode.shared.removeListener(_datasetChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _datasetChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(
+          HealthSyncService.shared.syncIfEnabled().catchError((Object _) {}));
+      unawaited(_resumePhoneSleep());
+    }
+  }
+
+  Future<void> _resumePhoneSleep() async {
+    if (!PhoneSleepService.shared.supported) return;
+    try {
+      await WellnessRepository.shared.wearableUsage();
+      await PhoneSleepService.shared.resume();
+    } catch (_) {
+      /* No permission prompts or guessed preference when offline. */
+    }
+  }
+
+  Future<void> _initializeMode() async {
+    await AppDataMode.shared.initialize();
+    if (mounted) setState(() => _modeReady = true);
+  }
+
+  void _onTabSelected(int index) {
+    final next = index.clamp(0, 3);
+    if (next == _currentIndex) return;
+    setState(() {
+      _currentIndex = next;
+      _visitedTabs.add(next);
+    });
+  }
+
+  void _openRoute(Widget page) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = FitAiCopy.of(context);
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentIndex != 0) _onTabSelected(0);
+      },
+      child: Scaffold(
+        backgroundColor: DSColors.dashboardBg,
+        extendBody: true,
+        // Let nested page Scaffolds paint through the dock's artificial safe area.
+        // Each scroll view reserves its own space using scrollBottomInset.
+        body: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            padding: MediaQuery.paddingOf(context).copyWith(bottom: 0),
+          ),
+          child: Column(children: [
+            Expanded(
+                child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: AppDataMode.shared.available,
+                    child: !_modeReady
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                                color: Colors.white54))
+                        : AnimatedTabStack(
+                            key: ValueKey(AppDataMode.shared.dataset),
+                            index: _currentIndex,
+                            children: <Widget>[
+                              _visitedTabs.contains(0)
+                                  ? TodayHomeView(
+                                      isActive: _currentIndex == 0,
+                                      onSelectTab: _onTabSelected,
+                                      onOpenProfile: () =>
+                                          _openRoute(const ProfileView()),
+                                    )
+                                  : const SizedBox.shrink(),
+                              _visitedTabs.contains(1)
+                                  ? TrainView(isActive: _currentIndex == 1)
+                                  : const SizedBox.shrink(),
+                              _visitedTabs.contains(2)
+                                  ? BodyView(
+                                      onTrain: () => _onTabSelected(1),
+                                      isActive: _currentIndex == 2)
+                                  : const SizedBox.shrink(),
+                              _visitedTabs.contains(3)
+                                  ? ProgressView(isActive: _currentIndex == 3)
+                                  : const SizedBox.shrink(),
+                            ]
+                                .asMap()
+                                .entries
+                                .map((entry) => TickerMode(
+                                    enabled: _currentIndex == entry.key,
+                                    child: entry.value))
+                                .toList(),
+                          ))),
+          ]),
+        ),
+        bottomNavigationBar: LiquidSilverBottomBar(
+          selectedIndex: _currentIndex,
+          onTabSelected: _onTabSelected,
+          labels: [
+            copy.text('today'),
+            copy.text('train'),
+            copy.text('body'),
+            copy.text('progress'),
+          ],
+        ),
+      ),
+    );
+  }
+}

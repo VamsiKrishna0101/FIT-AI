@@ -1,0 +1,106 @@
+# Miscellaneous / OS files
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ & IDE related
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables & sensitive credentials
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+google-services.json
+GoogleService-Info.plist
+!.env.example
+
+# Flutter / Dart / Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+build/
+/coverage/
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Android Studio & Gradle related
+**/android/**/gradle-app.setting
+**/android/**/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+android/.gradle/
+android/.cxx/
+android/captures/
+android/app/debug/
+android/app/profile/
+android/app/release/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+*.keystore
+*.jks
+key.properties
+**/android/key.properties
+
+# iOS & macOS related
+**/ios/**/GeneratedPluginRegistrant.h
+**/ios/**/GeneratedPluginRegistrant.m
+**/ios/**/GeneratedPluginRegistrant.swift
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/profile/
+**/ios/release/
+**/ios/**/default.mode1v3
+**/ios/**/default.mode2v3
+**/ios/**/default.pbxuser
+**/ios/**/default.perspectivev3
+**/ios/**/project.xcworkspace/xcuserdata/
+**/ios/**/xcuserdata/
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+
+# Linux & Windows Desktop related
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+
+# Widget Preview related
+.widget_preview/

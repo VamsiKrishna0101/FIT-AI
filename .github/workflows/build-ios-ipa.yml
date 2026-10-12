@@ -1,0 +1,68 @@
+name: Build iOS IPA (TestMu AI / Cloud Testing)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      backend_url:
+        description: 'Backend Base URL (ngrok)'
+        required: false
+        default: 'https://4266-2401-4900-1cb4-ee3e-a9de-3d34-fc2b-928c.ngrok-free.app'
+
+jobs:
+  build-ipa:
+    name: Build Unsigned iOS IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Environment
+        run: |
+          flutter --version
+          pod --version
+
+      - name: Install Dependencies
+        run: |
+          if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
+            cd mobile
+          fi
+          flutter pub get
+
+      - name: Build iOS Application (Release, No Codesign)
+        env:
+          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://4266-2401-4900-1cb4-ee3e-a9de-3d34-fc2b-928c.ngrok-free.app' }}
+        run: |
+          if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
+            cd mobile
+          fi
+          echo "Building iOS with backend URL: $BACKEND_URL"
+          flutter build ios --release --no-codesign --dart-define=FITAI_API_BASE_URL="$BACKEND_URL"
+
+      - name: Package Payload into Installable IPA
+        run: |
+          if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
+            cd mobile
+          fi
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r -y Runner.ipa Payload
+          mkdir -p "$GITHUB_WORKSPACE/output"
+          cp Runner.ipa "$GITHUB_WORKSPACE/output/FitAI-Runner.ipa"
+          ls -lh "$GITHUB_WORKSPACE/output/FitAI-Runner.ipa"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitai-ios-ipa
+          path: output/FitAI-Runner.ipa
+          if-no-files-found: error
+          retention-days: 14
