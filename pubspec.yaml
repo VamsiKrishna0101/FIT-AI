@@ -31,6 +31,7 @@ dependencies:
   crypto: ^3.0.3
   health: ^13.3.1
   image_picker: ^1.1.2
+  liquid_glass_native: 0.3.1
 
 dev_dependencies:
   flutter_test:
