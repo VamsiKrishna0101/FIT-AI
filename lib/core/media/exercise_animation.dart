@@ -276,71 +276,68 @@ class _ExerciseAnimationSurfaceState extends State<ExerciseAnimationSurface>
         final ready = !_controller.loading && !_controller.failed;
         return Column(children: [
           Expanded(
-              child: Stack(fit: StackFit.expand, children: [
-            if (!ready &&
-                !_controller.failed &&
-                !widget.compact &&
-                widget.placeholder != null)
-              Opacity(opacity: .12, child: widget.placeholder),
-            if (ready)
-              Center(child: LayoutBuilder(builder: (context, constraints) {
-                // A 180px GIF is a small illustration, not a full-screen hero.
-                // High-resolution files can use the complete available stage.
-                final lowResolution =
-                    _controller.width <= 300 && _controller.height <= 300;
-                final size = widget.compact && lowResolution
-                    ? Size(
-                        _controller.width
-                            .toDouble()
-                            .clamp(0, constraints.maxWidth),
-                        _controller.height
-                            .toDouble()
-                            .clamp(0, constraints.maxHeight))
-                    : Size(constraints.maxWidth, constraints.maxHeight);
-                return SizedBox(
-                    width: size.width,
-                    height: size.height,
-                    child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(widget.compact ? 12 : 0),
-                        child: RepaintBoundary(
-                            child: ValueListenableBuilder<ui.Image?>(
-                                valueListenable: _controller.frame,
-                                builder: (_, image, __) => ColoredBox(
-                                    color: widget.compact
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    child: RawImage(
-                                        image: image,
-                                        fit: widget.fit,
-                                        alignment: widget.alignment,
-                                        filterQuality:
-                                            FilterQuality.medium))))));
-              })),
-            if (_controller.loading)
-              Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const CupertinoActivityIndicator(color: Color(0xFFE2E2E2)),
-                const SizedBox(height: 12),
-                Text(copy('Loading demo'),
-                    style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF969696))),
-              ])),
-            if (_controller.failed)
-              Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(CupertinoIcons.play_rectangle,
-                    size: 28, color: Color(0xFF969696)),
-                const SizedBox(height: 10),
-                Text(copy('Demo unavailable'),
-                    style: const TextStyle(
-                        fontSize: 13, color: Color(0xFF969696))),
-                TextButton(
-                    onPressed: _controller.retry,
-                    child: Text(copy('Retry'),
-                        style: const TextStyle(color: Color(0xFFE2E2E2)))),
-              ])),
-          ])),
+              child: ColoredBox(
+                  color: ready ? Colors.white : Colors.transparent,
+                  child: Stack(fit: StackFit.expand, children: [
+                    if (!ready &&
+                        !_controller.failed &&
+                        !widget.compact &&
+                        widget.placeholder != null)
+                      Opacity(opacity: .12, child: widget.placeholder),
+                    if (ready)
+                      Center(
+                          child: LayoutBuilder(builder: (context, constraints) {
+                        // Fit the complete movement into the full stage without stretching or cropping.
+                        final size =
+                            Size(constraints.maxWidth, constraints.maxHeight);
+                        return SizedBox(
+                            width: size.width,
+                            height: size.height,
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                    widget.compact ? 12 : 0),
+                                child: RepaintBoundary(
+                                    child: ValueListenableBuilder<ui.Image?>(
+                                        valueListenable: _controller.frame,
+                                        builder: (_, image, __) => ColoredBox(
+                                            color: widget.compact
+                                                ? Colors.white
+                                                : Colors.transparent,
+                                            child: RawImage(
+                                                image: image,
+                                                fit: widget.fit,
+                                                alignment: widget.alignment,
+                                                filterQuality:
+                                                    FilterQuality.medium))))));
+                      })),
+                    if (_controller.loading)
+                      Center(
+                          child:
+                              Column(mainAxisSize: MainAxisSize.min, children: [
+                        const CupertinoActivityIndicator(
+                            color: Color(0xFFE2E2E2)),
+                        const SizedBox(height: 12),
+                        Text(copy('Loading demo'),
+                            style: const TextStyle(
+                                fontSize: 12, color: Color(0xFF969696))),
+                      ])),
+                    if (_controller.failed)
+                      Center(
+                          child:
+                              Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(CupertinoIcons.play_rectangle,
+                            size: 28, color: Color(0xFF969696)),
+                        const SizedBox(height: 10),
+                        Text(copy('Demo unavailable'),
+                            style: const TextStyle(
+                                fontSize: 13, color: Color(0xFF969696))),
+                        TextButton(
+                            onPressed: _controller.retry,
+                            child: Text(copy('Retry'),
+                                style:
+                                    const TextStyle(color: Color(0xFFE2E2E2)))),
+                      ])),
+                  ]))),
           if (widget.controls)
             Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),

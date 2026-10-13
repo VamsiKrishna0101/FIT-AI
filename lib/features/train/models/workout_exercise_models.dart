@@ -224,6 +224,7 @@ class TodayPlanItemModel {
   final int targetSets;
   final String targetReps;
   final double targetWeight;
+  final Map<String, dynamic>? setTargets;
   final double? targetRpe;
   final int restSeconds;
   final String status; // "NOT_STARTED", "IN_PROGRESS", "COMPLETED", "SKIPPED"
@@ -237,6 +238,7 @@ class TodayPlanItemModel {
     required this.targetSets,
     required this.targetReps,
     required this.targetWeight,
+    this.setTargets,
     this.targetRpe,
     required this.restSeconds,
     required this.status,
@@ -268,6 +270,7 @@ class TodayPlanItemModel {
       targetSets: targetSets ?? this.targetSets,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
+      setTargets: setTargets,
       targetRpe: targetRpe ?? this.targetRpe,
       restSeconds: restSeconds ?? this.restSeconds,
       status: status ?? this.status,
@@ -294,6 +297,9 @@ class TodayPlanItemModel {
       targetWeight: (json['targetWeight'] is num)
           ? (json['targetWeight'] as num).toDouble()
           : 0.0,
+      setTargets: json['setTargets'] is Map
+          ? Map<String, dynamic>.from(json['setTargets'] as Map)
+          : null,
       targetRpe: (json['targetRpe'] is num)
           ? (json['targetRpe'] as num).toDouble()
           : null,
@@ -316,12 +322,45 @@ class TodayPlanItemModel {
       'targetSets': targetSets,
       'targetReps': targetReps,
       'targetWeight': targetWeight,
+      'setTargets': setTargets,
       'targetRpe': targetRpe,
       'restSeconds': restSeconds,
       'status': status,
       'completedAt': completedAt?.toIso8601String(),
       'workout': exercise.toJson(),
     };
+  }
+
+  Map<String, dynamic>? targetForSet(int number) =>
+      (setTargets?['sets'] as List? ?? [])
+          .whereType<Map>()
+          .where((set) => set['setNumber'] == number)
+          .map((set) => Map<String, dynamic>.from(set))
+          .firstOrNull;
+
+  String? targetLabel(int number) {
+    final set = targetForSet(number);
+    if (set == null) {
+      if (number > targetSets) return null;
+      final load =
+          targetWeight > 0 ? '$targetWeight kg' : 'Choose a comfortable load';
+      return '$targetReps reps · $load';
+    }
+    final reps = set['repsMin'] == set['repsMax']
+        ? '${set['repsMax']}'
+        : '${set['repsMin']}–${set['repsMax']}';
+    final weight = set['weightKg'] as num?;
+    final load = weight == null
+        ? 'Choose a comfortable load'
+        : setTargets?['weightBasis'] == 'bodyweight'
+            ? 'Bodyweight'
+            : '${weight.toDouble() == weight.roundToDouble() ? weight.toInt() : weight} kg';
+    final unit = setTargets?['weightUnit'] == 'per_hand'
+        ? ' per hand'
+        : setTargets?['weightUnit'] == 'total_load'
+            ? ' total'
+            : '';
+    return '$reps reps · $load$unit';
   }
 }
 

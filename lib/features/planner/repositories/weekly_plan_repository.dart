@@ -7,8 +7,25 @@ import '../../nutrition/repositories/nutrition_repository.dart';
 import '../../progress/repositories/progress_repository.dart';
 import '../../train/repositories/workout_repository.dart';
 import '../../train/repositories/training_repository.dart';
+import '../../body_scan/models/body_assessment_models.dart';
+import '../../body_scan/repositories/body_assessment_repository.dart';
 
 class WeeklyPlanRepository {
+  Future<BodyOverview> bodyOverview() => BodyAssessmentRepository.shared.load();
+
+  static bool hasCurrentWeekScan(BodyOverview body, DateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    return body.records.any((entry) {
+      final date = DateTime.tryParse(entry.recordedDate);
+      return entry.status == 'SAVED' &&
+          entry.method == 'photo_review' &&
+          date != null &&
+          !date.isBefore(monday) &&
+          !date.isAfter(today);
+    });
+  }
+
   Future<Map<String, dynamic>> availability() async {
     final response = await ApiClient.shared
         .get<Map<String, dynamic>>('/api/plans/availability');

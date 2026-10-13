@@ -127,6 +127,7 @@ class HomeUser {
 }
 
 class HomeReadiness {
+  final String? sleepSource;
   final double score;
   final String label;
   final String aiTarget;
@@ -141,6 +142,7 @@ class HomeReadiness {
   final int activeCalories;
 
   const HomeReadiness({
+    this.sleepSource,
     required this.score,
     required this.label,
     required this.aiTarget,
@@ -156,6 +158,7 @@ class HomeReadiness {
   });
 
   factory HomeReadiness.fromJson(Map<String, dynamic> json) => HomeReadiness(
+        sleepSource: json['sleepSource'] as String?,
         score: (json['score'] as num?)?.toDouble() ?? 0,
         label: json['label'] as String? ?? '',
         aiTarget: json['aiTarget'] as String? ?? '',
@@ -171,6 +174,7 @@ class HomeReadiness {
       );
 
   Map<String, dynamic> toJson() => {
+        'sleepSource': sleepSource,
         'score': score,
         'label': label,
         'aiTarget': aiTarget,

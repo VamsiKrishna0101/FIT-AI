@@ -149,11 +149,9 @@ void main() {
     await tester.tap(find.text('84'));
     await tester.pumpAndSettle();
     expect(find.text('Sample guidance for this day.'), findsOneWidget);
-    expect(
-        find.descendant(
-            of: find.byType(BottomSheet), matching: find.text('84 / 100')),
-        findsOneWidget);
-    Navigator.of(tester.element(find.text('84 / 100').last)).pop();
+    expect(find.text('What went into your score'), findsOneWidget);
+    expect(find.text('84'), findsOneWidget);
+    Navigator.of(tester.element(find.text('84'))).pop();
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Start session'), 200,
         scrollable: find.byType(Scrollable).first);
@@ -170,6 +168,54 @@ void main() {
     expect(find.text('84'), findsNothing);
     expect(find.text('HRV'), findsNothing);
     expect(find.text('A day to recover'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Entered sleep acknowledges an incomplete no-wearable check-in',
+      (tester) async {
+    final data = HomeData.fromJson({
+      ..._data.toJson(),
+      'wearableUsage': 'NONE',
+      'healthMetrics': null,
+      'readiness': null,
+      'sleepLog': {'sleepMinutes': 420, 'energy': 3},
+    });
+    await tester.pumpWidget(_app(data: data));
+    expect(find.text('Your readiness check-in'), findsOneWidget);
+    expect(find.textContaining('rest, soreness'), findsOneWidget);
+    expect(find.text('84'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Complete check-in shows a labelled ring without invented vitals',
+      (tester) async {
+    final data = HomeData.fromJson({
+      ..._data.toJson(),
+      'wearableUsage': 'NONE',
+      'healthMetrics': null,
+      'sleepLog': {
+        'sleepMinutes': 420,
+        'energy': 3,
+        'rested': 3,
+        'soreness': 3
+      },
+      'readiness': {
+        'score': 7,
+        'label': 'Daily check-in estimate',
+        'source': 'check_in_estimate',
+        'sleepMinutes': 420,
+      },
+    });
+    await tester.pumpWidget(_app(data: data));
+    expect(find.text('70'), findsOneWidget);
+    expect(find.text('Based on your check-in'), findsOneWidget);
+    expect(find.text('Okay'), findsOneWidget);
+    expect(find.text('Somewhat rested'), findsOneWidget);
+    await tester.tap(find.text('70'));
+    await tester.pumpAndSettle();
+    expect(find.text('HRV'), findsNothing);
+    expect(find.text('Resting HR'), findsNothing);
+    expect(find.text('What went into your score'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -202,6 +248,25 @@ void main() {
     expect(label('54 bpm'), findsOneWidget);
     expect(tester.takeException(), isNull);
     semantics.dispose();
+  });
+
+  testWidgets(
+      'A real synced score keeps its heart readings for phone-only users',
+      (tester) async {
+    final data = HomeData.fromJson({
+      ..._data.toJson(),
+      'wearableUsage': 'NONE',
+    });
+    await tester.pumpWidget(_app(data: data));
+    final card = find.byKey(const ValueKey('today-readiness-card'));
+    expect(find.descendant(of: card, matching: find.text('68 ms')),
+        findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('54 bpm')),
+        findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Add answer')),
+        findsNothing);
+    expect(find.descendant(of: card, matching: find.text('Apple Health')),
+        findsOneWidget);
   });
 
   test('Home cache preserves measurement date, real source and session title',

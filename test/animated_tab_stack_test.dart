@@ -134,4 +134,27 @@ void main() {
     expect(find.text('Tab 0: 0'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Changing motion settings during a tab transition stays stable',
+      (tester) async {
+    final selected = ValueNotifier(0);
+    addTearDown(selected.dispose);
+    await tester.pumpWidget(_app(selected));
+    selected.value = 1;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 70));
+    await tester.pumpWidget(_app(selected, reducedMotion: true));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Tab 1: 0'), findsOneWidget);
+    for (final index in [0, 2, 1, 0]) {
+      selected.value = index;
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    }
+    await tester.pumpWidget(_app(selected));
+    await tester.pumpAndSettle();
+    expect(find.text('Tab 0: 0'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

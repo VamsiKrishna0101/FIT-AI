@@ -7,11 +7,13 @@ import '../models/workout_exercise_models.dart';
 class WorkoutItemActions extends StatelessWidget {
   final TodayPlanItemModel item;
   final bool busy;
+  final String doneLabel;
   final VoidCallback onDone, onSkip, onUndo;
   const WorkoutItemActions(
       {super.key,
       required this.item,
       required this.busy,
+      this.doneLabel = 'Done',
       required this.onDone,
       required this.onSkip,
       required this.onUndo});
@@ -59,10 +61,15 @@ class WorkoutItemActions extends StatelessWidget {
                           width: 15,
                           height: 15,
                           child: CupertinoActivityIndicator())
-                      : const Icon(CupertinoIcons.checkmark, size: 14),
+                      : Icon(
+                          doneLabel == 'Done'
+                              ? CupertinoIcons.checkmark
+                              : CupertinoIcons.pencil,
+                          size: 14),
                   const SizedBox(width: 5),
                   Flexible(
-                      child: Text(copy('Done'), textAlign: TextAlign.center)),
+                      child:
+                          Text(copy(doneLabel), textAlign: TextAlign.center)),
                 ]));
     final secondary = TextButton(
         onPressed: busy

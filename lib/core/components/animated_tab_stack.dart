@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Keeps tab subtrees mounted while fading and sliding between destinations.
+/// Keeps tab subtrees mounted while crossfading between destinations.
 class AnimatedTabStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
@@ -11,8 +11,8 @@ class AnimatedTabStack extends StatefulWidget {
     required this.children,
   }) : assert(index >= 0 && index < children.length);
 
-  static const duration = Duration(milliseconds: 320);
-  static const curve = Curves.easeInOutCubic;
+  static const duration = Duration(milliseconds: 260);
+  static const curve = Curves.easeOutCubic;
 
   @override
   State<AnimatedTabStack> createState() => _AnimatedTabStackState();
@@ -31,9 +31,14 @@ class _AnimatedTabStackState extends State<AnimatedTabStack> {
   }
 
   void _hideFinishedTab(int index) {
-    if (index != widget.index && _visible.contains(index)) {
+    // A zero-duration animation can complete while its parent is rebuilding.
+    // Wait until that frame ends, and check rapid tab changes again.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || index == widget.index || !_visible.contains(index)) {
+        return;
+      }
       setState(() => _visible.remove(index));
-    }
+    });
   }
 
   @override
@@ -57,14 +62,7 @@ class _AnimatedTabStackState extends State<AnimatedTabStack> {
                   duration: duration,
                   curve: AnimatedTabStack.curve,
                   onEnd: () => _hideFinishedTab(index),
-                  child: AnimatedSlide(
-                    offset: index == widget.index
-                        ? Offset.zero
-                        : Offset(index < widget.index ? -.025 : .025, 0),
-                    duration: duration,
-                    curve: AnimatedTabStack.curve,
-                    child: RepaintBoundary(child: widget.children[index]),
-                  ),
+                  child: RepaintBoundary(child: widget.children[index]),
                 ),
               ),
             ),

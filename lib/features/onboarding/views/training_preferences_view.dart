@@ -9,6 +9,7 @@ import '../../../core/storage/onboarding_draft.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../auth/views/auth_view.dart';
 import '../components/onboarding_scaffold.dart';
+import 'package:flutter/services.dart';
 
 const trainingMuscles = <String, String>{
   'chest': 'Chest',
@@ -244,8 +245,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
   Widget build(BuildContext context) => OnboardingScaffold(
         step: 7,
         title: widget.editProfile ? 'Training preferences' : 'Make it yours.',
-        subtitle:
-            'Choose what you want to focus on. You can change this anytime.',
+        subtitle: 'Your priorities, your schedule, your way to train.',
         actionTitle: widget.editProfile ? 'Save preferences' : 'Continue',
         onBack: () => Navigator.of(context).pop(),
         loading: _saving,
@@ -304,7 +304,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                   const _Heading('Your week',
                       'Choose at least two days, or keep your schedule flexible.'),
                   const SizedBox(height: 12),
-                  Wrap(spacing: 7, runSpacing: 3, children: [
+                  Wrap(spacing: 7, runSpacing: 8, children: [
                     for (int i = 0; i < _days.length; i++)
                       _chip(
                           const [
@@ -332,7 +332,14 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                       initialValue: _draft.preferredTime ?? 'ANY',
                       isExpanded: true,
                       decoration: InputDecoration(
-                          labelText: fitnessText(context, 'Preferred time')),
+                          labelText: fitnessText(context, 'Preferred time'),
+                          fillColor: const Color(0xFF171819),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 16)),
+                      dropdownColor: const Color(0xFF252628),
+                      borderRadius: BorderRadius.circular(16),
+                      icon: const Icon(CupertinoIcons.chevron_down,
+                          size: 16, color: FitnessTheme.muted),
                       items: const [
                         DropdownMenuItem(
                             value: 'ANY', child: FitnessText('Whenever works')),
@@ -357,8 +364,15 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                   DropdownButtonFormField<String>(
                     initialValue: _draft.trainingSplit,
                     isExpanded: true,
-                    decoration:
-                        const InputDecoration(labelText: 'Training style'),
+                    decoration: InputDecoration(
+                        labelText: fitnessText(context, 'Training style'),
+                        fillColor: const Color(0xFF171819),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16)),
+                    dropdownColor: const Color(0xFF252628),
+                    borderRadius: BorderRadius.circular(16),
+                    icon: const Icon(CupertinoIcons.chevron_down,
+                        size: 16, color: FitnessTheme.muted),
                     items: [
                       for (final entry in _trainingSplits.entries)
                         DropdownMenuItem(
@@ -513,17 +527,49 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
       );
 
   Widget _chip(String label, bool selected, ValueChanged<bool>? onSelected) =>
-      FilterChip(
-        label: FitnessText(label, style: const TextStyle(fontSize: 12)),
+      Semantics(
+        key: ValueKey('training-choice-$label'),
+        button: true,
         selected: selected,
-        showCheckmark: false,
-        side: BorderSide(
-            color: selected ? const Color(0xFF9B9B9B) : Colors.transparent,
-            width: .8),
-        selectedColor: const Color(0xFF494949),
-        backgroundColor: const Color(0xFF2D2D2D),
-        disabledColor: const Color(0xFF282828),
-        onSelected: onSelected,
+        enabled: onSelected != null,
+        child: Opacity(
+          opacity: onSelected == null ? .4 : 1,
+          child: AnimatedContainer(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: selected ? FitnessTheme.silver : const Color(0xFF282A2C),
+              border: Border.all(
+                  color:
+                      selected ? FitnessTheme.silver : const Color(0xFF3C3E40),
+                  width: .8),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: onSelected == null
+                    ? null
+                    : () {
+                        HapticFeedback.selectionClick();
+                        onSelected(!selected);
+                      },
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    child: FitnessText(label,
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: selected
+                                ? FitnessTheme.canvas
+                                : FitnessTheme.silver))),
+              ),
+            ),
+          ),
+        ),
       );
 }
 
@@ -535,7 +581,10 @@ class _Heading extends StatelessWidget {
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         FitnessText(title,
             style: const TextStyle(
-                fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -.2)),
+                fontSize: 11,
+                color: FitnessTheme.silver,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1)),
         const SizedBox(height: 5),
         FitnessText(subtitle,
             style: const TextStyle(

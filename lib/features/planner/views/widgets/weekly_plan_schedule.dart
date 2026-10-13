@@ -191,6 +191,13 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
   }
 
   Widget _exercise(Map exercise, int number, String date) {
+    final targets =
+        (exercise['setPrescriptions'] as List? ?? []).whereType<Map>().toList();
+    final unit = exercise['weightUnit'] == 'per_hand'
+        ? ' per hand'
+        : exercise['weightUnit'] == 'total_load'
+            ? ' total'
+            : '';
     final load = exercise['weightBasis'] == 'bodyweight'
         ? 'Bodyweight'
         : exercise['weightKg'] == null
@@ -214,9 +221,29 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
                         fontSize: 16, fontWeight: FontWeight.w600))),
           ]),
           const SizedBox(height: 14),
-          FitnessText(
-              '${exercise['sets']} × ${exercise['repsMin']}–${exercise['repsMax']} · $load',
-              style: const TextStyle(fontSize: 14, color: FitnessTheme.silver)),
+          if (targets.isEmpty)
+            FitnessText(
+                '${exercise['sets']} × ${exercise['repsMin']}–${exercise['repsMax']} · $load',
+                style:
+                    const TextStyle(fontSize: 14, color: FitnessTheme.silver)),
+          for (final set in targets)
+            Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(children: [
+                  FitnessText('Set ${set['setNumber']}',
+                      style: const TextStyle(
+                          fontSize: 12, color: FitnessTheme.muted)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: FitnessText(
+                          '${set['repsMin'] == set['repsMax'] ? set['repsMax'] : '${set['repsMin']}–${set['repsMax']}'} reps · ${set['weightKg'] == null ? 'Choose starting load' : exercise['weightBasis'] == 'bodyweight' ? 'Bodyweight' : '${set['weightKg']} kg$unit'}',
+                          style: const TextStyle(
+                              fontSize: 14, color: FitnessTheme.silver))),
+                ])),
+          if (targets.isNotEmpty &&
+              exercise['weightBasis'] == 'estimated_start')
+            const FitnessText('Starting estimate · reduce the load if needed',
+                style: TextStyle(fontSize: 11, color: FitnessTheme.muted)),
           const SizedBox(height: 6),
           FitnessText(
               'Effort ${exercise['targetRpe']}/10 · ${exercise['restSeconds']} s rest',

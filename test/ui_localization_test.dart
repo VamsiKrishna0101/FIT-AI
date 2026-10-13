@@ -72,14 +72,14 @@ void main() {
     await tester
         .pumpWidget(_app(const TrainingPreferencesView(), AppLanguage.uk));
     await tester.pumpAndSettle();
-    final chest = find.widgetWithText(FilterChip, 'Chest');
-    final shoulders = find.widgetWithText(FilterChip, 'Shoulders');
+    final chest = find.byKey(const ValueKey('training-choice-Chest'));
+    final shoulders = find.byKey(const ValueKey('training-choice-Shoulders'));
     final first = tester.getRect(chest), second = tester.getRect(shoulders);
     await tester.tap(chest);
     await tester.pumpAndSettle();
     expect(tester.getRect(chest), first);
     expect(tester.getRect(shoulders), second);
-    expect(tester.widget<FilterChip>(chest).selected, isTrue);
+    expect(tester.widget<Semantics>(chest).properties.selected, isTrue);
     expect(tester.takeException(), isNull);
   });
   testWidgets(

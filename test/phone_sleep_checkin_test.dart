@@ -23,7 +23,7 @@ class _Repo extends WellnessRepository {
   @override
   Future<Map<String, dynamic>?> load(String date) async => null;
   @override
-  Future<void> save(String date, int minutes, int? energy,
+  Future<Map<String, dynamic>> save(String date, int minutes, int? energy,
       {int? rested, int? soreness, PhoneSleepEstimate? estimate}) async {
     saved = {
       'date': date,
@@ -31,6 +31,12 @@ class _Repo extends WellnessRepository {
       'rested': rested,
       'soreness': soreness,
       'estimate': estimate
+    };
+    return {
+      'date': date,
+      'sleepMinutes': minutes,
+      'source': 'self_report',
+      'updatedAt': DateTime.now().toUtc().toIso8601String()
     };
   }
 }
@@ -65,7 +71,7 @@ class _FailingRepo extends _Repo {
   _FailingRepo() : super('NONE');
 
   @override
-  Future<void> save(String date, int minutes, int? energy,
+  Future<Map<String, dynamic>> save(String date, int minutes, int? energy,
       {int? rested, int? soreness, PhoneSleepEstimate? estimate}) async {
     final request = RequestOptions(path: '/api/wellness/check-in/$date');
     throw DioException(
@@ -115,7 +121,7 @@ void main() {
     });
   }
   testWidgets(
-      'No wearable is an explicit choice; tracking remains opt-in and stops on wearable selection',
+      'No wearable is chosen once; tracking stays opt-in and preferences move to Settings',
       (tester) async {
     final repo = _Repo('UNKNOWN'), phone = _Phone();
     await open(tester, repo, phone);
@@ -125,9 +131,12 @@ void main() {
     expect(phone.starts, 0);
     await tap(tester, find.byType(Switch));
     expect(phone.starts, 1);
+    expect(find.text('I use a wearable'), findsNothing);
+    await tap(tester, find.text('Sleep preferences'));
     await tap(tester, find.text('I use a wearable'));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
     expect(repo.usage, 'WEARABLE');
-    expect(phone.stops, 1);
     expect(find.text('Estimate my sleep'), findsNothing);
     expect(find.text('How sore are you?'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -157,7 +166,7 @@ void main() {
     await tester.enterText(find.byType(TextField).first, '7');
     await tester.pumpAndSettle();
     expect(find.text('Phone estimate · confirmed'), findsNothing);
-    await tap(tester, find.text('Save check-in'));
+    await tap(tester, find.text('Save sleep'));
     expect(repo.saved?['minutes'], 420);
     expect(repo.saved?['estimate'], isNull);
     expect(tester.takeException(), isNull);
@@ -168,7 +177,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await open(tester, _Repo('NONE'), _Phone(), scale: 1.8);
-    await tester.ensureVisible(find.text('Save check-in'));
+    await tester.ensureVisible(find.text('Save sleep'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
@@ -182,7 +191,7 @@ void main() {
       (tester) async {
     final repo = _Repo('NONE');
     await open(tester, repo, _Phone());
-    await tester.tap(find.text('Save check-in'));
+    await tester.tap(find.text('Save sleep'));
     await tester.pump();
     expect(find.byType(SnackBar), findsOneWidget);
     expect(repo.saved, isNull);
@@ -196,7 +205,7 @@ void main() {
     await tester.ensureVisible(find.byType(TextField).first);
     await tester.enterText(find.byType(TextField).first, '7');
     await tester.enterText(find.byType(TextField).last, '');
-    await tester.tap(find.text('Save check-in'));
+    await tester.tap(find.text('Save sleep'));
     await tester.pumpAndSettle();
     expect(repo.saved?['minutes'], 420);
     expect(tester.takeException(), isNull);
@@ -208,7 +217,7 @@ void main() {
     await open(tester, _FailingRepo(), _Phone());
     await tester.ensureVisible(find.byType(TextField).first);
     await tester.enterText(find.byType(TextField).first, '8');
-    await tester.tap(find.text('Save check-in'));
+    await tester.tap(find.text('Save sleep'));
     await tester.pump();
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Confirm your wearable preference before saving.'),
@@ -223,6 +232,7 @@ void main() {
     final data = HomeData.fromJson({
       'wearableUsage': 'NONE',
       'calendarDate': '2026-10-11',
+      'sleepLog': {'sleepMinutes': 372, 'source': 'self_report'},
       'user': <String, dynamic>{},
       'nutrition': <String, dynamic>{},
       'weeklyStreak': <dynamic>[]
@@ -244,7 +254,8 @@ void main() {
     await tap(tester, find.byKey(const ValueKey('today-readiness-card')));
     expect(opened, 1);
     expect(find.text('Resting heart rate or HRV'), findsNothing);
-    expect(find.text('Daily check-in estimate'), findsOneWidget);
+    expect(find.text('Complete check-in'), findsWidgets);
+    expect(find.text('Your readiness check-in'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -14,6 +14,7 @@ import '../../history/views/progress_view.dart';
 import '../../profile/views/profile_view.dart';
 import '../../today/views/today_home_view.dart';
 import '../../train/views/train_view.dart';
+import '../../../core/navigation/onboarding_page_route.dart';
 
 class MainDashboardScaffold extends StatefulWidget {
   final int initialIndex;
@@ -88,7 +89,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
   }
 
   void _openRoute(Widget page) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+    Navigator.of(context).push(AppPageRoute<void>(page: page));
   }
 
   @override

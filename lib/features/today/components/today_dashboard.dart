@@ -7,11 +7,16 @@ import '../../../core/localization/fitai_copy.dart';
 import '../../../models/home_models.dart';
 import '../../history/repositories/history_repository.dart';
 import 'readiness_score_ring.dart';
+import 'readiness_signals.dart';
+import '../views/readiness_detail_view.dart';
 import '../models/session_guidance.dart';
 import '../models/readiness_availability.dart';
 import '../../body_scan/models/training_map_models.dart';
 import 'today_training_preview.dart';
 import '../../../core/localization/fitness_text.dart';
+import '../../../core/components/profile_avatar.dart';
+import '../../../core/navigation/onboarding_page_route.dart';
+import '../../wellness/views/sleep_preferences_view.dart';
 
 const _surface = Color(0xFF202020);
 const _muted = Color(0xFF969696);
@@ -27,6 +32,7 @@ class TodayDashboard extends StatelessWidget {
   final ScrollController? scrollController;
   final bool loading;
   final bool loadFailed;
+  final bool refreshFailed;
   final DateTime? now;
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
@@ -47,6 +53,7 @@ class TodayDashboard extends StatelessWidget {
     this.scrollController,
     this.loading = false,
     this.loadFailed = false,
+    this.refreshFailed = false,
     this.now,
     this.selectedDate,
     this.onDateSelected,
@@ -99,13 +106,22 @@ class TodayDashboard extends StatelessWidget {
         : null;
     final days = weekDays ?? data?.weeklyStreak ?? const <WeekDay>[];
     final noWearable = data?.wearableUsage == 'NONE';
+    final needsCheckIn = noWearable &&
+        data?.sleepLog != null &&
+        (data?.sleepLog?['rested'] == null ||
+            data?.sleepLog?['energy'] == null ||
+            data?.sleepLog?['soreness'] == null);
     void openReadiness() {
       if (noWearable && r == null && onSleep != null) {
         onSleep!();
         return;
       }
       _showReadiness(context, r, copy,
-          date: date, onSleep: onSleep, health: health);
+          date: date,
+          onSleep: onSleep,
+          health: health,
+          sleepLog: data?.sleepLog,
+          noWearable: noWearable);
     }
 
     final history = recovery
@@ -124,7 +140,9 @@ class TodayDashboard extends StatelessWidget {
       history.add(RecoveryPoint(
           date: readingDate,
           recoveryScore:
-              r.source == 'check_in_estimate' ? null : _readinessScore(r),
+              ['check_in_estimate', 'mixed_estimate'].contains(r.source)
+                  ? null
+                  : _readinessScore(r),
           hrv: r.hrvMs > 0 ? r.hrvMs.toDouble() : null,
           hrvMethod: health?.hrvMethod ??
               (r.source == 'health_connect'
@@ -178,6 +196,23 @@ class TodayDashboard extends StatelessWidget {
                   ])),
                   const SizedBox(height: 24),
                 ],
+                if (refreshFailed && !loadFailed) ...[
+                  _TodaySurface(
+                      key: const ValueKey('today-refresh-warning'),
+                      child: Row(children: [
+                        const Icon(CupertinoIcons.wifi_slash,
+                            size: 18, color: _muted),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                            child: FitnessText(
+                                'Could not refresh. Showing saved data.',
+                                style: TextStyle(color: _muted, fontSize: 12))),
+                        TextButton(
+                            onPressed: onRefresh,
+                            child: Text(copy.text('retry'))),
+                      ])),
+                  const SizedBox(height: 16),
+                ],
                 if (days.isNotEmpty) ...[
                   _Section(
                       title: copy.text('weekProgress'),
@@ -226,6 +261,7 @@ class TodayDashboard extends StatelessWidget {
                   _ReadinessCard(
                       readiness: r,
                       health: health,
+                      sleepLog: data?.sleepLog,
                       noWearable: noWearable,
                       copy: copy,
                       today: date,
@@ -236,10 +272,7 @@ class TodayDashboard extends StatelessWidget {
                           health.sleepMinutes != null)) ...[
                     const SizedBox(height: 12),
                     _DailyMetrics(
-                        metrics: health,
-                        copy: copy,
-                        onTap: () => _showReadiness(context, r, copy,
-                            date: date, health: health)),
+                        metrics: health, copy: copy, onTap: openReadiness),
                   ],
                   if (onSleep != null) ...[
                     const SizedBox(height: 12),
@@ -254,25 +287,33 @@ class TodayDashboard extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                 FitnessText(
-                                    data?.sleepLog != null
-                                        ? 'Sleep logged'
-                                        : 'Log sleep',
+                                    needsCheckIn
+                                        ? 'Complete check-in'
+                                        : data?.sleepLog != null ||
+                                                (health?.sleepMinutes ?? 0) > 0
+                                            ? 'Sleep logged'
+                                            : 'Log sleep',
                                     style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500)),
                                 const SizedBox(height: 4),
                                 FitnessText(
-                                    data?.sleepLog != null
-                                        ? (data?.sleepLog?['source'] ==
-                                                'phone_estimate_confirmed'
-                                            ? 'Phone estimate · confirmed'
-                                            : 'Self-reported')
-                                        : 'No device needed',
+                                    needsCheckIn
+                                        ? 'Sleep saved · add how you feel'
+                                        : data?.sleepLog != null
+                                            ? (data?.sleepLog?['source'] ==
+                                                    'phone_estimate_confirmed'
+                                                ? 'Phone estimate · confirmed'
+                                                : 'Self-reported')
+                                            : (health?.sleepMinutes ?? 0) > 0
+                                                ? 'Synced from your health app'
+                                                : 'No device needed',
                                     style: const TextStyle(
                                         color: _muted, fontSize: 12)),
                               ])),
-                          if (data?.sleepLog?['sleepMinutes']
+                          if ((data?.sleepLog?['sleepMinutes'] ??
+                                  health?.sleepMinutes)
                               case final num minutes)
                             Padding(
                                 padding: const EdgeInsets.only(right: 12),
@@ -281,7 +322,8 @@ class TodayDashboard extends StatelessWidget {
                                     style: const TextStyle(
                                         color: Colors.white, fontSize: 16))),
                           Icon(
-                              data?.sleepLog != null
+                              data?.sleepLog != null ||
+                                      (health?.sleepMinutes ?? 0) > 0
                                   ? CupertinoIcons.pencil
                                   : CupertinoIcons.add,
                               color: _silver,
@@ -380,8 +422,6 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final names =
         name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
-    final initials =
-        names.take(2).map((s) => s.characters.first.toUpperCase()).join();
     final greeting = copy.text(clock.hour < 12
         ? 'goodMorning'
         : clock.hour < 18
@@ -403,31 +443,7 @@ class _Header extends StatelessWidget {
                 color: _muted, fontSize: 12, letterSpacing: -.1)),
       ])),
       const SizedBox(width: 12),
-      Semantics(
-          button: true,
-          label: copy.text('profile'),
-          excludeSemantics: true,
-          child: Material(
-              color: const Color(0xFF2C2C2C),
-              shape: const StadiumBorder(
-                  side: BorderSide(color: Color(0x1FFFFFFF), width: .6)),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                  onTap: onProfile,
-                  customBorder: const StadiumBorder(),
-                  child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 13),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        const Icon(CupertinoIcons.person_crop_circle,
-                            size: 18, color: Color(0xFFE3E3E3)),
-                        const SizedBox(width: 10),
-                        Text(initials.isEmpty ? '···' : initials,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500)),
-                      ]))))),
+      ProfileAvatar(name: name, label: 'Settings', onTap: onProfile),
     ]);
   }
 }
@@ -510,122 +526,99 @@ Color _scoreColor(int score) => score >= 67
     : score >= 34
         ? const Color(0xFFE9C76B)
         : const Color(0xFFF18E83);
-String _source(HomeReadiness r, FitAiCopy copy) =>
-    copy.text(r.source == 'sample' || r.source == 'preview'
-        ? 'todaySampleData'
-        : r.source == 'manual' || r.source == 'check_in_estimate'
-            ? 'todayCheckIn'
-            : r.source == 'health_connect'
-                ? 'todayHealthConnect'
-                : 'todayAppleHealth');
 
 class _ReadinessCard extends StatelessWidget {
   final HomeReadiness? readiness;
   final HomeHealthMetrics? health;
+  final Map<String, dynamic>? sleepLog;
   final bool noWearable;
   final FitAiCopy copy;
   final DateTime today;
   final VoidCallback? onTap;
+
   const _ReadinessCard(
       {required this.readiness,
       this.health,
+      this.sleepLog,
       this.noWearable = false,
       required this.copy,
       required this.today,
       this.onTap});
+
   @override
   Widget build(BuildContext context) {
-    final r = readiness;
-    if (r == null) {
-      final availability = ReadinessAvailability.fromMetrics(health);
-      return _TodaySurface(
-          key: const ValueKey('today-readiness-card'),
-          onTap: onTap,
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            FitnessText(
-                noWearable ? 'Daily check-in estimate' : availability.title,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500)),
-            const SizedBox(height: 7),
-            FitnessText(
-                noWearable
-                    ? 'Log sleep and how you feel to add your daily check-in.'
-                    : availability.description,
-                style:
-                    const TextStyle(color: _muted, fontSize: 12, height: 1.4)),
-          ]));
-    }
-    final score = _readinessScore(r);
-    final stamp = r.date == null ? null : DateTime.tryParse(r.date!);
-    final older = stamp != null &&
-        DateUtils.dateOnly(stamp).isBefore(DateUtils.dateOnly(today));
+    final reading = readiness;
+    final score = reading == null ? null : _readinessScore(reading);
+    final availability = ReadinessAvailability.fromMetrics(health,
+        sleepLog: sleepLog, noWearable: noWearable);
+    final checkIn =
+        reading == null ? noWearable : reading.source == 'check_in_estimate';
+    final ringSize =
+        MediaQuery.textScalerOf(context).scale(14) > 22 ? 100.0 : 124.0;
+
     return _TodaySurface(
-        key: const ValueKey('today-readiness-card'),
-        hero: true,
-        onTap: onTap,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF303030),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Text(_source(r, copy),
-                          style: const TextStyle(color: _muted, fontSize: 10))),
-                  if (older) ...[
-                    const SizedBox(height: 4),
-                    Text(DateFormat('d MMM', copy.localeCode).format(stamp),
-                        style: const TextStyle(color: _muted, fontSize: 11)),
-                  ],
-                  const SizedBox(height: 8),
-                  FitnessText(
-                      r.label.isEmpty ? copy.text('readiness') : r.label,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -.3)),
-                ])),
-            const SizedBox(width: 14),
-            ReadinessScoreRing(
-                key: const ValueKey('today-readiness-ring'),
-                score: score,
-                color: _scoreColor(score)),
-          ]),
-          if (older) ...[
-            const SizedBox(height: 10),
-            Text(copy.text('todayOlderReadiness'),
-                style:
-                    const TextStyle(color: _muted, fontSize: 11, height: 1.4))
-          ],
-          if (r.hrvMs > 0 || r.restingHrBpm > 0) ...[
-            const SizedBox(height: 15),
-            const Divider(height: 1, color: _line),
-            const SizedBox(height: 8),
-            Row(children: [
-              if (r.hrvMs > 0)
-                Expanded(
-                    child: _Metric(
-                        label: copy.text('hrv'),
-                        value: '${r.hrvMs}',
-                        unit: 'ms')),
-              if (r.restingHrBpm > 0)
-                Expanded(
-                    child: _Metric(
-                        label: copy.text('restingHeartRate'),
-                        value: '${r.restingHrBpm}',
-                        unit: 'bpm')),
-            ]),
-          ],
-        ]));
+      key: const ValueKey('today-readiness-card'),
+      hero: true,
+      padding: const EdgeInsets.all(20),
+      onTap: onTap,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        FitnessText(
+            reading == null ? availability.title : readinessBasis(reading),
+            style: const TextStyle(color: _muted, fontSize: 11)),
+        const SizedBox(height: 20),
+        Row(children: [
+          ReadinessScoreRing(
+              key: const ValueKey('today-readiness-ring'),
+              score: score,
+              color: score == null ? _silver : _scoreColor(score),
+              size: ringSize),
+          const SizedBox(width: 20),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                FitnessText(
+                    score == null
+                        ? checkIn
+                            ? 'How are you feeling?'
+                            : 'Add your readings'
+                        : readinessHeadline(score),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -.5)),
+                const SizedBox(height: 8),
+                FitnessText(
+                    score == null
+                        ? availability.description
+                        : readinessMeaning(score),
+                    style: const TextStyle(
+                        color: _muted, fontSize: 12, height: 1.5)),
+              ])),
+        ]),
+        const SizedBox(height: 20),
+        ReadinessSignals(
+            readiness: reading, sleepLog: sleepLog, checkIn: checkIn),
+        const SizedBox(height: 18),
+        const Divider(height: 1, color: _line),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(
+              child: FitnessText(
+                  reading == null
+                      ? checkIn
+                          ? 'Complete check-in'
+                          : 'View available readings'
+                      : 'View breakdown',
+                  style: const TextStyle(
+                      color: _silver,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500))),
+          const Icon(CupertinoIcons.chevron_right, size: 13, color: _silver),
+        ]),
+      ]),
+    );
   }
 }
 
@@ -1358,9 +1351,14 @@ class _TrendPainter extends CustomPainter {
 }
 
 void _showReadiness(BuildContext context, HomeReadiness? r, FitAiCopy copy,
-    {DateTime? date, VoidCallback? onSleep, HomeHealthMetrics? health}) {
+    {DateTime? date,
+    VoidCallback? onSleep,
+    HomeHealthMetrics? health,
+    Map<String, dynamic>? sleepLog,
+    bool noWearable = false}) {
   if (r == null) {
-    final availability = ReadinessAvailability.fromMetrics(health);
+    final availability = ReadinessAvailability.fromMetrics(health,
+        sleepLog: sleepLog, noWearable: noWearable);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: _surface,
@@ -1393,10 +1391,32 @@ void _showReadiness(BuildContext context, HomeReadiness? r, FitAiCopy copy,
                           color: _muted, fontSize: 14, height: 1.5)),
                   const SizedBox(height: 12),
                   _ReadinessInputRow(
-                      label: 'Synced sleep', available: availability.sleep),
-                  _ReadinessInputRow(
-                      label: 'Resting heart rate or HRV',
-                      available: availability.heart),
+                      label: availability.enteredSleep
+                          ? 'Entered sleep'
+                          : 'Synced sleep',
+                      available: availability.sleep),
+                  if (noWearable) ...[
+                    _ReadinessInputRow(
+                        label: 'Rest', available: sleepLog?['rested'] != null),
+                    _ReadinessInputRow(
+                        label: 'Energy',
+                        available: sleepLog?['energy'] != null),
+                    _ReadinessInputRow(
+                        label: 'Soreness',
+                        available: sleepLog?['soreness'] != null),
+                  ] else ...[
+                    _ReadinessInputRow(
+                        label: 'Synced heart readings',
+                        available: availability.heart),
+                    if (!availability.heart)
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext);
+                            Navigator.of(context).push(AppPageRoute<void>(
+                                page: const SleepPreferencesView()));
+                          },
+                          child: const FitnessText('Sleep preferences')),
+                  ],
                   if (health != null) ...[
                     const SizedBox(height: 24),
                     const FitnessText('Recorded readings',
@@ -1439,78 +1459,28 @@ void _showReadiness(BuildContext context, HomeReadiness? r, FitAiCopy copy,
                           onSleep();
                         },
                         icon: const Icon(CupertinoIcons.moon_stars),
-                        label: const FitnessText('Log sleep')),
+                        label: FitnessText(
+                            noWearable && availability.missingAnswers.isNotEmpty
+                                ? 'Complete check-in'
+                                : sleepLog == null
+                                    ? 'Log sleep'
+                                    : 'Edit sleep')),
                   ],
                 ]),
           )),
     );
     return;
   }
-  showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: _surface,
-    showDragHandle: true,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-    builder: (context) => SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(copy.text('readiness'),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                Text(
-                    '${_source(r, copy)}${r.date == null ? '' : ' · ${r.date}'}',
-                    style: const TextStyle(color: _muted, fontSize: 12)),
-                const SizedBox(height: 24),
-                Text('${_readinessScore(r)} / 100',
-                    style: TextStyle(
-                        color: _scoreColor(_readinessScore(r)),
-                        fontSize: 36,
-                        fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                FitnessText(r.label,
-                    style: const TextStyle(color: Colors.white, fontSize: 17)),
-                if (r.aiTarget.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  FitnessText(r.aiTarget,
-                      style: const TextStyle(
-                          color: Color(0xFFB7B7B7), fontSize: 14, height: 1.5))
-                ],
-                const SizedBox(height: 24),
-                Wrap(spacing: 24, runSpacing: 22, children: [
-                  if (r.hrvMs > 0)
-                    _Metric(
-                        label: copy.text('hrv'),
-                        value: '${r.hrvMs}',
-                        unit: 'ms'),
-                  if (r.restingHrBpm > 0)
-                    _Metric(
-                        label: copy.text('restingHeartRate'),
-                        value: '${r.restingHrBpm}',
-                        unit: 'bpm'),
-                  if (r.sleepMinutes > 0)
-                    _Metric(
-                        label: copy.text('todaySleep'),
-                        value: '${r.sleepMinutes ~/ 60}',
-                        unit: 'h ${r.sleepMinutes % 60} m'),
-                  if (r.sleepEfficiency > 0)
-                    _Metric(
-                        label: copy.text('todayEfficiency'),
-                        value: '${r.sleepEfficiency}',
-                        unit: '%'),
-                ]),
-              ]),
-        )),
-  );
+  final route = AppPageRoute<bool>(
+      page: ReadinessDetailView(
+    readiness: r,
+    sleepLog: sleepLog,
+    onEdit: onSleep == null ? null : () => Navigator.of(context).pop(true),
+  ));
+  Navigator.of(context).push(route).then((edit) async {
+    await route.completed;
+    if (edit == true && context.mounted) onSleep?.call();
+  });
 }
 
 class _ReadinessInputRow extends StatelessWidget {

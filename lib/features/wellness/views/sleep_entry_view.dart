@@ -9,6 +9,7 @@ import '../../../core/health/phone_sleep_service.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../repositories/wellness_repository.dart';
+import 'sleep_preferences_view.dart';
 
 class SleepEntryView extends StatefulWidget {
   final DateTime? initialDate;
@@ -36,6 +37,8 @@ class _SleepEntryViewState extends State<SleepEntryView> {
   int _request = 0;
   bool get _fallback => _usage == 'NONE';
   bool get _busy => _saving || _changing;
+  bool get _completeCheckIn =>
+      _fallback && _rested != null && _energy != null && _soreness != null;
 
   @override
   void initState() {
@@ -124,8 +127,12 @@ class _SleepEntryViewState extends State<SleepEntryView> {
       _error = null;
     });
     try {
-      if (usage != 'NONE' && phone.supported) await phone.stop();
       await repository.setWearableUsage(usage);
+      if (usage != 'NONE' && phone.supported) {
+        try {
+          await phone.stop();
+        } catch (_) {}
+      }
       if (!mounted) return;
       setState(() {
         _usage = usage;
@@ -269,7 +276,7 @@ class _SleepEntryViewState extends State<SleepEntryView> {
       _error = null;
     });
     try {
-      await repository.save(
+      final entry = await repository.save(
           CacheScope.todayKey(_date), (hours * 60 + minutes).round(), _energy,
           rested: _fallback ? _rested : null,
           soreness: _fallback ? _soreness : null,
@@ -277,15 +284,17 @@ class _SleepEntryViewState extends State<SleepEntryView> {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: FitnessText('Sleep saved')));
-        Navigator.pop(context, true);
+        Navigator.pop(context, entry);
       }
     } catch (error) {
       if (mounted) {
         setState(() => _saving = false);
         final body = error is DioException ? error.response?.data : null;
-        final message = body is Map && body['error'] is String
-            ? body['error'] as String
-            : 'Could not save. Your entry is still here. Try again.';
+        final message = error is StateError
+            ? error.message.toString()
+            : body is Map && body['error'] is String
+                ? body['error'] as String
+                : 'Could not save. Your entry is still here. Try again.';
         _showError(message);
       }
     }
@@ -335,7 +344,8 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                   child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                       child: FitnessSubmit(
-                          label: _fallback ? 'Save check-in' : 'Save sleep',
+                          label:
+                              _completeCheckIn ? 'Save check-in' : 'Save sleep',
                           busy: _saving,
                           onPressed: _changing ? null : _save))),
           body: SafeArea(
@@ -357,7 +367,7 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                         FitnessText(
                             _fallback
                                 ? 'Sleep, rest and energy. A quick check-in without a wearable.'
-                                : 'Add your sleep duration. Synced readings stay separate.',
+                                : 'Add missing sleep. Synced sleep is used when available.',
                             style: const TextStyle(
                                 color: FitnessTheme.muted,
                                 fontSize: 14,
@@ -369,37 +379,62 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                         else if (_loading)
                           const Center(child: CupertinoActivityIndicator())
                         else ...[
-                          FitnessCard(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                const FitnessText(
-                                    'Do you use a watch or fitness band?',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 10),
-                                Wrap(spacing: 8, runSpacing: 8, children: [
-                                  ChoiceChip(
-                                      label:
-                                          const FitnessText('I use a wearable'),
-                                      selected: _usage == 'WEARABLE',
-                                      onSelected: _busy
+                          if (_usage == 'UNKNOWN')
+                            FitnessCard(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  const FitnessText('Choose your sleep setup',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 10),
+                                  WearablePreferencePicker(
+                                      usage: _usage,
+                                      onChanged: _busy ? null : _chooseUsage),
+                                  if (_changing)
+                                    const Padding(
+                                        padding: EdgeInsets.only(top: 10),
+                                        child: CupertinoActivityIndicator()),
+                                ]))
+                          else
+                            FitnessCard(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  FitnessText(
+                                      _fallback
+                                          ? 'Manual sleep & check-in'
+                                          : 'Using a wearable',
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 6),
+                                  FitnessText(
+                                      _fallback
+                                          ? 'Your setup is saved. Phone estimation stays optional.'
+                                          : 'Your watch shares readings through your health app. You can enter missing sleep here.',
+                                      style: const TextStyle(
+                                          color: FitnessTheme.muted,
+                                          fontSize: 12,
+                                          height: 1.4)),
+                                  TextButton(
+                                      onPressed: _busy
                                           ? null
-                                          : (_) => _chooseUsage('WEARABLE')),
-                                  ChoiceChip(
-                                      label: const FitnessText(
-                                          'I don’t use a wearable'),
-                                      selected: _fallback,
-                                      onSelected: _busy
-                                          ? null
-                                          : (_) => _chooseUsage('NONE')),
-                                ]),
-                                if (_changing)
-                                  const Padding(
-                                      padding: EdgeInsets.only(top: 10),
-                                      child: CupertinoActivityIndicator()),
-                              ])),
+                                          : () async {
+                                              await Navigator.of(context).push(
+                                                  MaterialPageRoute<void>(
+                                                      builder: (_) =>
+                                                          SleepPreferencesView(
+                                                              repository:
+                                                                  repository)));
+                                              if (mounted) await _load();
+                                            },
+                                      child: const FitnessText(
+                                          'Sleep preferences')),
+                                ])),
                           if (_fallback && phone.supported) ...[
                             const SizedBox(height: 14),
                             FitnessCard(
@@ -535,8 +570,9 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                                 'Well rested',
                                 _rested,
                                 (v) => _rested = v),
-                          _rating('How is your energy?', 'Low energy', 'Okay',
-                              'Energized', _energy, (v) => _energy = v),
+                          if (_fallback)
+                            _rating('How is your energy?', 'Low energy', 'Okay',
+                                'Energized', _energy, (v) => _energy = v),
                           if (_fallback)
                             _rating(
                                 'How sore are you?',
@@ -555,8 +591,10 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                           const SizedBox(height: 6),
                           FitnessText(
                               _fallback
-                                  ? 'Answer all three questions for a daily check-in estimate. HRV and heart rate stay empty without readings.'
-                                  : 'Self-reported sleep. Recovery, HRV and heart rate need separate readings.',
+                                  ? (_completeCheckIn
+                                      ? 'Your check-in is complete. Save to see your daily estimate.'
+                                      : 'Sleep can be saved now. Answer rest, energy and soreness to see your daily estimate.')
+                                  : 'Entered sleep can support a readiness estimate when heart readings are available.',
                               style: const TextStyle(
                                   color: FitnessTheme.muted,
                                   fontSize: 12,

@@ -22,6 +22,17 @@ class TrainingRepository {
   final _historyRequests = <String, Future<List<Map<String, dynamic>>>>{};
   static const base = '/api/workout/training';
 
+  static String errorMessage(Object error, String fallback) {
+    if (error is FormatException) return error.message;
+    if (error is DioException &&
+        [400, 404, 409].contains(error.response?.statusCode)) {
+      final body = error.response?.data;
+      final message = body is Map ? body['error'] : null;
+      if (message is String && message.trim().isNotEmpty) return message;
+    }
+    return fallback;
+  }
+
   Future<String> _key(String date) => CacheScope.userKey(
       'training_v2_${LanguageManager.shared.currentLanguage.code}_$date');
   Future<TrainingDay?> cached(String date) async {

@@ -13,6 +13,9 @@ import '../repositories/weekly_plan_repository.dart';
 import 'weekly_plan_generation_view.dart';
 import 'weekly_plan_history_view.dart';
 import 'widgets/weekly_plan_schedule.dart';
+import '../../body_scan/models/body_assessment_models.dart';
+import '../../body_scan/views/body_photo_review_view.dart';
+import '../../../core/components/liquid_chrome_button.dart';
 
 class WeeklyPlanView extends StatefulWidget {
   final WeeklyPlanRepository? repository;
@@ -98,7 +101,12 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       var selected =
           plans.where((plan) => plan['id'] == selectedId).firstOrNull;
       if (selected == null && _selected != null) {
-        selected = await _repo.savedPlan(_selected!['id'] as String);
+        try {
+          selected = await _repo.savedPlan(_selected!['id'] as String);
+        } on DioException catch (error) {
+          // A reset plan can disappear while this screen is still open.
+          if (error.response?.statusCode != 404) rethrow;
+        }
         if (!await _sameOwner()) return;
       }
       setState(() {
@@ -151,6 +159,12 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       _error = null;
     });
     try {
+      final body = await _repo.bodyOverview();
+      if (!await _sameOwner()) return;
+      if (!WeeklyPlanRepository.hasCurrentWeekScan(body, DateTime.now())) {
+        if (!await _scanBeforePlanning(body)) return;
+        if (!await _sameOwner()) return;
+      }
       final run = await _repo.generate(weekStart: _week);
       if (!await _sameOwner()) return;
       setState(() => _run = run);
@@ -168,6 +182,84 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<bool> _scanBeforePlanning(BodyOverview body) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 24, 12, 12),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withValues(alpha: .15)),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF282A2C), Color(0xFF141516)],
+            ),
+          ),
+          child: SingleChildScrollView(
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(children: [
+                const Icon(CupertinoIcons.person_crop_rectangle,
+                    size: 32, color: FitnessTheme.silver),
+                const Spacer(),
+                IconButton(
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(CupertinoIcons.xmark, size: 18)),
+              ]),
+              const SizedBox(height: 20),
+              const FitnessText('A clearer picture of your progress',
+                  style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -.6,
+                      height: 1.15)),
+              const SizedBox(height: 12),
+              const FitnessText(
+                  'Add a body scan this week for more personal body context. Your workout history still guides weights and reps.',
+                  style: TextStyle(color: FitnessTheme.muted, height: 1.5)),
+              const SizedBox(height: 12),
+              const FitnessText(
+                  'Optional · you choose whether photos are saved',
+                  style: TextStyle(color: FitnessTheme.silver, fontSize: 12)),
+              const SizedBox(height: 24),
+              LiquidChromeButton(
+                  title: 'Scan body',
+                  onPressed: () => Navigator.pop(sheetContext, 'scan')),
+              const SizedBox(height: 10),
+              TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, 'continue'),
+                  child: const FitnessText('Continue without scan',
+                      style: TextStyle(color: FitnessTheme.silver))),
+            ],
+          )),
+        ),
+      ),
+    );
+
+    if (!await _sameOwner()) return false;
+    if (action == 'continue') return true;
+    if (action != 'scan') return false;
+    if (!mounted) return false;
+
+    final route = AppPageRoute<bool>(
+        page: BodyPhotoReviewView(
+      profileWeight: (body.profile?['weight'] as num?)?.toDouble(),
+      profileHeight: (body.profile?['height'] as num?)?.toDouble(),
+      female: '${body.profile?['gender']}'.toLowerCase().startsWith('f'),
+    ));
+    final saved = await Navigator.of(context).push(route);
+    await route.completed;
+    return saved == true;
   }
 
   Future<void> _poll() async {

@@ -59,6 +59,7 @@ Map<String, dynamic> fixture(String date,
 
 class Adapter implements HttpClientAdapter {
   int savedSets = 0;
+  bool rejectCompletion = false;
   Completer<void>? slowRead;
   final readStarted = Completer<void>();
   final requests = <RequestOptions>[];
@@ -80,11 +81,22 @@ class Adapter implements HttpClientAdapter {
     } else if (options.method == 'GET' && options.path.contains('/training')) {
       if (!readStarted.isCompleted) readStarted.complete();
       if (slowRead != null) await slowRead!.future;
-      data = fixture(date);
+      data = fixture(date, sets: savedSets);
     } else if (options.method == 'PUT') {
       savedSets = 1;
       data = fixture(date, sets: 1);
     } else if (options.method == 'PATCH' && options.path.contains('/status')) {
+      if (rejectCompletion ||
+          (savedSets == 0 && options.data['status'] == 'COMPLETED')) {
+        return ResponseBody.fromString(
+            jsonEncode({
+              'error': 'Log at least one set before marking this exercise done.'
+            }),
+            400,
+            headers: {
+              Headers.contentTypeHeader: ['application/json']
+            });
+      }
       data = fixture(date, sets: savedSets);
       (data['items'] as List).first['status'] = options.data['status'];
     } else if (options.method == 'POST' && options.path.contains('/finish')) {
@@ -110,11 +122,13 @@ Widget app(Widget child, {String locale = 'en'}) => MaterialApp(
 
 void main() {
   late Adapter adapter;
+  var accountNumber = 0;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     await SecureSessionStore.shared.saveTokens(
-        accessToken: token('train-test'), refreshToken: 'synthetic');
+        accessToken: token('train-test-${accountNumber++}'),
+        refreshToken: 'synthetic');
     adapter = Adapter();
     final original = ApiClient.shared.client.httpClientAdapter;
     ApiClient.shared.client.httpClientAdapter = adapter;
@@ -155,14 +169,19 @@ void main() {
             date: '2026-10-11',
             itemId: 'actual-item',
             number: 1,
+            targetLabel: '10 reps · 2 kg per hand',
             disabled: false,
-            onSave: (reps, weight) async {
+            onSave: (reps, weight, effort) async {
               saves++;
               expect(reps, 10);
               expect(weight, 20);
             },
             onDelete: () async {}))));
     await tester.pumpAndSettle();
+    expect(find.text('Target · 10 reps · 2 kg per hand'), findsOneWidget);
+    expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        isEmpty);
     await tester.tap(find.byTooltip('Save set'));
     await tester.pump();
     expect(saves, 0);
@@ -241,6 +260,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Edit logged sets'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Your sets'), 200,
+        scrollable: find.descendant(of: find.byKey(const ValueKey('workout-session-scroll')),
+            matching: find.byType(Scrollable)).first);
     expect(find.byType(WorkoutSetEntry), findsWidgets);
     expect(find.text('Save changes'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
@@ -270,6 +292,76 @@ void main() {
     expect(find.byType(WorkoutSessionView), findsOneWidget);
     expect(find.byType(WorkoutSetEntry), findsNWidgets(3));
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Train opens logging instead of completing an exercise with no sets',
+      (tester) async {
+    await tester.pumpWidget(app(const TrainView()));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Log sets'), 180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Log sets'));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutSessionView), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Your sets'), 200,
+        scrollable: find.descendant(of: find.byKey(const ValueKey('workout-session-scroll')),
+            matching: find.byType(Scrollable)).first);
+    expect(find.byType(WorkoutSetEntry), findsNWidgets(3));
+    expect(
+        adapter.requests.where((request) => request.path.contains('/status')),
+        isEmpty);
+    expect(find.text('Could not save. Please try again.'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Train Done completes an exercise that already has saved sets',
+      (tester) async {
+    adapter.savedSets = 1;
+    await tester.pumpWidget(app(const TrainView()));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Done'), 180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('Completed'), findsOneWidget);
+    expect(find.text('Could not save. Please try again.'), findsNothing);
+    expect(
+        adapter.requests.where((request) => request.path.contains('/status')),
+        hasLength(1));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Train preserves backend validation instead of hiding its reason',
+      (tester) async {
+    adapter.savedSets = 1;
+    adapter.rejectCompletion = true;
+    await tester.pumpWidget(app(const TrainView()));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Done'), 180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Done'));
+    // Dio delivers rejection on the event loop while the busy indicator loops.
+    final message =
+        find.text('Log at least one set before marking this exercise done.');
+    for (var attempt = 0;
+        attempt < 100 && message.evaluate().isEmpty;
+        attempt++) {
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      });
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+    expect(find.text('Log at least one set before marking this exercise done.'),
+        findsOneWidget);
+    expect(find.text('Completed'), findsNothing);
+    expect(
+        tester
+            .widget<FilledButton>(find.ancestor(
+                of: find.text('Done'), matching: find.byType(FilledButton)))
+            .onPressed,
+        isNotNull);
     await tester.pumpWidget(const SizedBox());
   });
 

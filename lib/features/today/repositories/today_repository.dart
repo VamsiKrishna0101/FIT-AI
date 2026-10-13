@@ -35,12 +35,103 @@ class TodayRepository {
   int _revision = 0;
   Future<HomeData?>? _inFlight;
   String? _inFlightLocale;
+  final _confirmedSleep = <String, Map<String, dynamic>>{};
+  final _failedDates = <String>{};
+
+  bool refreshFailedFor(DateTime date) => _failedDates
+      .contains('${AppDataMode.shared.owner}:${CacheScope.todayKey(date)}');
+
+  HomeData _withConfirmedSleep(HomeData data, String owner) {
+    final key = '$owner:${data.calendarDate}';
+    final entry = _confirmedSleep[key];
+    if (entry == null) return data;
+    final confirmedAt = DateTime.parse(entry['updatedAt'] as String);
+    final fetchedAt =
+        DateTime.tryParse(data.sleepLog?['updatedAt']?.toString() ?? '');
+    if (fetchedAt != null && !fetchedAt.isBefore(confirmedAt)) {
+      // Keep the newest acknowledged version through cache initialization.
+      // An older Home response must not erase it after navigating back.
+      _confirmedSleep[key] = {
+        ...data.sleepLog!,
+        'wearableUsage': data.wearableUsage,
+        'readiness': data.readiness?.toJson(),
+      };
+      return data;
+    }
+    return HomeData.fromJson({
+      ...data.toJson(),
+      'sleepLog': entry,
+      if (entry.containsKey('readiness')) 'readiness': entry['readiness'],
+      if (entry.containsKey('wearableUsage'))
+        'wearableUsage': entry['wearableUsage'],
+    });
+  }
+
+  Future<void> applyConfirmedSleep(Map<String, dynamic> entry,
+      {required String owner}) async {
+    if (owner != await _currentUserId()) throw StateError('Session changed');
+    final date = entry['date'] as String;
+    invalidate();
+    _confirmedSleep['$owner:$date'] = Map.of(entry);
+    final locale = LanguageManager.shared.currentLanguage.code;
+    final key =
+        '${CacheScope.userPrefix}${owner}_home_v12_${locale}_${date}_real';
+    HomeData? data = _activeUserId == owner && _lastKnown?.calendarDate == date
+        ? _lastKnown
+        : null;
+    try {
+      final raw = data == null ? await LocalCache.shared.getJson(key) : null;
+      if (raw != null) data = HomeData.fromJson(raw);
+    } catch (_) {}
+    if (owner != await _currentUserId()) throw StateError('Session changed');
+    if (data == null) return;
+    final updated = _withConfirmedSleep(data, owner);
+    if (date == CacheScope.todayKey()) {
+      _lastKnown = updated;
+      _controller.add(updated);
+    }
+    unawaited(LocalCache.shared
+        .saveJson(key, updated.toJson())
+        .catchError((Object _) {}));
+  }
+
+  Future<void> applyWearableUsage(String usage, {required String owner}) async {
+    if (owner != await _currentUserId()) throw StateError('Session changed');
+    invalidate();
+    for (final saved in _confirmedSleep.entries) {
+      if (!saved.key.startsWith('$owner:')) continue;
+      saved.value['wearableUsage'] = usage;
+      if (usage != 'NONE' &&
+          (saved.value['readiness'] as Map?)?['source'] ==
+              'check_in_estimate') {
+        saved.value['readiness'] = null;
+      }
+    }
+    final data = current;
+    if (data != null) {
+      final readiness =
+          usage != 'NONE' && data.readiness?.source == 'check_in_estimate'
+              ? null
+              : data.readiness?.toJson();
+      final updated = HomeData.fromJson({
+        ...data.toJson(),
+        'wearableUsage': usage,
+        'readiness': readiness,
+      });
+      _lastKnown = updated;
+      _controller.add(updated);
+      unawaited(LocalCache.shared
+          .saveJson(_cacheKeyForUser(owner), updated.toJson())
+          .catchError((Object _) {}));
+    }
+    unawaited(fetchFresh(forceRefresh: true));
+  }
 
   Future<String> _currentUserId() async =>
       await SecureSessionStore.shared.userId ?? 'current_user';
 
   String _cacheKeyForUser(String userId, [String? locale]) =>
-      '${CacheScope.userPrefix}${userId}_home_v11_${locale ?? LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${AppDataMode.shared.dataset}';
+      '${CacheScope.userPrefix}${userId}_home_v12_${locale ?? LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${AppDataMode.shared.dataset}';
 
   /// Historical snapshots never replace today's shared cache or stream.
   Future<HomeData?> loadDate(DateTime selected,
@@ -53,13 +144,15 @@ class TodayRepository {
     final owner = await _currentUserId();
     final locale = LanguageManager.shared.currentLanguage.code;
     final key =
-        '${CacheScope.userPrefix}${owner}_home_v11_${locale}_${date}_real';
+        '${CacheScope.userPrefix}${owner}_home_v12_${locale}_${date}_real';
     HomeData? cached;
     try {
       final raw = await LocalCache.shared.getJson(key);
       if (raw != null) {
         final parsed = HomeData.fromJson(raw);
-        if (parsed.calendarDate == date) cached = parsed;
+        if (parsed.calendarDate == date) {
+          cached = _withConfirmedSleep(parsed, owner);
+        }
       }
     } catch (_) {
       // Ignore an invalid cache entry and request the selected day's data.
@@ -74,14 +167,17 @@ class TodayRepository {
         return null;
       }
       if (response.statusCode == 200 && response.data != null) {
-        final data = HomeData.fromJson(response.data!);
+        final data =
+            _withConfirmedSleep(HomeData.fromJson(response.data!), owner);
         if (data.calendarDate != date) {
           return null;
         }
-        await LocalCache.shared.saveJson(key, response.data!);
+        _failedDates.remove('$owner:$date');
+        await LocalCache.shared.saveJson(key, data.toJson());
         return data;
       }
     } catch (_) {}
+    _failedDates.add('$owner:$date');
     return owner == await _currentUserId() &&
             locale == LanguageManager.shared.currentLanguage.code
         ? cached
@@ -98,6 +194,8 @@ class TodayRepository {
     _lastKnown = null;
     _activeUserId = null;
     _activeLocale = null;
+    _confirmedSleep.clear();
+    _failedDates.clear();
     await CacheScope.clearAllUserData();
     await CacheManager.shared.clearAll();
   }
@@ -127,7 +225,7 @@ class TodayRepository {
         _activeLocale == locale &&
         LanguageManager.shared.currentLanguage.code == locale) {
       try {
-        final cached = HomeData.fromJson(rawJson);
+        final cached = _withConfirmedSleep(HomeData.fromJson(rawJson), userId);
         _lastKnown = cached;
         _controller.add(cached);
       } catch (_) {}
@@ -189,13 +287,15 @@ class TodayRepository {
             LanguageManager.shared.currentLanguage.code != locale) {
           return _lastKnown;
         }
-        final fresh = HomeData.fromJson(response.data!);
+        final fresh =
+            _withConfirmedSleep(HomeData.fromJson(response.data!), userId);
+        _failedDates.remove('$userId:$date');
         _lastKnown = fresh;
         _controller.add(fresh);
 
         // Keep dashboard cache isolated to the signed-in account.
         await LocalCache.shared
-            .saveJson(_cacheKeyForUser(userId, locale), response.data!);
+            .saveJson(_cacheKeyForUser(userId, locale), fresh.toJson());
 
         // Also update Drift SQLite table
         final now = DateTime.now();
@@ -232,6 +332,9 @@ class TodayRepository {
     } on DioException {
       // In offline mode, the cached data is gracefully preserved
     } catch (_) {}
+    if (revision == _revision) {
+      _failedDates.add('${await _currentUserId()}:$date');
+    }
     return _lastKnown;
   }
 

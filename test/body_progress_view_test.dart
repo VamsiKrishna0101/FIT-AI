@@ -17,6 +17,10 @@ import 'package:fitai_mobile/features/body_scan/views/body_history_view.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/body_controls.dart';
 import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
+import 'package:fitai_mobile/core/components/animated_tab_stack.dart';
+import 'package:fitai_mobile/features/progress/views/progress_overview_view.dart';
+import 'package:fitai_mobile/features/progress/models/progress_models.dart';
+import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
 
 Map<String, dynamic> _entry(String id, String date, double weight,
         {String source = 'scale', String hour = '10', bool estimate = false}) =>
@@ -89,12 +93,15 @@ class _Plans extends WeeklyPlanRepository {
   Future<Map<String, dynamic>> availability() async => {'canGenerate': true};
 }
 
-Widget _app(Widget body, {double scale = 1, Key? capture}) => MaterialApp(
+Widget _app(Widget body,
+        {double scale = 1, bool reducedMotion = false, Key? capture}) =>
+    MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(scale)),
+          data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(scale),
+              disableAnimations: reducedMotion),
           child: child!),
       home: RepaintBoundary(key: capture, child: Scaffold(body: body)),
     );
@@ -197,6 +204,75 @@ void main() {
     await tester.tap(find.text('Body history'));
     await tester.pumpAndSettle();
     expect(find.byType(BodyHistoryView), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Body and Progress stay intact during tab and animation changes',
+      (tester) async {
+    final selected = ValueNotifier(0);
+    addTearDown(selected.dispose);
+    final bodyRepository = _Repository();
+    final plans = _Plans();
+
+    Widget dashboard({bool reducedMotion = false}) => _app(
+          ValueListenableBuilder<int>(
+            valueListenable: selected,
+            builder: (context, index, _) => AnimatedTabStack(
+              index: index,
+              children: [
+                TickerMode(
+                  enabled: index == 0,
+                  child: BodyView(
+                    isActive: index == 0,
+                    repository: bodyRepository,
+                    planRepository: plans,
+                    onTrain: () {},
+                  ),
+                ),
+                TickerMode(
+                  enabled: index == 1,
+                  child: ProgressOverviewView(
+                    isActive: index == 1,
+                    initial: const ProgressOverview({}),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          reducedMotion: reducedMotion,
+        );
+
+    await tester.pumpWidget(dashboard());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Physique'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your weekly plan'), findsOneWidget);
+    expect(find.text('Photo scan'), findsOneWidget);
+
+    selected.value = 1;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 70));
+    await tester.pumpWidget(dashboard(reducedMotion: true));
+    await tester.pumpAndSettle();
+    expect(find.text('Progress'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    selected.value = 0;
+    await tester.pumpAndSettle();
+    final physique = find.byType(BodyPhysiqueHome);
+    expect(physique, findsOneWidget);
+    expect(find.text('Your weekly plan'), findsOneWidget);
+    expect(find.text('Photo scan'), findsOneWidget);
+    await tester
+        .widget<RefreshIndicator>(find.descendant(
+          of: physique,
+          matching: find.byType(RefreshIndicator),
+        ))
+        .onRefresh();
+    await tester.pumpAndSettle();
+    expect(find.text('Your weekly plan'), findsOneWidget);
+    expect(find.text('Photo scan'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

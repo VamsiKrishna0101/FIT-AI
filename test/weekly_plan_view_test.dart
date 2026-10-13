@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
 import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
 import 'package:fitai_mobile/features/planner/views/weekly_plan_card.dart';
+import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
+import 'package:fitai_mobile/features/body_scan/views/body_photo_review_view.dart';
 
 class _Repository extends WeeklyPlanRepository {
   bool generated = false;
@@ -11,6 +14,25 @@ class _Repository extends WeeklyPlanRepository {
   bool unlockedAfterSave = false;
   int activations = 0;
   int generations = 0;
+  bool currentScan = true;
+
+  @override
+  Future<BodyOverview> bodyOverview() async => BodyOverview.fromJson({
+        'profile': {'weight': 70, 'height': 175, 'gender': 'male'},
+        'records': currentScan
+            ? [
+                {
+                  'id': 'scan',
+                  'recordedDate':
+                      DateTime.now().toIso8601String().substring(0, 10),
+                  'status': 'SAVED',
+                  'method': 'photo_review',
+                  'metrics': {},
+                  'updatedAt': DateTime.now().toIso8601String(),
+                }
+              ]
+            : [],
+      });
 
   @override
   Future<Map<String, dynamic>> availability() async => {
@@ -68,6 +90,16 @@ class _Repository extends WeeklyPlanRepository {
   Future<List<Map<String, dynamic>>> plans() async => generated ? [plan] : [];
 
   @override
+  Future<Map<String, dynamic>> savedPlan(String id) async {
+    if (generated) return plan;
+    final request = RequestOptions(path: '/api/plans/saved/$id');
+    throw DioException(
+        requestOptions: request,
+        response: Response(requestOptions: request, statusCode: 404),
+        type: DioExceptionType.badResponse);
+  }
+
+  @override
   Future<Map<String, dynamic>> generate({required DateTime weekStart}) async {
     generations++;
     generated = true;
@@ -85,10 +117,97 @@ class _Repository extends WeeklyPlanRepository {
 }
 
 void main() {
+  testWidgets(
+      'Refreshing a reset plan removes the old selection and unlocks generation',
+      (tester) async {
+    final repository = _Repository()..generated = true;
+    await tester
+        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpAndSettle();
+    expect(find.text('Dumbbell floor press'), findsOneWidget);
+    repository.generated = false;
+    await tester
+        .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+        .onRefresh();
+    await tester.pumpAndSettle();
+    expect(find.text('Dumbbell floor press'), findsNothing);
+    expect(find.text('Generate weekly plan'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+  test('Only a saved photo assessment from this local week skips the prompt',
+      () {
+    BodyOverview overview(String date, {String method = 'photo_review'}) =>
+        BodyOverview.fromJson({
+          'records': [
+            {
+              'id': 'scan',
+              'recordedDate': date,
+              'status': 'SAVED',
+              'method': method,
+              'metrics': {},
+              'updatedAt': '2026-10-12T09:00:00Z',
+            }
+          ]
+        });
+    final today = DateTime(2026, 10, 12, 23);
+    expect(
+        WeeklyPlanRepository.hasCurrentWeekScan(overview('2026-10-12'), today),
+        isTrue);
+    expect(
+        WeeklyPlanRepository.hasCurrentWeekScan(overview('2026-10-11'), today),
+        isFalse);
+    expect(
+        WeeklyPlanRepository.hasCurrentWeekScan(overview('2026-10-13'), today),
+        isFalse);
+    expect(
+        WeeklyPlanRepository.hasCurrentWeekScan(
+            overview('2026-10-12', method: 'entered'), today),
+        isFalse);
+  });
+
   setUp(() => FlutterSecureStorage.setMockInitialValues({
         'fitai_access_token': 'opaque',
         'fitai_user_id': 'weekly-plan-test',
       }));
+
+  testWidgets('Missing scan prompts before generation and allows continuing',
+      (tester) async {
+    final repository = _Repository()..currentScan = false;
+    await tester
+        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Generate weekly plan'));
+    await tester.tap(find.text('Generate weekly plan'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Scan body'), findsOneWidget);
+    expect(repository.generations, 0);
+    await tester.tap(find.text('Continue without scan'));
+    await tester.pumpAndSettle();
+    expect(repository.generations, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Scan action opens photo flow without starting generation',
+      (tester) async {
+    final repository = _Repository()..currentScan = false;
+    await tester
+        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Generate weekly plan'));
+    await tester.tap(find.text('Generate weekly plan'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Scan body'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BodyPhotoReviewView), findsOneWidget);
+    expect(repository.generations, 0);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(repository.generations, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
       'Real generation has no demo toggle and opens a usable saved plan',

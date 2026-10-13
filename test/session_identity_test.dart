@@ -187,7 +187,7 @@ void main() {
             .assessment
             ?.id,
         'saved-body');
-    await tester.tap(find.text('Estimate from photos'));
+    await tester.tap(find.text('Photo scan'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.byType(TextField), 180,
         scrollable: find.byType(Scrollable).first);

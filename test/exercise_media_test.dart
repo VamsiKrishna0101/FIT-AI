@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fitai_mobile/core/media/exercise_animation.dart';
 import 'package:fitai_mobile/core/media/video_cache.dart';
@@ -27,11 +28,13 @@ Widget _surface(ExerciseAnimationController controller,
                     child: SizedBox(
                         width: 290,
                         height: 248,
-                        child: ExerciseAnimationSurface(
-                            url: 'https://media.example/demo.gif',
-                            controller: controller,
-                            controls: true,
-                            compact: true))))));
+                        child: RepaintBoundary(
+                            key: const ValueKey('media-stage'),
+                            child: ExerciseAnimationSurface(
+                                url: 'https://media.example/demo.gif',
+                                controller: controller,
+                                controls: true,
+                                compact: true)))))));
 
 Future<void> _decode(WidgetTester tester) async {
   await tester
@@ -55,6 +58,33 @@ Future<int> _pixel(WidgetTester tester, ui.Image image) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+      'Contained GIF fills its stage with white instead of dark side bars',
+      (tester) async {
+    final bytes =
+        File('test/fixtures/exercise-white-demo.gif').readAsBytesSync();
+    final controller = ExerciseAnimationController(
+        loader: (_, {refresh = false}) async => bytes);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_surface(controller));
+    await _ready(tester, controller);
+    expect(tester.getSize(find.byType(RawImage)).width, 290);
+    expect(tester.widget<RawImage>(find.byType(RawImage)).fit, BoxFit.contain);
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(const ValueKey('media-stage')));
+      final image = await boundary.toImage();
+      final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      for (final x in [1, image.width - 2]) {
+        final start = (80 * image.width + x) * 4;
+        expect(pixels!.buffer.asUint8List().sublist(start, start + 4),
+            [255, 255, 255, 255]);
+      }
+      image.dispose();
+    });
+    await tester.pumpWidget(const SizedBox());
+  });
 
   test('media detection handles signed video URLs and URL fragments', () {
     expect(

@@ -13,6 +13,25 @@ import HealthKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    if let navigationRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "FitAINavigation") {
+      let navigationChannel = FlutterMethodChannel(
+        name: "fitai/navigation", binaryMessenger: navigationRegistrar.messenger())
+
+      navigationChannel.setMethodCallHandler { call, result in
+        guard call.method == "supportsLiquidGlass" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+
+        if #available(iOS 26.0, *) {
+          result(true)
+        } else {
+          result(false)
+        }
+      }
+    }
+
     guard let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "FitAIHealthTotals") else { return }
     let channel = FlutterMethodChannel(name: "fitai/health_ui", binaryMessenger: registrar.messenger())
     let store = HKHealthStore()

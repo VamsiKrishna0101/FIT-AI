@@ -1,12 +1,14 @@
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:liquid_glass_native/liquid_glass_native.dart';
 
 import 'animated_tab_stack.dart';
 
-class LiquidSilverBottomBar extends StatelessWidget {
+class LiquidSilverBottomBar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
   final List<String> labels;
@@ -18,6 +20,86 @@ class LiquidSilverBottomBar extends StatelessWidget {
     required this.labels,
   })  : assert(labels.length == 4),
         assert(selectedIndex >= 0 && selectedIndex < 4);
+
+  static bool get _isIOS =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  static double _height(BuildContext context) =>
+      60 + (MediaQuery.textScalerOf(context).scale(10) - 10).clamp(0, 14);
+
+  static double _bottomMargin(BuildContext context) =>
+      MediaQuery.viewPaddingOf(context).bottom + 32;
+
+  static double scrollBottomInset(BuildContext context) =>
+      (_isIOS ? 100 : _height(context)) + _bottomMargin(context) + 28;
+
+  @override
+  State<LiquidSilverBottomBar> createState() => _LiquidSilverBottomBarState();
+}
+
+class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
+  static const _platform = MethodChannel('fitai/navigation');
+  bool _nativeGlassAvailable = false;
+
+  int get selectedIndex => widget.selectedIndex;
+  List<String> get labels => widget.labels;
+
+  @override
+  void initState() {
+    super.initState();
+    if (LiquidSilverBottomBar._isIOS) _checkNativeGlass();
+  }
+
+  Future<void> _checkNativeGlass() async {
+    try {
+      final available =
+          await _platform.invokeMethod<bool>('supportsLiquidGlass');
+      if (mounted && available == true) {
+        setState(() => _nativeGlassAvailable = true);
+      }
+    } on PlatformException {
+      // Keep navigation usable if the platform bridge is unavailable.
+    } on MissingPluginException {
+      // Widget previews and older app hosts use the Flutter dock.
+    }
+  }
+
+  void _selectTab(int index) {
+    if (index == selectedIndex) return;
+    HapticFeedback.selectionClick();
+    widget.onTabSelected(index);
+  }
+
+  Widget _nativeDock(BuildContext context) {
+    // UIKit adds its own inset around the visible capsule inside this 100pt
+    // host. Leave that space intact instead of clipping the system glass.
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          12, 12, 12, LiquidSilverBottomBar._bottomMargin(context) - 16),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 372),
+          child: LiquidGlassTabBar(
+            // The plugin updates selection in place; labels need a new native
+            // view when the account language changes.
+            key: ValueKey(List<String>.of(labels).join('\u0000')),
+            currentIndex: selectedIndex,
+            brightness: Brightness.dark,
+            tint: const Color(0xFFF3F3F5),
+            items: [
+              TabItem(label: labels[0], sfSymbol: 'sun.max'),
+              TabItem(label: labels[1], sfSymbol: 'flame'),
+              TabItem(label: labels[2], sfSymbol: 'person.crop.rectangle'),
+              TabItem(label: labels[3], sfSymbol: 'chart.bar'),
+            ],
+            onTap: _selectTab,
+          ),
+        ),
+      ),
+    );
+  }
 
   static final _blur = ImageFilter.blur(sigmaX: 14, sigmaY: 14);
   static const _icons = [
@@ -33,22 +115,16 @@ class LiquidSilverBottomBar extends StatelessWidget {
     CupertinoIcons.chart_bar_fill,
   ];
 
-  static double _height(BuildContext context) =>
-      60 + (MediaQuery.textScalerOf(context).scale(10) - 10).clamp(0, 14);
-
-  static double _bottomMargin(BuildContext context) =>
-      MediaQuery.viewPaddingOf(context).bottom + 32;
-
-  static double scrollBottomInset(BuildContext context) =>
-      _height(context) + _bottomMargin(context) + 28;
-
   @override
   Widget build(BuildContext context) {
+    if (_nativeGlassAvailable) return _nativeDock(context);
+
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : AnimatedTabStack.duration;
     return Padding(
-      padding: EdgeInsets.fromLTRB(28, 12, 28, _bottomMargin(context)),
+      padding: EdgeInsets.fromLTRB(
+          28, 12, 28, LiquidSilverBottomBar._bottomMargin(context)),
       child: Align(
         alignment: Alignment.bottomCenter,
         heightFactor: 1,
@@ -57,7 +133,7 @@ class LiquidSilverBottomBar extends StatelessWidget {
           child: SizedBox(
             key: const ValueKey('navigation-capsule'),
             width: double.infinity,
-            height: _height(context),
+            height: LiquidSilverBottomBar._height(context),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(40),
@@ -172,11 +248,7 @@ class LiquidSilverBottomBar extends StatelessWidget {
         message: labels[index],
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () {
-            if (selected) return;
-            HapticFeedback.selectionClick();
-            onTabSelected(index);
-          },
+          onTap: () => _selectTab(index),
           child: AnimatedOpacity(
             opacity: selected ? 1 : .86,
             duration: duration,

@@ -114,18 +114,25 @@ class AboutYouViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void incrementAge() {
-    if (_age < 100) {
-      _age++;
-      notifyListeners();
-    }
+  void setAge(double value) {
+    _age = value.round().clamp(13, 100);
+    notifyListeners();
   }
 
-  void decrementAge() {
-    if (_age > 13) {
-      _age--;
-      notifyListeners();
-    }
+  void setHeight(double value) {
+    _heightCm = (_isImperial ? value * 2.54 : value).clamp(120.0, 230.0);
+    notifyListeners();
+  }
+
+  void setWeight(double value) {
+    _weightKg = (_isImperial ? value / 2.20462 : value).clamp(30.0, 250.0);
+    notifyListeners();
+  }
+
+  void setTargetWeight(double value) {
+    _targetWeightKg =
+        (_isImperial ? value / 2.20462 : value).clamp(30.0, 250.0);
+    notifyListeners();
   }
 
   // ── Height Handlers ──────────────────────────────────────────────────────
@@ -153,19 +160,6 @@ class AboutYouViewModel extends ChangeNotifier {
     }
   }
 
-  void incrementHeight() {
-    // Imperial increments by 1 inch (2.54 cm), metric by 1 cm
-    final delta = _isImperial ? 2.54 : 1.0;
-    _heightCm = (_heightCm + delta).clamp(120.0, 230.0);
-    notifyListeners();
-  }
-
-  void decrementHeight() {
-    final delta = _isImperial ? 2.54 : 1.0;
-    _heightCm = (_heightCm - delta).clamp(120.0, 230.0);
-    notifyListeners();
-  }
-
   // ── Weight Handlers ──────────────────────────────────────────────────────
   String get weightDisplay {
     if (_isImperial) {
@@ -187,19 +181,6 @@ class AboutYouViewModel extends ChangeNotifier {
     }
   }
 
-  void incrementWeight() {
-    // Imperial increments by 1 lb (~0.4536 kg), metric by 0.5 kg
-    final deltaKg = _isImperial ? (1.0 / 2.20462) : 0.5;
-    _weightKg = (_weightKg + deltaKg).clamp(30.0, 250.0);
-    notifyListeners();
-  }
-
-  void decrementWeight() {
-    final deltaKg = _isImperial ? (1.0 / 2.20462) : 0.5;
-    _weightKg = (_weightKg - deltaKg).clamp(30.0, 250.0);
-    notifyListeners();
-  }
-
   // ── Target Weight Handlers ───────────────────────────────────────────────
   String get targetWeightDisplay {
     if (_isImperial) {
@@ -217,18 +198,6 @@ class AboutYouViewModel extends ChangeNotifier {
       final lbs = (_targetWeightKg * 2.20462).round();
       return "$lbs lb";
     }
-  }
-
-  void incrementTargetWeight() {
-    final deltaKg = _isImperial ? (1.0 / 2.20462) : 0.5;
-    _targetWeightKg = (_targetWeightKg + deltaKg).clamp(30.0, 250.0);
-    notifyListeners();
-  }
-
-  void decrementTargetWeight() {
-    final deltaKg = _isImperial ? (1.0 / 2.20462) : 0.5;
-    _targetWeightKg = (_targetWeightKg - deltaKg).clamp(30.0, 250.0);
-    notifyListeners();
   }
 
   String get weightGoalSummary {

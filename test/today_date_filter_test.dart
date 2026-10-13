@@ -168,8 +168,7 @@ void main() {
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(
         find.descendant(
-            of: find.byType(BottomSheet),
-            matching: find.text('No readiness for this day')),
+            of: find.byType(BottomSheet), matching: find.text('Sleep logged')),
         findsOneWidget);
     expect(find.text('0 / 100'), findsNothing);
     expect(tester.takeException(), isNull);

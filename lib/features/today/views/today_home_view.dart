@@ -43,6 +43,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
   StreamSubscription<HealthSnapshotPayload>? _healthUpdates;
   bool _loading = true;
   bool _loadFailed = false;
+  bool _refreshFailed = false;
   TrainingMapData? _trainingMap;
   DateTime _selectedDate = DateUtils.dateOnly(DateTime.now());
   List<WeekDay> _weekDays = const [];
@@ -64,6 +65,8 @@ class _TodayHomeViewState extends State<TodayHomeView> {
           _homeData = data;
           _weekDays = data.weeklyStreak;
           _loadFailed = false;
+          _refreshFailed =
+              TodayRepository.shared.refreshFailedFor(_selectedDate);
           _loading = false;
         });
         if (widget.isActive &&
@@ -137,7 +140,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
     final owner = await CacheScope.userId();
     if (!mounted || request != _request) return;
     setState(() {
-      _loading = true;
+      _loading = _homeData?.calendarDate != CacheScope.todayKey(date);
       _loadFailed = false;
     });
     HomeData? fresh;
@@ -154,10 +157,14 @@ class _TodayHomeViewState extends State<TodayHomeView> {
       return;
     }
     setState(() {
-      _homeData = fresh;
+      if (fresh != null ||
+          _homeData?.calendarDate != CacheScope.todayKey(date)) {
+        _homeData = fresh;
+      }
       if (fresh != null) _weekDays = fresh.weeklyStreak;
       _loading = false;
-      _loadFailed = fresh == null;
+      _loadFailed = _homeData == null;
+      _refreshFailed = TodayRepository.shared.refreshFailedFor(date);
     });
     unawaited(_loadTrainingPreview());
     final recovery = await HistoryRepository.shared
@@ -206,6 +213,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
             trainingMap: _trainingMap,
             loading: _loading,
             loadFailed: _loadFailed,
+            refreshFailed: _refreshFailed,
             onRefresh: () => _loadHome(refresh: true),
             onProfile: widget.onOpenProfile,
             onSession: () => _open(TrainView(
@@ -221,10 +229,23 @@ class _TodayHomeViewState extends State<TodayHomeView> {
             onSleep: _selectedDate.isAfter(DateUtils.dateOnly(DateTime.now()))
                 ? null
                 : () async {
-                    await Navigator.of(context).push<bool>(MaterialPageRoute(
-                        builder: (_) =>
-                            SleepEntryView(initialDate: _selectedDate)));
+                    final entry = await Navigator.of(context)
+                        .push<Map<String, dynamic>>(MaterialPageRoute(
+                            builder: (_) =>
+                                SleepEntryView(initialDate: _selectedDate)));
                     if (mounted) {
+                      if (entry != null &&
+                          entry['date'] == CacheScope.todayKey(_selectedDate) &&
+                          _homeData != null) {
+                        setState(() => _homeData = HomeData.fromJson({
+                              ..._homeData!.toJson(),
+                              'sleepLog': entry,
+                              if (entry.containsKey('readiness'))
+                                'readiness': entry['readiness'],
+                              if (entry.containsKey('wearableUsage'))
+                                'wearableUsage': entry['wearableUsage'],
+                            }));
+                      }
                       await _loadHome(refresh: true);
                     }
                   },

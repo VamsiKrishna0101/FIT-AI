@@ -3,6 +3,21 @@ import 'package:fitai_mobile/features/today/models/readiness_availability.dart';
 import 'package:fitai_mobile/models/home_models.dart';
 
 void main() {
+  test('Saved sleep is acknowledged even when a heart reading is missing', () {
+    final status = ReadinessAvailability.fromMetrics(null,
+        sleepLog: {'sleepMinutes': 420});
+    expect(status.sleep, true);
+    expect(status.title, 'Sleep logged');
+    expect(status.description, contains('Sleep saved'));
+    expect(status.description, contains('Watch heart readings'));
+    expect(status.description, contains('Sleep preferences'));
+  });
+  test('Partial no-wearable check-ins name the missing answers', () {
+    final status = ReadinessAvailability.fromMetrics(null,
+        noWearable: true, sleepLog: {'sleepMinutes': 420, 'energy': 3});
+    expect(status.description, contains('rest, soreness'));
+    expect(status.description, isNot(contains('HRV')));
+  });
   test(
       'Movement-only sync identifies both missing inputs without a connect prompt',
       () {
@@ -19,7 +34,7 @@ void main() {
         date: '2026-10-10', source: 'health_connect', sleepMinutes: 420));
     expect(status.sleep, true);
     expect(status.heart, false);
-    expect(status.description, contains('resting heart rate or HRV'));
+    expect(status.description, contains('Heart readings have not synced'));
   });
   test('Heart without sleep names the remaining input', () {
     final status = ReadinessAvailability.fromMetrics(const HomeHealthMetrics(

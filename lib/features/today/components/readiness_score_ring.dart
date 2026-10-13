@@ -3,20 +3,21 @@ import 'package:flutter/material.dart';
 
 /// A single reveal on first display, then motion only when the score changes.
 class ReadinessScoreRing extends StatelessWidget {
-  final int score;
+  final int? score;
   final Color color;
+  final double size;
   const ReadinessScoreRing(
-      {super.key, required this.score, required this.color});
+      {super.key, required this.score, required this.color, this.size = 132});
   @override
   Widget build(BuildContext context) => Semantics(
-      label: '$score / 100',
+      label: score == null ? 'Readiness not available' : '$score / 100',
       excludeSemantics: true,
       child: RepaintBoundary(
           child: SizedBox(
-              width: 80,
-              height: 80,
+              width: size,
+              height: size,
               child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: score.clamp(0, 100) / 100),
+                  tween: Tween(begin: 0, end: (score ?? 0).clamp(0, 100) / 100),
                   duration: MediaQuery.disableAnimationsOf(context)
                       ? Duration.zero
                       : const Duration(milliseconds: 700),
@@ -31,18 +32,19 @@ class ReadinessScoreRing extends StatelessWidget {
                               child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text('$score',
-                                        style: const TextStyle(
+                                    Text(score == null ? '—' : '$score',
+                                        style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: 27,
-                                            fontWeight: FontWeight.w500,
+                                            fontSize: size * .31,
+                                            fontWeight: FontWeight.w400,
                                             letterSpacing: -.8,
                                             height: 1.1)),
                                     const SizedBox(height: 3),
-                                    const Text('/ 100',
+                                    Text(score == null ? 'READINESS' : 'OF 100',
                                         style: TextStyle(
-                                            color: Color(0xFF969696),
-                                            fontSize: 9)),
+                                            color: const Color(0xFF969696),
+                                            letterSpacing: 1,
+                                            fontSize: size * .065)),
                                   ]))))))));
 }
 
@@ -52,12 +54,23 @@ class _RingPainter extends CustomPainter {
   _RingPainter(this.value, this.color);
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = (Offset.zero & size).deflate(4);
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
+    final tick = Paint()
+      ..color = Colors.white.withValues(alpha: .13)
+      ..strokeWidth = 1;
+    for (var index = 0; index < 60; index++) {
+      final angle = index / 60 * math.pi * 2 - math.pi / 2;
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      canvas.drawLine(center + direction * (radius - 2),
+          center + direction * (radius - 5), tick);
+    }
+    final rect = (Offset.zero & size).deflate(size.shortestSide * .075);
     final stroke = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
+      ..strokeWidth = size.shortestSide * .055
       ..strokeCap = StrokeCap.round;
-    canvas.drawOval(rect, stroke..color = const Color(0xFF383838));
+    canvas.drawOval(rect, stroke..color = const Color(0xFF303234));
     if (value <= 0) return;
     stroke.shader = SweepGradient(
         startAngle: -math.pi / 2,

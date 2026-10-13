@@ -14,7 +14,8 @@ import '../auth_copy.dart';
 import '../data/auth_repository.dart';
 
 class AuthView extends StatefulWidget {
-  const AuthView({super.key});
+  final bool initialSignIn;
+  const AuthView({super.key, this.initialSignIn = false});
 
   @override
   State<AuthView> createState() => _AuthViewState();
@@ -27,7 +28,7 @@ class _AuthViewState extends State<AuthView> {
   final _passwordFocus = FocusNode();
   final _repository = AuthRepository();
 
-  bool _isSignIn = false;
+  late bool _isSignIn = widget.initialSignIn;
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
   String? _errorMessage;

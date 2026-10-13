@@ -1,11 +1,11 @@
-import 'package:fitai_mobile/core/localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/components/animated_tab_stack.dart';
+import '../../../core/components/profile_avatar.dart';
+import '../../today/repositories/today_repository.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/health/health_sync_service.dart';
 import '../../../core/health/health_models.dart';
@@ -202,14 +202,10 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: -.8)),
                         ])),
-                    IconButton.filledTonal(
-                        tooltip: fitnessText(context, 'Profile'),
-                        style: IconButton.styleFrom(
-                            backgroundColor: FitnessTheme.surface),
-                        onPressed: () => Navigator.of(context).push(
-                            AppPageRoute<void>(page: const ProfileView())),
-                        icon: const Icon(CupertinoIcons.person_crop_circle,
-                            color: FitnessTheme.silver, size: 23)),
+                    ProfileAvatar(
+                        name: TodayRepository.shared.current?.user.name ?? '',
+                        onTap: () => Navigator.of(context).push(
+                            AppPageRoute<void>(page: const ProfileView()))),
                   ])),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),

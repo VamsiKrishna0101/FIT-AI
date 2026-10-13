@@ -1,15 +1,18 @@
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/components/fit_toast.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/about_you_controls.dart';
+import '../components/biometric_ruler_card.dart';
 import '../components/experience_card.dart';
 import '../components/onboarding_scaffold.dart';
 import '../models/experience_level.dart';
 import '../viewmodels/about_you_viewmodel.dart';
 import 'schedule_location_view.dart';
+import '../../../core/theme/fitness_theme.dart';
 
 // MARK: - Combined Screen 02 & 03: About You & Your Experience (Apple iOS Premium)
 class AboutYouExperienceView extends StatefulWidget {
@@ -24,6 +27,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
   late final AboutYouViewModel _viewModel;
   late final TextEditingController _nameController;
   late final AnimationController _expStaggerCtrl;
+  String _selectedMetric = 'weight';
 
   @override
   void initState() {
@@ -138,50 +142,27 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
 
         const SizedBox(height: 10),
 
-        // Age Stepper Card
-        AppleBiometricCard(
-          label: language.ageLabel,
-          valueDisplay: '${_viewModel.age}',
-          unitDisplay: language.yearsUnit,
-          onDecrement: _viewModel.decrementAge,
-          onIncrement: _viewModel.incrementAge,
-        ),
-
+        _ruler(),
+        const SizedBox(height: 12),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: _metricChoice('height', language.heightLabel,
+                  '${_viewModel.heightDisplay} ${_viewModel.heightUnitDisplay ?? ''}')),
+          const SizedBox(width: 10),
+          Expanded(
+              child: _metricChoice('weight', language.weightLabel,
+                  '${_viewModel.weightDisplay} ${_viewModel.weightUnitDisplay}')),
+        ]),
         const SizedBox(height: 10),
-
-        // Height Stepper Card
-        AppleBiometricCard(
-          label: language.heightLabel,
-          valueDisplay: _viewModel.heightDisplay,
-          unitDisplay: _viewModel.heightUnitDisplay,
-          secondaryDisplay: _viewModel.secondaryHeightDisplay,
-          onDecrement: _viewModel.decrementHeight,
-          onIncrement: _viewModel.incrementHeight,
-        ),
-
-        const SizedBox(height: 10),
-
-        // Weight Stepper Card
-        AppleBiometricCard(
-          label: language.weightLabel,
-          valueDisplay: _viewModel.weightDisplay,
-          unitDisplay: _viewModel.weightUnitDisplay,
-          secondaryDisplay: _viewModel.secondaryWeightDisplay,
-          onDecrement: _viewModel.decrementWeight,
-          onIncrement: _viewModel.incrementWeight,
-        ),
-
-        const SizedBox(height: 10),
-
-        // Target Weight Stepper Card
-        AppleBiometricCard(
-          label: language.targetWeightLabel,
-          valueDisplay: _viewModel.targetWeightDisplay,
-          unitDisplay: _viewModel.weightUnitDisplay,
-          secondaryDisplay: _viewModel.secondaryTargetWeightDisplay,
-          onDecrement: _viewModel.decrementTargetWeight,
-          onIncrement: _viewModel.incrementTargetWeight,
-        ),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: _metricChoice('age', language.ageLabel,
+                  '${_viewModel.age} ${language.yearsUnit}')),
+          const SizedBox(width: 10),
+          Expanded(
+              child: _metricChoice('target', language.targetWeightLabel,
+                  '${_viewModel.targetWeightDisplay} ${_viewModel.weightUnitDisplay}')),
+        ]),
 
         const SizedBox(height: 10),
 
@@ -241,6 +222,102 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
 
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _ruler() {
+    final model = _viewModel;
+    final language = model.selectedLanguage;
+    final imperial = model.isImperial;
+    final rulerKey = ValueKey('ruler-$_selectedMetric-$imperial');
+
+    if (_selectedMetric == 'age') {
+      return BiometricRulerCard(
+          key: rulerKey,
+          label: language.ageLabel,
+          value: model.age.toDouble(),
+          valueDisplay: '${model.age}',
+          unit: language.yearsUnit,
+          min: 13,
+          max: 100,
+          step: 1,
+          majorEvery: 5,
+          tickLabel: (value) => '${value.round()}',
+          onChanged: model.setAge);
+    }
+
+    if (_selectedMetric == 'height') {
+      return BiometricRulerCard(
+          key: rulerKey,
+          label: language.heightLabel,
+          value: imperial
+              ? (model.heightCm / 2.54).roundToDouble()
+              : model.heightCm,
+          valueDisplay: model.heightDisplay,
+          unit: model.heightUnitDisplay,
+          secondaryDisplay: model.secondaryHeightDisplay,
+          min: imperial ? 48 : 120,
+          max: imperial ? 90 : 230,
+          step: 1,
+          majorEvery: imperial ? 6 : 10,
+          tickLabel: (value) => imperial
+              ? '${value.round() ~/ 12}′${value.round() % 12}″'
+              : '${value.round()}',
+          onChanged: model.setHeight);
+    }
+
+    final target = _selectedMetric == 'target';
+    final weight = target ? model.targetWeightKg : model.weightKg;
+    return BiometricRulerCard(
+        key: rulerKey,
+        label: target ? language.targetWeightLabel : language.weightLabel,
+        value: imperial ? (weight * 2.20462).roundToDouble() : weight,
+        valueDisplay: target ? model.targetWeightDisplay : model.weightDisplay,
+        unit: model.weightUnitDisplay,
+        secondaryDisplay: target
+            ? model.secondaryTargetWeightDisplay
+            : model.secondaryWeightDisplay,
+        min: imperial ? 67 : 30,
+        max: imperial ? 551 : 250,
+        step: imperial ? 1 : .1,
+        majorEvery: 10,
+        tickLabel: (value) => '${value.round()}',
+        onChanged: target ? model.setTargetWeight : model.setWeight);
+  }
+
+  Widget _metricChoice(String metric, String label, String value) {
+    final selected = _selectedMetric == metric;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? const Color(0xFF2B2C2E) : FitnessTheme.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+                color: selected ? const Color(0xFFB4B4B4) : FitnessTheme.line)),
+        child: InkWell(
+          key: ValueKey('select-biometric-$metric'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            setState(() => _selectedMetric = metric);
+          },
+          child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FitnessText(label,
+                        style: const TextStyle(
+                            fontSize: 11, color: FitnessTheme.muted)),
+                    const SizedBox(height: 6),
+                    Text(value.trim(),
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w500)),
+                  ])),
+        ),
+      ),
     );
   }
 }

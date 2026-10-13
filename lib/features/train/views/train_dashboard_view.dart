@@ -114,10 +114,11 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     setState(() => _busy = true);
     try {
       await action();
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(copy('Could not save. Please try again.'))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(copy(TrainingRepository.errorMessage(
+                error, 'Could not save. Please try again.')))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -638,6 +639,18 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _completeExercise(
+      TodayPlanItemModel item, TrainingDay day) async {
+    await _action(() async {
+      if (day.logs(item.id).isEmpty) {
+        await _openExercise(item, day);
+        return null;
+      }
+      return _repo.mutate(_date, 'PATCH', '/items/${item.id}/status',
+          data: {'status': 'COMPLETED'});
+    });
+  }
+
   Widget _exercise(TodayPlanItemModel item, TrainingDay day) => InkWell(
         onTap: () => _openExercise(item, day),
         child: Padding(
@@ -691,14 +704,15 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                     child: WorkoutItemActions(
                         item: item,
                         busy: _busy,
-                        onDone: () => _action(() => _repo.mutate(
-                            _date, 'PATCH', '/items/${item.id}/status',
-                            data: {'status': 'COMPLETED'})),
+                        doneLabel:
+                            day.logs(item.id).isEmpty ? 'Log sets' : 'Done',
+                        onDone: () => _completeExercise(item, day),
                         onSkip: () => _action(() => _repo.mutate(
                             _date, 'PATCH', '/items/${item.id}/status',
                             data: {'status': 'SKIPPED'})),
-                        onUndo: () => _action(() =>
-                            _repo.mutate(_date, 'PATCH', '/items/${item.id}/status', data: {'status': 'NOT_STARTED'})))),
+                        onUndo: () => _action(() => _repo.mutate(
+                            _date, 'PATCH', '/items/${item.id}/status',
+                            data: {'status': 'NOT_STARTED'})))),
             ])),
       );
 

@@ -100,8 +100,9 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
           });
         }
       }
-    } catch (_) {
-      _error('Could not save. Please try again.');
+    } catch (error) {
+      _error(TrainingRepository.errorMessage(
+          error, 'Could not save. Please try again.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -119,8 +120,9 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
     try {
       if (_day.items.isNotEmpty) await _saveEnteredSets(_day.items[_index].id);
       if (mounted) setState(() => _editingFinished = false);
-    } catch (_) {
-      _error('Not saved yet. Tap save to retry.');
+    } catch (error) {
+      _error(TrainingRepository.errorMessage(
+          error, 'Not saved yet. Tap save to retry.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -147,8 +149,9 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
       await _mutate('POST', '/finish');
       await _rest(0);
       await HapticFeedback.mediumImpact();
-    } catch (_) {
-      _error('Could not finish. Please try again.');
+    } catch (error) {
+      _error(TrainingRepository.errorMessage(
+          error, 'Could not finish. Please try again.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -231,18 +234,20 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                           })))),
                       Expanded(
                           child: ListView(
+                              key: const ValueKey('workout-session-scroll'),
                               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
                               children: [
                             ClipRRect(
                                 borderRadius: BorderRadius.circular(22),
-                                child: SizedBox(
-                                    height: 190,
+                                child: AspectRatio(
+                                    aspectRatio: 1,
                                     child: RepaintBoundary(
                                         child: FitVideoSurface(
                                             key: ValueKey(item.id),
                                             url: item.exercise.url,
                                             autoplay: true,
                                             fit: BoxFit.contain,
+                                            neutralBackground: true,
                                             backgroundColor: Colors.white)))),
                             const SizedBox(height: 17),
                             Text(item.exercise.displayName,
@@ -292,6 +297,14 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                       ]),
                                       const SizedBox(height: 7),
                                       _previousSets(),
+                                      if (item.setTargets?['weightBasis'] ==
+                                          'estimated_start')
+                                        Text(
+                                            copy(
+                                                'Starting estimate · reduce the load if needed'),
+                                            style: const TextStyle(
+                                                color: trainingMuted,
+                                                fontSize: 11)),
                                       const SizedBox(height: 10),
                                       for (int number = 1;
                                           number <= _setCount(item);
@@ -304,19 +317,23 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                             date: _day.date,
                                             itemId: item.id,
                                             number: number,
+                                            targetLabel:
+                                                item.targetLabel(number),
                                             log: _day
                                                 .logs(item.id)
                                                 .where((row) =>
                                                     row['setNumber'] == number)
                                                 .firstOrNull,
                                             disabled: _busy,
-                                            onSave: (reps, weight) async {
+                                            onSave:
+                                                (reps, weight, effort) async {
                                               await _mutate('PUT',
                                                   '/items/${item.id}/sets',
                                                   data: {
                                                     'setNumber': number,
                                                     'reps': reps,
-                                                    'weight': weight
+                                                    'weight': weight,
+                                                    'rpe': effort,
                                                   });
                                               await _rest(item.restSeconds);
                                               await HapticFeedback

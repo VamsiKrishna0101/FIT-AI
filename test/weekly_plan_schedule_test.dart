@@ -25,10 +25,31 @@ final _payload = <String, dynamic>{
                 {
                   'name': day == 2 ? 'Cable row' : 'Dumbbell floor press',
                   'sets': 3,
-                  'repsMin': 8,
-                  'repsMax': 12,
+                  'repsMin': 10,
+                  'repsMax': 10,
                   'weightKg': 14,
                   'weightBasis': 'as_logged',
+                  'weightUnit': 'per_hand',
+                  'setPrescriptions': [
+                    {
+                      'setNumber': 1,
+                      'repsMin': 10,
+                      'repsMax': 10,
+                      'weightKg': 12
+                    },
+                    {
+                      'setNumber': 2,
+                      'repsMin': 10,
+                      'repsMax': 10,
+                      'weightKg': 14
+                    },
+                    {
+                      'setNumber': 3,
+                      'repsMin': 10,
+                      'repsMax': 10,
+                      'weightKg': 14
+                    },
+                  ],
                   'targetRpe': 7,
                   'restSeconds': 90,
                   'reason': 'A familiar movement from your previous logs.',
@@ -102,7 +123,8 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     expect(find.text('Dumbbell floor press'), findsOneWidget);
-    expect(find.text('3 × 8–12 · 14 kg · as logged'), findsOneWidget);
+    expect(find.text('10 reps · 12 kg per hand'), findsOneWidget);
+    expect(find.text('10 reps · 14 kg per hand'), findsNWidgets(2));
     expect(find.text('A familiar movement from your previous logs.'),
         findsNothing);
     await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-13')));

@@ -224,28 +224,28 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                             border: Border.all(color: const Color(0x18FFFFFF))),
                         child: ClipRRect(
                             borderRadius: BorderRadius.circular(22),
-                            child: SizedBox(
-                                height: 248,
-                                child: FitVideoSurface(
-                                    url: exercise.url,
-                                    fit: BoxFit.contain,
-                                    backgroundColor: const Color(0xFF111111),
-                                    neutralBackground: true,
-                                    tapToToggle: true,
-                                    placeholder: exercise.thumbnailUrl?.isNotEmpty ==
-                                            true
-                                        ? CachedNetworkImage(
-                                            imageUrl: exercise.thumbnailUrl!,
-                                            fit: BoxFit.contain,
-                                            errorWidget: (_, __, ___) =>
-                                                const Center(
-                                                    child: Icon(
-                                                        CupertinoIcons.person,
-                                                        size: 40)))
-                                        : const Center(
-                                            child: Icon(CupertinoIcons.person,
-                                                color: Color(0xFF969696),
-                                                size: 40))))))),
+                            child: LayoutBuilder(
+                                builder: (context, bounds) => SizedBox(
+                                    height: bounds.maxWidth + 56,
+                                    child: FitVideoSurface(
+                                        url: exercise.url,
+                                        fit: BoxFit.contain,
+                                        backgroundColor:
+                                            const Color(0xFF111111),
+                                        neutralBackground: true,
+                                        tapToToggle: true,
+                                        placeholder: exercise.thumbnailUrl?.isNotEmpty == true
+                                            ? CachedNetworkImage(
+                                                imageUrl:
+                                                    exercise.thumbnailUrl!,
+                                                fit: BoxFit.contain,
+                                                errorWidget: (_, __, ___) =>
+                                                    const Center(
+                                                        child:
+                                                            Icon(CupertinoIcons.person,
+                                                                size: 40)))
+                                            : const Center(
+                                                child: Icon(CupertinoIcons.person, color: Color(0xFF969696), size: 40)))))))),
                 const SizedBox(height: 22),
                 PremiumSurface(
                     color: const Color(0xFF202020),

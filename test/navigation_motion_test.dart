@@ -80,6 +80,55 @@ void main() {
         'fitai_user_id': 'motion-test',
       }));
 
+  testWidgets('Page navigation slides an opaque screen and supports swipe back',
+      (tester) async {
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navigator,
+      theme: ThemeData(platform: TargetPlatform.iOS),
+      home: const Scaffold(body: Text('Previous screen')),
+    ));
+    navigator.currentState!.push(AppPageRoute<void>(
+      page: const Scaffold(body: Text('Next screen')),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getTopLeft(find.text('Next screen')).dx, greaterThan(0));
+    final fades = tester.widgetList<FadeTransition>(find.ancestor(
+      of: find.text('Next screen'),
+      matching: find.byType(FadeTransition),
+    ));
+    expect(fades.any((fade) => fade.opacity.value < 1), false);
+    await tester.pumpAndSettle();
+    await tester.dragFrom(const Offset(2, 300), const Offset(700, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Previous screen'), findsOneWidget);
+    expect(find.text('Next screen'), findsNothing);
+  });
+
+  testWidgets('Reduced motion opens and closes a page without movement',
+      (tester) async {
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navigator,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
+      home: const Scaffold(body: Text('Previous screen')),
+    ));
+    final route =
+        AppPageRoute<void>(page: const Scaffold(body: Text('Next screen')));
+    navigator.currentState!.push(route);
+    await tester.pump();
+    await tester.pump();
+    expect(route.transitionDuration, Duration.zero);
+    expect(tester.getTopLeft(find.text('Next screen')).dx, 0);
+    navigator.currentState!.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('Next screen'), findsNothing);
+  });
+
   testWidgets(
       'Content crossfades, blocks outgoing actions and settles after rapid changes',
       (tester) async {
