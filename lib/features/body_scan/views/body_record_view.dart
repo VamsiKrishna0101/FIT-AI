@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
@@ -45,7 +46,8 @@ class _BodyRecordViewState extends State<BodyRecordView> {
 
   Future<void> _delete() async {
     final approved = await showDialog<bool>(
-        context: context,
+        animationStyle: DSMotion.dialogStyle(context),
+context: context,
         builder: (context) => AlertDialog(
                 backgroundColor: FitnessTheme.surface,
                 title: const FitnessText('Delete this entry?'),

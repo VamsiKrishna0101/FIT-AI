@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fitai_mobile/core/components/liquid_silver_bottom_bar.dart';
 import 'package:fitai_mobile/core/theme/fitness_theme.dart';
+import 'package:fitai_mobile/models/home_models.dart';
 import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
 import 'package:fitai_mobile/features/today/components/readiness_score_ring.dart';
 import 'package:fitai_mobile/features/today/components/today_training_preview.dart';
@@ -28,39 +29,48 @@ final _history = List.generate(
         hrv: 60.0 + i,
         sleepHours: 7.0 + i / 10,
         restingHr: 60 - i));
-Widget _app({bool reduced = true, List<RecoveryPoint>? history}) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData.dark(),
-    home: Builder(
-        builder: (context) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: reduced),
-            child: RepaintBoundary(
-                key: _preview,
-                child: FitnessTheme(
-                    child: Scaffold(
-                        backgroundColor: FitnessTheme.canvas,
-                        extendBody: true,
-                        body: MediaQuery(
-                            data: MediaQuery.of(context).copyWith(
-                                padding: MediaQuery.paddingOf(context)
-                                    .copyWith(bottom: 0)),
-                            child: SafeArea(
-                                bottom: false,
-                                child: TodayDashboard(
-                                    data: benchmarkHome,
-                                    trainingMap: _map,
-                                    recovery: history ?? _history,
-                                    now: DateTime(2026, 10, 6, 10),
-                                    onRefresh: () async {},
-                                    onProfile: () {},
-                                    onSession: () {},
-                                    onTrain: () {},
-                                    onBody: () {},
-                                    onNutrition: () {}))),
-                        bottomNavigationBar: LiquidSilverBottomBar(
-                            selectedIndex: 0,
-                            labels: const ['Today', 'Train', 'Body', 'Progress'],
-                            onTabSelected: (_) {})))))));
+Widget _app({
+  bool reduced = true,
+  List<RecoveryPoint>? history,
+  HomeData? data,
+  VoidCallback? onSleep,
+  TextScaler textScaler = TextScaler.noScaling,
+}) =>
+    MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData.dark(),
+        home: Builder(
+            builder: (context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                    disableAnimations: reduced, textScaler: textScaler),
+                child: RepaintBoundary(
+                    key: _preview,
+                    child: FitnessTheme(
+                        child: Scaffold(
+                            backgroundColor: FitnessTheme.canvas,
+                            extendBody: true,
+                            body: MediaQuery(
+                                data: MediaQuery.of(context).copyWith(
+                                    padding: MediaQuery.paddingOf(context)
+                                        .copyWith(bottom: 0)),
+                                child: SafeArea(
+                                    bottom: false,
+                                    child: TodayDashboard(
+                                        data: data ?? benchmarkHome,
+                                        trainingMap: _map,
+                                        recovery: history ?? _history,
+                                        now: DateTime(2026, 10, 6, 10),
+                                        onRefresh: () async {},
+                                        onSleep: onSleep,
+                                        onProfile: () {},
+                                        onSession: () {},
+                                        onTrain: () {},
+                                        onBody: () {},
+                                        onNutrition: () {}))),
+                            bottomNavigationBar: LiquidSilverBottomBar(
+                                selectedIndex: 0,
+                                labels: const ['Today', 'Train', 'Body', 'Progress'],
+                                onTabSelected: (_) {})))))));
 Future<void> _snapshot(WidgetTester tester, String name) async {
   await tester.pumpAndSettle();
   await tester.runAsync(() async {
@@ -190,6 +200,106 @@ void main() {
     final after = tester.widget<CustomPaint>(paint).painter!;
     expect(after.shouldRepaint(before), isFalse);
   });
+  testWidgets(
+      'empty recovery stays compact while sleep retains its recorded value',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final checkIn = HomeData.fromJson({
+      ...benchmarkHome.toJson(),
+      'wearableUsage': 'NONE',
+      'sleepLog': {
+        'sleepMinutes': 450,
+        'rested': 4,
+        'energy': 4,
+        'soreness': 2
+      },
+      'readiness': {
+        'source': 'check_in_estimate',
+        'date': '2026-10-06',
+        'score': 6.9,
+        'sleepMinutes': 450
+      },
+    });
+    await tester.pumpWidget(_app(data: checkIn, history: const []));
+    await tester.pumpAndSettle();
+    final chart = find.byKey(const ValueKey('today-chart-card'));
+    final emptyHeight = tester.getSize(chart).height;
+    expect(find.byKey(const ValueKey('today-chart-empty')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today-chart-day-6')), findsNothing);
+    expect(find.text('69'), findsOneWidget);
+    expect(find.text('Ready today'), findsOneWidget);
+    expect(
+        tester
+            .getSize(find.byKey(const ValueKey('today-readiness-heading')))
+            .height,
+        lessThan(28));
+    expect(
+        tester
+            .getSize(find.byKey(const ValueKey('readiness-signal-Sleep')))
+            .height,
+        tester
+            .getSize(find.byKey(const ValueKey('readiness-signal-Energy')))
+            .height);
+    await _snapshot(tester, 'today-check-in-polished-preview');
+    await tester.tap(find.descendant(of: chart, matching: find.text('Sleep')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('today-chart-empty')), findsNothing);
+    expect(tester.getSize(chart).height, greaterThan(emptyHeight));
+    expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('today-chart-value')))
+            .data,
+        '7 h 30 m');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'card press responds without delaying save and settles after release',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var taps = 0;
+    await tester.pumpWidget(_app(reduced: false, onSleep: () => taps++));
+    await tester.pumpAndSettle();
+    final label = find.text('Log sleep');
+    await tester.scrollUntilVisible(label, 120,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(label);
+    await tester.pumpAndSettle();
+    final tapArea =
+        find.ancestor(of: label, matching: find.byType(InkWell)).first;
+    final width = tester.getRect(tapArea).width;
+    final gesture = await tester.startGesture(tester.getCenter(label));
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.pump(const Duration(milliseconds: 180));
+    expect(tester.getRect(tapArea).width, lessThan(width));
+    await gesture.up();
+    expect(taps, 1);
+    await tester.pumpAndSettle();
+    expect(tester.getRect(tapArea).width, closeTo(width, .01));
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('large text keeps readiness readable with reduced motion',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(textScaler: const TextScaler.linear(1.6)));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('today-readiness-heading')), 120,
+        scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Add your readings'), findsOneWidget);
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
       'premium Today previews preserve compact surfaces and the fixed header',
       (tester) async {

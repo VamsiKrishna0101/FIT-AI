@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
@@ -72,7 +73,8 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
   }
 
   void _photos() => showModalBottomSheet<void>(
-      context: context,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
       backgroundColor: FitnessTheme.canvas,
       showDragHandle: true,
       useSafeArea: true,

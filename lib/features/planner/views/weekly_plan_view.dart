@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/content_transition.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import 'dart:async';
@@ -190,7 +191,8 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
 
   Future<bool> _scanBeforePlanning(BodyOverview body) async {
     final action = await showModalBottomSheet<String>(
-      context: context,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => SafeArea(
@@ -334,7 +336,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
         Scrollable.ensureVisible(planContext,
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
-                : const Duration(milliseconds: 300),
+                : DSMotion.regular,
             curve: Curves.easeOutCubic);
       }
     });

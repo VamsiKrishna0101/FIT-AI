@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
@@ -88,10 +89,10 @@ class _LocationAppleCardState extends State<LocationAppleCard> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _pressed ? 0.98 : (isSelected ? 1.01 : 1.0),
-        duration: const Duration(milliseconds: 140),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: DSMotion.duration(context, DSMotion.selection),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
@@ -150,7 +151,7 @@ class _LocationAppleCardState extends State<LocationAppleCard> {
 
               // Apple Minimal Radio Indicator
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: DSMotion.duration(context, DSMotion.selection),
                 curve: Curves.easeOutCubic,
                 width: 22,
                 height: 22,
@@ -165,7 +166,7 @@ class _LocationAppleCardState extends State<LocationAppleCard> {
                 ),
                 alignment: Alignment.center,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: DSMotion.duration(context, DSMotion.selection),
                   curve: Curves.easeOutCubic,
                   width: isSelected ? 10 : 0,
                   height: isSelected ? 10 : 0,

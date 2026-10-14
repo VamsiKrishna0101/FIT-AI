@@ -99,7 +99,9 @@ void main() {
     expect(find.byType(BackdropFilter), findsNothing);
     final bounds = tester.getRect(find.byType(UiKitView));
     expect(bounds.center.dx, closeTo(393 / 2, .01));
-    expect(bounds.bottom, lessThan(852 - 34));
+    // The host reaches the screen edge; UIKit floats the visible glass above
+    // the home indicator instead of receiving the safe area twice.
+    expect(bounds.bottom, closeTo(852, .01));
     expect(bounds.height, 100);
 
     // Exercise the real method-channel callback, rather than calling the Dart
@@ -157,7 +159,7 @@ void main() {
       expect(capsule.center.dx, closeTo(width / 2, .01));
       expect(capsule.width, lessThanOrEqualTo(340));
       expect(capsule.left, greaterThanOrEqualTo(28));
-      expect(capsule.bottom, closeTo(852 - 34 - 32, .01));
+      expect(capsule.bottom, closeTo(852 - 34 - 16, .01));
       expect(find.byType(BackdropFilter), findsOneWidget);
       for (final label in ['Training', 'Körper', 'Fortschritt']) {
         await tester.tap(find.text(label));
@@ -185,7 +187,7 @@ void main() {
         tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
     final screenHeight =
         tester.view.physicalSize.height / tester.view.devicePixelRatio;
-    expect(screenHeight - capsule.bottom, closeTo(32, .01));
+    expect(screenHeight - capsule.bottom, closeTo(16, .01));
     final lens = find.byKey(const ValueKey('navigation-active-lens'));
     expect(tester.getCenter(lens).dx,
         closeTo(tester.getCenter(find.text('Today')).dx, .01));

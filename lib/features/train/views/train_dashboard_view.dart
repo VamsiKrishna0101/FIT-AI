@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -223,7 +224,8 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                   child: RefreshIndicator(
                 color: trainingSilver,
                 onRefresh: () => _load(refresh: true),
-                child: ListView(
+                child: MotionEntrance(
+                    child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics()),
                   padding: EdgeInsets.fromLTRB(
@@ -336,7 +338,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                           isActive: widget.isActive, onReturn: _load),
                     ],
                   ],
-                ),
+                )),
               )),
             ])),
       ),

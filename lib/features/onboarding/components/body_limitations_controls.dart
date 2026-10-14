@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
@@ -70,10 +71,10 @@ class _LimitationChipState extends State<_LimitationChip> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _pressed ? 0.95 : 1.0,
-        duration: const Duration(milliseconds: 130),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: DSMotion.duration(context, DSMotion.press),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(

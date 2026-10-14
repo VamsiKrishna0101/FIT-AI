@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/cache/cache_scope.dart';
@@ -222,20 +223,18 @@ class ProgressMuscleBars extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(3)),
                                   child: Align(
                                       alignment: Alignment.centerLeft,
-                                      child: FractionallySizedBox(
-                                          widthFactor:
-                                              (row['directSets'] as num? ?? 0) /
-                                                  max,
-                                          child: Container(
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(3),
-                                                  gradient:
-                                                      const LinearGradient(
-                                                          colors: [
-                                                        Color(0xFF427FA8),
-                                                        progressCyan
-                                                      ]))))))),
+                                      child: MotionValue(
+                                          value: ((row['directSets'] as num? ?? 0) / max)
+                                              .toDouble(),
+                                          builder: (context, animatedValue) => FractionallySizedBox(
+                                              widthFactor: animatedValue,
+                                              child: Container(
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              3),
+                                                      gradient: const LinearGradient(
+                                                          colors: [Color(0xFF427FA8), progressCyan])))))))),
                           const SizedBox(width: 12),
                           Text('${row['directSets'] ?? 0}',
                               style: const TextStyle(

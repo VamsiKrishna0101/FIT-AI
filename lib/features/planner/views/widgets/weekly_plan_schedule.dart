@@ -1,3 +1,4 @@
+import '../../../../core/theme/ds_motion.dart';
 import '../../../../core/theme/ds_colors.dart';
 import '../../../../core/components/content_transition.dart';
 import 'package:flutter/cupertino.dart';
@@ -108,7 +109,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
             borderRadius: BorderRadius.circular(16),
             onTap: () => setState(() => _day = index),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
+              duration: DSMotion.duration(context, DSMotion.selection),
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),

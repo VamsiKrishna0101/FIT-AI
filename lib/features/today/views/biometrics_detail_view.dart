@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:async';
@@ -313,7 +314,8 @@ class _BiometricsDetailViewState extends State<BiometricsDetailView> {
   void _showBiometricInfoSheet(BuildContext context) {
     HapticFeedback.lightImpact();
     showModalBottomSheet<void>(
-      context: context,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
       backgroundColor: DSColors.bg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

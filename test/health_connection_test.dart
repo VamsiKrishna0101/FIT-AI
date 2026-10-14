@@ -589,7 +589,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('today-readiness-card')));
     await tester.pumpAndSettle();
     expect(find.text('Synced sleep'), findsOneWidget);
-    expect(find.text('Resting heart rate or HRV'), findsOneWidget);
+    expect(find.text('Synced heart readings'), findsOneWidget);
     expect(find.text('Missing'), findsNWidgets(2));
     expect(find.text('Connect your health'), findsNothing);
     expect(find.text('0 / 100'), findsNothing);

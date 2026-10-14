@@ -1,3 +1,4 @@
+import '../../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
   );
   late final _progress = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 750),
+    duration: DSMotion.chart,
     upperBound: 100,
     value: widget.percent.toDouble(),
   );
@@ -60,13 +61,16 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
       if (MediaQuery.disableAnimationsOf(context)) {
         _progress.value = widget.percent.toDouble();
       } else {
-        _progress.animateTo(widget.percent.toDouble(),
-            curve: Curves.easeOutCubic);
+        _progress.animateTo(widget.percent.toDouble(), curve: DSMotion.effects);
       }
     }
   }
 
   void _updateMotion() {
+    if (DSMotion.reduced(context)) {
+      _progress.stop();
+      _progress.value = widget.percent.toDouble();
+    }
     final enabled = widget.animating &&
         TickerMode.valuesOf(context).enabled &&
         !MediaQuery.disableAnimationsOf(context);

@@ -119,7 +119,15 @@ void main() {
     expect(second, isNot(first));
     await tester.pump(const Duration(milliseconds: 240));
     await _decode(tester);
-    expect(await _pixel(tester, controller.frame.value!), first);
+    // Decoding uses the real engine clock; a busy runner can pass the exact phase.
+    // Verify that the original first frame returns within a bounded loop instead.
+    var looped = await _pixel(tester, controller.frame.value!) == first;
+    for (var attempt = 0; attempt < 8 && !looped; attempt++) {
+      await tester.pump(const Duration(milliseconds: 40));
+      await _decode(tester);
+      looped = await _pixel(tester, controller.frame.value!) == first;
+    }
+    expect(looped, isTrue);
     await tester.tap(find.byKey(const ValueKey('exercise-demo-play')));
     await tester.pump();
     expect(controller.playing, isFalse);

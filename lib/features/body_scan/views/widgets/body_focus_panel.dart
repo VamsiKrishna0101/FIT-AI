@@ -1,3 +1,4 @@
+import '../../../../core/theme/ds_motion.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/localization/fitness_text.dart';
@@ -66,7 +67,8 @@ class _BodyFocusPanelState extends State<BodyFocusPanel> {
 
   void _sheet(String title, List<Widget> children) =>
       showModalBottomSheet<void>(
-          context: context,
+          sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
           backgroundColor: FitnessTheme.canvas,
           showDragHandle: true,
           useSafeArea: true,

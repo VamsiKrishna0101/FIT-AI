@@ -1,3 +1,4 @@
+import 'motion.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,7 +25,8 @@ class BioluminescentTrendCard extends StatefulWidget {
   });
 
   @override
-  State<BioluminescentTrendCard> createState() => _BioluminescentTrendCardState();
+  State<BioluminescentTrendCard> createState() =>
+      _BioluminescentTrendCardState();
 }
 
 class _BioluminescentTrendCardState extends State<BioluminescentTrendCard> {
@@ -89,7 +91,8 @@ class _BioluminescentTrendCardState extends State<BioluminescentTrendCard> {
               ),
               // Current Value Display
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: widget.trajectoryColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
@@ -137,21 +140,24 @@ class _BioluminescentTrendCardState extends State<BioluminescentTrendCard> {
               builder: (context, constraints) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onHorizontalDragDown: (details) =>
-                      _handleTouch(details.localPosition.dx, constraints.maxWidth),
-                  onHorizontalDragUpdate: (details) =>
-                      _handleTouch(details.localPosition.dx, constraints.maxWidth),
-                  onHorizontalDragEnd: (_) => setState(() => _hoveredIndex = null),
+                  onHorizontalDragDown: (details) => _handleTouch(
+                      details.localPosition.dx, constraints.maxWidth),
+                  onHorizontalDragUpdate: (details) => _handleTouch(
+                      details.localPosition.dx, constraints.maxWidth),
+                  onHorizontalDragEnd: (_) =>
+                      setState(() => _hoveredIndex = null),
                   onTapUp: (_) => setState(() => _hoveredIndex = null),
-                  child: CustomPaint(
-                    size: Size(constraints.maxWidth, 120),
-                    painter: _BioluminescentChartPainter(
-                      dataPoints: points,
-                      baseline: widget.baseline,
-                      trajectoryColor: widget.trajectoryColor,
-                      hoveredIndex: _hoveredIndex,
-                    ),
-                  ),
+                  child: MotionChartReveal(
+                      dataKey: '${widget.metricName}:${points.join('|')}',
+                      child: CustomPaint(
+                        size: Size(constraints.maxWidth, 120),
+                        painter: _BioluminescentChartPainter(
+                          dataPoints: points,
+                          baseline: widget.baseline,
+                          trajectoryColor: widget.trajectoryColor,
+                          hoveredIndex: _hoveredIndex,
+                        ),
+                      )),
                 );
               },
             ),

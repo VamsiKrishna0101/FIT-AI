@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:async';
@@ -35,6 +36,7 @@ class BodyEstimateView extends StatefulWidget {
 class _BodyEstimateViewState extends State<BodyEstimateView>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
+  bool _motionReady = false;
   BodyAssessment? _entry;
   String _stage = 'uploading';
   String? _error;
@@ -81,12 +83,25 @@ class _BodyEstimateViewState extends State<BodyEstimateView>
     unawaited(_start());
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _motionReady = true;
+    if (DSMotion.reduced(context) || !TickerMode.valuesOf(context).enabled) {
+      _pulse.stop();
+    } else if (_entry == null && _error == null && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    }
+  }
+
   Future<void> _start() async {
     setState(() {
       _error = null;
       _stage = 'uploading';
     });
-    _pulse.repeat(reverse: true);
+    if (_motionReady && !DSMotion.reduced(context)) {
+      _pulse.repeat(reverse: true);
+    }
     try {
       final entry = await widget.estimate((stage) {
         if (mounted && !_cancelled) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/ds_motion.dart';
 
 /// Keeps tab subtrees mounted while crossfading between destinations.
 class AnimatedTabStack extends StatefulWidget {
@@ -11,8 +12,8 @@ class AnimatedTabStack extends StatefulWidget {
     required this.children,
   }) : assert(index >= 0 && index < children.length);
 
-  static const duration = Duration(milliseconds: 260);
-  static const curve = Curves.easeOutCubic;
+  static const duration = DSMotion.feedback;
+  static const curve = DSMotion.effects;
 
   @override
   State<AnimatedTabStack> createState() => _AnimatedTabStackState();

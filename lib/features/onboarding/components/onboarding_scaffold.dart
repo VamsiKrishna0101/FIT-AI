@@ -1,3 +1,5 @@
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/components/motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,12 +59,14 @@ class OnboardingScaffold extends StatelessWidget {
                                 ? const SizedBox(height: 44)
                                 : OnboardingBackButton(onPressed: onBack!))),
                   Expanded(
-                      child: ListView(
-                          key: const ValueKey('onboarding-scroll'),
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                          children: [
+                      child: MotionEntrance(
+                          child: ListView(
+                              key: const ValueKey('onboarding-scroll'),
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                              children: [
                         FitnessText(title,
                             style: const TextStyle(
                                 fontSize: 28,
@@ -77,7 +81,7 @@ class OnboardingScaffold extends StatelessWidget {
                                 height: 1.45)),
                         const SizedBox(height: 24),
                         ...children
-                      ])),
+                      ]))),
                   Container(
                       decoration: const BoxDecoration(
                           color: FitnessTheme.canvas,
@@ -117,50 +121,58 @@ class OnboardingChoice extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
       button: true,
       selected: selected,
-      child: Material(
-          color: selected ? const Color(0xFF292929) : FitnessTheme.surface,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(
-                  color:
-                      selected ? const Color(0xFFBCBCBC) : Colors.transparent,
-                  width: .8)),
-          child: InkWell(
-            splashFactory: NoSplash.splashFactory,
-            highlightColor: Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onTap();
-            },
-            child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Row(children: [
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        FitnessText(title,
-                            style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -.2)),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 5),
-                          FitnessText(subtitle!,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: FitnessTheme.muted,
-                                  height: 1.4))
-                        ],
-                      ])),
-                  const SizedBox(width: 12),
-                  Icon(selected ? Icons.check_circle : Icons.circle_outlined,
+      child: MotionPress(
+          child: Material(
+              animationDuration: DSMotion.duration(context, DSMotion.selection),
+              color: selected ? const Color(0xFF292929) : FitnessTheme.surface,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(
                       color: selected
-                          ? FitnessTheme.silver
-                          : const Color(0xFF606060),
-                      size: 20)
-                ])),
-          )));
+                          ? const Color(0xFFBCBCBC)
+                          : Colors.transparent,
+                      width: .8)),
+              child: InkWell(
+                splashFactory: NoSplash.splashFactory,
+                highlightColor: Colors.transparent,
+                borderRadius: BorderRadius.circular(18),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onTap();
+                },
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                    child: Row(children: [
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            FitnessText(title,
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: -.2)),
+                            if (subtitle != null) ...[
+                              const SizedBox(height: 5),
+                              FitnessText(subtitle!,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: FitnessTheme.muted,
+                                      height: 1.4))
+                            ],
+                          ])),
+                      const SizedBox(width: 12),
+                      MotionFeedback(
+                          child: Icon(
+                              selected
+                                  ? Icons.check_circle
+                                  : Icons.circle_outlined,
+                              color: selected
+                                  ? FitnessTheme.silver
+                                  : const Color(0xFF606060),
+                              key: ValueKey(selected),
+                              size: 20))
+                    ])),
+              ))));
 }

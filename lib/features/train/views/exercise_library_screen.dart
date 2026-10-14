@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -199,7 +200,8 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
               onAddToPlan:
                   _added.contains(exercise.id) ? null : () => _add(exercise))));
   void _custom() => showModalBottomSheet<void>(
-      context: context,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddExerciseSheet(

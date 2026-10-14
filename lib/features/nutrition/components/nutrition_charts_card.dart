@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -112,14 +113,19 @@ class MacroDistributionCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          value: calProgress,
-                          minHeight: 3,
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF00E5FF),
-                          ),
-                        ),
+                        child: MotionValue(
+                            value: calProgress,
+                            builder: (context, animatedValue) =>
+                                LinearProgressIndicator(
+                                  value: animatedValue,
+                                  minHeight: 3,
+                                  backgroundColor:
+                                      Colors.white.withValues(alpha: 0.08),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF00E5FF),
+                                  ),
+                                )),
                       ),
                     ],
                   ],
@@ -328,12 +334,14 @@ class MacroDistributionCard extends StatelessWidget {
           const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 3.5,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
+            child: MotionValue(
+                value: progress,
+                builder: (context, animatedValue) => LinearProgressIndicator(
+                      value: animatedValue,
+                      minHeight: 3.5,
+                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    )),
           ),
         ],
       ),
@@ -477,25 +485,29 @@ class CalorieWeeklyBarChart extends StatelessWidget {
                         Expanded(
                           child: Align(
                             alignment: Alignment.bottomCenter,
-                            child: FractionallySizedBox(
-                              heightFactor: barHeightRatio,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: barColor,
-                                  borderRadius: BorderRadius.circular(6),
-                                  gradient: isToday
-                                      ? const LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Color(0xFF00E5FF),
-                                            Color(0xFF0091EA),
-                                          ],
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ),
+                            child: MotionValue(
+                                value: barHeightRatio,
+                                builder: (context, animatedValue) =>
+                                    FractionallySizedBox(
+                                      heightFactor: animatedValue,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: barColor,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                          gradient: isToday
+                                              ? const LinearGradient(
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                  colors: [
+                                                    Color(0xFF00E5FF),
+                                                    Color(0xFF0091EA),
+                                                  ],
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                    )),
                           ),
                         ),
                         const SizedBox(height: 8),

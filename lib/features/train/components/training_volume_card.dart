@@ -1,3 +1,6 @@
+import 'dart:convert';
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/components/motion.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -78,32 +81,39 @@ class _TrainingVolumeCardState extends State<TrainingVolumeCard> {
         Text(copy('Log sets to see your training trend.'),
             style: const TextStyle(color: trainingMuted, fontSize: 12))
       else
-        SizedBox(
-            height: 74,
-            child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              for (final row in _weeks)
-                Expanded(
-                    child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text('${row['totalSets']}',
-                                  style: const TextStyle(
-                                      color: trainingMuted, fontSize: 10)),
-                              const SizedBox(height: 5),
-                              Container(
-                                  height:
-                                      ((row['totalSets'] as num) / maximum * 50)
-                                          .clamp(3, 50)
-                                          .toDouble(),
-                                  decoration: BoxDecoration(
-                                      color: row == last
-                                          ? trainingSilver
-                                          : const Color(0xFF424242),
-                                      borderRadius: BorderRadius.circular(6))),
-                            ]))),
-            ])),
+        MotionProgress(
+            dataKey: jsonEncode(_weeks),
+            builder: (context, progress) => SizedBox(
+                height: 59 + MediaQuery.textScalerOf(context).scale(10) * 1.5,
+                child:
+                    Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  for (final (index, row) in _weeks.indexed)
+                    Expanded(
+                        child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text('${row['totalSets']}',
+                                      style: const TextStyle(
+                                          color: trainingMuted, fontSize: 10)),
+                                  const SizedBox(height: 5),
+                                  Container(
+                                      height: ((row['totalSets'] as num) /
+                                                  maximum *
+                                                  50)
+                                              .clamp(0, 50)
+                                              .toDouble() *
+                                          DSMotion.barProgress(
+                                              progress, index, _weeks.length),
+                                      decoration: BoxDecoration(
+                                          color: row == last
+                                              ? trainingSilver
+                                              : const Color(0xFF424242),
+                                          borderRadius:
+                                              BorderRadius.circular(6))),
+                                ]))),
+                ]))),
     ]));
   }
 }

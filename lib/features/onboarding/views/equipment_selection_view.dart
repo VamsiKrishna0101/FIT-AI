@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -296,7 +297,7 @@ class _EquipmentCard extends StatelessWidget {
             key: ValueKey('equipment-${item.id}'),
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
-                : const Duration(milliseconds: 180),
+                : DSMotion.press,
             decoration: BoxDecoration(
                 color: FitnessTheme.surface,
                 borderRadius: BorderRadius.circular(20),

@@ -1,3 +1,5 @@
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/components/motion.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/components/content_transition.dart';
@@ -260,6 +262,7 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
     HapticFeedback.selectionClick();
     setState(() => _selected = id);
     showModalBottomSheet<void>(
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -488,16 +491,24 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                                             child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(3),
-                                                child: LinearProgressIndicator(
-                                                    value: r.targetSets > 0
-                                                        ? (r.completedSets /
-                                                                r.targetSets)
-                                                            .clamp(0, 1)
-                                                        : 0,
-                                                    minHeight: 4,
-                                                    color: _color(r),
-                                                    backgroundColor:
-                                                        FitnessTheme.line))),
+                                                child: MotionValue(
+                                                    value: (r.targetSets > 0
+                                                            ? (r.completedSets /
+                                                                    r
+                                                                        .targetSets)
+                                                                .clamp(0, 1)
+                                                            : 0)
+                                                        .toDouble(),
+                                                    builder: (context,
+                                                            animatedValue) =>
+                                                        LinearProgressIndicator(
+                                                            value:
+                                                                animatedValue,
+                                                            minHeight: 4,
+                                                            color: _color(r),
+                                                            backgroundColor:
+                                                                FitnessTheme
+                                                                    .line)))),
                                         const SizedBox(width: 12),
                                         SizedBox(
                                             width: 55,
@@ -819,11 +830,15 @@ class _MuscleDetailState extends State<_MuscleDetail> {
                 const SizedBox(height: 9),
                 ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                        value: (r.completedSets / r.targetSets).clamp(0, 1),
-                        minHeight: 5,
-                        color: FitnessTheme.blue,
-                        backgroundColor: FitnessTheme.line))
+                    child: MotionValue(
+                        value: ((r.completedSets / r.targetSets).clamp(0, 1))
+                            .toDouble(),
+                        builder: (context, animatedValue) =>
+                            LinearProgressIndicator(
+                                value: animatedValue,
+                                minHeight: 5,
+                                color: FitnessTheme.blue,
+                                backgroundColor: FitnessTheme.line)))
               ],
               const SizedBox(height: 26),
               const FitnessText('How does it feel today?',
@@ -874,8 +889,13 @@ class _MuscleDetailState extends State<_MuscleDetail> {
                 const SizedBox(height: 14),
                 SizedBox(
                     height: 80,
-                    child: CustomPaint(
-                        size: Size.infinite, painter: _LoadChart(r.trend))),
+                    child: MotionChartReveal(
+                        dataKey: r.trend
+                            .map((p) => '${p['date']}:${p['weightKg']}')
+                            .join('|'),
+                        child: CustomPaint(
+                            size: Size.infinite,
+                            painter: _LoadChart(r.trend)))),
                 const SizedBox(height: 10),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

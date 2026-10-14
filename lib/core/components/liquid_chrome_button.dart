@@ -1,3 +1,4 @@
+import 'motion.dart';
 import '../theme/ds_colors.dart';
 import '../localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
@@ -22,7 +23,6 @@ class LiquidChromeButton extends StatefulWidget {
 }
 
 class _LiquidChromeButtonState extends State<LiquidChromeButton> {
-  bool _pressed = false;
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null && !widget.isLoading;
@@ -30,17 +30,14 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
       button: true,
       enabled: enabled,
       label: fitnessText(context, widget.title),
-      child: AnimatedScale(
-          scale: _pressed ? .98 : 1,
-          duration: const Duration(milliseconds: 120),
+      child: MotionPress(
+          enabled: enabled,
           child: Opacity(
             opacity: enabled || widget.isLoading ? 1 : .38,
             child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(18),
-                  onHighlightChanged: (value) =>
-                      setState(() => _pressed = value),
                   onTap: enabled
                       ? () {
                           HapticFeedback.lightImpact();

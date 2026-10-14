@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 import 'progress_chart.dart';
+import 'nutrition_progress_content.dart';
 import 'progress_surface.dart';
 import 'progress_trend_summary.dart';
 
@@ -23,6 +24,10 @@ class _WellnessProgressContentState extends State<WellnessProgressContent> {
   String? _metric;
   @override
   Widget build(BuildContext context) {
+    if (widget.nutrition) {
+      return NutritionProgressContent(
+          data: widget.data, compact: widget.compact);
+    }
     _metric ??= widget.nutrition ? 'protein' : 'recovery';
     final choices = widget.nutrition
         ? const {

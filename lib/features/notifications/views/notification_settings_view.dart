@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -215,6 +216,12 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView>
             if (preferences['deliveryReady'] != true)
               const SettingsNotice('Push delivery is not ready on the server.'),
             SettingsGroup(title: 'Your reminders', children: [
+              _row(
+                  CupertinoIcons.creditcard,
+                  'Trial reminders',
+                  'billing',
+                  'A reminder 2 days before your trial ends, and when it expires. No automatic charge.',
+                  null),
               _row(
                   CupertinoIcons.flame,
                   'Workout reminders',
@@ -456,7 +463,8 @@ Future<void> offerNotificationReminders(BuildContext context) async {
     await storage.setBool(key, true);
     if (!context.mounted) return;
     final enable = await showModalBottomSheet<bool>(
-      context: context,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
       backgroundColor: FitnessTheme.surface,
       showDragHandle: true,
       isScrollControlled: true,

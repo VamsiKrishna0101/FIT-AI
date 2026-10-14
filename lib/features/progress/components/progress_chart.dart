@@ -1,3 +1,6 @@
+import '../../../core/components/motion.dart';
+import '../../../core/theme/ds_motion.dart';
+import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +11,7 @@ import 'progress_surface.dart';
 class ProgressChart extends StatefulWidget {
   final List<ProgressPoint> points;
   final String unit;
+  final int digits;
   final bool bars, daily, average, showReference, compactHeader;
   final Color color;
   final double height;
@@ -18,6 +22,7 @@ class ProgressChart extends StatefulWidget {
     super.key,
     required this.points,
     this.unit = '',
+    this.digits = 1,
     this.bars = false,
     this.daily = false,
     this.average = false,
@@ -41,7 +46,9 @@ class _ProgressChartState extends State<ProgressChart> {
   @override
   void didUpdateWidget(ProgressChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.points != widget.points) _selected = null;
+    if (_chartKey(oldWidget.points) != _chartKey(widget.points)) {
+      _selected = null;
+    }
   }
 
   @override
@@ -79,7 +86,7 @@ class _ProgressChartState extends State<ProgressChart> {
         Expanded(
             child: widget.compactHeader
                 ? Text(
-                    '${fitnessText(context, headlineLabel)} · ${progressValue(context, headline, unit: widget.unit)}',
+                    '${fitnessText(context, headlineLabel)} · ${progressValue(context, headline, unit: widget.unit, digits: widget.digits)}',
                     style: const TextStyle(fontSize: 11, color: progressMuted))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +97,9 @@ class _ProgressChartState extends State<ProgressChart> {
                         const SizedBox(height: 4),
                         Text.rich(
                             TextSpan(children: [
-                              TextSpan(text: progressValue(context, headline)),
+                              TextSpan(
+                                  text: progressValue(context, headline,
+                                      digits: widget.digits)),
                               if (widget.unit.isNotEmpty)
                                 TextSpan(
                                     text:
@@ -137,6 +146,7 @@ class _ProgressChartState extends State<ProgressChart> {
                   }
                 }
                 if (candidate != _selected) {
+                  HapticFeedback.selectionClick();
                   setState(() => _selected = candidate);
                 }
               }
@@ -150,17 +160,22 @@ class _ProgressChartState extends State<ProgressChart> {
                       onHorizontalDragUpdate: (details) =>
                           select(details.localPosition),
                       child: RepaintBoundary(
-                          child: CustomPaint(
-                              size: Size(constraints.maxWidth, widget.height),
-                              painter: _ChartPainter(
-                                  points: points,
-                                  min: min,
-                                  max: max,
-                                  color: widget.color,
-                                  bars: widget.bars,
-                                  daily: widget.daily,
-                                  selected: _selected,
-                                  reference: reference)))));
+                          child: MotionProgress(
+                              dataKey:
+                                  '${widget.bars}:${widget.unit}:${_chartKey(points)}',
+                              builder: (context, progress) => CustomPaint(
+                                  size:
+                                      Size(constraints.maxWidth, widget.height),
+                                  painter: _ChartPainter(
+                                      points: points,
+                                      progress: progress,
+                                      min: min,
+                                      max: max,
+                                      color: widget.color,
+                                      bars: widget.bars,
+                                      daily: widget.daily,
+                                      selected: _selected,
+                                      reference: reference))))));
             })),
             const SizedBox(width: 10),
             SizedBox(
@@ -231,15 +246,18 @@ class ProgressSparkline extends StatelessWidget {
     final high = points.map((point) => point.value).reduce(math.max);
     final padding = math.max(1.0, (high - low) * .2);
     return RepaintBoundary(
-        child: CustomPaint(
-            size: const Size(70, 28),
-            painter: _ChartPainter(
-                points: points,
-                min: low - padding,
-                max: high + padding,
-                color: color,
-                daily: daily,
-                compact: true)));
+        child: MotionProgress(
+            dataKey: _chartKey(points),
+            builder: (context, progress) => CustomPaint(
+                size: const Size(70, 28),
+                painter: _ChartPainter(
+                    points: points,
+                    progress: progress,
+                    min: low - padding,
+                    max: high + padding,
+                    color: color,
+                    daily: daily,
+                    compact: true))));
   }
 }
 
@@ -272,7 +290,7 @@ class _ChartGeometry {
 
 class _ChartPainter extends CustomPainter {
   final List<ProgressPoint> points;
-  final double min, max;
+  final double min, max, progress;
   final Color color;
   final bool bars, daily, compact;
   final int? selected;
@@ -282,6 +300,7 @@ class _ChartPainter extends CustomPainter {
     required this.min,
     required this.max,
     required this.color,
+    this.progress = 1,
     this.bars = false,
     this.daily = false,
     this.compact = false,
@@ -328,7 +347,13 @@ class _ChartPainter extends CustomPainter {
         if (points[i].value == 0) continue;
         final p = geometry.position(i);
         final rect = Rect.fromLTRB(
-            p.dx - width / 2, p.dy, p.dx + width / 2, size.height - 4);
+            p.dx - width / 2,
+            size.height -
+                4 -
+                (size.height - 4 - p.dy) *
+                    DSMotion.barProgress(progress, i, points.length),
+            p.dx + width / 2,
+            size.height - 4);
         final bar = Paint()
           ..shader = LinearGradient(
               begin: Alignment.topCenter,
@@ -342,6 +367,9 @@ class _ChartPainter extends CustomPainter {
             RRect.fromRectAndRadius(rect, const Radius.circular(3)), bar);
       }
     } else {
+      canvas.save();
+      canvas.clipRect(Rect.fromLTWH(0, 0,
+          size.width * DSMotion.effects.transform(progress), size.height));
       var start = 0;
       for (var i = 1; i <= points.length; i++) {
         final gap = i < points.length &&
@@ -383,6 +411,7 @@ class _ChartPainter extends CustomPainter {
         canvas.drawCircle(last, 3.5, Paint()..color = color);
       }
     }
+    if (!bars) canvas.restore();
     if (reference != null && !compact) {
       _dash(
           canvas,
@@ -406,6 +435,7 @@ class _ChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ChartPainter old) =>
+      old.progress != progress ||
       old.points != points ||
       old.selected != selected ||
       old.color != color ||
@@ -416,3 +446,7 @@ class _ChartPainter extends CustomPainter {
       old.min != min ||
       old.max != max;
 }
+
+String _chartKey(List<ProgressPoint> points) => points
+    .map((point) => '${point.date.microsecondsSinceEpoch}:${point.value}')
+    .join('|');

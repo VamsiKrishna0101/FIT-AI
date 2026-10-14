@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
@@ -81,10 +82,10 @@ class _EatingStyleCardState extends State<_EatingStyleCard> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _pressed ? 0.97 : 1.0,
-        duration: const Duration(milliseconds: 140),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: DSMotion.duration(context, DSMotion.selection),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
@@ -128,7 +129,7 @@ class _EatingStyleCardState extends State<_EatingStyleCard> {
                 ),
                 child: Center(
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
+                    duration: DSMotion.duration(context, DSMotion.press),
                     width: isSelected ? 9 : 0,
                     height: isSelected ? 9 : 0,
                     decoration: const BoxDecoration(
@@ -290,7 +291,7 @@ class _BudgetTab extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         alignment: Alignment.center,
         decoration: BoxDecoration(
@@ -428,7 +429,7 @@ class _StepperButtonState extends State<_StepperButton> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedScale(
         scale: _pressed ? 0.90 : 1.0,
-        duration: const Duration(milliseconds: 100),
+        duration: DSMotion.duration(context, DSMotion.press),
         child: Container(
           width: 40,
           height: 40,

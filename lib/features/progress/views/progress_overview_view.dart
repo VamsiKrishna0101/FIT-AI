@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -305,16 +306,17 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                     child: RefreshIndicator(
                         color: progressSilver,
                         onRefresh: () => _load(refresh: true),
-                        child: ListView(
-                            physics: const AlwaysScrollableScrollPhysics(
-                                parent: BouncingScrollPhysics()),
-                            padding: EdgeInsets.fromLTRB(
-                                18,
-                                4,
-                                18,
-                                LiquidSilverBottomBar.scrollBottomInset(
-                                    context)),
-                            children: [
+                        child: MotionEntrance(
+                            child: ListView(
+                                physics: const AlwaysScrollableScrollPhysics(
+                                    parent: BouncingScrollPhysics()),
+                                padding: EdgeInsets.fromLTRB(
+                                    18,
+                                    4,
+                                    18,
+                                    LiquidSilverBottomBar.scrollBottomInset(
+                                        context)),
+                                children: [
                               if (_failed)
                                 Row(children: [
                                   Expanded(
@@ -338,6 +340,6 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                                                 color: progressSilver,
                                                 strokeWidth: 2)))),
                               if (_data != null) ..._sections(_data!),
-                            ]))),
+                            ])))),
               ]))));
 }

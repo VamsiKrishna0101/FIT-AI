@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -287,12 +288,17 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                     backgroundColor: saved
                         ? const Color(0xFF414141)
                         : const Color(0xFF303030)),
-                icon: _busy
-                    ? const CupertinoActivityIndicator()
-                    : Icon(
-                        saved ? CupertinoIcons.checkmark : CupertinoIcons.plus,
-                        size: 17,
-                        color: trainingSilver)),
+                icon: MotionFeedback(
+                    child: _busy
+                        ? const CupertinoActivityIndicator(
+                            key: ValueKey('saving'))
+                        : Icon(
+                            saved
+                                ? CupertinoIcons.checkmark
+                                : CupertinoIcons.plus,
+                            size: 17,
+                            key: ValueKey(saved),
+                            color: trainingSilver))),
             SizedBox(
                 width: 36,
                 child: widget.log == null

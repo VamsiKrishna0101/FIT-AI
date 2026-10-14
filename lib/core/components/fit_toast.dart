@@ -1,3 +1,4 @@
+import '../theme/ds_motion.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -72,6 +73,7 @@ class _FitToastWidgetState extends State<_FitToastWidget>
   late final AnimationController _slideCtrl;
   late final Animation<Offset> _slideAnim;
   late final AnimationController _progressCtrl;
+  bool _started = false;
 
   double _dragOffset = 0.0;
   bool _isDismissing = false;
@@ -85,24 +87,35 @@ class _FitToastWidgetState extends State<_FitToastWidget>
 
     _slideCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 480),
+      duration: DSMotion.feedback,
     );
     _slideAnim = Tween<Offset>(
       begin: const Offset(0.0, 1.4),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _slideCtrl,
-      curve: Curves.easeOutBack,
+      curve: DSMotion.effects,
     ));
 
     _progressCtrl = AnimationController(
       vsync: this,
       duration: widget.duration,
+      animationBehavior: AnimationBehavior.preserve,
     );
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _slideCtrl.duration = DSMotion.duration(context, DSMotion.feedback);
     _slideCtrl.forward().then((_) {
+      if (!mounted) return;
       HapticFeedback.lightImpact();
-      _progressCtrl.forward().then((_) => _dismiss());
+      _progressCtrl.forward().then((_) {
+        if (mounted) _dismiss();
+      });
     });
   }
 
@@ -114,13 +127,13 @@ class _FitToastWidgetState extends State<_FitToastWidget>
   }
 
   void _dismiss() {
-    if (_isDismissing) return;
+    if (!mounted || _isDismissing) return;
     _isDismissing = true;
     _progressCtrl.stop();
     _slideCtrl
         .animateBack(
           0.0,
-          duration: const Duration(milliseconds: 300),
+          duration: DSMotion.duration(context, DSMotion.selection),
           curve: Curves.easeInCubic,
         )
         .then((_) => widget.onDismissed());
@@ -235,7 +248,7 @@ class _ToastCard extends StatelessWidget {
                       child: Text(
                         message,
                         style: const TextStyle(
-                                                    fontSize: 14,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF0F0F0F),
                           letterSpacing: -0.2,
@@ -254,7 +267,9 @@ class _ToastCard extends StatelessWidget {
                   child: AnimatedBuilder(
                     animation: progressCtrl,
                     builder: (_, __) => LinearProgressIndicator(
-                      value: 1.0 - progressCtrl.value,
+                      value: DSMotion.reduced(context)
+                          ? 1
+                          : 1.0 - progressCtrl.value,
                       backgroundColor:
                           const Color(0xFF0F0F0F).withValues(alpha: 0.08),
                       valueColor: const AlwaysStoppedAnimation<Color>(

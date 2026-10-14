@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 
@@ -80,7 +81,8 @@ class _AuthViewState extends State<AuthView> {
       final draft = await OnboardingDraft.load();
       if (!mounted) return;
       final result = await showModalBottomSheet<AuthResponse>(
-        context: context,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
         useSafeArea: true,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -275,10 +277,10 @@ class _AppleSignInButtonState extends State<_AppleSignInButton> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _pressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 140),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: DSMotion.duration(context, DSMotion.press),
           curve: Curves.easeOutCubic,
           constraints: const BoxConstraints(minHeight: 52),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -351,10 +353,10 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _pressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 140),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: DSMotion.duration(context, DSMotion.press),
           curve: Curves.easeOutCubic,
           constraints: const BoxConstraints(minHeight: 52),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -496,7 +498,7 @@ class _LuxuryEmailFieldState extends State<_LuxuryEmailField> {
             .hasMatch(widget.controller.text.trim());
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: DSMotion.duration(context, DSMotion.press),
       curve: Curves.easeOutCubic,
       constraints: const BoxConstraints(minHeight: 54),
       decoration: BoxDecoration(
@@ -639,7 +641,7 @@ class _LuxuryPasswordFieldState extends State<_LuxuryPasswordField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: DSMotion.duration(context, DSMotion.press),
           curve: Curves.easeOutCubic,
           constraints: const BoxConstraints(minHeight: 54),
           decoration: BoxDecoration(
@@ -734,7 +736,7 @@ class _LuxuryPasswordFieldState extends State<_LuxuryPasswordField> {
             child: Row(
               children: [
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: DSMotion.duration(context, DSMotion.selection),
                   child: Icon(
                     meetsRequirement
                         ? Icons.check_circle_rounded
@@ -749,7 +751,7 @@ class _LuxuryPasswordFieldState extends State<_LuxuryPasswordField> {
                 const SizedBox(width: 6),
                 Expanded(
                     child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
+                  duration: DSMotion.duration(context, DSMotion.selection),
                   style: TextStyle(
                     fontFamily:
                         Theme.of(context).textTheme.bodyMedium?.fontFamily,
@@ -1132,7 +1134,7 @@ class OtpCodeField extends StatelessWidget {
                         child: Padding(
                           padding: EdgeInsets.only(right: index == 5 ? 0 : 8),
                           child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
+                            duration: DSMotion.duration(context, DSMotion.press),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),

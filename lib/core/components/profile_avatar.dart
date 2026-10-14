@@ -1,3 +1,4 @@
+import '../theme/ds_motion.dart';
 import 'package:flutter/material.dart';
 
 class ProfileAvatar extends StatefulWidget {
@@ -58,7 +59,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
               scale: _pressed ? .94 : 1,
               duration: MediaQuery.disableAnimationsOf(context)
                   ? Duration.zero
-                  : const Duration(milliseconds: 160),
+                  : DSMotion.press,
               curve: Curves.easeOutCubic,
               child: ClipOval(
                 child: Material(

@@ -22,6 +22,9 @@ import '../../planner/views/weekly_plan_view.dart';
 import '../../wellness/views/sleep_entry_view.dart';
 import '../../nutrition/views/food_library_view.dart';
 import '../../today/repositories/today_repository.dart';
+import '../../subscription/subscription_gate.dart';
+import '../../subscription/subscription_view.dart';
+import '../../subscription/subscription_service.dart';
 
 class MainDashboardScaffold extends StatefulWidget {
   final int initialIndex;
@@ -49,6 +52,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
     _currentIndex = widget.initialIndex.clamp(0, 3);
     _visitedTabs.add(_currentIndex);
     AppDataMode.shared.addListener(_datasetChanged);
+    SubscriptionService.shared.addListener(_datasetChanged);
     unawaited(_initializeMode());
     _notifications =
         NotificationService.shared.opened.listen((_) => _takeNotification());
@@ -59,6 +63,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
   void dispose() {
     _notifications?.cancel();
     AppDataMode.shared.removeListener(_datasetChanged);
+    SubscriptionService.shared.removeListener(_datasetChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -106,6 +111,10 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
     Navigator.of(context).popUntil((route) => route == dashboard);
 
     switch (data['type']) {
+      case 'TRIAL_ENDING':
+      case 'TRIAL_EXPIRED':
+        _openRoute(const SubscriptionView());
+        break;
       case 'WORKOUT':
         _onTabSelected(1);
         break;
@@ -164,10 +173,15 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
             padding: MediaQuery.paddingOf(context).copyWith(bottom: 0),
           ),
           child: Column(children: [
+            const SubscriptionBanner(),
             Expanded(
                 child: MediaQuery.removePadding(
                     context: context,
-                    removeTop: AppDataMode.shared.available,
+                    removeTop: AppDataMode.shared.available ||
+                        (SubscriptionService.shared.access != null &&
+                            !(SubscriptionService.shared.access!.state ==
+                                    'active' &&
+                                SubscriptionService.shared.access!.hasAccess)),
                     child: !_modeReady
                         ? const Center(
                             child: CircularProgressIndicator(

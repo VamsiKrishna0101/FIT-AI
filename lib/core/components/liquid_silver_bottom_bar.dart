@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_native/liquid_glass_native.dart';
 
+import '../theme/ds_colors.dart';
 import 'animated_tab_stack.dart';
 
 class LiquidSilverBottomBar extends StatefulWidget {
@@ -28,7 +29,7 @@ class LiquidSilverBottomBar extends StatefulWidget {
       60 + (MediaQuery.textScalerOf(context).scale(10) - 10).clamp(0, 14);
 
   static double _bottomMargin(BuildContext context) =>
-      MediaQuery.viewPaddingOf(context).bottom + 32;
+      MediaQuery.viewPaddingOf(context).bottom + 16;
 
   static double scrollBottomInset(BuildContext context) =>
       (_isIOS ? 100 : _height(context)) + _bottomMargin(context) + 28;
@@ -71,11 +72,10 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
   }
 
   Widget _nativeDock(BuildContext context) {
-    // UIKit adds its own inset around the visible capsule inside this 100pt
-    // host. Leave that space intact instead of clipping the system glass.
+    // Pin the plugin's host to the bottom edge. UIKit supplies the capsule's
+    // floating gap and home-indicator inset inside its 100pt native view.
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          12, 12, 12, LiquidSilverBottomBar._bottomMargin(context) - 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Align(
         alignment: Alignment.bottomCenter,
         heightFactor: 1,
@@ -87,7 +87,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
             key: ValueKey(List<String>.of(labels).join('\u0000')),
             currentIndex: selectedIndex,
             brightness: Brightness.dark,
-            tint: const Color(0xFFF3F3F5),
+            tint: DSColors.navGlassText,
             items: [
               TabItem(label: labels[0], sfSymbol: 'sun.max'),
               TabItem(label: labels[1], sfSymbol: 'flame'),
@@ -161,16 +161,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(40),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0x1CFFFFFF),
-                            Color(0x07DCE2EA),
-                            Color(0x12FFFFFF),
-                          ],
-                          stops: [0, .52, 1],
-                        ),
+                        gradient: DSColors.navGlassGradient,
                       ),
                       child: Stack(
                         children: [
@@ -197,16 +188,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(40),
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Color(0x38FFFFFF),
-                                            Color(0x12FFFFFF),
-                                            Color(0x20E8EDF5),
-                                          ],
-                                          stops: [0, .6, 1],
-                                        ),
+                                        gradient: DSColors.navGlassLensGradient,
                                       ),
                                     ),
                                   ),
@@ -263,7 +245,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
                   child: Icon(
                     selected ? _activeIcons[index] : _icons[index],
                     key: ValueKey(selected),
-                    color: const Color(0xFFF3F3F5),
+                    color: DSColors.navGlassText,
                     size: 20,
                   ),
                 ),
@@ -274,7 +256,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: const Color(0xFFF3F3F5),
+                    color: DSColors.navGlassText,
                     fontSize: 10,
                     height: 1.1,
                     fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
@@ -308,16 +290,16 @@ class _SilverRimPainter extends CustomPainter {
         end: Alignment.bottomRight,
         colors: selected
             ? const [
-                Color(0xA6FFFFFF),
-                Color(0x26FFFFFF),
+                Color(0x44FFFFFF),
                 Color(0x18FFFFFF),
-                Color(0x85FFFFFF),
+                Color(0x0CFFFFFF),
+                Color(0x36FFFFFF),
               ]
             : const [
-                Color(0x99FFFFFF),
-                Color(0x30FFFFFF),
-                Color(0x12FFFFFF),
-                Color(0x70FFFFFF),
+                Color(0x33FFFFFF),
+                Color(0x10FFFFFF),
+                Color(0x06FFFFFF),
+                Color(0x24FFFFFF),
               ],
         stops: const [0, .32, .62, 1],
       ).createShader(bounds);
@@ -330,7 +312,7 @@ class _SilverRimPainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0x05FFFFFF), Color(0x08FFFFFF), Color(0x40FFFFFF)],
+          colors: [Color(0x03FFFFFF), Color(0x04FFFFFF), Color(0x18FFFFFF)],
           stops: [0, .65, 1],
         ).createShader(bounds);
       canvas.drawRRect(rim.deflate(2.5), paint);

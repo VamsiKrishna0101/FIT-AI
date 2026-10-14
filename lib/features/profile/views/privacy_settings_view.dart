@@ -120,7 +120,7 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
     final confirmed = await confirmSettingsAction(context,
         title: 'Permanently delete account?',
         message:
-            'Your account, plans, workouts, health records and saved photos will be removed. This cannot be undone.',
+            'Your account, plans, workouts, health records and saved photos will be removed. This cannot be undone. Deleting your account does not cancel a Google Play subscription. Manage it in Google Play first.',
         action: 'Delete account',
         destructive: true);
     if (!confirmed || !mounted) return;

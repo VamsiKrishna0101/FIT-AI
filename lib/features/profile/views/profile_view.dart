@@ -21,6 +21,7 @@ import 'profile_details_view.dart';
 import 'settings_components.dart';
 import 'settings_preferences_view.dart';
 import '../../notifications/views/notification_settings_view.dart';
+import '../../subscription/subscription_view.dart';
 
 class ProfileView extends StatefulWidget {
   final SettingsRepository? repository;
@@ -224,6 +225,11 @@ class _ProfileViewState extends State<ProfileView> {
                 onTap: () => _open(const McpConnectionsView())),
           ]),
           SettingsGroup(title: 'Preferences', children: [
+            SettingsRow(
+                icon: CupertinoIcons.sparkles,
+                title: 'FitAI Premium',
+                subtitle: 'Trial, subscription and billing',
+                onTap: () => _open(const SubscriptionView())),
             SettingsRow(
                 icon: CupertinoIcons.bell,
                 title: 'Notifications',

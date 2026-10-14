@@ -67,6 +67,21 @@ class DSColors {
   static const Color navInactive = Color(0x7AFFFFFF);
   static const Color navActiveBg = Color(0x2BFFFFFF);
   static const Color navBarBg = Color(0x99111418);
+  static const Color navGlassText = Color(0xFFF3F3F5);
+
+  static const LinearGradient navGlassGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xB8181818), Color(0xA6101010), Color(0xB8151515)],
+    stops: [0, .52, 1],
+  );
+
+  static const LinearGradient navGlassLensGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0x12FFFFFF), Color(0x07FFFFFF), Color(0x0DFFFFFF)],
+    stops: [0, .6, 1],
+  );
 
   // ── Glass Card Gradient ───────────────────────────────────────────────────
   static const LinearGradient glassCardGradient = LinearGradient(

@@ -1,3 +1,5 @@
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,7 +22,9 @@ class TrainingSurface extends StatelessWidget {
       this.onTap});
 
   @override
-  Widget build(BuildContext context) => Material(
+  Widget build(BuildContext context) => MotionPress(
+      enabled: onTap != null,
+      child: Material(
         color: DSColors.bgCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),
@@ -29,7 +33,7 @@ class TrainingSurface extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
             onTap: onTap, child: Padding(padding: padding, child: child)),
-      );
+      ));
 }
 
 class TrainingButton extends StatelessWidget {
@@ -44,7 +48,9 @@ class TrainingButton extends StatelessWidget {
       this.primary = false,
       this.icon});
   @override
-  Widget build(BuildContext context) => FilledButton(
+  Widget build(BuildContext context) => MotionPress(
+      enabled: onPressed != null,
+      child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: primary ? trainingSilver : const Color(0xFF303030),
@@ -70,7 +76,7 @@ class TrainingButton extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 14, fontWeight: FontWeight.w600))),
             ]),
-      );
+      ));
 }
 
 class TrainingPoster extends StatelessWidget {
@@ -103,6 +109,7 @@ Future<String?> trainingName(
     BuildContext context, String title, String initial) async {
   final controller = TextEditingController(text: initial);
   final result = await showDialog<String>(
+      animationStyle: DSMotion.dialogStyle(context),
       context: context,
       builder: (context) => AlertDialog(
             backgroundColor: DSColors.bgCard,

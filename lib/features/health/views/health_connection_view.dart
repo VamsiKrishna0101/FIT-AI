@@ -1,3 +1,5 @@
+import '../../../core/components/motion.dart';
+import '../../../core/theme/ds_motion.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -142,6 +144,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
     }
     if (!mounted) return;
     showDialog<void>(
+        animationStyle: DSMotion.dialogStyle(context),
         context: context,
         builder: (_) => AlertDialog(
                 title: const FitnessText('Manage health access'),
@@ -209,11 +212,13 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                             ])),
                       ),
                       Expanded(
-                          child: ListView(
-                              key: const ValueKey('health-connection-scroll'),
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                              children: [
+                          child: MotionEntrance(
+                              child: ListView(
+                                  key: const ValueKey(
+                                      'health-connection-scroll'),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                                  children: [
                             const FitnessText('Connect your health',
                                 style: TextStyle(
                                     fontSize: 28,
@@ -395,7 +400,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                                         builder: (_) =>
                                             const HealthPrivacyView())),
                                 child: const FitnessText('Privacy & data use')),
-                          ])),
+                          ]))),
                       Container(
                         key: const ValueKey('health-action-footer'),
                         decoration: const BoxDecoration(

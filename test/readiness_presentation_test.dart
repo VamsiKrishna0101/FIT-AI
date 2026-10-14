@@ -110,6 +110,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+      'compact wearable card puts the real score on the right and shows only recorded vitals',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 852);
+    addTearDown(tester.view.reset);
+    final data = HomeData.fromJson({
+      'user': {'name': 'Vamsi'},
+      'readiness': {
+        'score': 6.8,
+        'source': 'health_connect',
+        'date': '2026-10-13',
+        'hrvMs': 42,
+        'restingHrBpm': 63,
+        'sleepMinutes': 410,
+      },
+      'nutrition': <String, dynamic>{},
+      'weeklyStreak': <dynamic>[],
+    });
+    await tester.pumpWidget(_app(Scaffold(
+        body: TodayDashboard(
+      data: data,
+      now: DateTime(2026, 10, 13),
+      onRefresh: () async {},
+      onProfile: () {},
+      onSession: () {},
+      onTrain: () {},
+      onNutrition: () {},
+      onBody: () {},
+    ))));
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('today-readiness-card')));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const ValueKey('today-readiness-card'));
+    final ring = find.byKey(const ValueKey('today-readiness-ring'));
+    final heading = find.byKey(const ValueKey('today-readiness-heading'));
+    expect(tester.getSize(card).height, lessThan(260));
+    expect(tester.getSize(ring).width, 92);
+    expect(
+        tester.getCenter(ring).dx, greaterThan(tester.getCenter(heading).dx));
+    expect(find.text('68'), findsOneWidget);
+    expect(find.text('42 ms'), findsOneWidget);
+    expect(find.text('63 bpm'), findsOneWidget);
+    expect(find.text('Sample data'), findsNothing);
+    expect(find.text('84'), findsNothing);
+    expect(find.text('54 bpm'), findsNothing);
+    await _capture(tester, 'readiness-compact-vitals');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Readiness remains readable on a small screen with large text',
       (tester) async {
     tester.view.devicePixelRatio = 1;

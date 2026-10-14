@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../localization/language_manager.dart';
 import '../storage/secure_session_store.dart';
 import 'endpoints.dart';
@@ -6,6 +7,7 @@ import '../cache/app_data_mode.dart';
 
 // MARK: - Production Async Dio API Client
 class ApiClient {
+  static final subscriptionRequired = ValueNotifier<int>(0);
   static final ApiClient shared = ApiClient._();
   late final Dio _dio;
   Future<bool>? _renewing;
@@ -65,6 +67,11 @@ class ApiClient {
           handler.next(response);
         },
         onError: (DioException error, handler) async {
+          if (error.response?.statusCode == 402 &&
+              error.response?.data is Map &&
+              error.response?.data['code'] == 'SUBSCRIPTION_REQUIRED') {
+            subscriptionRequired.value++;
+          }
           final request = error.requestOptions;
           final header = request.headers['Authorization'];
           if (error.response?.statusCode == 401 &&

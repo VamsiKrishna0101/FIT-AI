@@ -1,3 +1,5 @@
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -84,37 +86,43 @@ class ProgressChoices extends StatelessWidget {
               .map((entry) => Semantics(
                   selected: selected == entry.key,
                   button: true,
-                  child: InkWell(
-                      onTap: () => onChanged(entry.key),
-                      borderRadius: BorderRadius.circular(8),
-                      child: ConstrainedBox(
-                          constraints: const BoxConstraints(minHeight: 48),
-                          child: Padding(
-                              padding: const EdgeInsets.only(
-                                  right: 22, top: 12, bottom: 6),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(fitnessText(context, entry.value),
-                                        style: TextStyle(
-                                            color: selected == entry.key
-                                                ? progressSilver
-                                                : progressMuted,
-                                            fontSize: 12,
-                                            fontWeight: selected == entry.key
-                                                ? FontWeight.w600
-                                                : FontWeight.w400)),
-                                    const SizedBox(height: 10),
-                                    Container(
-                                        width: 24,
-                                        height: 2,
-                                        decoration: BoxDecoration(
-                                            color: selected == entry.key
-                                                ? color
-                                                : Colors.transparent,
-                                            borderRadius:
-                                                BorderRadius.circular(1))),
-                                  ]))))))
+                  child: MotionPress(
+                      child: InkWell(
+                          onTap: () => onChanged(entry.key),
+                          borderRadius: BorderRadius.circular(8),
+                          child: ConstrainedBox(
+                              constraints: const BoxConstraints(minHeight: 48),
+                              child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 22, top: 12, bottom: 6),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(fitnessText(context, entry.value),
+                                            style: TextStyle(
+                                                color: selected == entry.key
+                                                    ? progressSilver
+                                                    : progressMuted,
+                                                fontSize: 12,
+                                                fontWeight:
+                                                    selected == entry.key
+                                                        ? FontWeight.w600
+                                                        : FontWeight.w400)),
+                                        const SizedBox(height: 10),
+                                        AnimatedContainer(
+                                            duration: DSMotion.duration(
+                                                context, DSMotion.selection),
+                                            curve: DSMotion.effects,
+                                            width: 24,
+                                            height: 2,
+                                            decoration: BoxDecoration(
+                                                color: selected == entry.key
+                                                    ? color
+                                                    : Colors.transparent,
+                                                borderRadius:
+                                                    BorderRadius.circular(1))),
+                                      ])))))))
               .toList()));
 }
 

@@ -1,3 +1,4 @@
+import 'motion.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../localization/fitness_text.dart';
@@ -47,19 +48,21 @@ class FitnessSubmit extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
       width: double.infinity,
       height: 50,
-      child: FilledButton(
-          onPressed: busy ? null : onPressed,
-          style: FilledButton.styleFrom(
-              backgroundColor: FitnessTheme.silver,
-              foregroundColor: FitnessTheme.canvas,
-              disabledBackgroundColor: const Color(0xFF363636),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16))),
-          child: busy
-              ? const CupertinoActivityIndicator(color: Colors.white70)
-              : FitnessText(label,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600))));
+      child: MotionPress(
+          enabled: !busy && onPressed != null,
+          child: FilledButton(
+              onPressed: busy ? null : onPressed,
+              style: FilledButton.styleFrom(
+                  backgroundColor: FitnessTheme.silver,
+                  foregroundColor: FitnessTheme.canvas,
+                  disabledBackgroundColor: const Color(0xFF363636),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16))),
+              child: busy
+                  ? const CupertinoActivityIndicator(color: Colors.white70)
+                  : FitnessText(label,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)))));
 }
 
 double? inputNumber(String text) {

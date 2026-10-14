@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/fitness_form.dart';
 import '../../../core/localization/fitness_text.dart';
@@ -145,7 +146,9 @@ class _MealPortionViewState extends State<MealPortionView> {
                         padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
                         child: FitnessSubmit(
                             label: 'Log meal', busy: _busy, onPressed: _save))),
-                body: ListView(padding: const EdgeInsets.all(20), children: [
+                body: MotionEntrance(
+                    child:
+                        ListView(padding: const EdgeInsets.all(20), children: [
                   if (food != null) ...[
                     Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +302,7 @@ class _MealPortionViewState extends State<MealPortionView> {
                         child: FitnessText(_error!,
                             style: const TextStyle(
                                 color: FitnessTheme.coral, fontSize: 13))),
-                ]))));
+                ])))));
   }
 
   Widget _value(String label, String value) => Padding(

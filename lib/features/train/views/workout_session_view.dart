@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -277,155 +278,176 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                             _loadPrevious();
                                           })))),
                       Expanded(
-                          child: ListView(
-                              key: const ValueKey('workout-session-scroll'),
-                              padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-                              children: [
-                            ClipRRect(
-                                borderRadius: BorderRadius.circular(22),
-                                child: AspectRatio(
-                                    aspectRatio: 1,
-                                    child: RepaintBoundary(
-                                        child: FitVideoSurface(
-                                            key: ValueKey(item.id),
-                                            url: item.exercise.url,
-                                            autoplay: true,
-                                            fit: BoxFit.contain,
-                                            neutralBackground: true,
-                                            backgroundColor: Colors.white)))),
-                            const SizedBox(height: 17),
-                            Text(item.exercise.displayName,
-                                style: const TextStyle(
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: -.5)),
-                            const SizedBox(height: 5),
-                            Text(
-                                '${item.exercise.targetLabel ?? item.exercise.target} · ${item.exercise.equipmentLabel ?? item.exercise.equipment}',
-                                style: const TextStyle(
-                                    fontSize: 13, color: trainingMuted)),
-                            Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton.icon(
-                                    onPressed: () => Navigator.of(context).push(
-                                        MaterialPageRoute<void>(
-                                            builder: (_) => ExerciseDetailView(
-                                                exercise: item.exercise))),
-                                    icon: const Icon(CupertinoIcons.info_circle,
-                                        size: 16),
-                                    label: Text(copy('Form guide'),
-                                        style: const TextStyle(fontSize: 12)))),
-                            _restCard(),
-                            const SizedBox(height: 13),
-                            TrainingSurface(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(children: [
-                                        Expanded(
-                                            child: Text(copy('Your sets'),
-                                                style: const TextStyle(
-                                                    fontSize: 17,
-                                                    fontWeight:
-                                                        FontWeight.w600))),
-                                        Text(
-                                            copy('{sets} × {reps}', values: {
-                                              'sets': item.targetSets,
-                                              'reps': item.targetReps
-                                            }),
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: trainingMuted))
-                                      ]),
-                                      const SizedBox(height: 7),
-                                      Text(
-                                          copy(
-                                              'Confirm or edit each set before saving.'),
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              color: trainingMuted)),
-                                      if (item.setTargets?['weightBasis'] ==
-                                          'estimated_start')
-                                        Text(
-                                            copy(
-                                                'Starting estimate · reduce the load if needed'),
-                                            style: const TextStyle(
-                                                color: trainingMuted,
-                                                fontSize: 11)),
-                                      const SizedBox(height: 10),
-                                      for (int number = 1;
-                                          number <= _setCount(item);
-                                          number++)
-                                        WorkoutSetEntry(
-                                            key: _setEntries.putIfAbsent(
-                                                '${item.id}:$number',
-                                                () => GlobalKey<
-                                                    WorkoutSetEntryState>()),
-                                            date: _day.date,
-                                            itemId: item.id,
-                                            number: number,
-                                            targetLabel:
-                                                item.localizedTargetLabel(
-                                                    context, number),
-                                            suggestedReps:
-                                                _suggestedReps(item, number),
-                                            suggestedWeight:
-                                                _suggestedWeight(item, number),
-                                            previous: _previous,
-                                            log: _day
-                                                .logs(item.id)
-                                                .where((row) =>
-                                                    row['setNumber'] == number)
-                                                .firstOrNull,
-                                            disabled: _busy,
-                                            onSave:
-                                                (reps, weight, effort) async {
-                                              await _mutate('PUT',
-                                                  '/items/${item.id}/sets',
-                                                  data: {
-                                                    'setNumber': number,
-                                                    'reps': reps,
-                                                    'weight': weight,
-                                                    'rpe': effort,
-                                                  });
-                                              await _rest(item.restSeconds);
-                                              await HapticFeedback
-                                                  .selectionClick();
-                                            },
-                                            onDelete: () => _mutate('DELETE',
-                                                '/items/${item.id}/sets/$number')),
-                                      TextButton.icon(
-                                          onPressed: _busy
-                                              ? null
-                                              : () => _extraSet(item),
-                                          icon: const Icon(CupertinoIcons.plus,
-                                              size: 14),
-                                          label: Text(copy('Add set'),
-                                              style: const TextStyle(
-                                                  fontSize: 12))),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                          copy(
-                                              'Only saved sets count toward your body map.'),
-                                          style: const TextStyle(
-                                              color: trainingMuted,
-                                              fontSize: 11,
-                                              height: 1.4)),
-                                      const SizedBox(height: 12),
-                                      if (!_day.finished)
-                                        WorkoutItemActions(
-                                            item: item,
-                                            busy: _busy,
-                                            onDone: () =>
-                                                _status(item, 'COMPLETED'),
-                                            onSkip: () =>
-                                                _status(item, 'SKIPPED'),
-                                            onUndo: () =>
-                                                _status(item, 'NOT_STARTED')),
-                                    ])),
-                          ])),
+                          child: MotionEntrance(
+                              key: ValueKey(item.id),
+                              child: ListView(
+                                  key: const ValueKey('workout-session-scroll'),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(18, 8, 18, 24),
+                                  children: [
+                                    ClipRRect(
+                                        borderRadius: BorderRadius.circular(22),
+                                        child: AspectRatio(
+                                            aspectRatio: 1,
+                                            child: RepaintBoundary(
+                                                child: FitVideoSurface(
+                                                    key: ValueKey(item.id),
+                                                    url: item.exercise.url,
+                                                    autoplay: true,
+                                                    fit: BoxFit.contain,
+                                                    neutralBackground: true,
+                                                    backgroundColor:
+                                                        Colors.white)))),
+                                    const SizedBox(height: 17),
+                                    Text(item.exercise.displayName,
+                                        style: const TextStyle(
+                                            fontSize: 23,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: -.5)),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                        '${item.exercise.targetLabel ?? item.exercise.target} · ${item.exercise.equipmentLabel ?? item.exercise.equipment}',
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            color: trainingMuted)),
+                                    Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: TextButton.icon(
+                                            onPressed: () => Navigator.of(context)
+                                                .push(MaterialPageRoute<void>(
+                                                    builder: (_) =>
+                                                        ExerciseDetailView(
+                                                            exercise: item
+                                                                .exercise))),
+                                            icon: const Icon(
+                                                CupertinoIcons.info_circle,
+                                                size: 16),
+                                            label: Text(copy('Form guide'),
+                                                style:
+                                                    const TextStyle(fontSize: 12)))),
+                                    _restCard(),
+                                    const SizedBox(height: 13),
+                                    TrainingSurface(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(children: [
+                                                Expanded(
+                                                    child: Text(
+                                                        copy('Your sets'),
+                                                        style: const TextStyle(
+                                                            fontSize: 17,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600))),
+                                                Text(
+                                                    copy('{sets} × {reps}',
+                                                        values: {
+                                                          'sets':
+                                                              item.targetSets,
+                                                          'reps':
+                                                              item.targetReps
+                                                        }),
+                                                    style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: trainingMuted))
+                                              ]),
+                                              const SizedBox(height: 7),
+                                              Text(
+                                                  copy(
+                                                      'Confirm or edit each set before saving.'),
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: trainingMuted)),
+                                              if (item.setTargets?[
+                                                      'weightBasis'] ==
+                                                  'estimated_start')
+                                                Text(
+                                                    copy(
+                                                        'Starting estimate · reduce the load if needed'),
+                                                    style: const TextStyle(
+                                                        color: trainingMuted,
+                                                        fontSize: 11)),
+                                              const SizedBox(height: 10),
+                                              for (int number = 1;
+                                                  number <= _setCount(item);
+                                                  number++)
+                                                WorkoutSetEntry(
+                                                    key: _setEntries.putIfAbsent(
+                                                        '${item.id}:$number',
+                                                        () => GlobalKey<
+                                                            WorkoutSetEntryState>()),
+                                                    date: _day.date,
+                                                    itemId: item.id,
+                                                    number: number,
+                                                    targetLabel: item
+                                                        .localizedTargetLabel(
+                                                            context, number),
+                                                    suggestedReps:
+                                                        _suggestedReps(
+                                                            item, number),
+                                                    suggestedWeight:
+                                                        _suggestedWeight(
+                                                            item, number),
+                                                    previous: _previous,
+                                                    log: _day
+                                                        .logs(item.id)
+                                                        .where((row) =>
+                                                            row['setNumber'] ==
+                                                            number)
+                                                        .firstOrNull,
+                                                    disabled: _busy,
+                                                    onSave: (reps, weight,
+                                                        effort) async {
+                                                      await _mutate('PUT',
+                                                          '/items/${item.id}/sets',
+                                                          data: {
+                                                            'setNumber': number,
+                                                            'reps': reps,
+                                                            'weight': weight,
+                                                            'rpe': effort,
+                                                          });
+                                                      await _rest(
+                                                          item.restSeconds);
+                                                      await HapticFeedback
+                                                          .selectionClick();
+                                                    },
+                                                    onDelete: () => _mutate(
+                                                        'DELETE',
+                                                        '/items/${item.id}/sets/$number')),
+                                              TextButton.icon(
+                                                  onPressed: _busy
+                                                      ? null
+                                                      : () => _extraSet(item),
+                                                  icon: const Icon(
+                                                      CupertinoIcons.plus,
+                                                      size: 14),
+                                                  label: Text(copy('Add set'),
+                                                      style: const TextStyle(
+                                                          fontSize: 12))),
+                                              const SizedBox(height: 5),
+                                              Text(
+                                                  copy(
+                                                      'Only saved sets count toward your body map.'),
+                                                  style: const TextStyle(
+                                                      color: trainingMuted,
+                                                      fontSize: 11,
+                                                      height: 1.4)),
+                                              const SizedBox(height: 12),
+                                              if (!_day.finished)
+                                                WorkoutItemActions(
+                                                    item: item,
+                                                    busy: _busy,
+                                                    onDone: () => _status(
+                                                        item, 'COMPLETED'),
+                                                    onSkip: () => _status(
+                                                        item, 'SKIPPED'),
+                                                    onUndo: () => _status(
+                                                        item, 'NOT_STARTED')),
+                                            ])),
+                                  ]))),
                     ]),
           bottomNavigationBar: _day.finished
               ? (_editingFinished
@@ -523,7 +545,8 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                     icon: const Icon(CupertinoIcons.forward_end, size: 16)),
             ]));
       });
-  Widget _summary() => ListView(padding: const EdgeInsets.all(18), children: [
+  Widget _summary() => MotionEntrance(
+          child: ListView(padding: const EdgeInsets.all(18), children: [
         const SizedBox(height: 30),
         const Icon(CupertinoIcons.checkmark_circle_fill,
             size: 54, color: trainingSilver),
@@ -571,7 +594,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
             label: 'Done',
             primary: true,
             onPressed: () => Navigator.pop(context)),
-      ]);
+      ]));
   Widget _stat(String label, String value) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 9),
       child: Row(children: [

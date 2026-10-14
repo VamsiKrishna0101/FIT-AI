@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
@@ -86,10 +87,10 @@ class _DurationPillState extends State<_DurationPill> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 140),
+        duration: DSMotion.duration(context, DSMotion.press),
         curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: DSMotion.duration(context, DSMotion.selection),
           curve: Curves.easeOutCubic,
           alignment: Alignment.center,
           decoration: BoxDecoration(

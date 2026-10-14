@@ -1,3 +1,4 @@
+import '../theme/ds_motion.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
@@ -41,8 +42,18 @@ class _LuminousOrbitalRingState extends State<LuminousOrbitalRing>
     super.initState();
     _rotationCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 22),
-    )..repeat();
+      duration: DSMotion.chart,
+      upperBound: .03,
+    )..forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (DSMotion.reduced(context)) {
+      _rotationCtrl.stop();
+      _rotationCtrl.value = 0;
+    }
   }
 
   @override

@@ -1,3 +1,4 @@
+import '../../../core/components/motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -24,11 +25,9 @@ class AboutYouExperienceView extends StatefulWidget {
   State<AboutYouExperienceView> createState() => _AboutYouExperienceViewState();
 }
 
-class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
-    with TickerProviderStateMixin {
+class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   late final AboutYouViewModel _viewModel;
   late final TextEditingController _nameController;
-  late final AnimationController _expStaggerCtrl;
   String _selectedMetric = 'weight';
 
   @override
@@ -36,13 +35,6 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
     super.initState();
     _viewModel = AboutYouViewModel()..addListener(_rebuild);
     _nameController = TextEditingController(text: _viewModel.name);
-    _expStaggerCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    Future<void>.delayed(const Duration(milliseconds: 320), () {
-      if (mounted) _expStaggerCtrl.forward();
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -66,7 +58,6 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
     _viewModel.removeListener(_rebuild);
     _viewModel.dispose();
     _nameController.dispose();
-    _expStaggerCtrl.dispose();
     super.dispose();
   }
 
@@ -191,34 +182,17 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
         // 3 Experience Cards — staggered slide-up entrance
         ...List.generate(ExperienceLevel.values.length, (index) {
           final level = ExperienceLevel.values[index];
-          final isSelected = selectedExperience == level;
-          final title = language.experienceTitle(level);
-          final subtitle = language.experienceSubtitle(level);
-          final start = index * 0.20;
-          final end = (start + 0.55).clamp(0.0, 1.0);
-          final cardAnim = CurvedAnimation(
-            parent: _expStaggerCtrl,
-            curve: Interval(start, end, curve: Curves.easeOutCubic),
-          );
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: FadeTransition(
-              opacity: cardAnim,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.22),
-                  end: Offset.zero,
-                ).animate(cardAnim),
-                child: ExperienceCard(
-                  level: level,
-                  title: title,
-                  subtitle: subtitle,
-                  isSelected: isSelected,
-                  onTap: () => _viewModel.selectExperience(level),
-                ),
-              ),
-            ),
-          );
+              padding: const EdgeInsets.only(bottom: 12),
+              child: MotionEntrance(
+                  order: index,
+                  child: ExperienceCard(
+                    level: level,
+                    title: language.experienceTitle(level),
+                    subtitle: language.experienceSubtitle(level),
+                    isSelected: selectedExperience == level,
+                    onTap: () => _viewModel.selectExperience(level),
+                  )));
         }),
 
         DropdownButtonFormField<String>(

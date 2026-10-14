@@ -1,3 +1,5 @@
+import '../../../../core/theme/ds_motion.dart';
+import '../../../../core/components/motion.dart';
 import '../../../../core/localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
@@ -85,6 +87,7 @@ class _BodyPhysiqueDashboardState extends State<BodyPhysiqueDashboard> {
             .toList() ??
         [];
     showModalBottomSheet<void>(
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -652,14 +655,17 @@ class BodyMetricTrend extends StatelessWidget {
           child: SizedBox(
               height: 80,
               width: double.infinity,
-              child: CustomPaint(
-                  painter: _TrendPainter(
-                      values,
-                      points
-                          .map((p) => DateTime.parse(p.recordedDate)
-                              .millisecondsSinceEpoch
-                              .toDouble())
-                          .toList())))),
+              child: MotionChartReveal(
+                  dataKey:
+                      '$metricKey:$source:${points.map((p) => '${p.recordedDate}:${p.metrics[metricKey]!.value}').join('|')}',
+                  child: CustomPaint(
+                      painter: _TrendPainter(
+                          values,
+                          points
+                              .map((p) => DateTime.parse(p.recordedDate)
+                                  .millisecondsSinceEpoch
+                                  .toDouble())
+                              .toList()))))),
       const SizedBox(height: 8),
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         FitnessText(bodyDate(points.first.recordedDate),

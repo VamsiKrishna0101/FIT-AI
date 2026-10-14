@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
@@ -540,7 +541,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
           child: AnimatedContainer(
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
-                : const Duration(milliseconds: 180),
+                : DSMotion.press,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: selected ? FitnessTheme.silver : const Color(0xFF282A2C),

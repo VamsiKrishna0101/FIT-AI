@@ -1,3 +1,5 @@
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -84,6 +86,7 @@ class _NutritionViewState extends State<NutritionView> {
 
   void _detail(UserMealLogItemModel meal) {
     showModalBottomSheet<void>(
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -370,11 +373,13 @@ class _ThinBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
       borderRadius: BorderRadius.circular(3),
-      child: LinearProgressIndicator(
+      child: MotionValue(
           value: value,
-          minHeight: 4,
-          color: color,
-          backgroundColor: const Color(0xFF383838)));
+          builder: (context, animatedValue) => LinearProgressIndicator(
+              value: animatedValue,
+              minHeight: 4,
+              color: color,
+              backgroundColor: const Color(0xFF383838))));
 }
 
 class _MealGroup extends StatelessWidget {

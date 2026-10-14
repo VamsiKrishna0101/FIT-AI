@@ -1,10 +1,10 @@
+import 'motion.dart';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/ds_colors.dart';
-import '../theme/ds_motion.dart';
 import '../theme/ds_radius.dart';
 import '../theme/ds_typography.dart';
 
@@ -67,7 +67,8 @@ class _LiquidButtonState extends State<LiquidButton> {
         const Color(0xFF141414).withValues(alpha: enabled ? 0.88 : 0.54),
       ],
     );
-    final labelColor = widget.isAccent ? DSColors.onAccent : DSColors.textPrimary;
+    final labelColor =
+        widget.isAccent ? DSColors.onAccent : DSColors.textPrimary;
 
     return Semantics(
       button: true,
@@ -79,10 +80,8 @@ class _LiquidButtonState extends State<LiquidButton> {
         onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
         onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
         onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedScale(
-          scale: _pressed ? 0.975 : 1,
-          duration: DSMotion.fast,
-          curve: Curves.easeOutCubic,
+        child: MotionPress(
+          enabled: enabled,
           child: Container(
             width: double.infinity,
             height: widget.height,
@@ -91,7 +90,8 @@ class _LiquidButtonState extends State<LiquidButton> {
               boxShadow: enabled && widget.isAccent
                   ? [
                       BoxShadow(
-                        color: DSColors.accent.withValues(alpha: _pressed ? 0.12 : 0.22),
+                        color: DSColors.accent
+                            .withValues(alpha: _pressed ? 0.12 : 0.22),
                         blurRadius: _pressed ? 14 : 22,
                         offset: const Offset(0, 5),
                       ),
@@ -104,11 +104,12 @@ class _LiquidButtonState extends State<LiquidButton> {
                 filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: widget.isAccent ? accentGradient : surfaceGradient,
+                    gradient:
+                        widget.isAccent ? accentGradient : surfaceGradient,
                     borderRadius: DSRadius.capsuleRadius,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha:
-                        enabled ? (widget.isAccent ? 0.42 : 0.18) : 0.10,
+                      color: Colors.white.withValues(
+                        alpha: enabled ? (widget.isAccent ? 0.42 : 0.18) : 0.10,
                       ),
                       width: 1,
                     ),
@@ -124,7 +125,8 @@ class _LiquidButtonState extends State<LiquidButton> {
                               begin: Alignment.topCenter,
                               end: Alignment.center,
                               colors: [
-                                Colors.white.withValues(alpha: widget.isAccent ? 0.30 : 0.14),
+                                Colors.white.withValues(
+                                    alpha: widget.isAccent ? 0.30 : 0.14),
                                 Colors.white.withValues(alpha: 0.02),
                               ],
                             ),
@@ -166,10 +168,12 @@ class _LiquidButtonState extends State<LiquidButton> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: widget.isAccent ? 0.28 : 0.08),
+                                color: Colors.white.withValues(
+                                    alpha: widget.isAccent ? 0.28 : 0.08),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: widget.isAccent ? 0.42 : 0.14),
+                                  color: Colors.white.withValues(
+                                      alpha: widget.isAccent ? 0.42 : 0.14),
                                 ),
                               ),
                               child: Icon(

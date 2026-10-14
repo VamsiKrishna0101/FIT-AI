@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/ds_motion.dart';
 
 /// Apple iOS style segmented stadium capsule progress bar for onboarding.
 /// Features 6.8px stadium pills with luminous white active glow and dark smoked glass inactive pills.
@@ -27,8 +28,8 @@ class OnboardingProgressBar extends StatelessWidget {
 
               return Expanded(
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
+                  duration: DSMotion.duration(context, DSMotion.selection),
+                  curve: DSMotion.effects,
                   margin: EdgeInsets.only(
                     right: index < totalSteps - 1 ? 6.0 : 0,
                   ),

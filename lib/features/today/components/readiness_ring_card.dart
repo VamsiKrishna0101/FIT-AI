@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
@@ -214,7 +215,7 @@ class _ReadinessRingCardState extends State<ReadinessRingCard> {
                   children: [
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: score / 100.0),
-                      duration: const Duration(milliseconds: 1100),
+                      duration: DSMotion.duration(context, DSMotion.chart),
                       curve: Curves.easeOutCubic,
                       builder: (_, value, __) => CustomPaint(
                         size: const Size(118, 118),
@@ -519,7 +520,7 @@ class _TrendBar extends StatelessWidget {
         const SizedBox(height: 4),
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: h),
-          duration: const Duration(milliseconds: 800),
+          duration: DSMotion.duration(context, DSMotion.chart),
           curve: Curves.easeOutCubic,
           builder: (_, barH, __) => Container(
             width: 14,

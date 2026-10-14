@@ -14,8 +14,10 @@ class EquipmentRepository {
   Future<EquipmentProfile> load() async {
     final owner = await CacheScope.userId();
     if (owner == 'anonymous') throw StateError('Sign in to edit equipment.');
-    final data = await UserDataCache.shared.load('profile', 'onboarding', () async {
-      final response = await ApiClient.shared.get<Map<String, dynamic>>('/api/onboarding');
+    final data =
+        await UserDataCache.shared.load('profile', 'onboarding', () async {
+      final response =
+          await ApiClient.shared.get<Map<String, dynamic>>('/api/onboarding');
       return Map<String, dynamic>.from(response.data?['data'] as Map);
     });
     if (await CacheScope.userId() != owner) {

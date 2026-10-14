@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -89,7 +90,7 @@ class _BiometricRulerCardState extends State<BiometricRulerCard> {
         _scroll.jumpTo(target);
       } else {
         await _scroll.animateTo(target,
-            duration: const Duration(milliseconds: 160),
+            duration: DSMotion.press,
             curve: Curves.easeOutCubic);
       }
     }

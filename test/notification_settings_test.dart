@@ -151,6 +151,8 @@ void main() {
     await tester.pumpWidget(app(data, FakePush(data), scale: 1.5));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Send test notification'), 300);
+    await tester.ensureVisible(find.text('Send test notification'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Send test notification'));
     await tester.pumpAndSettle();
     expect(data.tests, 1);

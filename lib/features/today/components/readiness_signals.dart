@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/fitness_theme.dart';
+import '../../../core/theme/ds_colors.dart';
 import '../../../models/home_models.dart';
 
 String readinessHeadline(int score) => score >= 67
@@ -31,8 +31,13 @@ class ReadinessSignals extends StatelessWidget {
   final HomeReadiness? readiness;
   final Map<String, dynamic>? sleepLog;
   final bool checkIn;
+  final bool compact;
   const ReadinessSignals(
-      {super.key, this.readiness, this.sleepLog, this.checkIn = false});
+      {super.key,
+      this.readiness,
+      this.sleepLog,
+      this.checkIn = false,
+      this.compact = false});
 
   String _rating(String field, List<String> labels) {
     final rating = sleepLog?[field] as num?;
@@ -50,12 +55,16 @@ class ReadinessSignals extends StatelessWidget {
         ? readiness!.sleepMinutes
         : (sleepLog?['sleepMinutes'] as num?)?.toInt() ?? 0;
     final hasSleep = minutes > 0 || sleepLog?['sleepMinutes'] != null;
+    final hasVitals =
+        (readiness?.hrvMs ?? 0) > 0 || (readiness?.restingHrBpm ?? 0) > 0;
     final signals = <({IconData icon, String label, String value})>[
-      (
-        icon: CupertinoIcons.moon,
-        label: 'Sleep',
-        value: hasSleep ? '${minutes ~/ 60}h ${minutes % 60}m' : 'Not recorded'
-      ),
+      if (!compact || checkIn || !hasVitals)
+        (
+          icon: CupertinoIcons.moon,
+          label: 'Sleep',
+          value:
+              hasSleep ? '${minutes ~/ 60}h ${minutes % 60}m' : 'Not recorded'
+        ),
       if (checkIn) ...[
         (
           icon: CupertinoIcons.bolt,
@@ -86,7 +95,7 @@ class ReadinessSignals extends StatelessWidget {
             label: 'Resting HR',
             value: '${readiness!.restingHrBpm} bpm'
           ),
-        if ((readiness?.sleepEfficiency ?? 0) > 0)
+        if (!compact && (readiness?.sleepEfficiency ?? 0) > 0)
           (
             icon: CupertinoIcons.moon_zzz,
             label: 'Sleep efficiency',
@@ -95,42 +104,79 @@ class ReadinessSignals extends StatelessWidget {
       ],
     ];
 
-    return LayoutBuilder(
-        builder: (context, bounds) => Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final signal in signals)
-                  Container(
-                    width: MediaQuery.textScalerOf(context).scale(14) > 22
-                        ? bounds.maxWidth
-                        : (bounds.maxWidth - 10) / 2,
-                    padding: const EdgeInsets.all(13),
-                    decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .035),
-                        borderRadius: BorderRadius.circular(14)),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(builder: (context, bounds) {
+      final columns = MediaQuery.textScalerOf(context).scale(14) > 22 ? 1 : 2;
+      return Column(children: [
+        for (var index = 0; index < signals.length; index += columns)
+          Padding(
+            padding: EdgeInsets.only(
+                bottom: index + columns < signals.length ? 10 : 0),
+            child: columns == 1
+                ? _tile(signals[index].icon, signals[index].label,
+                    signals[index].value)
+                : IntrinsicHeight(
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(children: [
-                            Icon(signal.icon,
-                                size: 14, color: FitnessTheme.muted),
-                            const SizedBox(width: 6),
-                            Expanded(
-                                child: FitnessText(signal.label,
-                                    style: const TextStyle(
-                                        color: FitnessTheme.muted,
-                                        fontSize: 11))),
-                          ]),
-                          const SizedBox(height: 7),
-                          FitnessText(signal.value,
-                              style: const TextStyle(
-                                  color: FitnessTheme.silver,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500)),
+                          Expanded(
+                              child: _tile(signals[index].icon,
+                                  signals[index].label, signals[index].value)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                              child: index + 1 < signals.length
+                                  ? _tile(
+                                      signals[index + 1].icon,
+                                      signals[index + 1].label,
+                                      signals[index + 1].value)
+                                  : const SizedBox.shrink()),
                         ]),
                   ),
-              ],
-            ));
+          ),
+      ]);
+    });
   }
+
+  Widget _tile(IconData icon, String label, String value) => compact
+      ? SizedBox(
+          key: ValueKey('readiness-signal-$label'),
+          width: double.infinity,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            FitnessText(label,
+                style:
+                    const TextStyle(color: FitnessTheme.muted, fontSize: 11)),
+            const SizedBox(height: 6),
+            FitnessText(value,
+                style: const TextStyle(
+                    color: FitnessTheme.silver,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    height: 1.2)),
+          ]),
+        )
+      : Container(
+          key: ValueKey('readiness-signal-$label'),
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: DSColors.bgRaised,
+              borderRadius: BorderRadius.circular(14)),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(icon, size: 14, color: FitnessTheme.muted),
+              const SizedBox(width: 6),
+              Expanded(
+                  child: FitnessText(label,
+                      style: const TextStyle(
+                          color: FitnessTheme.muted, fontSize: 11))),
+            ]),
+            const SizedBox(height: 7),
+            FitnessText(value,
+                style: const TextStyle(
+                    color: FitnessTheme.silver,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500)),
+          ]),
+        );
 }

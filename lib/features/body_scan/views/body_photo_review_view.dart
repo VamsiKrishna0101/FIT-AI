@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:convert';
@@ -44,7 +45,8 @@ class _BodyPhotoReviewViewState extends State<BodyPhotoReviewView> {
 
   Future<void> _pick(String view) async {
     final source = await showModalBottomSheet<ImageSource>(
-        context: context,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+context: context,
         backgroundColor: FitnessTheme.surface,
         builder: (context) => SafeArea(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [

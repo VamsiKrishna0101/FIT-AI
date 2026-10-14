@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../localization/fitness_text.dart';
 import '../theme/fitness_theme.dart';
+import '../theme/ds_motion.dart';
 
 /// Use a stable child key for refreshes, and a new key for a new selection.
 class ContentTransition extends StatelessWidget {
@@ -9,7 +10,7 @@ class ContentTransition extends StatelessWidget {
 
   final Widget child;
 
-  static const duration = Duration(milliseconds: 280);
+  static const duration = DSMotion.regular;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,7 @@ class ContentTransition extends StatelessWidget {
 
     return AnimatedSize(
       duration: duration,
-      curve: Curves.easeOutCubic,
+      curve: DSMotion.effects,
       alignment: Alignment.topCenter,
       child: AnimatedSwitcher(
         duration: duration,

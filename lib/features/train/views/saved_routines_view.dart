@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,8 @@ class _SavedRoutinesViewState extends State<SavedRoutinesView> {
 
   Future<void> _delete(Map<String, dynamic> routine) async {
     final approved = await showDialog<bool>(
-        context: context,
+        animationStyle: DSMotion.dialogStyle(context),
+context: context,
         builder: (context) => AlertDialog(
               title: Text(copy('Delete routine?')),
               content: Text(routine['name'] as String),
@@ -192,7 +194,8 @@ class _RoutineDetailViewState extends State<RoutineDetailView> {
       if (use) {
         final approved = widget.day.items.isEmpty ||
             await showDialog<bool>(
-                    context: context,
+                    animationStyle: DSMotion.dialogStyle(context),
+context: context,
                     builder: (context) => AlertDialog(
                           title: Text(copy('Replace this workout?')),
                           content: Text(copy(
