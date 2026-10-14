@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -77,7 +78,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
           decoration: InputDecoration(
               labelText: fitnessText(context, label),
               filled: true,
-              fillColor: const Color(0xFF202020),
+              fillColor: DSColors.bgCard,
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none)));
@@ -100,11 +101,11 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
           decoration: InputDecoration(
               labelText: fitnessText(context, label),
               filled: true,
-              fillColor: const Color(0xFF202020),
+              fillColor: DSColors.bgCard,
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none)),
-          dropdownColor: const Color(0xFF202020),
+          dropdownColor: DSColors.bgCard,
           items: choices
               .map((item) => DropdownMenuItem(
                   value: item, child: Text(fitnessText(context, item))))
@@ -119,7 +120,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
         padding:
             EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
         decoration: const BoxDecoration(
-            color: Color(0xFF111111),
+            color: DSColors.bg,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
         child: SafeArea(
             top: false,
@@ -230,7 +231,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
                           onPressed: _saving ? null : _save,
                           style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFFE2E2E2),
-                              foregroundColor: const Color(0xFF111111),
+                              foregroundColor: DSColors.bg,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18))),

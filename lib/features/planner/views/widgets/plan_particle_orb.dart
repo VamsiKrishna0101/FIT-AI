@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
@@ -110,7 +111,7 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
                         height: 1.1,
                       )),
                   const SizedBox(height: 9),
-                  const Text('YOUR WEEK',
+                  const FitnessText('YOUR WEEK',
                       style: TextStyle(
                         color: Color(0xFFB9C5C2),
                         fontSize: 10,

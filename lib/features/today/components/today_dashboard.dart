@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,11 +19,11 @@ import '../../../core/components/profile_avatar.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../wellness/views/sleep_preferences_view.dart';
 
-const _surface = Color(0xFF202020);
-const _muted = Color(0xFF969696);
-const _silver = Color(0xFFE2E2E2);
+const _surface = DSColors.bgCard;
+const _muted = DSColors.muted;
+const _silver = DSColors.silver;
 const _blue = Color(0xFF0A84FF);
-const _line = Color(0x14FFFFFF);
+const _line = DSColors.border;
 
 /// Today-specific surfaces and layout. Other dashboard tabs keep their styling.
 class TodayDashboard extends StatelessWidget {
@@ -467,16 +468,10 @@ class _TodaySurface extends StatelessWidget {
       child: DecoratedBox(
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              border: hero
-                  ? Border.all(color: const Color(0x20FFFFFF), width: .6)
-                  : null,
-              gradient: hero
-                  ? const RadialGradient(
-                      center: Alignment.topRight,
-                      radius: 1.5,
-                      colors: [Color(0xFF303030), _surface],
-                      stops: [.05, .85])
-                  : null),
+              color: DSColors.bgCard,
+              border: Border.all(
+                  color: hero ? DSColors.borderHi : DSColors.border,
+                  width: .7)),
           child: InkWell(
               onTap: onTap, child: Padding(padding: padding, child: child))));
 }

@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -61,7 +62,7 @@ class WeeklyStreakStrip extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
+              FitnessText(
                 'THIS WEEK',
                 style: TextStyle(
                   fontSize: 11,

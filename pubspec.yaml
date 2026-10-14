@@ -32,6 +32,9 @@ dependencies:
   health: ^13.3.1
   image_picker: ^1.1.2
   liquid_glass_native: 0.3.1
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+  app_settings: ^9.0.0
 
 dev_dependencies:
   flutter_test:

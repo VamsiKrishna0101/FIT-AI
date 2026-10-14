@@ -61,11 +61,12 @@ class LocalCache {
   /// Returns `(data, age)` or null.
   Future<(Object?, Duration)?> getEntry(String key) async {
     final json = await getJson(key);
-    if (json == null || !json.containsKey('savedAt')) return null;
+    if (json == null || json['savedAt'] is! num) return null;
     final savedAt = DateTime.fromMillisecondsSinceEpoch(
       (json['savedAt'] as num).toInt(),
     );
-    return (json['data'], DateTime.now().difference(savedAt));
+    final age = DateTime.now().difference(savedAt);
+    return age.isNegative ? null : (json['data'], age);
   }
 
   Future<void> remove(String key) async {
@@ -77,8 +78,8 @@ class LocalCache {
   Future<void> removeByPrefix(String prefix) async {
     _memory.removeWhere((k, _) => k.startsWith(prefix));
     final prefs = await _p;
-    for (final k in prefs.getKeys().where((k) => k.startsWith(prefix)).toList()) {
-      await prefs.remove(k);
-    }
+    final keys =
+        prefs.getKeys().where((key) => key.startsWith(prefix)).toList();
+    await Future.wait(keys.map(prefs.remove));
   }
 }

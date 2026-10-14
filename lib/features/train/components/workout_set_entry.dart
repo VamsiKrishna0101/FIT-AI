@@ -12,6 +12,9 @@ class WorkoutSetEntry extends StatefulWidget {
   final int number;
   final Map<String, dynamic>? log;
   final String? targetLabel;
+  final int? suggestedReps;
+  final double? suggestedWeight;
+  final Future<Map<String, dynamic>>? previous;
   final bool disabled;
   final Future<void> Function(int reps, double? weight, double? effort) onSave;
   final Future<void> Function() onDelete;
@@ -22,6 +25,9 @@ class WorkoutSetEntry extends StatefulWidget {
       required this.number,
       this.log,
       this.targetLabel,
+      this.suggestedReps,
+      this.suggestedWeight,
+      this.previous,
       required this.disabled,
       required this.onSave,
       required this.onDelete});
@@ -34,13 +40,17 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   String? _draftKey;
   Timer? _debounce;
   bool _busy = false;
+  bool _confirmed = false;
+  bool _touched = false;
   double? _effort;
   Future<void>? _pendingSave;
   @override
   void initState() {
     super.initState();
-    _reps.text = widget.log?['reps']?.toString() ?? '';
-    final weight = widget.log?['weight'];
+    _reps.text = widget.log?['reps']?.toString() ??
+        widget.suggestedReps?.toString() ??
+        '';
+    final weight = widget.log?['weight'] ?? widget.suggestedWeight;
     _weight.text = weight == null ? '' : '$weight';
     _effort = (widget.log?['rpe'] as num?)?.toDouble();
     _restore();
@@ -52,7 +62,8 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     final draft = await LocalCache.shared.getJson(key);
     if (!mounted) return;
     _draftKey = key;
-    if (draft != null) {
+    if (draft != null && !_touched && !_confirmed) {
+      _touched = true;
       _reps.text = draft['reps'] as String? ?? '';
       _weight.text = draft['weight'] as String? ?? '';
       _effort = (draft['rpe'] as num?)?.toDouble() ?? _effort;
@@ -61,6 +72,8 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   }
 
   void _changed(String _) {
+    _confirmed = false;
+    _touched = true;
     setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), _persist);
@@ -77,7 +90,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   @override
   void dispose() {
     _debounce?.cancel();
-    if (_dirty) _persist();
+    if (hasPendingValues) _persist();
     _reps.dispose();
     _weight.dispose();
     super.dispose();
@@ -89,14 +102,17 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
       _load != widget.log?['weight'] ||
       _effort != widget.log?['rpe'];
   bool get hasPendingValues =>
+      !_confirmed &&
+      _touched &&
       _dirty &&
       (_reps.text.isNotEmpty || _weight.text.isNotEmpty || widget.log != null);
 
-  Future<void> savePending() async {
+  Future<void> savePending({bool confirmSuggestion = false}) async {
     if (_pendingSave != null) {
       await _pendingSave;
       return;
     }
+    if (confirmSuggestion) _touched = true;
     if (!hasPendingValues) return;
     final future = _commit();
     _pendingSave = future;
@@ -107,7 +123,12 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     }
   }
 
-  Future<void> _commit() async {
+  Future<void> waitForSave() async {
+    await _pendingSave;
+  }
+
+  Map<String, dynamic>? pendingSet() {
+    if (!hasPendingValues) return null;
     final reps = int.tryParse(_reps.text);
     final load = _load;
     if (reps == null ||
@@ -117,9 +138,30 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
             (load == null || load < 0 || load > 1000))) {
       throw const FormatException('Enter valid reps and load.');
     }
+    return {
+      'setNumber': widget.number,
+      'reps': reps,
+      'weight': load,
+      'rpe': _effort
+    };
+  }
+
+  void confirmSaved() {
+    _confirmed = true;
+    _debounce?.cancel();
+    if (_draftKey != null) {
+      unawaited(LocalCache.shared.remove(_draftKey!));
+    }
+  }
+
+  Future<void> _commit() async {
+    final values = pendingSet();
+    if (values == null) return;
     setState(() => _busy = true);
     try {
-      await widget.onSave(reps, load, _effort);
+      await widget.onSave(values['reps'] as int, values['weight'] as double?,
+          values['rpe'] as double?);
+      _confirmed = true;
       _debounce?.cancel();
       if (_draftKey != null) await LocalCache.shared.remove(_draftKey!);
     } finally {
@@ -132,7 +174,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
       if (_reps.text.isEmpty) {
         throw const FormatException('Enter valid reps and load.');
       }
-      await savePending();
+      await savePending(confirmSuggestion: true);
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -153,6 +195,8 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
       _reps.clear();
       _weight.clear();
       _effort = null;
+      _confirmed = true;
+      _touched = false;
       if (_draftKey != null) await LocalCache.shared.remove(_draftKey!);
     } catch (_) {
       if (mounted) {
@@ -176,6 +220,31 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                 style: const TextStyle(color: trainingSilver, fontSize: 12)),
             const SizedBox(height: 8),
           ],
+          if (widget.previous != null)
+            FutureBuilder<Map<String, dynamic>>(
+              future: widget.previous,
+              builder: (context, snapshot) {
+                final sets = snapshot.data?['sets'] as List? ?? [];
+                final previous = sets
+                    .whereType<Map>()
+                    .where((set) => set['setNumber'] == widget.number)
+                    .firstOrNull;
+                if (previous == null) return const SizedBox.shrink();
+                final weight = previous['weight'];
+                final performance = weight == null
+                    ? fitnessText(context, '{count} reps',
+                        values: {'count': previous['reps']})
+                    : '$weight kg × ${previous['reps']}';
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                      fitnessText(context, 'Last: {performance}',
+                          values: {'performance': performance}),
+                      style:
+                          const TextStyle(fontSize: 11, color: trainingMuted)),
+                );
+              },
+            ),
           Row(children: [
             SizedBox(
                 width: 28,
@@ -206,7 +275,13 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                     decoration: _decoration('Reps', context))),
             const SizedBox(width: 6),
             IconButton(
-                tooltip: fitnessText(context, saved ? 'Saved' : 'Save set'),
+                tooltip: fitnessText(
+                    context,
+                    saved
+                        ? (widget.log?['pendingSync'] == true
+                            ? 'Saved on this phone'
+                            : 'Saved')
+                        : 'Save set'),
                 onPressed: widget.disabled || _busy || saved ? null : _save,
                 style: IconButton.styleFrom(
                     backgroundColor: saved
@@ -229,8 +304,11 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                             size: 17, color: trainingMuted))),
           ]),
           DropdownButton<double>(
+            isExpanded: true,
             value: _effort,
             hint: Text(fitnessText(context, 'Effort (optional)'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 11, color: trainingMuted)),
             isDense: true,
             underline: const SizedBox(),
@@ -256,6 +334,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   InputDecoration _decoration(String hint, BuildContext context) =>
       InputDecoration(
         hintText: fitnessText(context, hint),
+        labelText: fitnessText(context, hint),
         filled: true,
         fillColor: const Color(0xFF292929),
         isDense: true,

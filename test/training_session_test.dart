@@ -85,6 +85,18 @@ class Adapter implements HttpClientAdapter {
     } else if (options.method == 'PUT') {
       savedSets = 1;
       data = fixture(date, sets: 1);
+    } else if (options.method == 'POST' && options.path.contains('/complete')) {
+      final sets = options.data['sets'] as List;
+      if (rejectCompletion) {
+        return ResponseBody.fromString(
+            '{"error":"Could not save. Please try again."}', 503,
+            headers: {
+              Headers.contentTypeHeader: ['application/json']
+            });
+      }
+      savedSets = sets.isEmpty ? savedSets : sets.length;
+      data = fixture(date, sets: savedSets);
+      (data['items'] as List).first['status'] = 'COMPLETED';
     } else if (options.method == 'PATCH' && options.path.contains('/status')) {
       if (rejectCompletion ||
           (savedSets == 0 && options.data['status'] == 'COMPLETED')) {
@@ -192,6 +204,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(saves, 1);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -209,6 +222,7 @@ void main() {
     expect(find.text('800 kg'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -240,9 +254,9 @@ void main() {
     final writes = adapter.requests
         .where((r) => r.path.contains('/items/item') && r.method != 'GET')
         .toList();
-    expect(writes.map((r) => r.method), ['PUT', 'PATCH']);
-    expect(writes.first.data['reps'], 10);
-    expect(writes.first.data['weight'], 20);
+    expect(writes.map((r) => r.method), ['POST']);
+    expect(writes.first.data['sets'].first['reps'], 10);
+    expect(writes.first.data['sets'].first['weight'], 20);
     await tester.tap(find.text('Finish workout'));
     await tester.pumpAndSettle();
     expect(find.text('Workout complete'), findsOneWidget);
@@ -250,6 +264,7 @@ void main() {
     expect(find.text('No sets were logged. Your body map is unchanged.'),
         findsNothing);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -261,11 +276,15 @@ void main() {
     await tester.tap(find.text('Edit logged sets'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Your sets'), 200,
-        scrollable: find.descendant(of: find.byKey(const ValueKey('workout-session-scroll')),
-            matching: find.byType(Scrollable)).first);
+        scrollable: find
+            .descendant(
+                of: find.byKey(const ValueKey('workout-session-scroll')),
+                matching: find.byType(Scrollable))
+            .first);
     expect(find.byType(WorkoutSetEntry), findsWidgets);
     expect(find.text('Save changes'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('Train fits a small phone and opens the active exercise logger',
@@ -293,6 +312,7 @@ void main() {
     expect(find.byType(WorkoutSetEntry), findsNWidgets(3));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -306,14 +326,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutSessionView), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Your sets'), 200,
-        scrollable: find.descendant(of: find.byKey(const ValueKey('workout-session-scroll')),
-            matching: find.byType(Scrollable)).first);
+        scrollable: find
+            .descendant(
+                of: find.byKey(const ValueKey('workout-session-scroll')),
+                matching: find.byType(Scrollable))
+            .first);
     expect(find.byType(WorkoutSetEntry), findsNWidgets(3));
     expect(
         adapter.requests.where((request) => request.path.contains('/status')),
         isEmpty);
     expect(find.text('Could not save. Please try again.'), findsNothing);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('Train Done completes an exercise that already has saved sets',
@@ -331,6 +355,7 @@ void main() {
         adapter.requests.where((request) => request.path.contains('/status')),
         hasLength(1));
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('Train preserves backend validation instead of hiding its reason',
@@ -363,6 +388,7 @@ void main() {
             .onPressed,
         isNotNull);
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   test(

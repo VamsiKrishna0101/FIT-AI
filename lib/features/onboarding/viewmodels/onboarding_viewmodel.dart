@@ -36,7 +36,6 @@ class OnboardingViewModel extends ChangeNotifier {
   Future<void> selectLanguage(AppLanguage language) async {
     await LanguageManager.shared.selectLanguage(language);
     draft.languageCode = language.code;
-    draft.countryCode = language.countryCode;
     await draft.save();
     if (!_isDisposed) notifyListeners();
   }

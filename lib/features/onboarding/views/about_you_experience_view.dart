@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/components/fit_toast.dart';
+import '../../../core/localization/app_language.dart';
+import '../../../core/localization/fitness_copy.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/about_you_controls.dart';
 import '../components/biometric_ruler_card.dart';
@@ -119,8 +121,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
           onChanged: _viewModel.setName,
         ),
 
-        const SizedBox(height: 12),
-
+        const SizedBox(height: 16),
         // Full-Width Apple Gender Selector (Male / Female)
         AppleGenderSelector(
           selectedGender: _viewModel.gender,
@@ -220,6 +221,29 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
           );
         }),
 
+        DropdownButtonFormField<String>(
+          key: const ValueKey('onboarding-country'),
+          initialValue: appCountries.containsKey(_viewModel.countryCode)
+              ? _viewModel.countryCode
+              : 'ZZ',
+          isExpanded: true,
+          dropdownColor: const Color(0xFF242424),
+          decoration: InputDecoration(
+            labelText: fitnessText(context, 'Country'),
+            helperText: fitnessText(
+                context, 'Your country helps us suggest practical foods.'),
+            helperMaxLines: 2,
+          ),
+          items: appCountries.entries
+              .map((country) => DropdownMenuItem(
+                    value: country.key,
+                    child: FitnessText(country.value),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            if (value != null) _viewModel.setCountry(value);
+          },
+        ),
         const SizedBox(height: 16),
       ],
     );

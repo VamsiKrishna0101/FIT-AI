@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +56,7 @@ class TodayDietCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
+                    FitnessText(
                       'METABOLIC FUELING',
                       style: TextStyle(
                         fontSize: 10,

@@ -1,15 +1,16 @@
+import 'ds_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Shared with Today's quiet black canvas and silver controls.
 class FitnessTheme extends StatelessWidget {
-  static const canvas = Color(0xFF111111);
-  static const surface = Color(0xFF202020);
-  static const silver = Color(0xFFE2E2E2);
-  static const muted = Color(0xFF969696);
-  static const line = Color(0x14FFFFFF);
-  static const blue = Color(0xFF689FFF);
-  static const violet = Color(0xFFA28BFA);
-  static const coral = Color(0xFFED927F);
+  static const canvas = DSColors.bg;
+  static const surface = DSColors.bgCard;
+  static const silver = DSColors.silver;
+  static const muted = DSColors.muted;
+  static const line = DSColors.border;
+  static const blue = DSColors.blue;
+  static const violet = DSColors.violet;
+  static const coral = DSColors.coral;
   final Widget child;
   const FitnessTheme({super.key, required this.child});
 
@@ -28,10 +29,22 @@ class FitnessTheme extends StatelessWidget {
               primary: silver,
               secondary: silver,
               surface: surface,
+              surfaceContainerLowest: canvas,
+              surfaceContainerLow: surface,
+              surfaceContainer: surface,
+              surfaceContainerHigh: DSColors.bgRaised,
+              surfaceContainerHighest: DSColors.bgRaised,
               onSurface: Colors.white,
               onSurfaceVariant: muted,
               surfaceTint: Colors.transparent),
           scaffoldBackgroundColor: canvas,
+          canvasColor: canvas,
+          appBarTheme: theme.appBarTheme.copyWith(
+            backgroundColor: canvas,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+          ),
           inputDecorationTheme: const InputDecorationTheme(
               filled: true,
               fillColor: surface,
@@ -55,6 +68,8 @@ class FitnessCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
       padding: padding,
       decoration: BoxDecoration(
-          color: FitnessTheme.surface, borderRadius: BorderRadius.circular(20)),
+          color: FitnessTheme.surface,
+          border: Border.all(color: DSColors.border, width: .7),
+          borderRadius: BorderRadius.circular(20)),
       child: child);
 }

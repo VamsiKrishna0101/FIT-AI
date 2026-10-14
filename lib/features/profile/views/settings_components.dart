@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_text.dart';
@@ -78,10 +79,9 @@ class SettingsGroup extends StatelessWidget {
           Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: const Color(0xFF191A1C),
+              color: DSColors.bgCard,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: .055), width: .7),
+              border: Border.all(color: DSColors.border, width: .7),
             ),
             child: Column(children: [
               for (var index = 0; index < children.length; index++) ...[

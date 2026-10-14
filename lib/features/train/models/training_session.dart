@@ -31,6 +31,8 @@ class TrainingDay {
   int get durationSeconds =>
       (session?['durationSeconds'] as num?)?.toInt() ?? 0;
   int get skipped => (json['summary']?['skipped'] as num?)?.toInt() ?? 0;
+  bool get pendingSync => (json['pendingSync'] as num? ?? 0) > 0;
+  bool get syncBlocked => json['syncBlocked'] == true;
   bool get allResolved =>
       items.isNotEmpty && items.every((item) => !item.isPending);
   double get volume => (json['summary']?['volume'] as num?)?.toDouble() ?? 0;
@@ -52,5 +54,6 @@ class TrainingDay {
         'targetReps': item.targetReps,
         'targetWeight': item.targetWeight,
         'restSeconds': item.restSeconds,
+        if (item.setTargets != null) 'setTargets': item.setTargets,
       };
 }

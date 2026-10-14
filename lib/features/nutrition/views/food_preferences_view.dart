@@ -144,7 +144,7 @@ class _FoodPreferencesViewState extends State<FoodPreferencesView> {
                         DropdownButtonFormField<String>(
                             initialValue: _style,
                             decoration: const InputDecoration(
-                        label: FitnessText('Eating style')),
+                                label: FitnessText('Eating style')),
                             items: const {
                               'NO_PREFERENCE': 'No preference',
                               'NON_VEGETARIAN': 'Non-vegetarian',

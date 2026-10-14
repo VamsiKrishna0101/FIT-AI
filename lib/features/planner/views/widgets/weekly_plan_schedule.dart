@@ -1,6 +1,8 @@
+import '../../../../core/theme/ds_colors.dart';
 import '../../../../core/components/content_transition.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/localization/fitness_copy.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/fitness_theme.dart';
@@ -76,11 +78,8 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Colors.white.withValues(alpha: .10)),
-              gradient: const LinearGradient(
-                  colors: [Color(0xFF252525), Color(0xFF171717)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight),
+              border: Border.all(color: DSColors.border, width: .7),
+              color: DSColors.bgCard,
             ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -314,7 +313,8 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
                 for (final food in (meal['foods'] as List).whereType<Map>())
                   Padding(
                       padding: const EdgeInsets.only(top: 10),
-                      child: FitnessText('${food['name']} · ${food['grams']} g',
+                      child: FitnessText(
+                          '${foodDisplayName('${food['foodId']}', '${food['name']}')} · ${food['grams']} g',
                           style: const TextStyle(
                               fontSize: 13, color: FitnessTheme.silver))),
               ])),

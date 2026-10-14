@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,7 +27,7 @@ class LiquidNameInput extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: const Color(0xFF202020),
+        color: DSColors.bgCard,
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.10),
           width: 0.8,
@@ -100,7 +101,7 @@ class AppleGenderSelector extends StatelessWidget {
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF202020),
+        color: DSColors.bgCard,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.08),
@@ -157,7 +158,7 @@ class _GenderTab extends StatelessWidget {
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(11),
-          color: const Color(0xFF202020),
+          color: DSColors.bgCard,
           border: Border.all(
               color: isSelected
                   ? Colors.white.withValues(alpha: 0.25)
@@ -222,7 +223,7 @@ class BiometricsHeaderWithUnits extends StatelessWidget {
           height: 30,
           padding: const EdgeInsets.all(2.5),
           decoration: BoxDecoration(
-            color: const Color(0xFF202020),
+            color: DSColors.bgCard,
             borderRadius: BorderRadius.circular(9),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.08),

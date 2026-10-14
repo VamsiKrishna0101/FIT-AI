@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -222,9 +223,9 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
   @override
   Widget build(BuildContext context) => FitnessTheme(
       child: Scaffold(
-          backgroundColor: const Color(0xFF111111),
+          backgroundColor: DSColors.bg,
           appBar: AppBar(
-              backgroundColor: const Color(0xFF111111),
+              backgroundColor: DSColors.bg,
               surfaceTintColor: Colors.transparent,
               title: Text(
                   fitnessText(

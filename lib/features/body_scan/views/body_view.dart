@@ -56,8 +56,9 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(_load());
-    _healthUpdates = HealthSyncService.shared.updates.stream.listen((_) {
-      if (mounted && widget.isActive) unawaited(_load());
+    _healthUpdates = HealthSyncService.shared.updates.stream.listen((_) async {
+      await _repository.invalidate();
+      if (mounted && widget.isActive) await _load();
     });
   }
 
@@ -97,7 +98,7 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
     setState(() {
       if (owner != _owner) _overview.value = null;
       _owner = owner;
-      _loading = true;
+      _loading = _overview.value == null;
       _error = null;
     });
     try {
@@ -235,8 +236,12 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                         planRepository: widget.planRepository,
                         loading: _loading,
                         error: _error,
-                        onRefresh: _load,
+                        onRefresh: () async {
+                          await _repository.invalidate();
+                          await _load();
+                        },
                         onCompare: _compare,
+                        onTrain: widget.onTrain,
                         onMeasurements: _measurements,
                         onHistory: _history,
                         onManual: () => _route(

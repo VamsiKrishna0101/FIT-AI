@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/cache/app_data_mode.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/cache_manager.dart';
@@ -35,6 +36,7 @@ class TodayRepository {
   int _revision = 0;
   Future<HomeData?>? _inFlight;
   String? _inFlightLocale;
+  final _fetchedAt = <String, DateTime>{};
   final _confirmedSleep = <String, Map<String, dynamic>>{};
   final _failedDates = <String>{};
 
@@ -158,17 +160,20 @@ class TodayRepository {
       // Ignore an invalid cache entry and request the selected day's data.
     }
     try {
-      final response = await ApiClient.shared.get<Map<String, dynamic>>(
-        Endpoints.home,
-        queryParameters: {'date': date, if (forceRefresh) 'refresh': 'true'},
-      );
+      final json =
+          await UserDataCache.shared.load('home_history', date, () async {
+        final response = await ApiClient.shared.get<Map<String, dynamic>>(
+          Endpoints.home,
+          queryParameters: {'date': date, if (forceRefresh) 'refresh': 'true'},
+        );
+        return response.data!;
+      }, ttl: const Duration(minutes: 1), refresh: forceRefresh);
       if (owner != await _currentUserId() ||
           locale != LanguageManager.shared.currentLanguage.code) {
         return null;
       }
-      if (response.statusCode == 200 && response.data != null) {
-        final data =
-            _withConfirmedSleep(HomeData.fromJson(response.data!), owner);
+      {
+        final data = _withConfirmedSleep(HomeData.fromJson(json), owner);
         if (data.calendarDate != date) {
           return null;
         }
@@ -187,6 +192,7 @@ class TodayRepository {
   void invalidate() {
     _revision++;
     _inFlight = null;
+    _fetchedAt.clear();
   }
 
   /// Wipe every user-scoped cache (call on sign-out / account switch).
@@ -242,6 +248,13 @@ class TodayRepository {
     final owner = await _currentUserId();
     final scope =
         '$owner:$locale:${AppDataMode.shared.dataset}:${CacheScope.todayKey()}';
+    if (!forceRefresh &&
+        current != null &&
+        _fetchedAt[scope] != null &&
+        DateTime.now().difference(_fetchedAt[scope]!) <
+            const Duration(seconds: 30)) {
+      return current;
+    }
     if (forceRefresh) invalidate();
     if (!forceRefresh && _inFlight != null && _inFlightLocale == scope) {
       return _inFlight!;
@@ -291,6 +304,7 @@ class TodayRepository {
             _withConfirmedSleep(HomeData.fromJson(response.data!), userId);
         _failedDates.remove('$userId:$date');
         _lastKnown = fresh;
+        _fetchedAt['$userId:$locale:$dataset:$date'] = DateTime.now();
         _controller.add(fresh);
 
         // Keep dashboard cache isolated to the signed-in account.

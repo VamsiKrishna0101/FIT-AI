@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'app_language.dart';
 import '../storage/local_cache.dart';
 import '../storage/onboarding_draft.dart';
@@ -23,6 +24,7 @@ class LanguageManager extends ChangeNotifier {
     if (match.isEmpty) return;
     _revision++;
     _currentLanguage = match.first;
+    Intl.defaultLocale = _currentLanguage.locale.toLanguageTag();
     await LocalCache.shared.saveString(LocalCache.keyAppLanguage, code);
     notifyListeners();
   }
@@ -55,6 +57,7 @@ class LanguageManager extends ChangeNotifier {
         orElse: () => AppLanguage.uk,
       );
       _currentLanguage = matched;
+      Intl.defaultLocale = matched.locale.toLanguageTag();
       notifyListeners();
     }
   }
@@ -86,6 +89,7 @@ class LanguageManager extends ChangeNotifier {
     }
     HapticFeedback.heavyImpact();
     _currentLanguage = language;
+    Intl.defaultLocale = language.locale.toLanguageTag();
     notifyListeners();
 
     await LocalCache.shared
@@ -94,7 +98,6 @@ class LanguageManager extends ChangeNotifier {
     // Sync with OnboardingDraft so registration has language ready
     final draft = await OnboardingDraft.load();
     draft.languageCode = language.code;
-    if (!persistAccount) draft.countryCode = language.countryCode;
     await draft.save();
   }
 }

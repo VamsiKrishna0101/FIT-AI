@@ -1,3 +1,4 @@
+import '../../../core/network/api_client.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/components/content_transition.dart';
 import '../../../core/localization/language_manager.dart';
@@ -10,8 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/components/liquid_silver_bottom_bar.dart';
-import '../../../core/network/api_client.dart';
+import '../repositories/body_assessment_repository.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../onboarding/views/training_preferences_view.dart';
 import '../../profile/views/profile_view.dart';
@@ -129,13 +131,7 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
       if (widget.loadMap != null) {
         data = await widget.loadMap!();
       } else {
-        final response = await ApiClient.shared.get<Map<String, dynamic>>(
-            '/api/heatmap/training',
-            queryParameters: {
-              'date': CacheScope.todayKey(now),
-              'utcOffsetMinutes': now.timeZoneOffset.inMinutes
-            });
-        data = TrainingMapData.fromJson(response.data!);
+        data = await BodyAssessmentRepository.shared.trainingMap(date: now);
       }
       final currentUser = await CacheScope.userId();
       if (mounted && request == _request && currentUser == user) {
@@ -165,6 +161,7 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
       'date': CacheScope.todayKey(now),
       'utcOffsetMinutes': now.timeZoneOffset.inMinutes
     });
+    await UserDataCache.shared.invalidate('training_map');
     await _load();
   }
 
@@ -564,15 +561,22 @@ class _NextFocus extends StatelessWidget {
   Widget build(BuildContext context) {
     final due = regions
         .where((region) => region.dueSets > region.completedSets)
-        .take(3)
         .toList();
+    due.sort((first, second) {
+      final firstCaution = first.hasLimitation || (first.soreness ?? 0) > 0;
+      final secondCaution = second.hasLimitation || (second.soreness ?? 0) > 0;
+      if (firstCaution != secondCaution) return firstCaution ? 1 : -1;
+      if (first.isFocus != second.isFocus) return first.isFocus ? -1 : 1;
+      return (first.completedSets / first.dueSets)
+          .compareTo(second.completedSets / second.dueSets);
+    });
     final upcoming =
         regions.where((region) => region.nextExercises.isNotEmpty).firstOrNull;
     return FitnessCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         const Expanded(
-            child: FitnessText('Your next focus',
+            child: FitnessText('Next in your plan',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
         TextButton(
             onPressed: onTrain,
@@ -586,7 +590,7 @@ class _NextFocus extends StatelessWidget {
                 : 'Add a workout plan in Train to see what needs attention.',
             style: const TextStyle(
                 fontSize: 13, color: FitnessTheme.muted, height: 1.4)),
-      for (final region in due)
+      for (final region in due.take(3))
         InkWell(
             onTap: () => onSelect(region.id),
             child: Padding(
@@ -741,11 +745,8 @@ class _MuscleDetailState extends State<_MuscleDetail> {
 
   Future<void> _openExercise(String id) async {
     try {
-      final response = await ApiClient.shared
-          .get<Map<String, dynamic>>('/api/workout/exercises/$id');
-      final raw = response.data!;
-      final exercise = WorkoutExerciseModel.fromJson(
-          Map<String, dynamic>.from((raw['data'] ?? raw) as Map));
+      final exercise = await WorkoutRepository.shared.getExerciseDetail(id);
+      if (exercise == null) throw StateError('Could not open this exercise.');
       if (mounted) {
         await Navigator.of(context).push(
             AppPageRoute<void>(page: ExerciseDetailView(exercise: exercise)));

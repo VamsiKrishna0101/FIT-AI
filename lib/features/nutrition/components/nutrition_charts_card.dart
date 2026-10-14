@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../history/repositories/history_repository.dart';
@@ -71,7 +72,7 @@ class MacroDistributionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const FitnessText(
                       'DAILY ENERGY INTAKE',
                       style: TextStyle(
                         fontSize: 10,
@@ -382,7 +383,7 @@ class CalorieWeeklyBarChart extends StatelessWidget {
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  FitnessText(
                     '7-DAY INTAKE TREND',
                     style: TextStyle(
                       fontSize: 10,
@@ -392,7 +393,7 @@ class CalorieWeeklyBarChart extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 2),
-                  Text(
+                  FitnessText(
                     'Caloric Consistency',
                     style: TextStyle(
                       fontSize: 16,

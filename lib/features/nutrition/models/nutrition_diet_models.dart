@@ -1,8 +1,11 @@
+import '../../../core/localization/fitness_copy.dart';
+
 // MARK: - Nutrition & Diet Models for Today Full Meal Plan
 
 class NutritionFoodItemModel {
   final String id;
-  final String name;
+  final String canonicalName;
+  String get name => foodDisplayName(id, canonicalName);
   final String? brand;
   final String category;
   final String? imageUrl;
@@ -17,7 +20,7 @@ class NutritionFoodItemModel {
 
   const NutritionFoodItemModel({
     required this.id,
-    required this.name,
+    required String name,
     this.brand,
     required this.category,
     this.imageUrl,
@@ -30,12 +33,12 @@ class NutritionFoodItemModel {
     required this.carbsPerServing,
     required this.fatPerServing,
     this.fiberPerServing = 0.0,
-  });
+  }) : canonicalName = name;
 
   factory NutritionFoodItemModel.fromJson(Map<String, dynamic> json) {
     return NutritionFoodItemModel(
       id: (json['id'] ?? '').toString(),
-      name: (json['name'] ?? 'Custom Food').toString(),
+      name: (json['canonicalName'] ?? json['name'] ?? 'Custom Food').toString(),
       brand: json['brand']?.toString(),
       category: (json['category'] ?? 'PROTEIN_SOURCE').toString(),
       imageUrl: json['imageUrl']?.toString(),
@@ -66,7 +69,7 @@ class NutritionFoodItemModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'name': canonicalName,
       'brand': brand,
       'category': category,
       'imageUrl': imageUrl,

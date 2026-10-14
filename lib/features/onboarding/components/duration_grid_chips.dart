@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,7 +27,7 @@ class DurationGridChips extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF202020),
+        color: DSColors.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.08),
@@ -93,7 +94,7 @@ class _DurationPillState extends State<_DurationPill> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: const Color(0xFF202020),
+            color: DSColors.bgCard,
             border: Border.all(
                 color: selected
                     ? Colors.white.withValues(alpha: 0.25)

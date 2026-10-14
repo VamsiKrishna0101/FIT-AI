@@ -13,6 +13,7 @@ import 'core/theme/ds_typography.dart';
 import 'core/localization/language_manager.dart';
 import 'core/localization/app_language.dart';
 import 'features/onboarding/views/onboarding_view.dart';
+import 'features/notifications/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,7 @@ void main() async {
 
   // Initialize localization engine from cache
   await LanguageManager.shared.init();
+  await NotificationService.shared.initialize();
 
   // Check persisted auth session token from secure hardware storage
   final token = await SecureSessionStore.shared.accessToken;
@@ -61,6 +63,7 @@ class FitAIApp extends StatelessWidget {
       animation: LanguageManager.shared,
       builder: (context, _) => MaterialApp(
         title: 'FitAI',
+        scaffoldMessengerKey: NotificationService.messengerKey,
         locale: LanguageManager.shared.currentLanguage.locale,
         supportedLocales: AppLanguage.values.map((language) => language.locale),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -96,6 +99,12 @@ class FitAIApp extends StatelessWidget {
           colorScheme: const ColorScheme.dark(
             primary: DSColors.accent,
             surface: DSColors.bgCard,
+            surfaceContainerLowest: DSColors.bg,
+            surfaceContainerLow: DSColors.bgCard,
+            surfaceContainer: DSColors.bgCard,
+            surfaceContainerHigh: DSColors.bgRaised,
+            surfaceContainerHighest: DSColors.bgRaised,
+            surfaceTint: Colors.transparent,
             onPrimary: DSColors.onAccent,
             onSurface: DSColors.textPrimary,
           ),

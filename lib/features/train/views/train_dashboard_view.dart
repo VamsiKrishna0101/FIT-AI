@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ import '../repositories/training_repository.dart';
 import 'exercise_detail_view.dart';
 import 'exercise_library_screen.dart';
 import 'workout_session_view.dart';
+import 'saved_routines_view.dart';
+import '../../../core/navigation/onboarding_page_route.dart';
 import '../../planner/views/weekly_plan_card.dart';
 
 class TrainView extends StatefulWidget {
@@ -36,6 +39,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   bool _loading = true, _busy = false;
   String? _error;
   int _generation = 0;
+  Timer? _syncTimer;
   StreamSubscription<TrainingDay>? _subscription;
   final _repo = TrainingRepository.shared;
   String copy(String key, {Map<String, Object> values = const {}}) =>
@@ -51,6 +55,11 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
       if (mounted && day.date == _date) setState(() => _day = day);
     });
     _load();
+    _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (widget.isActive && !_busy && _day?.pendingSync == true) {
+        unawaited(_repo.syncPending().catchError((Object _) {}));
+      }
+    });
   }
 
   void _localeChanged() {
@@ -61,7 +70,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool refresh = false}) async {
     final generation = ++_generation;
     final date = _date;
     final cached = await _repo.cached(date);
@@ -72,7 +81,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
       });
     }
     try {
-      final day = await _repo.load(date, refresh: true);
+      final day = await _repo.load(date, refresh: refresh);
       if (mounted && generation == _generation) {
         setState(() {
           _day = day;
@@ -95,6 +104,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     LanguageManager.shared.removeListener(_localeChanged);
     _subscription?.cancel();
+    _syncTimer?.cancel();
     super.dispose();
   }
 
@@ -204,7 +214,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     return Theme(
       data: Theme.of(context).copyWith(colorScheme: scheme),
       child: Scaffold(
-        backgroundColor: const Color(0xFF111111),
+        backgroundColor: DSColors.bg,
         body: SafeArea(
             bottom: false,
             child: Column(children: [
@@ -212,7 +222,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
               Expanded(
                   child: RefreshIndicator(
                 color: trainingSilver,
-                onRefresh: _load,
+                onRefresh: () => _load(refresh: true),
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics()),
@@ -224,6 +234,12 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                           ? 28
                           : LiquidSilverBottomBar.scrollBottomInset(context)),
                   children: [
+                    if (day?.pendingSync == true) ...[
+                      WorkoutSyncNotice(
+                          blocked: day!.syncBlocked,
+                          onRetry: () => _load(refresh: true)),
+                      const SizedBox(height: 14),
+                    ],
                     _exploreButton(),
                     const SizedBox(height: 16),
                     _week(locale),
@@ -302,8 +318,18 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                                                 height: 1.4))),
                                   ]))
                               : Column(children: [
-                                  for (final routine in day.routines)
-                                    _routine(routine, day)
+                                  for (final routine in day.routines.take(3))
+                                    _routine(routine, day),
+                                  if (day.routines.length > 3)
+                                    TextButton(
+                                        onPressed: () async {
+                                          await Navigator.of(context).push(
+                                              AppPageRoute<void>(
+                                                  page: SavedRoutinesView(
+                                                      initial: day)));
+                                          await _load(refresh: true);
+                                        },
+                                        child: Text(copy('View all'))),
                                 ])),
                       const SizedBox(height: 20),
                       WeeklyPlanCard(
@@ -441,9 +467,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: active
-                                ? const Color(0xFF111111)
-                                : trainingSilver))),
+                            color: active ? DSColors.bg : trainingSilver))),
                 const SizedBox(height: 5),
                 SizedBox(
                     height: 7,
@@ -499,7 +523,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     final title = day.name != 'Workout'
         ? day.name
         : copy(day.finished
-            ? 'Workout complete'
+            ? (day.pendingSync ? 'Saved on this phone' : 'Workout complete')
             : day.restDay
                 ? 'Recover & recharge'
                 : 'Your workout');
@@ -717,31 +741,12 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
       );
 
   Widget _routine(Map<String, dynamic> routine, TrainingDay day) => InkWell(
-        onTap: day.started || _busy
+        onTap: _busy
             ? null
             : () async {
-                final approved = day.items.isEmpty ||
-                    await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                                    title: Text(copy('Replace this workout?')),
-                                    content: Text(copy(
-                                        'Your saved routine will replace the scheduled exercises.')),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: Text(copy('Cancel'))),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: Text(copy('Use routine')))
-                                    ])) ==
-                        true;
-                if (approved) {
-                  await _action(() => _repo.mutate(
-                      _date, 'POST', '/routines/${routine['id']}/apply'));
-                }
+                await Navigator.of(context).push(AppPageRoute<void>(
+                    page: RoutineDetailView(day: day, routine: routine)));
+                await _load(refresh: true);
               },
         child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),

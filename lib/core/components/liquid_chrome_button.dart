@@ -1,3 +1,4 @@
+import '../theme/ds_colors.dart';
 import '../localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
@@ -68,20 +69,19 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
                                         width: 20,
                                         height: 20,
                                         child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(0xFF111111)))
+                                            strokeWidth: 2, color: DSColors.bg))
                                   else ...[
                                     Expanded(
                                         child: FitnessText(widget.title,
                                             textAlign: TextAlign.center,
                                             style: const TextStyle(
-                                                color: Color(0xFF111111),
+                                                color: DSColors.bg,
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.w600,
                                                 letterSpacing: -.3))),
                                     if (widget.showArrow)
                                       const Icon(Icons.arrow_forward_rounded,
-                                          size: 20, color: Color(0xFF111111)),
+                                          size: 20, color: DSColors.bg),
                                   ],
                                 ])),
                       )),

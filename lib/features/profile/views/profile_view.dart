@@ -1,8 +1,10 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/profile_avatar.dart';
 import '../../../core/localization/fitness_text.dart';
+import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/fitness_theme.dart';
@@ -18,6 +20,7 @@ import 'privacy_settings_view.dart';
 import 'profile_details_view.dart';
 import 'settings_components.dart';
 import 'settings_preferences_view.dart';
+import '../../notifications/views/notification_settings_view.dart';
 
 class ProfileView extends StatefulWidget {
   final SettingsRepository? repository;
@@ -148,12 +151,8 @@ class _ProfileViewState extends State<ProfileView> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: .08), width: .7),
-              gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF222426), Color(0xFF191A1C)]),
+              border: Border.all(color: DSColors.border, width: .7),
+              color: DSColors.bgCard,
             ),
             child: Row(children: [
               ProfileAvatar(name: name, size: 40, label: 'Profile'),
@@ -162,7 +161,10 @@ class _ProfileViewState extends State<ProfileView> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(name.isEmpty ? 'Your profile' : name,
+                    Text(
+                        name.isEmpty
+                            ? fitnessText(context, 'Your profile')
+                            : name,
                         style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -222,6 +224,10 @@ class _ProfileViewState extends State<ProfileView> {
                 onTap: () => _open(const McpConnectionsView())),
           ]),
           SettingsGroup(title: 'Preferences', children: [
+            SettingsRow(
+                icon: CupertinoIcons.bell,
+                title: 'Notifications',
+                onTap: () => _open(const NotificationSettingsView())),
             SettingsRow(
                 icon: CupertinoIcons.slider_horizontal_3,
                 title: 'App preferences',

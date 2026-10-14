@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
     <!-- Camera for 4-pose body scan -->
@@ -24,6 +25,10 @@
         android:fullBackupContent="@xml/phone_sleep_backup_rules"
         android:dataExtractionRules="@xml/phone_sleep_extraction_rules"
         android:enableOnBackInvokedCallback="true">
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="fitai_reminders" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_notification" />
         <receiver android:name=".PhoneSleepReceiver" android:exported="false" />
         <activity
             android:name=".MainActivity"

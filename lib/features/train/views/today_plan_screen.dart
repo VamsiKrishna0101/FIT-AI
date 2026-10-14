@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -113,9 +114,9 @@ class _TodayPlanViewState extends State<TodayPlanView> {
                 primary: const Color(0xFFE2E2E2),
                 secondary: const Color(0xFFE2E2E2))),
         child: Scaffold(
-          backgroundColor: const Color(0xFF111111),
+          backgroundColor: DSColors.bg,
           appBar: AppBar(
-              backgroundColor: const Color(0xFF111111),
+              backgroundColor: DSColors.bg,
               surfaceTintColor: Colors.transparent,
               centerTitle: false,
               titleSpacing: 0,
@@ -275,7 +276,7 @@ class _TodayPlanViewState extends State<TodayPlanView> {
                                     return PremiumSurface(
                                         key:
                                             ValueKey('workout-card-${item.id}'),
-                                        color: const Color(0xFF202020),
+                                        color: DSColors.bgCard,
                                         radius: 20,
                                         padding: const EdgeInsets.all(14),
                                         child: Column(children: [

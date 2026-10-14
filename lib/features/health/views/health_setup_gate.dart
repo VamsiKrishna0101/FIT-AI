@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/health/health_sync_service.dart';
 import 'health_connection_view.dart';
@@ -30,7 +31,7 @@ class _HealthSetupGateState extends State<HealthSetupGate> {
   @override
   Widget build(BuildContext context) => _offer == null
       ? const Scaffold(
-          backgroundColor: Color(0xFF111111),
+          backgroundColor: DSColors.bg,
           body: Center(child: CircularProgressIndicator(color: Colors.white54)))
       : _offer!
           ? HealthConnectionView(

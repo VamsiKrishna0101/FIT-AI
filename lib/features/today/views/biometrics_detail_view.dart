@@ -1,3 +1,5 @@
+import '../../../core/theme/ds_colors.dart';
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
@@ -138,7 +140,7 @@ class _BiometricsDetailViewState extends State<BiometricsDetailView> {
               color: Colors.white, size: 24),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: const FitnessText(
           'HEALTH TELEMETRY',
           style: TextStyle(
             fontSize: 13,
@@ -312,7 +314,7 @@ class _BiometricsDetailViewState extends State<BiometricsDetailView> {
     HapticFeedback.lightImpact();
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF121418),
+      backgroundColor: DSColors.bg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -333,7 +335,7 @@ class _BiometricsDetailViewState extends State<BiometricsDetailView> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            const FitnessText(
               'Biometric Intelligence & Recovery',
               style: TextStyle(
                 fontSize: 18,
@@ -343,7 +345,7 @@ class _BiometricsDetailViewState extends State<BiometricsDetailView> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            FitnessText(
               'Your FitAI Recovery score aggregates Resting Heart Rate (RHR), Heart Rate Variability (HRV), and Sleep Quality to compute your autonomic nervous system readiness. A higher score signifies optimal readiness for high-strain training.',
               style: TextStyle(
                 fontSize: 13,
@@ -391,7 +393,7 @@ class _HealthSyncBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF101216),
+        color: DSColors.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isConnected
@@ -551,7 +553,7 @@ class _EmptyBiometrics extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF101216),
+        color: DSColors.bgCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.08),
@@ -566,7 +568,7 @@ class _EmptyBiometrics extends StatelessWidget {
             color: const Color(0xFF00FF87).withValues(alpha: 0.8),
           ),
           const SizedBox(height: 14),
-          const Text(
+          const FitnessText(
             'Biometric Telemetry Disconnected',
             style: TextStyle(
               fontSize: 16,

@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -76,8 +77,7 @@ class _LimitationChipState extends State<_LimitationChip> {
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFF303030) : const Color(0xFF202020),
+            color: isSelected ? const Color(0xFF303030) : DSColors.bgCard,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
@@ -132,7 +132,7 @@ class CustomInjuryNoteCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF202020),
+        color: DSColors.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.12),

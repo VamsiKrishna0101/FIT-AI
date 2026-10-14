@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -233,7 +234,7 @@ class _ReadinessRingCardState extends State<ReadinessRingCard> {
                             fontFeatures: [FontFeature.tabularFigures()],
                           ),
                         ),
-                        Text(
+                        FitnessText(
                           'RECOVERY',
                           style: TextStyle(
                             fontSize: 8.5,
@@ -441,7 +442,7 @@ class _SevenDayTrend extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
+            FitnessText(
               'LAST 7 DAYS',
               style: TextStyle(
                 fontSize: 10,

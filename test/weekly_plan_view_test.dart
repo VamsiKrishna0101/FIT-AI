@@ -52,7 +52,7 @@ class _Repository extends WeeklyPlanRepository {
         'id': 'saved-plan',
         'weekStart': '2026-10-12',
         'version': 1,
-        'status': 'DRAFT',
+        'status': 'ACTIVE',
         'synthetic': synthetic,
         'payload': {
           'synthetic': synthetic,
@@ -220,14 +220,18 @@ void main() {
     expect(find.text('Use test history'), findsNothing);
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
-    await tester.pumpAndSettle();
+    // Start the route ticker before advancing time; the underlying generate
+    // button remains busy while the progress page is open.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 800));
     expect(find.text('Your week is ready'), findsOneWidget);
     await tester.ensureVisible(find.text('View weekly plan'));
     await tester.tap(find.text('View weekly plan'));
     await tester.pumpAndSettle();
     expect(find.text('Dumbbell floor press'), findsOneWidget);
     expect(find.text('2 × 10–12 · 12 kg · as logged'), findsOneWidget);
-    expect(find.text('Use this weekly plan'), findsOneWidget);
+    expect(find.text('Use this weekly plan'), findsNothing);
     expect(repository.activations, 0);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

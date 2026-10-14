@@ -7,6 +7,7 @@ import '../models/body_assessment_models.dart';
 import '../models/body_progress_summary.dart';
 import 'widgets/body_controls.dart';
 import 'widgets/body_progress_style.dart';
+import 'widgets/body_progress_cards.dart';
 
 class BodyMeasurementsView extends StatelessWidget {
   final BodyOverview overview;
@@ -89,6 +90,8 @@ class BodyMeasurementsView extends StatelessWidget {
                           ]);
                     }),
                   ],
+                  const SizedBox(height: 20),
+                  BodyBalanceCard(summary: summary, onAdd: onAdd),
                   for (final group in groups.entries)
                     if (group.value
                         .any((key) => summary.latest(key) != null)) ...[

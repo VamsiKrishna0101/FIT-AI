@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -95,9 +96,9 @@ class _ProgressExercisesViewState extends State<ProgressExercisesView> {
   @override
   Widget build(BuildContext context) => FitnessTheme(
       child: Scaffold(
-          backgroundColor: const Color(0xFF111111),
+          backgroundColor: DSColors.bg,
           appBar: AppBar(
-              backgroundColor: const Color(0xFF111111),
+              backgroundColor: DSColors.bg,
               surfaceTintColor: Colors.transparent,
               title: Text(fitnessText(context, 'Exercise progress'),
                   style: const TextStyle(

@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -271,10 +272,7 @@ class _EnergyCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF27292D), Color(0xFF202020)]),
+          color: DSColors.bgCard,
           border: Border.all(color: const Color(0x18FFFFFF), width: .7)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const FitnessText('Daily intake',
@@ -289,7 +287,7 @@ class _EnergyCard extends StatelessWidget {
                   letterSpacing: -1.8)),
           const Padding(
               padding: EdgeInsets.only(left: 7, bottom: 4),
-              child: Text('kcal',
+              child: FitnessText('kcal',
                   style: TextStyle(fontSize: 14, color: FitnessTheme.muted))),
         ]),
         const SizedBox(height: 21),

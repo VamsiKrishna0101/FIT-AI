@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../auth/views/auth_view.dart';
@@ -210,6 +211,8 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
           ..._draft.personalizationPayload(),
           if (_draft.daysPerWeek != null) 'daysPerWeek': _draft.daysPerWeek
         });
+        await UserDataCache.shared.invalidate('profile');
+        await UserDataCache.shared.invalidate('training_map');
         if (mounted) Navigator.of(context).pop();
       } else {
         _draft.completedStep = 7;

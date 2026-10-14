@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -171,9 +172,9 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                 primary: const Color(0xFFE2E2E2),
                 secondary: const Color(0xFFE2E2E2))),
         child: Scaffold(
-          backgroundColor: const Color(0xFF111111),
+          backgroundColor: DSColors.bg,
           appBar: AppBar(
-              backgroundColor: const Color(0xFF111111),
+              backgroundColor: DSColors.bg,
               surfaceTintColor: Colors.transparent,
               title: Text(copy('Exercise details'),
                   maxLines: 1,
@@ -230,25 +231,25 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                                     child: FitVideoSurface(
                                         url: exercise.url,
                                         fit: BoxFit.contain,
-                                        backgroundColor:
-                                            const Color(0xFF111111),
+                                        backgroundColor: DSColors.bg,
                                         neutralBackground: true,
                                         tapToToggle: true,
-                                        placeholder: exercise.thumbnailUrl?.isNotEmpty == true
+                                        placeholder: exercise
+                                                    .thumbnailUrl?.isNotEmpty ==
+                                                true
                                             ? CachedNetworkImage(
                                                 imageUrl:
                                                     exercise.thumbnailUrl!,
                                                 fit: BoxFit.contain,
                                                 errorWidget: (_, __, ___) =>
                                                     const Center(
-                                                        child:
-                                                            Icon(CupertinoIcons.person,
-                                                                size: 40)))
-                                            : const Center(
-                                                child: Icon(CupertinoIcons.person, color: Color(0xFF969696), size: 40)))))))),
+                                                        child: Icon(
+                                                            CupertinoIcons.person,
+                                                            size: 40)))
+                                            : const Center(child: Icon(CupertinoIcons.person, color: Color(0xFF969696), size: 40)))))))),
                 const SizedBox(height: 22),
                 PremiumSurface(
-                    color: const Color(0xFF202020),
+                    color: DSColors.bgCard,
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -281,7 +282,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                           fontSize: 19, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   PremiumSurface(
-                      color: const Color(0xFF202020),
+                      color: DSColors.bgCard,
                       child: Column(children: [
                         Row(children: [
                           Expanded(child: _field('Sets', _sets)),
@@ -317,7 +318,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                   ]))
                 else
                   PremiumSurface(
-                      color: const Color(0xFF202020),
+                      color: DSColors.bgCard,
                       child: Column(children: [
                         for (var index = 0; index < steps.length; index++) ...[
                           if (index > 0)
@@ -412,7 +413,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                                     : () => _act(widget.onAddToPlan!),
                                 style: FilledButton.styleFrom(
                                     backgroundColor: const Color(0xFFE2E2E2),
-                                    foregroundColor: const Color(0xFF111111),
+                                    foregroundColor: DSColors.bg,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
                                 child: _busy ? const CupertinoActivityIndicator() : Text(copy('Add to today')))),

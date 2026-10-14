@@ -196,6 +196,8 @@ void main() {
     await tester.scrollUntilVisible(find.text('82–92 cm'), 150,
         scrollable: find.byType(Scrollable).last);
     expect(find.text('82–92 cm'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Right arm'), -150,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Right arm'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();

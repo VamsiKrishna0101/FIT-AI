@@ -10,6 +10,7 @@ import '../../models/body_assessment_models.dart';
 import '../../models/body_progress_summary.dart';
 import 'body_controls.dart';
 import 'body_focus_panel.dart';
+import 'body_progress_cards.dart';
 
 class BodyPhysiqueHome extends StatelessWidget {
   final BodyOverview? overview;
@@ -19,6 +20,7 @@ class BodyPhysiqueHome extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final VoidCallback onManual, onPhotos, onMeasurements, onHistory;
   final ValueChanged<BodyAssessment> onRecord, onCompare;
+  final VoidCallback? onTrain;
 
   const BodyPhysiqueHome({
     super.key,
@@ -34,6 +36,7 @@ class BodyPhysiqueHome extends StatelessWidget {
     required this.onHistory,
     required this.onRecord,
     required this.onCompare,
+    this.onTrain,
   });
 
   @override
@@ -134,6 +137,23 @@ class BodyPhysiqueHome extends StatelessWidget {
                           report == null ? null : () => onRecord(report),
                     ),
                     const SizedBox(height: 18),
+                    BodyChangesCard(
+                      summary: summary,
+                      onMeasurements: onManual,
+                      onCompare: () {
+                        final entry = summary.comparisonEntry;
+                        if (entry != null) onCompare(entry);
+                      },
+                    ),
+                    const SizedBox(height: 18),
+                    if (onTrain != null) ...[
+                      BodyTrainingFocusCard(
+                        report: report,
+                        chosenFocus: overview?.focus ?? const [],
+                        onTrain: onTrain!,
+                      ),
+                      const SizedBox(height: 18),
+                    ],
                     FitnessCard(
                       child: Material(
                           color: Colors.transparent,

@@ -4,19 +4,26 @@ import 'package:flutter/material.dart';
 class DSColors {
   // ── Canvas ────────────────────────────────────────────────────────────────
   static const Color bg = Color(0xFF000000);
-  static const Color dashboardBg = Color(0xFF111111);
-  static const Color bgElevated = Color(0xFF0D1013);
-  static const Color bgDark = Color(0xFF000000);
-  static const Color bgCard = Color(0xFF15191D);
-  static const Color bgChip = Color(0xFF191E22);
-  static const Color bgInset = Color(0xFF0B0E11);
-  static const Color bgRaised = Color(0xFF1D2227);
+  static const Color dashboardBg = bg;
+  static const Color bgElevated = Color(0xFF0D0D0D);
+  static const Color bgDark = bg;
+  static const Color bgCard = Color(0xFF202020);
+  static const Color bgChip = bgRaised;
+  static const Color bgInset = Color(0xFF080808);
+  static const Color bgRaised = Color(0xFF2A2A2A);
 
   // ── Borders ───────────────────────────────────────────────────────────────
-  static const Color border = Color(0x338D969E);
-  static const Color borderHi = Color(0x548D969E);
+  static const Color border = Color(0x1CFFFFFF);
+  static const Color borderHi = Color(0x2AFFFFFF);
   static Color stroke = border;
   static Color strokeBright = borderHi;
+
+  // Shared dashboard colours.
+  static const Color silver = Color(0xFFE2E2E2);
+  static const Color muted = Color(0xFF969696);
+  static const Color blue = Color(0xFF689FFF);
+  static const Color violet = Color(0xFFA28BFA);
+  static const Color coral = Color(0xFFED927F);
 
   // ── Typography ────────────────────────────────────────────────────────────
   static const Color textPrimary = Color(0xFFFFFFFF);
@@ -42,9 +49,9 @@ class DSColors {
   static const Color whoopStrainCyan = Color(0xFF00E5FF);
   static const Color whoopStrainBlue = Color(0xFF2979FF);
   static const Color whoopSleepPurple = Color(0xFF7C4DFF);
-  static const Color whoopCard = Color(0xFF0C0E14);
-  static const Color whoopCardBorder = Color(0x1AFFFFFF);
-  static const Color whoopSubCard = Color(0xFF141720);
+  static const Color whoopCard = bgCard;
+  static const Color whoopCardBorder = border;
+  static const Color whoopSubCard = bgRaised;
 
   // ── Glass Sheen ───────────────────────────────────────────────────────────
   static final LinearGradient glassSheen = LinearGradient(
@@ -65,14 +72,14 @@ class DSColors {
   static const LinearGradient glassCardGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF23282D), Color(0xFF171B1F), Color(0xFF101316)],
+    colors: [bgCard, bgCard, bgCard],
     stops: [0.0, 0.45, 1.0],
   );
 
   static const LinearGradient canvasGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF000000), Color(0xFF000000)],
+    colors: [bg, bg],
   );
 
   static const LinearGradient titaniumSurface = LinearGradient(
@@ -151,19 +158,13 @@ class FastGlassCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                tint == null
-                    ? DSColors.bgRaised
-                    : Color.lerp(DSColors.bgRaised, tint, 0.07)!,
-                DSColors.bgCard,
-                DSColors.bgElevated,
-              ],
-              stops: const [0.0, 0.19, 1.0],
+            color: DSColors.bgCard,
+            border: Border.all(
+              color: tint == null
+                  ? DSColors.border
+                  : Color.lerp(DSColors.border, tint, .2)!,
+              width: .7,
             ),
-            border: Border.all(color: DSColors.border, width: 0.7),
           ),
           child: Stack(
             children: [

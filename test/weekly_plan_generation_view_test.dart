@@ -225,6 +225,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('View plan progress'));
     await tester.tap(find.text('View plan progress'));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();
     expect(find.text('41%'), findsOneWidget);
@@ -234,6 +235,7 @@ void main() {
     expect(find.text('View plan progress'), findsOneWidget);
     await tester.ensureVisible(find.text('View plan progress'));
     await tester.tap(find.text('View plan progress'));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();
     expect(find.text('41%'), findsOneWidget);

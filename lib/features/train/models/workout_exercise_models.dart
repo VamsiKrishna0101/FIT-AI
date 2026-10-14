@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import '../../../core/localization/fitness_copy.dart';
+
 // MARK: - Workout & Exercise Models adhering to FitAI Exercise Schema
 
 class WorkoutExerciseModel {
@@ -337,6 +340,32 @@ class TodayPlanItemModel {
           .where((set) => set['setNumber'] == number)
           .map((set) => Map<String, dynamic>.from(set))
           .firstOrNull;
+
+  String? localizedTargetLabel(BuildContext context, int number) {
+    if (number > targetSets && targetForSet(number) == null) return null;
+    final target = targetForSet(number);
+    final reps = target == null
+        ? targetReps
+        : target['repsMin'] == target['repsMax']
+            ? target['repsMax'].toString()
+            : '${target['repsMin']}–${target['repsMax']}';
+    final weight = target == null
+        ? (targetWeight > 0 ? targetWeight : null)
+        : target['weightKg'] as num?;
+    final load = setTargets?['weightBasis'] == 'bodyweight'
+        ? fitnessText(context, 'Bodyweight')
+        : weight == null
+            ? fitnessText(context, 'Choose a comfortable load')
+            : '${weight.toDouble() == weight.roundToDouble() ? weight.toInt().toString() : weight.toString()} kg';
+    final unit = setTargets?['weightUnit'] == 'per_hand'
+        ? fitnessText(context, 'Per hand')
+        : setTargets?['weightUnit'] == 'total_load'
+            ? fitnessText(context, 'Total load')
+            : '';
+    return '${fitnessText(context, '{count} reps', values: {
+          'count': reps
+        })} · $load${unit.isEmpty ? '' : ' · $unit'}';
+  }
 
   String? targetLabel(int number) {
     final set = targetForSet(number);

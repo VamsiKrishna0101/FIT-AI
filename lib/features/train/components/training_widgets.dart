@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +6,8 @@ import '../../../core/localization/fitness_copy.dart';
 import '../models/workout_exercise_models.dart';
 import '../views/exercise_library_screen.dart';
 
-const trainingSilver = Color(0xFFE2E2E2);
-const trainingMuted = Color(0xFF999999);
+const trainingSilver = DSColors.silver;
+const trainingMuted = DSColors.muted;
 
 class TrainingSurface extends StatelessWidget {
   final Widget child;
@@ -20,8 +21,11 @@ class TrainingSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: const Color(0xFF202020),
-        borderRadius: BorderRadius.circular(22),
+        color: DSColors.bgCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: DSColors.border, width: .7),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
             onTap: onTap, child: Padding(padding: padding, child: child)),
@@ -44,7 +48,7 @@ class TrainingButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: primary ? trainingSilver : const Color(0xFF303030),
-          foregroundColor: primary ? const Color(0xFF111111) : trainingSilver,
+          foregroundColor: primary ? DSColors.bg : trainingSilver,
           disabledBackgroundColor: const Color(0xFF282828),
           disabledForegroundColor: trainingMuted,
           minimumSize: const Size(0, 44),
@@ -101,7 +105,7 @@ Future<String?> trainingName(
   final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF202020),
+            backgroundColor: DSColors.bgCard,
             title: Text(fitnessText(context, title)),
             content: TextField(
                 controller: controller,
@@ -132,3 +136,33 @@ Future<WorkoutExerciseModel?> pickTrainingExercise(BuildContext context) =>
             onExerciseAdded: () {},
             onSelect: (exercise) =>
                 Navigator.of(pickerContext).pop(exercise))));
+
+class WorkoutSyncNotice extends StatelessWidget {
+  final bool blocked;
+  final VoidCallback onRetry;
+  const WorkoutSyncNotice(
+      {super.key, this.blocked = false, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) => TrainingSurface(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+              fitnessText(context,
+                  blocked ? 'Sync needs attention' : 'Saved on this phone'),
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Text(
+              fitnessText(
+                  context,
+                  blocked
+                      ? 'The server could not accept this workout. Reconnect and retry.'
+                      : 'Waiting to sync. Body and Progress update after syncing.'),
+              style: const TextStyle(
+                  fontSize: 12, height: 1.4, color: trainingMuted)),
+          TextButton(
+              onPressed: onRetry, child: Text(fitnessText(context, 'Retry'))),
+        ]),
+      );
+}

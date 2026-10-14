@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -38,7 +39,7 @@ class AiTargetCard extends StatelessWidget {
                 iconSize: 15,
               ),
               const SizedBox(width: 8),
-              Text(
+              FitnessText(
                 'Your AI target',
                 style: DSTypography.cardTitle.copyWith(
                   fontSize: 15,

@@ -173,7 +173,8 @@ class _MealPortionViewState extends State<MealPortionView> {
                   ],
                   DropdownButtonFormField<String>(
                       initialValue: _slot,
-                      decoration: const InputDecoration(label: FitnessText('Meal')),
+                      decoration:
+                          const InputDecoration(label: FitnessText('Meal')),
                       items: ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']
                           .map((s) => DropdownMenuItem(
                               value: s, child: FitnessText(mealSlotLabel(s))))

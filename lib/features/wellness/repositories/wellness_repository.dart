@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/local_cache.dart';
 import '../../progress/repositories/progress_repository.dart';
@@ -46,6 +47,8 @@ class WellnessRepository {
     await _syncPhoneUsage(usage, owner);
     await TodayRepository.shared.applyWearableUsage(usage, owner: owner);
     unawaited(Future.wait([
+      UserDataCache.shared.invalidate('training_map'),
+      UserDataCache.shared.invalidate('home_history'),
       ProgressRepository.shared.invalidate(),
       HistoryRepository.shared.invalidate(),
     ]).then<void>((_) {}, onError: (Object _, StackTrace __) {}));
@@ -118,6 +121,8 @@ class WellnessRepository {
     // A committed save must not wait for disk cache cleanup to finish.
     unawaited(Future.wait([
       LocalCache.shared.saveJson(key, {'entry': entry}),
+      UserDataCache.shared.invalidate('training_map'),
+      UserDataCache.shared.invalidate('home_history'),
       ProgressRepository.shared.invalidate(),
       HistoryRepository.shared.invalidate(),
     ]).then<void>((_) {}, onError: (Object _, StackTrace __) {}));

@@ -16,10 +16,12 @@ import 'widgets/weekly_plan_schedule.dart';
 import '../../body_scan/models/body_assessment_models.dart';
 import '../../body_scan/views/body_photo_review_view.dart';
 import '../../../core/components/liquid_chrome_button.dart';
+import '../../notifications/views/notification_settings_view.dart';
 
 class WeeklyPlanView extends StatefulWidget {
   final WeeklyPlanRepository? repository;
-  const WeeklyPlanView({super.key, this.repository});
+  final String? initialPlanId;
+  const WeeklyPlanView({super.key, this.repository, this.initialPlanId});
 
   @override
   State<WeeklyPlanView> createState() => _WeeklyPlanViewState();
@@ -97,12 +99,14 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       final (availability, plans) =
           await (_repo.availability(), _repo.plans()).wait;
       if (!await _sameOwner()) return;
-      final selectedId = _selected?['id'] ?? availability['lastPlanId'];
+      final selectedId = _selected?['id'] ??
+          widget.initialPlanId ??
+          availability['lastPlanId'];
       var selected =
           plans.where((plan) => plan['id'] == selectedId).firstOrNull;
-      if (selected == null && _selected != null) {
+      if (selected == null && selectedId is String) {
         try {
-          selected = await _repo.savedPlan(_selected!['id'] as String);
+          selected = await _repo.savedPlan(selectedId);
         } on DioException catch (error) {
           // A reset plan can disappear while this screen is still open.
           if (error.response?.statusCode != 404) rethrow;
@@ -281,6 +285,9 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       if (!_running) {
         _timer?.cancel();
         await _load();
+        if (_run?['status'] == 'COMPLETED' && mounted && await _sameOwner()) {
+          if (mounted) await offerNotificationReminders(context);
+        }
       }
     } catch (error) {
       if (await _sameOwner()) setState(() => _error = _message(error));
@@ -307,6 +314,9 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
     if (result != null) setState(() => _run = result);
     await _poll();
     await _load();
+    if (_run?['status'] == 'COMPLETED' && mounted && await _sameOwner()) {
+      if (mounted) await offerNotificationReminders(context);
+    }
   }
 
   Future<void> _openHistory() async {

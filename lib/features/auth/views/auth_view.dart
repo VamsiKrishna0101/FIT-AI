@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -285,7 +286,7 @@ class _AppleSignInButtonState extends State<_AppleSignInButton> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             // Apple frosted liquid glass
-            color: const Color(0xFF202020),
+            color: DSColors.bgCard,
             border: Border.all(
               color: _pressed
                   ? Colors.white.withValues(alpha: 0.45)
@@ -361,7 +362,7 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             // Apple frosted liquid glass
-            color: const Color(0xFF202020),
+            color: DSColors.bgCard,
             border: Border.all(
               color: _pressed
                   ? Colors.white.withValues(alpha: 0.45)
@@ -501,7 +502,7 @@ class _LuxuryEmailFieldState extends State<_LuxuryEmailField> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         // Apple frosted liquid glass
-        color: const Color(0xFF202020),
+        color: DSColors.bgCard,
         border: Border.all(
           color: _isFocused
               ? Colors.white.withValues(alpha: 0.60)
@@ -644,7 +645,7 @@ class _LuxuryPasswordFieldState extends State<_LuxuryPasswordField> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             // Apple frosted liquid glass
-            color: const Color(0xFF202020),
+            color: DSColors.bgCard,
             border: Border.all(
               color: _isFocused
                   ? Colors.white.withValues(alpha: 0.60)

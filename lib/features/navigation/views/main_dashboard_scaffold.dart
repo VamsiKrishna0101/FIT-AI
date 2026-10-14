@@ -15,6 +15,13 @@ import '../../profile/views/profile_view.dart';
 import '../../today/views/today_home_view.dart';
 import '../../train/views/train_view.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
+import '../../../core/storage/secure_session_store.dart';
+import '../../notifications/services/notification_service.dart';
+import '../../notifications/views/notification_settings_view.dart';
+import '../../planner/views/weekly_plan_view.dart';
+import '../../wellness/views/sleep_entry_view.dart';
+import '../../nutrition/views/food_library_view.dart';
+import '../../today/repositories/today_repository.dart';
 
 class MainDashboardScaffold extends StatefulWidget {
   final int initialIndex;
@@ -30,6 +37,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
   late int _currentIndex;
   final Set<int> _visitedTabs = {0};
   bool _modeReady = false;
+  StreamSubscription<Map<String, String>>? _notifications;
 
   @override
   void initState() {
@@ -42,10 +50,14 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
     _visitedTabs.add(_currentIndex);
     AppDataMode.shared.addListener(_datasetChanged);
     unawaited(_initializeMode());
+    _notifications =
+        NotificationService.shared.opened.listen((_) => _takeNotification());
+    unawaited(NotificationService.shared.refresh());
   }
 
   @override
   void dispose() {
+    _notifications?.cancel();
     AppDataMode.shared.removeListener(_datasetChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -77,6 +89,48 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
   Future<void> _initializeMode() async {
     await AppDataMode.shared.initialize();
     if (mounted) setState(() => _modeReady = true);
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _takeNotification());
+    }
+  }
+
+  Future<void> _takeNotification() async {
+    if (!mounted || !_modeReady) return;
+    final data = NotificationService.shared.takePending();
+    if (data == null ||
+        data['userId'] != await SecureSessionStore.shared.userId ||
+        !mounted) {
+      return;
+    }
+    final dashboard = ModalRoute.of(context);
+    Navigator.of(context).popUntil((route) => route == dashboard);
+
+    switch (data['type']) {
+      case 'WORKOUT':
+        _onTabSelected(1);
+        break;
+      case 'SUMMARY':
+        _onTabSelected(3);
+        break;
+      case 'PLAN_READY':
+      case 'PLAN_AVAILABLE':
+        _openRoute(WeeklyPlanView(initialPlanId: data['targetId']));
+        break;
+      case 'CHECK_IN':
+        await Navigator.of(context).push(AppPageRoute<void>(
+            page: SleepEntryView(
+                initialDate: DateTime.tryParse(data['date'] ?? ''))));
+        TodayRepository.shared.invalidate();
+        break;
+      case 'MEAL':
+        _openRoute(FoodLibraryView(
+            initialMealType: data['targetId'] ?? 'LUNCH',
+            onMealAdded: () => TodayRepository.shared.invalidate()));
+        break;
+      case 'TEST':
+        _openRoute(const NotificationSettingsView());
+        break;
+    }
   }
 
   void _onTabSelected(int index) {

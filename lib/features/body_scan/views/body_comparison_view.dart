@@ -164,9 +164,45 @@ class _BodyComparisonPanelState extends State<BodyComparisonPanel> {
     final keys = bodyMetricSpecs.keys.where((key) =>
         data.current.metrics.containsKey(key) ||
         data.previous.metrics.containsKey(key));
+    final changes = keys
+        .where((key) =>
+            data.metrics[key]?['delta'] != null &&
+            data.current.metrics[key]?.isPhotoEstimate == false &&
+            data.previous.metrics[key]?.isPhotoEstimate == false)
+        .take(3)
+        .toList();
     return ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
+          if (changes.isNotEmpty) ...[
+            FitnessCard(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  const FitnessText('Your progress',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  for (final key in changes)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      child: Row(children: [
+                        Expanded(
+                            child: FitnessText(bodyMetricSpecs[key]!.label,
+                                style: const TextStyle(fontSize: 14))),
+                        FitnessText(data.label(key),
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w500)),
+                      ]),
+                    ),
+                  const SizedBox(height: 7),
+                  Text(
+                      '${bodyDate(data.previous.recordedDate)} – ${bodyDate(data.current.recordedDate)}',
+                      style: const TextStyle(
+                          fontSize: 12, color: FitnessTheme.muted)),
+                ])),
+            const SizedBox(height: 18),
+          ],
           if (data.current.photos.isNotEmpty ||
               data.previous.photos.isNotEmpty) ...[
             BodySegment(
@@ -203,82 +239,102 @@ class _BodyComparisonPanelState extends State<BodyComparisonPanel> {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: FitnessCard(
                       padding: const EdgeInsets.all(14),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      child: ExpansionTile(
+                          tilePadding: EdgeInsets.zero,
+                          childrenPadding: const EdgeInsets.only(bottom: 8),
+                          title: FitnessText(area.key,
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w500)),
                           children: [
-                            FitnessText(area.key,
-                                style: const TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.w600)),
-                            for (final record in [
-                              data.previous,
-                              data.current
-                            ]) ...[
-                              const SizedBox(height: 10),
-                              FitnessText(
-                                  record.id == data.current.id
-                                      ? 'Now'
-                                      : 'Earlier',
-                                  style: const TextStyle(
-                                      fontSize: 11, color: FitnessTheme.muted)),
-                              for (final id in area.value)
-                                Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: FitnessText(_observation(record, id),
+                            Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  for (final record in [
+                                    data.previous,
+                                    data.current
+                                  ]) ...[
+                                    const SizedBox(height: 10),
+                                    FitnessText(
+                                        record.id == data.current.id
+                                            ? 'Now'
+                                            : 'Earlier',
                                         style: const TextStyle(
-                                            fontSize: 12, height: 1.4))),
-                            ],
+                                            fontSize: 11,
+                                            color: FitnessTheme.muted)),
+                                    for (final id in area.value)
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 4),
+                                          child: FitnessText(
+                                              _observation(record, id),
+                                              style: const TextStyle(
+                                                  fontSize: 12, height: 1.4))),
+                                  ],
+                                ]),
                           ]))),
           ],
-          const BodySectionTitle('Measurement changes'),
-          for (final key in keys)
-            Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: FitnessCard(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      FitnessText(bodyMetricSpecs[key]!.label,
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 12),
-                      Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final record in [data.previous, data.current])
-                              Expanded(
-                                  child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                    FitnessText(bodyDate(record.recordedDate),
-                                        style: const TextStyle(
-                                            fontSize: 10,
-                                            color: FitnessTheme.muted)),
-                                    const SizedBox(height: 5),
-                                    FitnessText(
-                                        record.metrics[key]?.display(
-                                                bodyMetricSpecs[key]!.unit) ??
-                                            '—',
-                                        style: const TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w500,
-                                            letterSpacing: -.5)),
-                                    const SizedBox(height: 4),
-                                    FitnessText(
-                                        record.metrics[key] == null
-                                            ? 'No reading'
-                                            : bodySourceLabel(
-                                                record.metrics[key]!.source),
-                                        style: const TextStyle(
-                                            fontSize: 10,
-                                            color: FitnessTheme.muted)),
-                                  ]))
-                          ]),
-                      const SizedBox(height: 13),
-                      FitnessText(data.label(key),
-                          style: const TextStyle(
-                              fontSize: 12, color: FitnessTheme.silver)),
-                    ]))),
+          const SizedBox(height: 18),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const FitnessText('Measurement changes',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+            children: [
+              for (final key in keys)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: FitnessCard(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          FitnessText(bodyMetricSpecs[key]!.label,
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 12),
+                          Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final record in [
+                                  data.previous,
+                                  data.current
+                                ])
+                                  Expanded(
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                        FitnessText(
+                                            bodyDate(record.recordedDate),
+                                            style: const TextStyle(
+                                                fontSize: 10,
+                                                color: FitnessTheme.muted)),
+                                        const SizedBox(height: 5),
+                                        FitnessText(
+                                            record.metrics[key]?.display(
+                                                    bodyMetricSpecs[key]!
+                                                        .unit) ??
+                                                '—',
+                                            style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w500,
+                                                letterSpacing: -.5)),
+                                        const SizedBox(height: 4),
+                                        FitnessText(
+                                            record.metrics[key] == null
+                                                ? 'No reading'
+                                                : bodySourceLabel(record
+                                                    .metrics[key]!.source),
+                                            style: const TextStyle(
+                                                fontSize: 10,
+                                                color: FitnessTheme.muted)),
+                                      ]))
+                              ]),
+                          const SizedBox(height: 13),
+                          FitnessText(data.label(key),
+                              style: const TextStyle(
+                                  fontSize: 12, color: FitnessTheme.silver)),
+                        ]))),
+            ],
+          ),
           const Padding(
               padding: EdgeInsets.only(top: 6),
               child: FitnessText(

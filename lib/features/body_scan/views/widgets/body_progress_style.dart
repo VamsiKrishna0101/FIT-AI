@@ -1,3 +1,4 @@
+import '../../../../core/theme/ds_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/fitness_theme.dart';
@@ -18,13 +19,10 @@ class BodyProgressCard extends StatelessWidget {
         padding: padding,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: .085)),
-          gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: highlighted
-                  ? [const Color(0xFF353535), const Color(0xFF1D1D1D)]
-                  : [const Color(0xFF252525), const Color(0xFF181818)]),
+          color: DSColors.bgCard,
+          border: Border.all(
+              color: highlighted ? DSColors.borderHi : DSColors.border,
+              width: .7),
         ),
         child: child,
       );

@@ -1,6 +1,8 @@
 package com.example.fitai_mobile
 
 import android.content.Intent
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -17,6 +19,13 @@ class MainActivity : FlutterFragmentActivity() {
     private lateinit var phoneSleep: PhoneSleepTracking
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val notifications = getSystemService(NotificationManager::class.java)
+        notifications.createNotificationChannel(NotificationChannel(
+            "fitai_reminders", "FitAI reminders", NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Workout reminders, check-ins and plan updates"
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
+        })
         phoneSleep = PhoneSleepTracking(this)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "fitai/sleep_estimate")
             .setMethodCallHandler { call, result -> phoneSleep.handle(call, result) }

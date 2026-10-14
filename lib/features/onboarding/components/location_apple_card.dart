@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -95,7 +96,7 @@ class _LocationAppleCardState extends State<LocationAppleCard> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            color: const Color(0xFF202020),
+            color: DSColors.bgCard,
             border: Border.all(
               color: isSelected
                   ? Colors.white.withValues(alpha: 0.70)

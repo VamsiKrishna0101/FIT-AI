@@ -1,10 +1,11 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 
-const progressMuted = Color(0xFFA0A0A5);
-const progressSilver = Color(0xFFE4E4E4);
+const progressMuted = DSColors.muted;
+const progressSilver = DSColors.silver;
 const progressBlue = Color(0xFF6AA9FF);
 const progressCyan = Color(0xFF72D9ED);
 const progressViolet = Color(0xFFB29AF7);
@@ -23,23 +24,13 @@ class ProgressSurface extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
       width: double.infinity,
       child: Material(
-          color: const Color(0xFF1D1E20),
+          color: DSColors.bgCard,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(22),
-              side: const BorderSide(color: Color(0x0DFFFFFF))),
+              side: const BorderSide(color: DSColors.border, width: .7)),
           clipBehavior: Clip.antiAlias,
           child: Ink(
-              decoration: BoxDecoration(
-                  gradient: accent == null
-                      ? null
-                      : LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                              Color.lerp(
-                                  const Color(0xFF1D1E20), accent, .055)!,
-                              const Color(0xFF1D1E20)
-                            ])),
+              decoration: const BoxDecoration(color: DSColors.bgCard),
               child: Padding(padding: padding, child: child))));
 }
 

@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/workout_exercise_models.dart';
@@ -33,7 +34,7 @@ Future<Map<String, dynamic>?> editTrainingTargets(
         }
 
         return AlertDialog(
-          backgroundColor: const Color(0xFF202020),
+          backgroundColor: DSColors.bgCard,
           title: Text(copy('Edit targets')),
           content: SingleChildScrollView(
               child: Form(

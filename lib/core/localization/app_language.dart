@@ -8,7 +8,7 @@ enum AppLanguage {
   uk('en', 'GB', '🇬🇧', 'English', 'United Kingdom', Color(0xFFD0EBFF)),
   germany('de', 'DE', '🇩🇪', 'Deutsch', 'Deutschland', Color(0xFFFFF3BF)),
   switzerland(
-      'de-CH', 'CH', '🇨🇭', 'Schwiizerdütsch', 'Schweiz', Color(0xFFD3F9D8)),
+      'de-CH', 'CH', '🇨🇭', 'Deutsch (Schweiz)', 'Schweiz', Color(0xFFD3F9D8)),
   france('fr', 'FR', '🇫🇷', 'Français', 'France', Color(0xFFE3FAFC)),
   sweden('sv', 'SE', '🇸🇪', 'Svenska', 'Sverige', Color(0xFFC5F6FA)),
   norway('no', 'NO', '🇳🇴', 'Norsk', 'Norge', Color(0xFFE5DBFF)),
@@ -1938,3 +1938,28 @@ enum AppLanguage {
     }
   }
 }
+
+const appCountries = <String, String>{
+  'GB': 'United Kingdom',
+  'DE': 'Germany',
+  'CH': 'Switzerland',
+  'FR': 'France',
+  'SE': 'Sweden',
+  'NO': 'Norway',
+  'DK': 'Denmark',
+  'NL': 'Netherlands',
+  'ES': 'Spain',
+  'IT': 'Italy',
+  'AT': 'Austria',
+  'BE': 'Belgium',
+  'FI': 'Finland',
+  'IE': 'Ireland',
+  'PL': 'Poland',
+  'PT': 'Portugal',
+  'CZ': 'Czechia',
+  'GR': 'Greece',
+  'RO': 'Romania',
+  'IN': 'India',
+  'US': 'United States',
+  'ZZ': 'Other',
+};

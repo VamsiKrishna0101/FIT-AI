@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/localization/app_language.dart';
 import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/fitness_text.dart';
@@ -34,6 +35,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   String? _owner;
   String _gender = 'OTHER', _goal = 'BUILD_MUSCLE', _experience = 'BEGINNER';
   String _diet = 'NO_PREFERENCE';
+  String _country = 'GB';
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
       _gender = data['gender'] as String? ?? 'OTHER';
       _goal = data['workingToward'] as String? ?? 'BUILD_MUSCLE';
       _experience = data['experience'] as String? ?? 'BEGINNER';
+      _country = data['countryCode'] as String? ?? 'GB';
       _diet = data['eatingStyle'] as String? ?? 'NO_PREFERENCE';
       _customDiet.text = data['customEatingStyle'] as String? ?? '';
       _allergies.text = (data['foodAllergies'] as List? ?? []).join(', ');
@@ -101,12 +104,14 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
             'dislikedFoods': _foodList(_dislikes.text),
           }
         : <String, dynamic>{
+            'countryCode': _country,
             'name': _name.text.trim(),
-            'age': double.parse(_age.text).round(),
-            'height': double.parse(_height.text),
-            'weight': double.parse(_weight.text),
+            'age': double.parse(_age.text.replaceAll(',', '.')).round(),
+            'height': double.parse(_height.text.replaceAll(',', '.')),
+            'weight': double.parse(_weight.text.replaceAll(',', '.')),
             if (_targetWeight.text.trim().isNotEmpty)
-              'targetWeight': double.parse(_targetWeight.text),
+              'targetWeight':
+                  double.parse(_targetWeight.text.replaceAll(',', '.')),
             'gender': _gender,
             'workingToward': _goal,
             'experience': _experience,
@@ -143,7 +148,10 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
               ? const TextInputType.numberWithOptions(decimal: true)
               : TextInputType.text,
           decoration: InputDecoration(labelText: fitnessText(context, label)),
-          validator: validator,
+          validator: (value) {
+            final error = validator?.call(value);
+            return error == null ? null : fitnessText(context, error);
+          },
         ),
       );
 
@@ -168,13 +176,18 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   String? _number(String? text, double min, double max,
       {bool whole = false, bool optional = false}) {
     if (optional && (text == null || text.trim().isEmpty)) return null;
-    final value = double.tryParse(text ?? '');
+    final value = double.tryParse((text ?? '').replaceAll(',', '.'));
     if (value == null ||
         !value.isFinite ||
         value < min ||
         value > max ||
         (whole && value != value.roundToDouble())) {
-      return 'Enter ${whole ? 'a whole number' : 'a value'} from ${min.toInt()} to ${max.toInt()}.';
+      return fitnessText(
+          context,
+          whole
+              ? 'Enter a whole number from {min} to {max}.'
+              : 'Enter a value from {min} to {max}.',
+          values: {'min': min.toInt(), 'max': max.toInt()});
     }
     return null;
   }
@@ -237,6 +250,17 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                         const SettingsNotice(
                             'Separate foods with commas. These preferences guide future recommendations.'),
                       ] else ...[
+                        _choices(
+                            'Country',
+                            _country,
+                            {
+                              ...appCountries,
+                              if (!appCountries.containsKey(_country))
+                                _country: _country
+                            },
+                            (value) => _country = value),
+                        const SettingsNotice(
+                            'Choose where you live. Your language stays the same.'),
                         _field('Name', _name,
                             validator: (text) => text == null ||
                                     text.trim().length < 2 ||

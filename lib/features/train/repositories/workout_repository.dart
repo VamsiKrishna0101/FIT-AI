@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/media/video_cache.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/endpoints.dart';
@@ -514,14 +515,15 @@ class WorkoutRepository {
     final locale = LanguageManager.shared.currentLanguage.code;
     final key = 'fitai_exercise_detail_v3_${locale}_$id';
     try {
-      final response = await ApiClient.shared
-          .get<Map<String, dynamic>>(Endpoints.workoutExerciseDetail(id));
+      final data =
+          await UserDataCache.shared.load('exercise_detail', id, () async {
+        final response = await ApiClient.shared
+            .get<Map<String, dynamic>>(Endpoints.workoutExerciseDetail(id));
+        return Map<String, dynamic>.from(response.data!['data'] as Map);
+      }, ttl: const Duration(days: 1));
       if (LanguageManager.shared.currentLanguage.code != locale) return null;
-      final data = response.data?['data'];
-      if (data is Map<String, dynamic>) {
-        await LocalCache.shared.saveJson(key, data);
-        return WorkoutExerciseModel.fromJson(data);
-      }
+      await LocalCache.shared.saveJson(key, data);
+      return WorkoutExerciseModel.fromJson(data);
     } catch (_) {/* A downloaded form guide remains available offline. */}
     final data = await LocalCache.shared.getJson(key);
     if (data != null && LanguageManager.shared.currentLanguage.code == locale) {

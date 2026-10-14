@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -82,7 +83,7 @@ class TodayTopBar extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          const Text(
+                          const FitnessText(
                             'LIVE',
                             style: TextStyle(
                               fontSize: 10,

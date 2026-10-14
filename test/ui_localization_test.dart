@@ -2,9 +2,12 @@ import 'package:fitai_mobile/features/onboarding/views/training_preferences_view
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:fitai_mobile/core/components/animated_tab_stack.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fitai_mobile/features/notifications/views/notification_settings_view.dart';
+import 'notification_settings_test.dart' show FakeNotifications, FakePush;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:fitai_mobile/core/localization/app_language.dart';
@@ -64,6 +67,32 @@ void main() {
       }
     }
   });
+  testWidgets(
+      'notification settings render every offered language on a small phone',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 780);
+    addTearDown(tester.view.reset);
+    for (final language in AppLanguage.values) {
+      await LanguageManager.shared.restoreAccountLanguage(language.code);
+      final data = FakeNotifications();
+      await tester.pumpWidget(_app(
+          NotificationSettingsView(
+              key: ValueKey(language.code),
+              repository: data,
+              service: FakePush(data)),
+          language));
+      await tester.pumpAndSettle();
+      expect(
+          find.text(fitnessCopyData[language.code.split('-').first]![
+              'Notifications']!),
+          findsOneWidget);
+      expect(tester.takeException(), isNull, reason: language.code);
+    }
+    await tester.pumpWidget(const SizedBox());
+    await LanguageManager.shared.restoreAccountLanguage('en');
+  });
+
   testWidgets('focus selection keeps chip sizes and wrap positions stable',
       (tester) async {
     tester.view.devicePixelRatio = 1;
@@ -93,20 +122,22 @@ void main() {
     await tester.pumpWidget(_app(
         BodyView(repository: repository, onTrain: () {}), AppLanguage.germany));
     await tester.pumpAndSettle();
-    expect(find.text(fitnessCopyData['de']!['Your body']!), findsOneWidget);
-    expect(find.text('Your body'), findsNothing);
+    expect(find.text(fitnessCopyData['de']!['Body']!), findsOneWidget);
+    expect(find.text('Body'), findsNothing);
     await tester.tap(find.text(fitnessCopyData['de']!['Physique']!));
     await tester.pumpAndSettle();
-    expect(find.text(fitnessCopyData['de']!['Estimate from photos']!),
-        findsOneWidget);
+    expect(find.text(fitnessCopyData['de']!['Photo scan']!), findsOneWidget);
     await LanguageManager.shared.selectLanguage(AppLanguage.france);
     await tester.pumpWidget(_app(
         BodyView(repository: repository, onTrain: () {}), AppLanguage.france));
     await tester.pumpAndSettle();
-    expect(find.text(fitnessCopyData['fr']!['Your body']!), findsOneWidget);
-    expect(find.text(fitnessCopyData['fr']!['Estimate from photos']!),
-        findsOneWidget);
-    expect(tester.widget<IndexedStack>(find.byType(IndexedStack)).index, 1);
+    expect(find.text(fitnessCopyData['fr']!['Body']!), findsOneWidget);
+    expect(find.text(fitnessCopyData['fr']!['Photo scan']!), findsOneWidget);
+    expect(
+        tester
+            .widget<AnimatedTabStack>(find.byType(AnimatedTabStack).first)
+            .index,
+        1);
     expect(tester.takeException(), isNull);
   });
 }

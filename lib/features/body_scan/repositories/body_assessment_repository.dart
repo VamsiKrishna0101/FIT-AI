@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_session_store.dart';
 import '../models/body_assessment_models.dart';
@@ -9,6 +10,20 @@ import '../models/training_map_models.dart';
 
 class BodyAssessmentRepository {
   static final shared = BodyAssessmentRepository();
+  Future<Map<String, dynamic>> _read(String path,
+          {String bucket = 'body', Map<String, dynamic>? query}) =>
+      UserDataCache.shared.load(bucket, '$path:${query.toString()}', () async {
+        await _requireSession();
+        final response = await ApiClient.shared
+            .get<Map<String, dynamic>>(path, queryParameters: query);
+        return response.data!;
+      },
+          ttl: bucket == 'training_map'
+              ? const Duration(seconds: 30)
+              : const Duration(minutes: 5));
+
+  Future<void> invalidate() => UserDataCache.shared.invalidate('body');
+
   Future<void> _requireSession() async {
     final token = await SecureSessionStore.shared.accessToken;
     if (token == null || token.isEmpty) {
@@ -18,35 +33,26 @@ class BodyAssessmentRepository {
 
   Future<TrainingMapData> trainingMap(
       {DateTime? date, bool daily = false}) async {
-    await _requireSession();
-    final response = await ApiClient.shared
-        .get<Map<String, dynamic>>('/api/heatmap/training', queryParameters: {
+    final data =
+        await _read('/api/heatmap/training', bucket: 'training_map', query: {
       'date': CacheScope.todayKey(date ?? DateTime.now()),
       'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
       if (daily) 'period': 'day',
     });
-    return TrainingMapData.fromJson(response.data!);
+    return TrainingMapData.fromJson(data);
   }
 
   Future<BodyOverview> load() async {
-    await _requireSession();
-    final response =
-        await ApiClient.shared.get<Map<String, dynamic>>('/api/body');
-    return BodyOverview.fromJson(response.data!);
+    return BodyOverview.fromJson(await _read('/api/body'));
   }
 
   Future<BodyComparison> compare(String current, String previous) async {
-    final response = await ApiClient.shared.get<Map<String, dynamic>>(
-        '/api/body/compare',
-        queryParameters: {'currentId': current, 'previousId': previous});
-    return BodyComparison.fromJson(response.data!);
+    return BodyComparison.fromJson(await _read('/api/body/compare',
+        query: {'currentId': current, 'previousId': previous}));
   }
 
   Future<BodyAssessment> entry(String id) async {
-    await _requireSession();
-    final response = await ApiClient.shared
-        .get<Map<String, dynamic>>('/api/body/entries/$id');
-    return BodyAssessment.fromJson(response.data!);
+    return BodyAssessment.fromJson(await _read('/api/body/entries/$id'));
   }
 
   Future<BodyAssessment> save(Map<String, dynamic> data,
@@ -62,15 +68,21 @@ class BodyAssessmentRepository {
                 'metrics': data['metrics'],
                 'expectedUpdatedAt': existing.updatedAt
               });
+    await invalidate();
+    await UserDataCache.shared.invalidate('profile');
     return BodyAssessment.fromJson(response.data!);
   }
 
-  Future<void> delete(String id) =>
-      ApiClient.shared.delete<void>('/api/body/entries/$id');
+  Future<void> delete(String id) async {
+    await ApiClient.shared.delete<void>('/api/body/entries/$id');
+    await invalidate();
+  }
+
   Future<BodyAssessment> deletePhotos(String id) async {
     await _requireSession();
     final response = await ApiClient.shared
         .delete<Map<String, dynamic>>('/api/body/entries/$id/photos');
+    await invalidate();
     return BodyAssessment.fromJson(response.data!);
   }
 
@@ -93,6 +105,7 @@ class BodyAssessmentRepository {
     if (cancelled() || await CacheScope.userId() != owner) {
       throw StateError('Report update cancelled.');
     }
+    await invalidate();
     return BodyAssessment.fromJson(response.data!);
   }
 
@@ -138,6 +151,7 @@ class BodyAssessmentRepository {
           }
           final result = BodyAssessment.fromJson(entry.data!);
           delivered = true;
+          await invalidate();
           return result;
         }
       }

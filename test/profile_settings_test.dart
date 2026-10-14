@@ -192,11 +192,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).first, 'Vamsi');
     await tester.enterText(find.byType(TextFormField).at(1), '28.0');
+    await tester.enterText(find.byType(TextFormField).at(3), '70,5');
     await tester.tap(find.text('Save changes'));
     await tester.pumpAndSettle();
     expect(repository.saved?['name'], 'Vamsi');
     expect(repository.saved?['age'], 28);
-    expect(repository.saved?['weight'], 70);
+    expect(repository.saved?['weight'], 70.5);
+    expect(repository.saved?['countryCode'], 'GB');
     expect(repository.saved?.containsKey('foodAllergies'), false);
   });
 

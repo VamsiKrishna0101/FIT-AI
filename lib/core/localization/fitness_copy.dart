@@ -1,5 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'fitness_copy_data.dart';
+import 'food_names.dart';
+import 'language_manager.dart';
+
+String foodDisplayName(String id, String fallback) {
+  final language = LanguageManager.shared.currentLanguage.code.split('-').first;
+  final translations = foodNames[id];
+  if (translations?['en'] != fallback) return fallback;
+  return translations?[language] ?? fallback;
+}
 
 final _displayTerms = {
   for (final locale in fitnessCopyData.entries)

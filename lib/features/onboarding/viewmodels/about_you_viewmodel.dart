@@ -102,6 +102,13 @@ class AboutYouViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get countryCode => draft.countryCode;
+
+  void setCountry(String value) {
+    draft.countryCode = value;
+    notifyListeners();
+  }
+
   void setGender(String val) {
     if (_gender == val) return;
     _gender = val;

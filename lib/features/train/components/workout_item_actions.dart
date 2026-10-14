@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -41,7 +42,7 @@ class WorkoutItemActions extends StatelessWidget {
             onPressed: busy ? null : onDone,
             style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFE2E2E2),
-                foregroundColor: const Color(0xFF111111),
+                foregroundColor: DSColors.bg,
                 disabledBackgroundColor: const Color(0xFF373737),
                 minimumSize: const Size(0, 36),
                 padding:
@@ -68,8 +69,8 @@ class WorkoutItemActions extends StatelessWidget {
                           size: 14),
                   const SizedBox(width: 5),
                   Flexible(
-                      child:
-                          Text(copy(doneLabel), textAlign: TextAlign.center)),
+                      child: Text(copy(busy ? 'Saving' : doneLabel),
+                          textAlign: TextAlign.center)),
                 ]));
     final secondary = TextButton(
         onPressed: busy

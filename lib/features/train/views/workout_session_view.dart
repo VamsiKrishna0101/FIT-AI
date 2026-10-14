@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
   final _repo = TrainingRepository.shared;
   final _clock = ValueNotifier(DateTime.now());
   Timer? _timer;
+  StreamSubscription<TrainingDay>? _syncSubscription;
   DateTime? _restEnd;
   Future<Map<String, dynamic>>? _previous;
   String copy(String key, {Map<String, Object> values = const {}}) =>
@@ -49,9 +51,28 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
             : pending;
     _loadPrevious();
     _restoreRest();
+    _syncSubscription = _repo.changes.stream.listen((day) {
+      if (!mounted || day.date != _day.date) return;
+      setState(() {
+        _day = day;
+        _index = _index.clamp(0, (_day.items.length - 1).clamp(0, 100));
+      });
+    });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _clock.value = DateTime.now();
+      if (_day.pendingSync && _.tick % 30 == 0 && !_busy) _sync();
     });
+  }
+
+  Future<void> _sync({bool retry = false}) async {
+    try {
+      await _repo.syncPending(retry: retry);
+    } catch (error) {
+      if (mounted && retry) {
+        _error(TrainingRepository.errorMessage(
+            error, 'Could not sync. Pull to retry.'));
+      }
+    }
   }
 
   Future<void> _restoreRest() async {
@@ -68,6 +89,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
   @override
   void dispose() {
     _timer?.cancel();
+    _syncSubscription?.cancel();
     _clock.dispose();
     super.dispose();
   }
@@ -83,14 +105,29 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
     setState(() => _busy = true);
     try {
       if (status == 'COMPLETED') {
-        await _saveEnteredSets(item.id);
-        if (_day.logs(item.id).isEmpty) {
+        final entries = _setEntries.entries
+            .where((entry) => entry.key.startsWith('${item.id}:'))
+            .map((entry) => entry.value.currentState)
+            .whereType<WorkoutSetEntryState>()
+            .toList();
+        await Future.wait(entries.map((entry) => entry.waitForSave()));
+        final sets = entries
+            .map((entry) => entry.pendingSet())
+            .whereType<Map<String, dynamic>>()
+            .toList();
+        if (_day.logs(item.id).isEmpty && sets.isEmpty) {
           _error('Log at least one set before marking this exercise done.');
           return;
         }
+        await _mutate('POST', '/items/${item.id}/complete',
+            data: {'sets': sets});
+        for (final entry in entries) {
+          entry.confirmSaved();
+        }
+      } else {
+        await _mutate('PATCH', '/items/${item.id}/status',
+            data: {'status': status});
       }
-      await _mutate('PATCH', '/items/${item.id}/status',
-          data: {'status': status});
       if (mounted && status != 'NOT_STARTED') {
         final next = _day.items.indexWhere((row) => row.isPending);
         if (next >= 0) {
@@ -168,9 +205,9 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                 .colorScheme
                 .copyWith(primary: trainingSilver, secondary: trainingSilver)),
         child: Scaffold(
-          backgroundColor: const Color(0xFF111111),
+          backgroundColor: DSColors.bg,
           appBar: AppBar(
-              backgroundColor: const Color(0xFF111111),
+              backgroundColor: DSColors.bg,
               title: Text(
                   _day.name == 'Workout' ? copy('Your workout') : _day.name,
                   style: const TextStyle(
@@ -200,6 +237,13 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
               : item == null
                   ? Center(child: Text(copy('No exercises found')))
                   : Column(children: [
+                      if (_day.pendingSync)
+                        Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18, vertical: 8),
+                            child: WorkoutSyncNotice(
+                                blocked: _day.syncBlocked,
+                                onRetry: () => _sync(retry: true))),
                       SizedBox(
                           height: 54,
                           child: ListView.separated(
@@ -296,7 +340,12 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                                 color: trainingMuted))
                                       ]),
                                       const SizedBox(height: 7),
-                                      _previousSets(),
+                                      Text(
+                                          copy(
+                                              'Confirm or edit each set before saving.'),
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: trainingMuted)),
                                       if (item.setTargets?['weightBasis'] ==
                                           'estimated_start')
                                         Text(
@@ -318,7 +367,13 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                             itemId: item.id,
                                             number: number,
                                             targetLabel:
-                                                item.targetLabel(number),
+                                                item.localizedTargetLabel(
+                                                    context, number),
+                                            suggestedReps:
+                                                _suggestedReps(item, number),
+                                            suggestedWeight:
+                                                _suggestedWeight(item, number),
+                                            previous: _previous,
                                             log: _day
                                                 .logs(item.id)
                                                 .where((row) =>
@@ -419,32 +474,21 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
     if (count < 100) setState(() => _extra[item.id] = count + 1);
   }
 
-  Widget _previousSets() => FutureBuilder<Map<String, dynamic>>(
-      future: _previous,
-      builder: (_, snapshot) {
-        if (snapshot.hasError) {
-          return Text(copy('Previous performance unavailable'),
-              style: const TextStyle(fontSize: 12, color: trainingMuted));
-        }
-        final sets = snapshot.data?['sets'] as List? ?? [];
-        if (sets.isEmpty) {
-          return Text(copy('No previous sets yet'),
-              style: const TextStyle(fontSize: 12, color: trainingMuted));
-        }
-        final performance = sets.take(6).map((row) {
-          final set = row as Map;
-          final load = set['weight'] == null ? '—' : '${set['weight']} kg';
-          return '$load × ${set['reps']}';
-        }).join(' · ');
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(copy('Last session'),
-              style: const TextStyle(fontSize: 11, color: trainingMuted)),
-          const SizedBox(height: 3),
-          Text(performance,
-              style: const TextStyle(
-                  fontSize: 12, color: trainingMuted, height: 1.4)),
-        ]);
-      });
+  int? _suggestedReps(TodayPlanItemModel item, int number) {
+    if (number > item.targetSets) return null;
+    final target = item.targetForSet(number);
+    if (target == null) return int.tryParse(item.targetReps);
+    if (target['repsMin'] != target['repsMax']) return null;
+    return (target['repsMax'] as num?)?.toInt();
+  }
+
+  double? _suggestedWeight(TodayPlanItemModel item, int number) {
+    if (number > item.targetSets) return null;
+    final target = item.targetForSet(number);
+    if (target != null) return (target['weightKg'] as num?)?.toDouble();
+    return item.targetWeight > 0 ? item.targetWeight : null;
+  }
+
   Widget _restCard() => ValueListenableBuilder<DateTime>(
       valueListenable: _clock,
       builder: (_, now, __) {
@@ -484,7 +528,10 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
         const Icon(CupertinoIcons.checkmark_circle_fill,
             size: 54, color: trainingSilver),
         const SizedBox(height: 18),
-        Text(copy('Workout complete'),
+        Text(
+            copy(_day.pendingSync
+                ? 'Workout saved on this phone'
+                : 'Workout complete'),
             textAlign: TextAlign.center,
             style: const TextStyle(
                 fontSize: 29, fontWeight: FontWeight.w700, letterSpacing: -.7)),
@@ -493,6 +540,11 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
             textAlign: TextAlign.center,
             style: const TextStyle(color: trainingMuted, fontSize: 13)),
         const SizedBox(height: 28),
+        if (_day.pendingSync) ...[
+          WorkoutSyncNotice(
+              blocked: _day.syncBlocked, onRetry: () => _sync(retry: true)),
+          const SizedBox(height: 16),
+        ],
         TrainingSurface(
             child: Column(children: [
           _stat(

@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -130,7 +131,7 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: FitnessText(
                   'TODAY\'S STRAIN TARGET',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -262,7 +263,7 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            FitnessText(
                               'PRIMARY FOCUS',
                               style: TextStyle(
                                 fontSize: 8,
@@ -345,7 +346,7 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
             child: Row(
               children: [
                 const Expanded(
-                  child: Text(
+                  child: FitnessText(
                     'VIEW FULL PLAN',
                     textAlign: TextAlign.center,
                     style: TextStyle(

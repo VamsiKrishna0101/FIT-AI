@@ -1,3 +1,4 @@
+import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
@@ -125,8 +126,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
       FilledButton(
           onPressed: widget.onAdd,
           style: FilledButton.styleFrom(
-              backgroundColor: progressSilver,
-              foregroundColor: const Color(0xFF111111)),
+              backgroundColor: progressSilver, foregroundColor: DSColors.bg),
           child: Text(fitnessText(context, 'Add a reading'))),
       const ProgressHeading('Measurements'),
       ProgressSurface(
