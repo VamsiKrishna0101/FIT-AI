@@ -17,7 +17,7 @@ class ProgressRepository {
 
   Future<String> _key(String path, String period, Map<String, dynamic> query) =>
       CacheScope.userKey(
-          'progress_v2_${LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${DateTime.now().timeZoneOffset.inMinutes}_${path}_${period}_${query.toString()}');
+          'progress_v4_${LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${DateTime.now().timeZoneOffset.inMinutes}_${path}_${period}_${query.toString()}');
 
   Future<ProgressJson?> cached(String path, String period,
       {Map<String, dynamic> query = const {}}) async {
@@ -94,8 +94,10 @@ class ProgressRepository {
     final owner = await CacheScope.userId();
     _versions[owner] = (_versions[owner] ?? 0) + 1;
     _requests.clear();
-    await LocalCache.shared
-        .removeByPrefix('${CacheScope.userPrefix}${owner}_progress_v2_');
+    for (final version in [2, 3, 4]) {
+      await LocalCache.shared.removeByPrefix(
+          '${CacheScope.userPrefix}${owner}_progress_v${version}_');
+    }
     updates.add('invalidated');
   }
 

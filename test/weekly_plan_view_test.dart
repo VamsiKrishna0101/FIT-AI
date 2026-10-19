@@ -182,6 +182,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Scan body'), findsOneWidget);
+    expect(find.text('Add photos for a more personal plan'), findsOneWidget);
     expect(repository.generations, 0);
     await tester.tap(find.text('Continue without scan'));
     await tester.pumpAndSettle();

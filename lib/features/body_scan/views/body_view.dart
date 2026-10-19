@@ -12,6 +12,7 @@ import '../../../core/health/health_models.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../profile/views/profile_view.dart';
 import '../../planner/repositories/weekly_plan_repository.dart';
+import '../../planner/views/weekly_plan_card.dart';
 import '../models/body_assessment_models.dart';
 import '../repositories/body_assessment_repository.dart';
 import 'body_entry_view.dart';
@@ -19,7 +20,6 @@ import 'body_photo_review_view.dart';
 import 'body_record_view.dart';
 import 'body_focus_result_view.dart';
 import 'body_training_view.dart';
-import 'body_comparison_view.dart';
 import 'widgets/body_physique_home.dart';
 import 'widgets/body_controls.dart';
 import 'body_measurements_view.dart';
@@ -128,26 +128,12 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
     if (mounted && changed == true) await _load();
   }
 
-  List<BodyAssessment> _baselines(BodyAssessment entry) =>
-      (_data?.records ?? []).where((r) => r.isEarlierThan(entry)).toList();
-  void _compare(BodyAssessment entry) {
-    final earlier = _baselines(entry);
-    if (earlier.isNotEmpty) {
-      Navigator.of(context).push(AppPageRoute<void>(
-          page: BodyComparisonView(
-              current: entry, baselines: earlier, repository: _repository)));
-    }
-  }
-
   void _openRecord(BodyAssessment entry) => _route(
         entry.photos.isNotEmpty ||
                 entry.observations.isNotEmpty ||
                 entry.physiqueReport != null
-            ? BodyFocusResultView(entry: entry, baselines: _baselines(entry))
-            : BodyRecordView(
-                entry: entry,
-                canCompare: _baselines(entry).isNotEmpty,
-                onCompare: () => _compare(entry)),
+            ? BodyFocusResultView(entry: entry, compact: true)
+            : BodyRecordView(entry: entry),
       );
 
   Widget _details(Widget Function(BodyOverview data) page) =>
@@ -169,8 +155,7 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
       ));
 
   void _history() => Navigator.of(context).push(AppPageRoute<void>(
-        page: _details(
-            (data) => BodyHistoryView(overview: data, onRecord: _openRecord)),
+        page: BodyHistoryView(repository: _repository, onRecord: _openRecord),
       ));
 
   @override
@@ -223,7 +208,8 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                     child: BodyTrainingView(
                       showHeader: false,
                       isActive: widget.isActive && _section == 0,
-                      loadMap: _repository.trainingMap,
+                      loadMap: (date, daily) =>
+                          _repository.trainingMap(date: date, daily: daily),
                       onTrain: widget.onTrain,
                     ),
                   ),
@@ -232,16 +218,21 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                     child: BodyPhysiqueHome(
                         key: ValueKey(_owner),
                         overview: _data,
+                        planCard: WeeklyPlanCard(
+                          isActive: widget.isActive && _section == 1,
+                          repository: widget.planRepository,
+                          onReturn: () async {
+                            await _repository.invalidate();
+                            await _load();
+                          },
+                        ),
                         isActive: widget.isActive && _section == 1,
-                        planRepository: widget.planRepository,
                         loading: _loading,
                         error: _error,
                         onRefresh: () async {
                           await _repository.invalidate();
                           await _load();
                         },
-                        onCompare: _compare,
-                        onTrain: widget.onTrain,
                         onMeasurements: _measurements,
                         onHistory: _history,
                         onManual: () => _route(
@@ -250,8 +241,7 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                             female: _data?.female ?? false,
                             profileWeight: _profileWeight,
                             profileHeight: (_data?.profile?['height'] as num?)
-                                ?.toDouble())),
-                        onRecord: _openRecord),
+                                ?.toDouble()))),
                   ),
                 ]),
               ),

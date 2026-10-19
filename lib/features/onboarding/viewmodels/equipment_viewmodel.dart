@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../core/localization/app_language.dart';
@@ -7,6 +5,7 @@ import '../../../core/localization/language_manager.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../models/equipment_models.dart';
 import '../data/equipment_repository.dart';
+import 'onboarding_controller.dart';
 
 class EquipmentViewModel extends ChangeNotifier {
   final bool editProfile;
@@ -16,20 +15,23 @@ class EquipmentViewModel extends ChangeNotifier {
   final int currentStep = 5;
   final int totalSteps = 8;
 
-  OnboardingDraft draft = OnboardingDraft();
+  final OnboardingController controller;
+  final bool _ownsController;
+  OnboardingDraft get draft => controller.draft;
   final Set<String> _selectedIds = {};
   Set<String> get selectedIds => Set.unmodifiable(_selectedIds);
   bool get isValid => _selectedIds.isNotEmpty;
-  int _pendingSaves = 0;
-  bool get isSaving => _pendingSaves > 0;
   bool _isReady = false;
   bool get isReady => _isReady;
   bool _isDisposed = false;
-  Future<void> _saveQueue = Future<void>.value();
 
   EquipmentViewModel(
-      {this.editProfile = false, EquipmentRepository? repository})
-      : repository = repository ?? EquipmentRepository() {
+      {this.editProfile = false,
+      EquipmentRepository? repository,
+      OnboardingController? controller})
+      : repository = repository ?? EquipmentRepository(),
+        controller = controller ?? OnboardingController(),
+        _ownsController = controller == null {
     LanguageManager.shared.addListener(_onLanguageChanged);
     loadState();
   }
@@ -56,7 +58,7 @@ class EquipmentViewModel extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      draft = await OnboardingDraft.load();
+      if (!controller.ready) await controller.initialize();
       if (_isDisposed) return;
 
       if (draft.languageCode.isNotEmpty) {
@@ -65,7 +67,8 @@ class EquipmentViewModel extends ChangeNotifier {
           orElse: () => LanguageManager.shared.currentLanguage,
         );
         if (LanguageManager.shared.currentLanguage != match) {
-          await LanguageManager.shared.selectLanguage(match);
+          await LanguageManager.shared
+              .selectLanguage(match, persistDraft: false);
           if (_isDisposed) return;
         }
       }
@@ -101,28 +104,14 @@ class EquipmentViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
-    if (!editProfile) unawaited(_persistSelection());
+    if (!editProfile) {
+      draft.equipmentIds = _selectedIds.toList()..sort();
+      controller.checkpoint();
+    }
   }
 
   List<String> get backendEquipment =>
       EquipmentCatalog.backendCategories(_selectedIds);
-
-  Future<void> _persistSelection() async {
-    draft.equipmentIds = _selectedIds.toList()..sort();
-    _pendingSaves++;
-    notifyListeners();
-
-    final save = _saveQueue.catchError((_) {}).then((_) => draft.save());
-    _saveQueue = save;
-    try {
-      await save;
-    } catch (_) {
-      // Continue can retry saving; retain the selection in memory meanwhile.
-    } finally {
-      _pendingSaves--;
-      if (!_isDisposed) notifyListeners();
-    }
-  }
 
   Future<void> continueToNextStep() async {
     if (!isValid) return;
@@ -132,13 +121,13 @@ class EquipmentViewModel extends ChangeNotifier {
     }
     draft.equipmentIds = _selectedIds.toList()..sort();
     draft.completedStep = currentStep;
-    await _saveQueue.catchError((_) {});
-    await draft.save();
+    controller.checkpoint();
   }
 
   @override
   void dispose() {
     _isDisposed = true;
+    if (_ownsController) controller.dispose();
     LanguageManager.shared.removeListener(_onLanguageChanged);
     super.dispose();
   }

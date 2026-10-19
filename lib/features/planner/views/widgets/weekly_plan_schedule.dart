@@ -1,3 +1,8 @@
+import 'dart:async';
+import '../../../../core/navigation/onboarding_page_route.dart';
+import '../../../train/models/training_session.dart';
+import '../../../train/repositories/training_repository.dart';
+import '../../../train/views/train_dashboard_view.dart';
 import '../../../../core/theme/ds_motion.dart';
 import '../../../../core/theme/ds_colors.dart';
 import '../../../../core/components/content_transition.dart';
@@ -11,22 +16,132 @@ import '../../../body_scan/views/widgets/body_controls.dart';
 
 class WeeklyPlanSchedule extends StatefulWidget {
   final Map<String, dynamic> payload;
+  final bool active;
+  final Future<TrainingDay> Function(String)? loadDay;
 
-  const WeeklyPlanSchedule({super.key, required this.payload});
+  const WeeklyPlanSchedule(
+      {super.key, required this.payload, this.active = false, this.loadDay});
 
   @override
   State<WeeklyPlanSchedule> createState() => _WeeklyPlanScheduleState();
 }
 
-class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
+class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
+    with SingleTickerProviderStateMixin {
   int _day = 0;
   int _section = 0;
+  late final _reveal =
+      AnimationController(vsync: this, duration: DSMotion.regular);
+  bool _revealed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (DSMotion.reduced(context)) {
+      _reveal.value = 1;
+      _revealed = true;
+    } else if (!_revealed) {
+      _revealed = true;
+      _reveal.forward();
+    }
+  }
 
   List<Map<String, dynamic>> get _days =>
       (widget.payload['workouts'] as List? ?? [])
           .whereType<Map>()
           .map((day) => Map<String, dynamic>.from(day))
           .toList();
+
+  final _live = <String, TrainingDay>{};
+  final _errors = <String>{};
+  StreamSubscription<TrainingDay>? _subscription;
+  int _request = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = TrainingRepository.shared.changes.stream.listen((day) {
+      if (mounted &&
+          widget.active &&
+          _days.any((row) => row['date'] == day.date)) {
+        setState(() {
+          _live[day.date] = day;
+          _errors.remove(day.date);
+        });
+      }
+    });
+    if (widget.active) unawaited(_loadSelected());
+  }
+
+  @override
+  void didUpdateWidget(WeeklyPlanSchedule oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) unawaited(_loadSelected());
+  }
+
+  Future<void> _loadSelected() async {
+    final days = _days;
+    if (!widget.active || days.isEmpty) return;
+    final date = days[_day.clamp(0, days.length - 1)]['date'] as String;
+    final request = ++_request;
+    try {
+      final day = await (widget.loadDay?.call(date) ??
+          TrainingRepository.shared.load(date, refresh: true));
+      if (!mounted || request != _request) return;
+      setState(() {
+        _live[date] = day;
+        _errors.remove(date);
+      });
+    } catch (_) {
+      if (mounted && request == _request) setState(() => _errors.add(date));
+    }
+  }
+
+  Future<void> _editDay(String date) async {
+    final route = AppPageRoute<void>(
+        page: TrainView(standalone: true, editOnly: true, initialDate: date));
+    await Navigator.of(context).push(route);
+    await route.completed;
+    if (mounted) await _loadSelected();
+  }
+
+  Map<String, dynamic> _currentWorkout(Map<String, dynamic> saved) {
+    final live = _live[saved['date']];
+    if (!widget.active || live == null) return saved;
+    final original = (saved['exercises'] as List? ?? []).whereType<Map>();
+    return {
+      ...saved,
+      'name': live.name,
+      'restDay': live.restDay,
+      'estimatedMinutes': live.estimatedMinutes,
+      'exercises': [
+        for (final item in live.items)
+          {
+            'exerciseId': item.exercise.id,
+            'displayName': item.exercise.displayName,
+            'sets': item.targetSets,
+            'targetReps': item.targetReps,
+            'weightKg': item.targetWeight > 0 ? item.targetWeight : null,
+            'weightBasis': item.setTargets?['weightBasis'],
+            'weightUnit': item.setTargets?['weightUnit'],
+            'setPrescriptions': item.setTargets?['sets'] ?? [],
+            'targetRpe': item.targetRpe,
+            'restSeconds': item.restSeconds,
+            'reason': original
+                .where((row) => row['exerciseId'] == item.exercise.id)
+                .firstOrNull?['reason'],
+          }
+      ],
+    };
+  }
+
+  @override
+  void dispose() {
+    ++_request;
+    _subscription?.cancel();
+    _reveal.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +152,8 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
     }
 
     final selected = days[_day.clamp(0, days.length - 1)];
-    final trainingDays = days.where((day) => day['restDay'] != true).length;
+    final trainingDays =
+        days.where((day) => _currentWorkout(day)['restDay'] != true).length;
     final restDays = days.length - trainingDays;
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -61,7 +177,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
         child: KeyedSubtree(
           key: ValueKey('${selected['date']}:$_section'),
           child: _section == 0
-              ? _workout(selected)
+              ? _workout(_currentWorkout(selected))
               : _food(selected['date'] as String),
         ),
       ),
@@ -86,7 +202,9 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
               scrollDirection: Axis.horizontal,
               child: Row(children: [
                 for (var index = 0; index < days.length; index++)
-                  SizedBox(width: width, child: _dayButton(days[index], index)),
+                  SizedBox(
+                      width: width,
+                      child: _dayButton(_currentWorkout(days[index]), index)),
               ]),
             ),
           );
@@ -107,7 +225,10 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
           child: InkWell(
             key: ValueKey('plan-day-${day['date']}'),
             borderRadius: BorderRadius.circular(16),
-            onTap: () => setState(() => _day = index),
+            onTap: () {
+              setState(() => _day = index);
+              unawaited(_loadSelected());
+            },
             child: AnimatedContainer(
               duration: DSMotion.duration(context, DSMotion.selection),
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
@@ -162,6 +283,33 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
           style: const TextStyle(
               fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -.5)),
       const SizedBox(height: 8),
+      if (widget.active) ...[
+        if (_errors.contains(day['date']))
+          TextButton.icon(
+              onPressed: _loadSelected,
+              icon: const Icon(CupertinoIcons.refresh, size: 15),
+              label: const FitnessText('Could not sync. Tap to retry.',
+                  style: TextStyle(fontSize: 12))),
+        if (!_live.containsKey(day['date']) && !_errors.contains(day['date']))
+          const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: CupertinoActivityIndicator(radius: 8)),
+        if (_live.containsKey(day['date']) &&
+            !_errors.contains(day['date']) &&
+            _live[day['date']]?.finished != true)
+          Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: ValueKey('edit-plan-day-${day['date']}'),
+                onPressed: () => _editDay(day['date'] as String),
+                icon: const Icon(CupertinoIcons.slider_horizontal_3, size: 16),
+                label: const FitnessText('Edit workout',
+                    style: TextStyle(fontSize: 13)),
+                style:
+                    TextButton.styleFrom(foregroundColor: FitnessTheme.silver),
+              )),
+        const SizedBox(height: 8),
+      ],
       if (day['restDay'] == true)
         const FitnessCard(
           child:
@@ -181,7 +329,17 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
             style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
         const SizedBox(height: 16),
         for (var index = 0; index < exercises.length; index++)
-          _exercise(exercises[index], index + 1, day['date'] as String),
+          SlideTransition(
+            key: ValueKey('plan-card-reveal-$index'),
+            position:
+                Tween<Offset>(begin: const Offset(0, .035), end: Offset.zero)
+                    .chain(CurveTween(
+                        curve: Interval((index.clamp(0, 3)) * .08, 1,
+                            curve: DSMotion.snappy)))
+                    .animate(_reveal),
+            child:
+                _exercise(exercises[index], index + 1, day['date'] as String),
+          ),
         const FitnessText(
             'Effort is out of 10. Weights follow your previous logging convention.',
             style: TextStyle(
@@ -216,14 +374,15 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
                     const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
             const SizedBox(width: 12),
             Expanded(
-                child: FitnessText('${exercise['name']}',
+                child: FitnessText(
+                    '${exercise['displayName'] ?? exercise['name']}',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w600))),
           ]),
           const SizedBox(height: 14),
           if (targets.isEmpty)
             FitnessText(
-                '${exercise['sets']} × ${exercise['repsMin']}–${exercise['repsMax']} · $load',
+                '${exercise['sets']} × ${exercise['targetReps'] ?? (exercise['repsMin'] == exercise['repsMax'] ? exercise['repsMax'] : '${exercise['repsMin']}–${exercise['repsMax']}')} · $load',
                 style:
                     const TextStyle(fontSize: 14, color: FitnessTheme.silver)),
           for (final set in targets)
@@ -246,7 +405,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
                 style: TextStyle(fontSize: 11, color: FitnessTheme.muted)),
           const SizedBox(height: 6),
           FitnessText(
-              'Effort ${exercise['targetRpe']}/10 · ${exercise['restSeconds']} s rest',
+              '${exercise['targetRpe'] == null ? '' : 'Effort ${exercise['targetRpe']}/10 · '}${exercise['restSeconds']} s rest',
               style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
           if (exercise['reason'] is String &&
               (exercise['reason'] as String).isNotEmpty)

@@ -1,3 +1,4 @@
+import '../../onboarding/viewmodels/onboarding_controller.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
@@ -17,7 +18,8 @@ import '../data/auth_repository.dart';
 
 class AuthView extends StatefulWidget {
   final bool initialSignIn;
-  const AuthView({super.key, this.initialSignIn = false});
+  final OnboardingController? controller;
+  const AuthView({super.key, this.initialSignIn = false, this.controller});
 
   @override
   State<AuthView> createState() => _AuthViewState();
@@ -74,15 +76,16 @@ class _AuthViewState extends State<AuthView> {
         return;
       }
 
+      await widget.controller?.flush();
       await _repository.sendOtp(email);
       if (!mounted) return;
       setState(() => _isSubmitting = false);
 
-      final draft = await OnboardingDraft.load();
+      final draft = widget.controller?.draft ?? await OnboardingDraft.load();
       if (!mounted) return;
       final result = await showModalBottomSheet<AuthResponse>(
         sheetAnimationStyle: DSMotion.sheetStyle(context),
-context: context,
+        context: context,
         useSafeArea: true,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -92,11 +95,16 @@ context: context,
           copy: _copy,
           onResend: () => _repository.sendOtp(email),
           onVerifyOtp: (otp) => _repository.verifyOtp(email: email, otp: otp),
-          onRegister: () => _repository.registerVerifiedEmail(
-            email: email,
-            password: password,
-            draft: draft,
-          ),
+          onRegister: () async {
+            await widget.controller?.flush();
+            final auth = await _repository.registerVerifiedEmail(
+              email: email,
+              password: password,
+              draft: draft,
+            );
+            widget.controller?.finish();
+            return auth;
+          },
         ),
       );
       if (result != null && mounted) _openApp(newlyRegistered: true);
@@ -1134,7 +1142,8 @@ class OtpCodeField extends StatelessWidget {
                         child: Padding(
                           padding: EdgeInsets.only(right: index == 5 ? 0 : 8),
                           child: AnimatedContainer(
-                            duration: DSMotion.duration(context, DSMotion.press),
+                            duration:
+                                DSMotion.duration(context, DSMotion.press),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),

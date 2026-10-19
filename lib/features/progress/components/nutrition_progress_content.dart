@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -10,10 +9,8 @@ import 'progress_surface.dart';
 class NutritionProgressContent extends StatefulWidget {
   final ProgressJson data;
   final bool compact;
-
   const NutritionProgressContent(
       {super.key, required this.data, this.compact = false});
-
   @override
   State<NutritionProgressContent> createState() =>
       _NutritionProgressContentState();
@@ -21,26 +18,25 @@ class NutritionProgressContent extends StatefulWidget {
 
 class _NutritionProgressContentState extends State<NutritionProgressContent> {
   String _metric = 'calories';
-
   static const labels = {
     'calories': 'Calories',
     'protein': 'Protein',
     'carbs': 'Carbs',
     'fat': 'Fat',
-    'water': 'Water',
+    'water': 'Water'
   };
   static const colors = {
-    'calories': progressSilver,
+    'calories': progressAmber,
     'protein': progressBlue,
     'carbs': progressViolet,
     'fat': progressAmber,
-    'water': progressCyan,
+    'water': progressCyan
   };
   static const targets = {
     'calories': 'targetCalories',
     'protein': 'targetProtein',
     'carbs': 'targetCarbs',
-    'fat': 'targetFat',
+    'fat': 'targetFat'
   };
 
   List<ProgressPoint> _points(String metric) {
@@ -81,225 +77,168 @@ class _NutritionProgressContentState extends State<NutritionProgressContent> {
         : _metric == 'water'
             ? 'L'
             : 'g';
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      ProgressSurface(
-        padding: const EdgeInsets.all(20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Icon(Icons.restaurant_outlined,
-                size: 16, color: progressMuted),
-            const SizedBox(width: 8),
-            Expanded(
-                child: Text(fitnessText(context, 'Daily nutrition'),
-                    style:
-                        const TextStyle(fontSize: 13, color: progressMuted))),
-          ]),
-          const SizedBox(height: 16),
-          ProgressChart(
-            key: ValueKey('nutrition-chart-$_metric'),
-            points: points,
-            digits: _metric == 'water' ? 1 : 0,
-            unit: unit,
-            bars: true,
-            daily: true,
-            average: true,
-            color: colors[_metric]!,
-            height: widget.compact ? 112 : 180,
-            showReference: target != null,
-            reference: target,
-            referenceLabel: 'Current target',
-          ),
-          const SizedBox(height: 16),
-          Wrap(spacing: 6, runSpacing: 6, children: [
-            for (final entry in labels.entries) _choice(entry.key, entry.value),
-          ]),
-          const SizedBox(height: 22),
-          const Divider(height: 1, color: DSColors.border),
-          const SizedBox(height: 18),
-          Text(fitnessText(context, 'Average macros'),
-              style: const TextStyle(fontSize: 12, color: progressMuted)),
-          const SizedBox(height: 12),
-          LayoutBuilder(builder: (context, constraints) {
-            final stacked = constraints.maxWidth < 275 ||
-                MediaQuery.textScalerOf(context).scale(12) > 18;
-            final tiles = [
-              for (final metric in ['protein', 'carbs', 'fat'])
-                _MacroAverage(
-                    label: labels[metric]!,
-                    value: _average(metric),
-                    target: _target(metric),
-                    color: colors[metric]!,
-                    stacked: stacked)
-            ];
-            return stacked
-                ? Column(children: [
-                    for (final tile in tiles)
-                      Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: tile)
-                  ])
-                : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    for (var index = 0; index < tiles.length; index++) ...[
-                      if (index > 0) const SizedBox(width: 8),
-                      Expanded(child: tiles[index]),
-                    ],
-                  ]);
-          }),
-          if (!widget.compact) ...[
-            const SizedBox(height: 14),
-            Text(
-                fitnessText(context,
-                    'Targets are estimated from your profile. Logged portions update your totals.'),
-                style: const TextStyle(
-                    fontSize: 11, height: 1.5, color: progressMuted)),
-          ],
-        ]),
-      ),
-      if (!widget.compact) ...[
-        const SizedBox(height: 14),
-        ProgressSurface(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(fitnessText(context, 'Your logging rhythm'),
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 16),
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(
-                child: _stat(context, 'Days logged',
-                    progressValue(context, loggedDays))),
-            const SizedBox(width: 14),
-            Expanded(
-                child: _stat(
-                    context, 'Meals logged', progressValue(context, meals))),
-          ]),
-          const SizedBox(height: 16),
-          const Divider(height: 1, color: DSColors.border),
-          const SizedBox(height: 16),
-          Row(children: [
-            const Icon(CupertinoIcons.drop, color: progressCyan, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-                child: Text(fitnessText(context, 'Average water'),
-                    style:
-                        const TextStyle(fontSize: 13, color: progressMuted))),
-            Text(progressValue(context, _average('water'), unit: 'L'),
+    final macros = ['protein', 'carbs', 'fat']
+        .where((metric) => _average(metric) != null)
+        .toList();
+    if (widget.compact) {
+      final waterOnly =
+          _points('calories').isEmpty && _points('protein').isEmpty;
+      final overview = _points(waterOnly ? 'water' : 'calories');
+      return ProgressSurface(
+          accent: progressAmber,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(fitnessText(context, 'Daily nutrition'),
                 style:
-                    const TextStyle(fontSize: 19, fontWeight: FontWeight.w500)),
-          ]),
-          const SizedBox(height: 12),
-          Text(
-              fitnessText(context,
-                  'Logs show what you recorded. Unlogged days are not zero intake.'),
-              style: const TextStyle(
-                  fontSize: 11, height: 1.5, color: progressMuted)),
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 14),
+            ProgressFactGrid(facts: [
+              (
+                waterOnly ? 'Average water' : 'Calories',
+                progressValue(
+                    context, _average(waterOnly ? 'water' : 'calories'),
+                    unit: waterOnly ? 'L' : 'kcal')
+              ),
+              (
+                'Protein',
+                progressValue(context, _average('protein'), unit: 'g')
+              ),
+            ]),
+            const SizedBox(height: 14),
+            Text(fitnessText(context, 'Recorded-day average'),
+                style: const TextStyle(fontSize: 12, color: progressMuted)),
+            if (overview.length > 1) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                  height: 42,
+                  width: double.infinity,
+                  child: ProgressSparkline(
+                      points: overview,
+                      color: waterOnly ? progressCyan : progressAmber,
+                      daily: true)),
+            ],
+          ]));
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ProgressMetricPicker(
+          choices: labels,
+          selected: _metric,
+          color: colors[_metric]!,
+          onChanged: (value) => setState(() => _metric = value)),
+      const SizedBox(height: 16),
+      ProgressSurface(
+          accent: colors[_metric],
+          padding: const EdgeInsets.all(20),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(
+                  _metric == 'water'
+                      ? Icons.water_drop_outlined
+                      : Icons.restaurant_outlined,
+                  size: 20,
+                  color: colors[_metric]),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text(fitnessText(context, labels[_metric]!),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600))),
+            ]),
+            const SizedBox(height: 20),
+            ProgressChart(
+                key: ValueKey('nutrition-chart-$_metric'),
+                points: points,
+                digits: _metric == 'water' ? 1 : 0,
+                unit: unit,
+                bars: true,
+                daily: true,
+                average: true,
+                color: colors[_metric]!,
+                height: 160,
+                showReference: target != null,
+                reference: target,
+                referenceLabel: 'Current target',
+                showReadings: true),
+            if (points.isEmpty)
+              const ProgressNote(
+                  'Log meals in Today to see your nutrition trends here.'),
+          ])),
+      if (macros.isNotEmpty) ...[
+        const ProgressHeading('Average macros'),
+        ProgressSurface(
+            child: Column(children: [
+          for (var i = 0; i < macros.length; i++) ...[
+            if (i > 0)
+              const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 18),
+                  child: Divider(height: 1, color: DSColors.border)),
+            _MacroAverage(
+                label: labels[macros[i]]!,
+                value: _average(macros[i])!,
+                target: _target(macros[i]),
+                color: colors[macros[i]]!),
+          ],
         ])),
+        const ProgressNote(
+            'Targets are estimated from your profile. Logged portions update your totals.'),
       ],
+      const ProgressHeading('Your logging rhythm'),
+      ProgressFactGrid(facts: [
+        ('Days logged', progressValue(context, loggedDays, digits: 0)),
+        ('Meals logged', progressValue(context, meals, digits: 0)),
+        if (_average('water') != null)
+          (
+            'Average water',
+            progressValue(context, _average('water'), unit: 'L')
+          ),
+      ], color: progressCyan),
+      const ProgressNote(
+          'Logs show what you recorded. Unlogged days are not zero intake.'),
     ]);
   }
-
-  Widget _choice(String metric, String label) {
-    final selected = _metric == metric;
-    return Semantics(
-        button: true,
-        selected: selected,
-        child: MotionPress(
-          child: Material(
-            color: selected ? DSColors.bgRaised : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () => setState(() => _metric = metric),
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                  child: Text(fitnessText(context, label),
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: selected ? colors[metric] : progressMuted,
-                          fontWeight:
-                              selected ? FontWeight.w500 : FontWeight.w400))),
-            ),
-          ),
-        ));
-  }
-
-  Widget _stat(BuildContext context, String label, String value) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(value,
-            style: const TextStyle(
-                fontSize: 28, fontWeight: FontWeight.w400, letterSpacing: -.8)),
-        const SizedBox(height: 4),
-        Text(fitnessText(context, label),
-            style: const TextStyle(fontSize: 12, color: progressMuted)),
-      ]);
 }
 
 class _MacroAverage extends StatelessWidget {
   final String label;
-  final double? value, target;
+  final double value;
+  final double? target;
   final Color color;
-  final bool stacked;
-
   const _MacroAverage(
       {required this.label,
       required this.value,
       required this.target,
-      required this.color,
-      required this.stacked});
-
+      required this.color});
   @override
-  Widget build(BuildContext context) {
-    final progress = value != null && target != null
-        ? (value! / target!).clamp(0.0, 1.0)
-        : null;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-          color: DSColors.bgRaised, borderRadius: BorderRadius.circular(14)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-              width: 5,
-              height: 5,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 6),
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
               child: Text(fitnessText(context, label),
-                  style: const TextStyle(fontSize: 11, color: progressMuted))),
-          if (stacked)
-            Text(progressValue(context, value, unit: 'g', digits: 0),
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w400)),
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w500))),
+          const SizedBox(width: 12),
+          Flexible(
+              child: Text(progressValue(context, value, unit: 'g', digits: 0),
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: color))),
         ]),
-        if (!stacked) ...[
+        if (target != null) ...[
           const SizedBox(height: 10),
-          Text(progressValue(context, value, unit: 'g', digits: 0),
-              style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -.4)),
+          ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: MotionValue(
+                  value: (value / target!).clamp(0.0, 1.0),
+                  builder: (context, value) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 6,
+                      color: color,
+                      backgroundColor: DSColors.bgRaised))),
+          const SizedBox(height: 8),
+          Text(
+              '${fitnessText(context, 'Current target')} · ${progressValue(context, target, unit: 'g', digits: 0)}',
+              style: const TextStyle(fontSize: 13, color: progressMuted)),
         ],
-        const SizedBox(height: 7),
-        Text(
-            target == null
-                ? '—'
-                : "${fitnessText(context, 'Current target')} ${progressValue(context, target, unit: 'g', digits: 0)}",
-            style: const TextStyle(
-                fontSize: 9, color: progressMuted, height: 1.3)),
-        const SizedBox(height: 10),
-        ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: MotionValue(
-                value: progress ?? 0,
-                builder: (context, value) => LinearProgressIndicator(
-                    value: value,
-                    minHeight: 3,
-                    color: color,
-                    backgroundColor: DSColors.border))),
-      ]),
-    );
-  }
+      ]);
 }

@@ -12,7 +12,7 @@ class ProgressChart extends StatefulWidget {
   final List<ProgressPoint> points;
   final String unit;
   final int digits;
-  final bool bars, daily, average, showReference, compactHeader;
+  final bool bars, daily, average, showReference, compactHeader, showReadings;
   final Color color;
   final double height;
   final double? maximum, reference;
@@ -28,6 +28,7 @@ class ProgressChart extends StatefulWidget {
     this.average = false,
     this.showReference = false,
     this.compactHeader = false,
+    this.showReadings = false,
     this.color = progressBlue,
     this.height = 150,
     this.maximum,
@@ -42,12 +43,14 @@ class ProgressChart extends StatefulWidget {
 
 class _ProgressChartState extends State<ProgressChart> {
   int? _selected;
+  int _readingCount = 7;
 
   @override
   void didUpdateWidget(ProgressChart oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_chartKey(oldWidget.points) != _chartKey(widget.points)) {
       _selected = null;
+      _readingCount = 7;
     }
   }
 
@@ -60,6 +63,8 @@ class _ProgressChartState extends State<ProgressChart> {
     final index = (_selected ?? points.length - 1).clamp(0, points.length - 1);
     final selected = points[index];
     final locale = Localizations.localeOf(context).toLanguageTag();
+    final axisWidth =
+        math.max(40.0, MediaQuery.textScalerOf(context).scale(48));
     final average = points.fold<double>(0, (sum, point) => sum + point.value) /
         points.length;
     final reference = widget.showReference ? widget.reference ?? average : null;
@@ -87,13 +92,13 @@ class _ProgressChartState extends State<ProgressChart> {
             child: widget.compactHeader
                 ? Text(
                     '${fitnessText(context, headlineLabel)} · ${progressValue(context, headline, unit: widget.unit, digits: widget.digits)}',
-                    style: const TextStyle(fontSize: 11, color: progressMuted))
+                    style: const TextStyle(fontSize: 12, color: progressMuted))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                         Text(fitnessText(context, headlineLabel),
                             style: const TextStyle(
-                                fontSize: 11, color: progressMuted)),
+                                fontSize: 12, color: progressMuted)),
                         const SizedBox(height: 4),
                         Text.rich(
                             TextSpan(children: [
@@ -116,97 +121,118 @@ class _ProgressChartState extends State<ProgressChart> {
                                 letterSpacing: -1.1)),
                       ])),
         if (widget.average && _selected == null)
-          Padding(
-              padding: const EdgeInsets.only(top: 3),
-              child: Text(
-                  fitnessText(context, '{count} recorded days',
-                      values: {'count': points.length}),
-                  style: const TextStyle(fontSize: 10, color: progressMuted)))
+          Flexible(
+              child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                      fitnessText(context, '{count} recorded days',
+                          values: {'count': points.length}),
+                      textAlign: TextAlign.end,
+                      style:
+                          const TextStyle(fontSize: 12, color: progressMuted))))
         else
-          Padding(
-              padding: const EdgeInsets.only(top: 3),
-              child: Text(DateFormat.MMMd(locale).format(selected.date),
-                  style: const TextStyle(color: progressMuted, fontSize: 11))),
+          Flexible(
+              child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(DateFormat.MMMd(locale).format(selected.date),
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                          color: progressMuted, fontSize: 12)))),
       ]),
       SizedBox(height: widget.compactHeader ? 12 : 18),
-      SizedBox(
-          height: widget.height,
-          child: Row(children: [
-            Expanded(child: LayoutBuilder(builder: (context, constraints) {
-              void select(Offset position) {
-                final geometry = _ChartGeometry(points,
-                    Size(constraints.maxWidth, widget.height), min, max);
-                var candidate = 0;
-                var distance = double.infinity;
-                for (var i = 0; i < points.length; i++) {
-                  final next = (geometry.position(i).dx - position.dx).abs();
-                  if (next < distance) {
-                    candidate = i;
-                    distance = next;
+      if (points.length > 1) ...[
+        SizedBox(
+            height: widget.height,
+            child: Row(children: [
+              Expanded(child: LayoutBuilder(builder: (context, constraints) {
+                void select(Offset position) {
+                  final geometry = _ChartGeometry(points,
+                      Size(constraints.maxWidth, widget.height), min, max);
+                  var candidate = 0;
+                  var distance = double.infinity;
+                  for (var i = 0; i < points.length; i++) {
+                    final next = (geometry.position(i).dx - position.dx).abs();
+                    if (next < distance) {
+                      candidate = i;
+                      distance = next;
+                    }
+                  }
+                  if (candidate != _selected) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _selected = candidate);
                   }
                 }
-                if (candidate != _selected) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selected = candidate);
-                }
-              }
 
-              return Semantics(
-                  label:
-                      '${progressValue(context, headline, unit: widget.unit)}, ${DateFormat.yMMMd(locale).format(selected.date)}',
-                  child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (details) => select(details.localPosition),
-                      onHorizontalDragUpdate: (details) =>
-                          select(details.localPosition),
-                      child: RepaintBoundary(
-                          child: MotionProgress(
-                              dataKey:
-                                  '${widget.bars}:${widget.unit}:${_chartKey(points)}',
-                              builder: (context, progress) => CustomPaint(
-                                  size:
-                                      Size(constraints.maxWidth, widget.height),
-                                  painter: _ChartPainter(
-                                      points: points,
-                                      progress: progress,
-                                      min: min,
-                                      max: max,
-                                      color: widget.color,
-                                      bars: widget.bars,
-                                      daily: widget.daily,
-                                      selected: _selected,
-                                      reference: reference))))));
-            })),
-            const SizedBox(width: 10),
-            SizedBox(
-                width: 32,
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [max, (max + min) / 2, min]
-                        .map((value) => Text(
-                            progressValue(context, value,
-                                digits: max - min < 3 ? 1 : 0),
+                return Semantics(
+                    label:
+                        '${progressValue(context, headline, unit: widget.unit)}, ${DateFormat.yMMMd(locale).format(selected.date)}',
+                    child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTapDown: (details) => select(details.localPosition),
+                        onHorizontalDragUpdate: (details) =>
+                            select(details.localPosition),
+                        child: RepaintBoundary(
+                            child: MotionProgress(
+                                dataKey:
+                                    '${widget.bars}:${widget.unit}:${_chartKey(points)}',
+                                builder: (context, progress) => CustomPaint(
+                                    size: Size(
+                                        constraints.maxWidth, widget.height),
+                                    painter: _ChartPainter(
+                                        points: points,
+                                        progress: progress,
+                                        min: min,
+                                        max: max,
+                                        color: widget.color,
+                                        bars: widget.bars,
+                                        daily: widget.daily,
+                                        selected: _selected,
+                                        reference: reference))))));
+              })),
+              const SizedBox(width: 10),
+              SizedBox(
+                  width: axisWidth,
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [max, (max + min) / 2, min]
+                          .map((value) => Text(
+                              progressValue(context, value,
+                                  digits: max - min < 3 ? 1 : 0),
+                              style: const TextStyle(
+                                  fontSize: 12, color: progressMuted)))
+                          .toList())),
+            ])),
+        const SizedBox(height: 10),
+        Padding(
+            padding: EdgeInsets.only(right: axisWidth + 10),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                      child: Text(
+                          DateFormat.MMMd(locale).format(points.first.date),
+                          style: const TextStyle(
+                              fontSize: 12, color: progressMuted))),
+                  if (points.length > 2 &&
+                      MediaQuery.sizeOf(context).width >= 380 &&
+                      MediaQuery.textScalerOf(context).scale(12) <= 16)
+                    Expanded(
+                        child: Text(
+                            DateFormat.MMMd(locale)
+                                .format(points[points.length ~/ 2].date),
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
-                                fontSize: 10, color: progressMuted)))
-                        .toList())),
-          ])),
-      const SizedBox(height: 10),
-      Padding(
-          padding: const EdgeInsets.only(right: 42),
-          child:
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(DateFormat.MMMd(locale).format(points.first.date),
-                style: const TextStyle(fontSize: 10, color: progressMuted)),
-            if (points.length > 2)
-              Text(
-                  DateFormat.MMMd(locale)
-                      .format(points[points.length ~/ 2].date),
-                  style: const TextStyle(fontSize: 10, color: progressMuted)),
-            if (points.length > 1)
-              Text(DateFormat.MMMd(locale).format(points.last.date),
-                  style: const TextStyle(fontSize: 10, color: progressMuted)),
-          ])),
+                                fontSize: 12, color: progressMuted))),
+                  if (points.length > 1)
+                    Expanded(
+                        child: Text(
+                            DateFormat.MMMd(locale).format(points.last.date),
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                                fontSize: 12, color: progressMuted))),
+                ])),
+      ],
       if (reference != null)
         Padding(
             padding: const EdgeInsets.only(top: 13),
@@ -216,15 +242,53 @@ class _ProgressChartState extends State<ProgressChart> {
               Expanded(
                   child: Text(fitnessText(context, widget.referenceLabel),
                       style:
-                          const TextStyle(fontSize: 10, color: progressMuted))),
+                          const TextStyle(fontSize: 12, color: progressMuted))),
               Text(progressValue(context, reference, unit: widget.unit),
-                  style: const TextStyle(fontSize: 11, color: progressSilver)),
+                  style: const TextStyle(fontSize: 12, color: progressSilver)),
             ])),
       if (points.length == 1)
         Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(fitnessText(context, 'Your first data point'),
-                style: const TextStyle(fontSize: 11, color: progressMuted))),
+            child: Text(
+                fitnessText(context, 'More readings will reveal your trend.'),
+                style: const TextStyle(fontSize: 12, color: progressMuted))),
+      if (widget.showReadings) ...[
+        const SizedBox(height: 12),
+        Text(fitnessText(context, 'Tap the chart to explore readings.'),
+            style: const TextStyle(fontSize: 12, color: progressMuted)),
+        const SizedBox(height: 8),
+        ExpansionTile(
+            key: ValueKey('readings-${widget.unit}-${_chartKey(points)}'),
+            tilePadding: EdgeInsets.zero,
+            shape: const Border(),
+            collapsedShape: const Border(),
+            title: Text(fitnessText(context, 'Recorded readings'),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            children: [
+              for (final point in points.reversed.take(_readingCount))
+                Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(children: [
+                      Expanded(
+                          child: Text(
+                              DateFormat.yMMMd(locale).format(point.date),
+                              style: const TextStyle(
+                                  fontSize: 13, color: progressMuted))),
+                      const SizedBox(width: 10),
+                      Flexible(
+                          child: Text(
+                              progressValue(context, point.value,
+                                  unit: widget.unit, digits: widget.digits),
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w600))),
+                    ])),
+              if (_readingCount < points.length)
+                TextButton(
+                    onPressed: () => setState(() => _readingCount += 7),
+                    child: Text(fitnessText(context, 'Load more'))),
+            ]),
+      ],
     ]);
   }
 }

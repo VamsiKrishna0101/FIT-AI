@@ -59,14 +59,12 @@ class OnboardingScaffold extends StatelessWidget {
                                 ? const SizedBox(height: 44)
                                 : OnboardingBackButton(onPressed: onBack!))),
                   Expanded(
-                      child: MotionEntrance(
-                          child: ListView(
-                              key: const ValueKey('onboarding-scroll'),
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.onDrag,
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                              children: [
+                      child: ListView(
+                          key: const ValueKey('onboarding-scroll'),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                          children: [
                         FitnessText(title,
                             style: const TextStyle(
                                 fontSize: 28,
@@ -81,7 +79,7 @@ class OnboardingScaffold extends StatelessWidget {
                                 height: 1.45)),
                         const SizedBox(height: 24),
                         ...children
-                      ]))),
+                      ])),
                   Container(
                       decoration: const BoxDecoration(
                           color: FitnessTheme.canvas,

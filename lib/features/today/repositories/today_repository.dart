@@ -140,7 +140,7 @@ class TodayRepository {
       {bool forceRefresh = false}) async {
     final date = CacheScope.todayKey(selected);
     if (date == CacheScope.todayKey()) {
-      await initialize();
+      await initialize(revalidate: false);
       return fetchFresh(forceRefresh: forceRefresh);
     }
     final owner = await _currentUserId();
@@ -207,7 +207,7 @@ class TodayRepository {
   }
 
   // ── Load cached data in 0ms, then revalidate in background ───────────────
-  Future<HomeData?> initialize() async {
+  Future<HomeData?> initialize({bool revalidate = true}) async {
     final locale = LanguageManager.shared.currentLanguage.code;
     final userId = await _currentUserId();
     if (_activeUserId != userId ||
@@ -221,7 +221,13 @@ class TodayRepository {
       _lastKnown = null;
     }
 
-    // 1. Read local cache for immediate 0ms paint
+    // Keep a newer in-memory result instead of replaying an older disk snapshot.
+    if (_lastKnown != null) {
+      if (revalidate) unawaited(fetchFresh().catchError((_) => null));
+      return _lastKnown;
+    }
+
+    // Read the signed-in user's cache before requesting the network.
     final key = _cacheKeyForUser(userId, locale);
     final rawJson = await LocalCache.shared.getJson(key);
     if (rawJson != null &&
@@ -237,8 +243,7 @@ class TodayRepository {
       } catch (_) {}
     }
 
-    // 2. Fetch fresh data from network in background
-    fetchFresh(forceRefresh: false).catchError((_) => null);
+    if (revalidate) unawaited(fetchFresh().catchError((_) => null));
     return _lastKnown;
   }
 

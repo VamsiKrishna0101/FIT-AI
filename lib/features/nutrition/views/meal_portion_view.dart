@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import '../../../core/localization/fitness_copy.dart';
 import '../../../core/components/motion.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/fitness_form.dart';
@@ -27,18 +31,49 @@ class _MealPortionViewState extends State<MealPortionView> {
       _fat = TextEditingController();
   String _unit = 'g';
   late String _slot;
-  bool _grams = true, _busy = false;
+  bool _busy = false, _pickingPhoto = false, _isMeal = false;
+  Uint8List? _photo;
+  FoodPortion? _measure;
+
+  List<FoodPortion> get _measures {
+    final food = widget.food;
+    if (food == null) return [];
+    return [
+      FoodPortion(
+          unit: food.servingUnit, label: food.servingUnit, gramsPerUnit: 1),
+      ...food.portions,
+    ];
+  }
+
+  bool get _measured =>
+      !_custom &&
+      (_measure?.unit == 'g' ||
+          _measure?.unit == 'ml' ||
+          widget.food!.portions.isNotEmpty);
+  String get _quantityUnit => _measure?.unit ?? 'g';
   String? _error;
   bool get _custom => widget.food == null;
-  double get _factor =>
-      (inputNumber(_quantity.text) ?? 0) /
-      (_grams && !_custom ? widget.food!.servingSize : 1);
+  double get _factor => _custom || !_measured
+      ? (inputNumber(_quantity.text) ?? 0)
+      : (inputNumber(_quantity.text) ?? 0) *
+          (_measure?.gramsPerUnit ?? 1) /
+          widget.food!.servingSize;
   @override
   void initState() {
     super.initState();
     _slot = widget.initialMealType;
-    _grams = widget.food?.servingUnit == 'g';
-    _quantity.text = _grams ? widget.food!.servingSize.toStringAsFixed(0) : '1';
+    if (!_custom) {
+      _measure = _measures.firstWhere(
+          (p) => p.unit == widget.food!.defaultPortionUnit,
+          orElse: () => _measures.first);
+    }
+    _quantity.text = _custom || !_measured
+        ? '1'
+        : _quantityUnit == 'ml'
+            ? '250'
+            : _quantityUnit == 'g'
+                ? widget.food!.servingSize.toStringAsFixed(0)
+                : '1';
     _quantity.addListener(_changed);
   }
 
@@ -63,7 +98,7 @@ class _MealPortionViewState extends State<MealPortionView> {
   }
 
   Future<void> _save() async {
-    if (_busy) return;
+    if (_busy || _pickingPhoto) return;
     FocusScope.of(context).unfocus();
     final quantity = inputNumber(_quantity.text);
     if (quantity == null || quantity <= 0 || _factor > 100) {
@@ -87,6 +122,12 @@ class _MealPortionViewState extends State<MealPortionView> {
       }
       custom = {
         'name': _name.text.trim(),
+        'category': _isMeal ? 'MEAL' : 'OTHER',
+        if (_photo != null)
+          'photo': {
+            'mimeType': _photo![0] == 137 ? 'image/png' : 'image/jpeg',
+            'base64': base64Encode(_photo!),
+          },
         'servingSize': size,
         'servingUnit': _unit,
         'calories': values[0],
@@ -137,7 +178,7 @@ class _MealPortionViewState extends State<MealPortionView> {
                 appBar: AppBar(
                     backgroundColor: FitnessTheme.canvas,
                     surfaceTintColor: Colors.transparent,
-                    title: FitnessText(_custom ? 'Custom meal' : 'Your portion',
+                    title: FitnessText(_custom ? 'Create food' : 'Your portion',
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.w600))),
                 bottomNavigationBar: SafeArea(
@@ -145,7 +186,9 @@ class _MealPortionViewState extends State<MealPortionView> {
                     child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
                         child: FitnessSubmit(
-                            label: 'Log meal', busy: _busy, onPressed: _save))),
+                            label: 'Log meal',
+                            busy: _busy || _pickingPhoto,
+                            onPressed: _save))),
                 body: MotionEntrance(
                     child:
                         ListView(padding: const EdgeInsets.all(20), children: [
@@ -166,7 +209,7 @@ class _MealPortionViewState extends State<MealPortionView> {
                                         height: 1.3)),
                                 const SizedBox(height: 7),
                                 Text(
-                                    '${food.servingSize.toStringAsFixed(0)} ${food.servingUnit} · ${food.caloriesPerServing.round()} kcal',
+                                    '${foodPortionLabel(context, food)} · ${(food.caloriesPerServing * food.previewFactor).round()} kcal',
                                     style: const TextStyle(
                                         color: FitnessTheme.muted,
                                         fontSize: 12)),
@@ -191,6 +234,19 @@ class _MealPortionViewState extends State<MealPortionView> {
                             TextStyle(color: FitnessTheme.muted, fontSize: 13)),
                     const SizedBox(height: 12),
                     FitnessInput(label: 'Food name', controller: _name),
+                    const SizedBox(height: 12),
+                    _photoInput(),
+                    SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: const FitnessText('Save as a meal',
+                            style: TextStyle(fontSize: 14)),
+                        subtitle: const FitnessText('Reuse it from My meals.',
+                            style: TextStyle(
+                                fontSize: 12, color: FitnessTheme.muted)),
+                        value: _isMeal,
+                        onChanged: _busy
+                            ? null
+                            : (value) => setState(() => _isMeal = value)),
                     const SizedBox(height: 12),
                     Row(children: [
                       Expanded(
@@ -250,21 +306,60 @@ class _MealPortionViewState extends State<MealPortionView> {
                     const SizedBox(height: 20),
                   ],
                   FitnessInput(
-                      label: _grams && !_custom
-                          ? 'Amount eaten'
-                          : 'Servings eaten',
+                      label: _measured ? 'Amount eaten' : 'Servings eaten',
                       controller: _quantity,
                       numeric: true,
-                      unit: _grams && !_custom ? 'g' : null),
+                      unit: _measured
+                          ? fitnessText(
+                              context, _measure?.label ?? _quantityUnit)
+                          : null),
                   const SizedBox(height: 12),
-                  if (_grams && !_custom)
+                  if (_measures.length > 1) ...[
+                    DropdownButtonFormField<String>(
+                        initialValue: _quantityUnit,
+                        decoration: InputDecoration(
+                            labelText: fitnessText(context, 'Unit')),
+                        items: _measures
+                            .map((p) => DropdownMenuItem(
+                                value: p.unit, child: FitnessText(p.label)))
+                            .toList(),
+                        onChanged: _busy
+                            ? null
+                            : (unit) => setState(() {
+                                  _measure = _measures
+                                      .firstWhere((p) => p.unit == unit);
+                                  _quantity.text = unit == 'g'
+                                      ? '100'
+                                      : unit == 'ml'
+                                          ? '250'
+                                          : '1';
+                                })),
+                    const SizedBox(height: 12),
+                  ],
+                  if (_measured)
                     Wrap(spacing: 8, children: [
-                      for (final grams in [50, 100, 150, 200])
+                      for (final amount in _quantityUnit == 'g'
+                          ? [50, 100, 150, 200]
+                          : _quantityUnit == 'ml'
+                              ? [100, 200, 250, 500]
+                              : [1, 2, 3])
                         ActionChip(
-                            label: Text('$grams g'),
+                            label: Text(
+                                '$amount ${fitnessText(context, _measure?.label ?? _quantityUnit)}'),
                             onPressed:
-                                _busy ? null : () => _quantity.text = '$grams')
+                                _busy ? null : () => _quantity.text = '$amount')
                     ]),
+                  if (_measure != null && !['g', 'ml'].contains(_quantityUnit))
+                    Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: FitnessText(
+                            'One {unit} is {grams} g of edible food.',
+                            values: {
+                              'unit': fitnessText(context, _measure!.label),
+                              'grams': _measure!.gramsPerUnit.toStringAsFixed(1)
+                            },
+                            style: const TextStyle(
+                                fontSize: 12, color: FitnessTheme.muted))),
                   const SizedBox(height: 24),
                   if (food != null)
                     FitnessCard(
@@ -287,6 +382,15 @@ class _MealPortionViewState extends State<MealPortionView> {
                             fontSize: 12,
                             color: FitnessTheme.muted,
                             height: 1.5)),
+                  if (food?.sourceName?.startsWith('USDA_') == true)
+                    const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: FitnessText(
+                            'Source: USDA FoodData Central. Reference values; check your package label.',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: FitnessTheme.muted,
+                                height: 1.5))),
                   if (food?.sourceName == 'ANSES_CIQUAL')
                     Padding(
                         padding: const EdgeInsets.only(top: 16),
@@ -304,6 +408,59 @@ class _MealPortionViewState extends State<MealPortionView> {
                                 color: FitnessTheme.coral, fontSize: 13))),
                 ])))));
   }
+
+  Future<void> _pickPhoto() async {
+    if (_busy || _pickingPhoto) return;
+    setState(() => _pickingPhoto = true);
+    try {
+      final file = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 480,
+          maxHeight: 480,
+          imageQuality: 70);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      if (bytes.length < 16 ||
+          bytes.length > 180000 ||
+          !(bytes[0] == 137 || bytes[0] == 255 && bytes[1] == 216)) {
+        setState(() => _error = 'Please choose a smaller JPG or PNG photo.');
+        return;
+      }
+      setState(() {
+        _photo = bytes;
+        _error = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Could not open the photo. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _pickingPhoto = false);
+    }
+  }
+
+  Widget _photoInput() => Row(children: [
+        if (_photo != null) ...[
+          ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.memory(_photo!,
+                  width: 68, height: 68, fit: BoxFit.cover)),
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+            child: OutlinedButton.icon(
+                onPressed: _busy || _pickingPhoto ? null : _pickPhoto,
+                icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+                label: FitnessText(
+                    _photo == null ? 'Add photo (optional)' : 'Change photo',
+                    style: const TextStyle(fontSize: 12)))),
+        if (_photo != null)
+          IconButton(
+              tooltip: fitnessText(context, 'Remove photo'),
+              onPressed: _busy ? null : () => setState(() => _photo = null),
+              icon: const Icon(Icons.close, size: 18)),
+      ]);
 
   Widget _value(String label, String value) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

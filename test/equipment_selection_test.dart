@@ -135,8 +135,7 @@ void main() {
       'conservative default is exclusive and exact choices preserve onboarding health data',
       (tester) async {
     await _size(tester);
-    await OnboardingDraft(heightCm: 178, weightKg: 80, name: 'Nova')
-        .save();
+    await OnboardingDraft(heightCm: 178, weightKg: 80, name: 'Nova').save();
     bool continued = false;
     await tester.pumpWidget(
         _app(EquipmentSelectionView(onContinue: () => continued = true)));
@@ -145,6 +144,8 @@ void main() {
     expect(find.text('0 selected'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('equipment-dumbbells')));
     await tester.pumpAndSettle();
+    // Selection is immediate; persistence follows a coalesced checkpoint.
+    await tester.pump(const Duration(milliseconds: 410));
     expect((await OnboardingDraft.load()).equipmentIds, ['dumbbells']);
     await tester.ensureVisible(
         find.byKey(const ValueKey('equipment-adjustable_bench')));

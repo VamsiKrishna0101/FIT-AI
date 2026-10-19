@@ -1,3 +1,4 @@
+import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
@@ -137,12 +138,17 @@ Future<String?> trainingName(
   return result;
 }
 
-Future<WorkoutExerciseModel?> pickTrainingExercise(BuildContext context) =>
-    Navigator.of(context).push<WorkoutExerciseModel>(MaterialPageRoute(
-        builder: (pickerContext) => ExerciseLibraryView(
-            onExerciseAdded: () {},
-            onSelect: (exercise) =>
-                Navigator.of(pickerContext).pop(exercise))));
+Future<WorkoutExerciseModel?> pickTrainingExercise(BuildContext context,
+    {String? workoutDate}) async {
+  final route = AppPageRoute<WorkoutExerciseModel>(
+      page: ExerciseLibraryView(
+          onExerciseAdded: () {},
+          workoutDate: workoutDate,
+          onSelect: (exercise) => Navigator.of(context).pop(exercise)));
+  final exercise = await Navigator.of(context).push(route);
+  await route.completed;
+  return exercise;
+}
 
 class WorkoutSyncNotice extends StatelessWidget {
   final bool blocked;

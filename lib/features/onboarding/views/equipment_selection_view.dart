@@ -1,3 +1,4 @@
+import '../viewmodels/onboarding_controller.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
@@ -17,8 +18,13 @@ class EquipmentSelectionView extends StatefulWidget {
   final VoidCallback? onContinue;
   final bool editProfile;
   final EquipmentRepository? repository;
+  final OnboardingController? controller;
   const EquipmentSelectionView(
-      {super.key, this.onContinue, this.editProfile = false, this.repository});
+      {super.key,
+      this.onContinue,
+      this.editProfile = false,
+      this.repository,
+      this.controller});
   @override
   State<EquipmentSelectionView> createState() => _EquipmentSelectionViewState();
 }
@@ -32,7 +38,9 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
   void initState() {
     super.initState();
     _viewModel = EquipmentViewModel(
-        editProfile: widget.editProfile, repository: widget.repository)
+        editProfile: widget.editProfile,
+        repository: widget.repository,
+        controller: widget.controller)
       ..addListener(_rebuild);
   }
 
@@ -61,8 +69,10 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
       } else if (widget.editProfile) {
         Navigator.of(context).pop(true);
       } else {
-        Navigator.of(context).push(OnboardingPageRoute(
-            page: const LifestyleNutritionLimitationsView()));
+        await OnboardingPageRoute(
+                page: LifestyleNutritionLimitationsView(
+                    controller: _viewModel.controller))
+            .open(context);
       }
     } catch (_) {
       if (mounted) {

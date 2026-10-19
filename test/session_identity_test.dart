@@ -186,7 +186,8 @@ void main() {
             .widget<BodyFocusPanel>(find.byType(BodyFocusPanel))
             .assessment
             ?.id,
-        'saved-body');
+        isNull,
+        reason: 'An entered measurement is not a photo assessment');
     await tester.tap(find.text('Photo scan'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.byType(TextField), 180,

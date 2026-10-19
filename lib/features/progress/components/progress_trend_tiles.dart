@@ -17,6 +17,8 @@ class ProgressExercisePreview extends StatelessWidget {
     final reps = progressNumber(latest?['reps']);
     final change = progressNumber(exercise['change']);
     final name = exercise['name'] as String? ?? '';
+    final points =
+        ProgressPoint.parse(progressRows(exercise['sparkline']), 'value');
     return ProgressSurface(
         accent: progressCyan,
         padding: EdgeInsets.zero,
@@ -33,7 +35,7 @@ class ProgressExercisePreview extends StatelessWidget {
                             Expanded(
                                 child: SizedBox(
                                     height: MediaQuery.textScalerOf(context)
-                                        .scale(34),
+                                        .scale(38),
                                     child: Text(
                                         name.isEmpty
                                             ? name
@@ -41,7 +43,7 @@ class ProgressExercisePreview extends StatelessWidget {
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                            fontSize: 13,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                             height: 1.3)))),
                             const SizedBox(width: 8),
@@ -59,7 +61,7 @@ class ProgressExercisePreview extends StatelessWidget {
                                     ? ' kg'
                                     : ' ${fitnessText(context, 'reps')}',
                                 style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 13,
                                     color: progressMuted,
                                     letterSpacing: 0)),
                           ]),
@@ -73,27 +75,36 @@ class ProgressExercisePreview extends StatelessWidget {
                             child: Text(
                                 load != null && load > 0
                                     ? '× ${progressValue(context, reps)} ${fitnessText(context, 'reps')}'
-                                    : fitnessText(context, 'No external load'),
+                                    : fitnessText(
+                                        context,
+                                        latest == null
+                                            ? 'No sets in this period'
+                                            : 'No external load'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                    fontSize: 10, color: progressMuted))),
+                                    fontSize: 12, color: progressMuted))),
                         if (change != null)
                           Text(
                               '${change > 0 ? '+' : ''}${progressValue(context, change)}%',
                               style: const TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   color: progressCyan,
                                   fontWeight: FontWeight.w500)),
                       ]),
                       const SizedBox(height: 17),
                       SizedBox(
                           width: double.infinity,
-                          height: 38,
-                          child: ProgressSparkline(
-                              points: ProgressPoint.parse(
-                                  progressRows(exercise['sparkline']),
-                                  'value'))),
+                          height: MediaQuery.textScalerOf(context).scale(38),
+                          child: points.length < 2
+                              ? Text(
+                                  fitnessText(context,
+                                      'More workouts will reveal your trend.'),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: progressMuted,
+                                      height: 1.4))
+                              : ProgressSparkline(points: points)),
                     ]))));
   }
 }
@@ -136,7 +147,7 @@ class ProgressMetricPreview extends StatelessWidget {
                         Expanded(
                             child: Text(fitnessText(context, title),
                                 style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w500))),
                         const Icon(Icons.chevron_right,
                             color: progressMuted, size: 16),
@@ -149,7 +160,7 @@ class ProgressMetricPreview extends StatelessWidget {
                               TextSpan(
                                   text: ' ${fitnessText(context, unit)}',
                                   style: const TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       color: progressMuted,
                                       letterSpacing: 0)),
                           ]),
@@ -159,20 +170,24 @@ class ProgressMetricPreview extends StatelessWidget {
                               letterSpacing: -.8)),
                       const SizedBox(height: 5),
                       SizedBox(
-                          height: MediaQuery.textScalerOf(context).scale(24),
+                          height: MediaQuery.textScalerOf(context).scale(34),
                           child: Text(fitnessText(context, caption),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 9, color: progressMuted))),
+                                  fontSize: 12, color: progressMuted))),
                       const SizedBox(height: 18),
                       SizedBox(
                           width: double.infinity,
                           height: 42,
-                          child: points.isEmpty
-                              ? const Center(
-                                  child: Text('—',
-                                      style: TextStyle(color: progressMuted)))
+                          child: points.length < 2
+                              ? Text(
+                                  fitnessText(context,
+                                      'More readings will reveal your trend.'),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: progressMuted,
+                                      height: 1.4))
                               : ProgressSparkline(
                                   points: points,
                                   color: color,

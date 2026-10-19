@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
+import 'package:fitai_mobile/features/onboarding/viewmodels/onboarding_controller.dart';
 import 'package:fitai_mobile/core/theme/fitness_theme.dart';
 import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
 import 'package:fitai_mobile/features/body_scan/views/body_training_view.dart';
@@ -39,9 +40,9 @@ Widget _app(Widget child, {double scale = 1}) => MaterialApp(
                     child: Scaffold(body: SafeArea(child: child)))))));
 
 TrainingMapDashboard _dashboard(
-        {Future<void> Function(String, int)? checkIn}) =>
+        {Future<void> Function(String, int)? checkIn, TrainingMapData? data}) =>
     TrainingMapDashboard(
-        data: _data,
+        data: data ?? _data,
         onRefresh: () async {},
         onCheckIn: checkIn ?? (_, __) async {},
         onTrain: () {},
@@ -54,11 +55,12 @@ Future<void> _size(WidgetTester tester, [double width = 393]) async {
   addTearDown(tester.view.reset);
 }
 
-Future<void> _snapshot(WidgetTester tester, String name) async {
+Future<void> _snapshot(WidgetTester tester, String name,
+    {Key capture = _preview}) async {
   await tester.pump();
   await tester.runAsync(() async {
     final boundary =
-        tester.renderObject<RenderRepaintBoundary>(find.byKey(_preview));
+        tester.renderObject<RenderRepaintBoundary>(find.byKey(capture));
     final image = await boundary.toImage(pixelRatio: 2);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     Directory('build').createSync(recursive: true);
@@ -136,12 +138,16 @@ void main() {
     expect(find.text('Target met'), findsNothing);
     final trainingMap = tester
         .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
+    expect(trainingMap.colors['chest'], const Color(0xFFE5B85E));
     expect(trainingMap.colors['quads'], const Color(0xFF606060),
-        reason: 'Unlogged scheduled work is not training volume');
+        reason:
+            'A plan without eligible performance does not earn a strength level');
     expect(find.text('Plan'), findsNothing);
     expect(find.text('Check-in'), findsNothing);
-    expect(find.text('No direct sets'), findsOneWidget);
-    await tester.tap(find.text('Back'));
+    expect(find.text('Not ranked yet'), findsOneWidget);
+    expect(find.text('Strength map'), findsOneWidget);
+    expect(find.text('1–3 sets'), findsNothing);
+    await tester.tap(find.text('Back').hitTestable());
     await tester.pump();
     expect(
         tester
@@ -162,10 +168,22 @@ void main() {
     await _size(tester);
     String? muscle;
     int? soreness;
-    await tester.pumpWidget(_app(_dashboard(checkIn: (id, value) async {
-      muscle = id;
-      soreness = value;
-    })));
+    final current =
+        jsonDecode(File('test/fixtures/training_map.json').readAsStringSync())
+            as Map<String, dynamic>;
+    final now = DateTime.now();
+    current['date'] = DateTime(now.year, now.month, now.day)
+        .toIso8601String()
+        .substring(0, 10);
+    const capture = ValueKey('muscle-sheet-preview');
+    await tester.pumpWidget(RepaintBoundary(
+        key: capture,
+        child: _app(_dashboard(
+            data: TrainingMapData.fromJson(current),
+            checkIn: (id, value) async {
+              muscle = id;
+              soreness = value;
+            }))));
     await tester.pump();
     final rect = tester.getRect(find.byType(AnatomicalTrainingMap));
     final point = _interior(musclePaths(back: false)['chest']!.first);
@@ -174,13 +192,41 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Chest'), findsWidgets);
     expect(find.text('Direct sets'), findsOneWidget);
+    expect(find.text('6 of 10 direct sets · weekly plan'), findsOneWidget);
+    expect(find.text('Novice'), findsWidgets);
+    expect(
+        find.text(
+            'Based on the lower median of supported exercise levels, not an isolated muscle test.'),
+        findsNothing);
+    expect(find.text('Workout history'), findsOneWidget);
+    expect(find.text('Open Train'), findsWidgets);
     await tester.tap(find.text('Sore'));
     await tester.pumpAndSettle();
     expect(muscle, 'chest');
     expect(soreness, 2);
-    await _snapshot(tester, 'body-muscle-detail-preview');
-    expect(find.text('6 of 10 direct sets · weekly plan'), findsOneWidget);
-    Navigator.of(tester.element(find.text('Direct sets'))).pop();
+    await _snapshot(tester, 'body-muscle-detail-preview', capture: capture);
+    await tester.tap(find.byKey(const ValueKey('muscle-strength-chest')));
+    await tester.pumpAndSettle();
+    expect(find.text('Barbell Bench Press'), findsWidgets);
+    final history = find.byKey(const ValueKey('muscle-history-chest'));
+    await tester.scrollUntilVisible(history, 140,
+        scrollable: find
+            .descendant(
+                of: find.byKey(const ValueKey('muscle-detail-scroll')),
+                matching: find.byType(Scrollable))
+            .first);
+    await tester.tap(history);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Load trend'), 120,
+        scrollable: find
+            .descendant(
+                of: find.byKey(const ValueKey('muscle-detail-scroll')),
+                matching: find.byType(Scrollable))
+            .first);
+    expect(find.text('Load trend'), findsOneWidget);
+    Navigator.of(
+            tester.element(find.byKey(const ValueKey('muscle-detail-sheet'))))
+        .pop();
     await tester.pumpAndSettle();
     expect(
         tester
@@ -192,9 +238,11 @@ void main() {
   });
   testWidgets('compact phones and larger text remain usable', (tester) async {
     await _size(tester, 320);
-    await tester.pumpWidget(_app(_dashboard(), scale: 1.3));
+    const capture = ValueKey('large-muscle-sheet-preview');
+    await tester.pumpWidget(
+        RepaintBoundary(key: capture, child: _app(_dashboard(), scale: 1.3)));
     await tester.pump();
-    expect(find.text('Muscles trained'), findsOneWidget);
+    expect(find.text('Strength map'), findsOneWidget);
     expect(find.text('Plan'), findsNothing);
     expect(find.text('Check-in'), findsNothing);
     expect(
@@ -203,6 +251,18 @@ void main() {
             .colors['quads'],
         const Color(0xFF606060),
         reason: 'Planned sets and soreness do not replace logged volume');
+    tester
+        .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap))
+        .onSelected('chest');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('muscle-detail-sheet')), findsOneWidget);
+    final action = find.descendant(
+        of: find.byKey(const ValueKey('muscle-detail-sheet')),
+        matching: find.text('Open Train'));
+    expect(tester.getBottomRight(action).dy,
+        lessThan(tester.view.physicalSize.height));
+    await _snapshot(tester, 'body-muscle-detail-large-text-preview',
+        capture: capture);
     expect(tester.takeException(), isNull);
   });
   testWidgets('final onboarding step saves priorities without a scan',
@@ -214,14 +274,18 @@ void main() {
         foodAllergies: ['peanuts'],
         limitations: ['KNEE']).save();
     var continued = false;
-    await tester.pumpWidget(
-        _app(TrainingPreferencesView(onContinue: () => continued = true)));
+    final controller = OnboardingController();
+    await controller.initialize();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(TrainingPreferencesView(
+        controller: controller, onContinue: () => continued = true)));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('Quads'));
-    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pumpAndSettle();
     await _snapshot(tester, 'onboarding-preferences-preview');
     await tester.tap(find.text('Continue'));
     await tester.pump(const Duration(milliseconds: 100));
+    await controller.flush();
     final stored = await OnboardingDraft.load();
     expect(stored.focusMuscles, ['chest', 'quads']);
     expect(stored.foodAllergies, ['peanuts']);

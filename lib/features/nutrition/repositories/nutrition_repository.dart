@@ -121,8 +121,7 @@ class NutritionRepository {
         '${CacheScope.userPrefix}${await CacheScope.userId()}_diet_v3_');
   }
 
-  Future<bool> _mutate(Future<dynamic> Function() request,
-      {bool catalogChanged = false}) async {
+  Future<bool> _mutate(Future<dynamic> Function() request) async {
     if (AppDataMode.shared.preview) return false;
     final owner = await CacheScope.userId();
     if (owner == 'anonymous') return false;
@@ -136,8 +135,7 @@ class NutritionRepository {
     try {
       await Future.wait([
         invalidate(),
-        if (catalogChanged)
-          UserDataCache.shared.invalidate('custom_food_pages'),
+        UserDataCache.shared.invalidate('custom_food_pages'),
         ProgressRepository.shared.invalidate(),
         HistoryRepository.shared.invalidate(),
       ]);
@@ -158,18 +156,16 @@ class NutritionRepository {
       double servings = 1,
       String status = 'LOGGED'}) {
     final (day, month, year) = getTodayDateStrings();
-    return _mutate(
-        () => ApiClient.shared.post(Endpoints.logMeal, data: {
-              if (nutritionId != null) 'nutritionId': nutritionId,
-              if (customFood != null) 'customFood': customFood,
-              'mealType': mealType,
-              'servings': servings,
-              'status': status,
-              'day': day,
-              'month': month,
-              'year': year,
-            }),
-        catalogChanged: customFood != null);
+    return _mutate(() => ApiClient.shared.post(Endpoints.logMeal, data: {
+          if (nutritionId != null) 'nutritionId': nutritionId,
+          if (customFood != null) 'customFood': customFood,
+          'mealType': mealType,
+          'servings': servings,
+          'status': status,
+          'day': day,
+          'month': month,
+          'year': year,
+        }));
   }
 
   Future<bool> logWater(int amountMl) {
@@ -191,7 +187,7 @@ class NutritionRepository {
   Future<List<NutritionFoodItemModel>> searchFoodCatalog(
       {String? query, String? category}) async {
     final key = await CacheScope.userKey(
-        'food_catalog_v3_${LanguageManager.shared.currentLanguage.code}_${query ?? ''}_${category ?? ''}');
+        'food_catalog_everyday_v1_${LanguageManager.shared.currentLanguage.code}_${query ?? ''}_${category ?? ''}');
     final entry = await LocalCache.shared.getEntry(key);
     List<NutritionFoodItemModel> parse(List rows) => rows
         .map((row) => NutritionFoodItemModel.fromJson(
@@ -234,14 +230,14 @@ class NutritionRepository {
       if (category != null) 'category': category,
     };
     final data = await UserDataCache.shared.load(
-        source == 'MY_FOODS' ? 'custom_food_pages' : 'food_pages',
+        source == 'LIBRARY' ? 'everyday_food_pages_v1' : 'custom_food_pages',
         query.toString(), () async {
       final response = await ApiClient.shared.get<Map<String, dynamic>>(
           '/api/nutrition/catalog',
           queryParameters: query);
       return Map<String, dynamic>.from(response.data!['data'] as Map);
     },
-        ttl: source == 'MY_FOODS'
+        ttl: source != 'LIBRARY'
             ? const Duration(minutes: 1)
             : const Duration(minutes: 30));
     if (owner != await CacheScope.userId()) {

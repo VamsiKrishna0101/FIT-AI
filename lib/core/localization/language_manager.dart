@@ -64,7 +64,7 @@ class LanguageManager extends ChangeNotifier {
 
   // Select new language, trigger haptic, persist locally & update draft
   Future<void> selectLanguage(AppLanguage language,
-      {bool persistAccount = false}) async {
+      {bool persistAccount = false, bool persistDraft = true}) async {
     if (_saving) return;
     _revision++;
     if (persistAccount) {
@@ -95,6 +95,7 @@ class LanguageManager extends ChangeNotifier {
     await LocalCache.shared
         .saveString(LocalCache.keyAppLanguage, language.code);
 
+    if (!persistDraft) return;
     // Sync with OnboardingDraft so registration has language ready
     final draft = await OnboardingDraft.load();
     draft.languageCode = language.code;

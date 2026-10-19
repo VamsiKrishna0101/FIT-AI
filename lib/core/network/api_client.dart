@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../localization/language_manager.dart';
+import '../localization/fitness_copy_data.dart';
 import '../storage/secure_session_store.dart';
 import 'endpoints.dart';
 import '../cache/app_data_mode.dart';
@@ -67,6 +68,9 @@ class ApiClient {
           handler.next(response);
         },
         onError: (DioException error, handler) async {
+          final limited = _rateLimitError(error);
+          if (limited != null) return handler.next(limited);
+
           if (error.response?.statusCode == 402 &&
               error.response?.data is Map &&
               error.response?.data['code'] == 'SUBSCRIPTION_REQUIRED') {
@@ -96,6 +100,38 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  // A rejected save must stay rejected. Show the server's wait time without
+  // replaying the request or treating a temporary limit as an expired session.
+  DioException? _rateLimitError(DioException error) {
+    final response = error.response;
+    final data = response?.data;
+    final unavailable = response?.statusCode == 503 &&
+        data is Map &&
+        data['code'] == 'RATE_LIMIT_UNAVAILABLE';
+    if (response?.statusCode != 429 && !unavailable) return null;
+
+    final raw = data is Map ? data['retryAfterSeconds'] : null;
+    final seconds = int.tryParse(raw?.toString() ?? '') ??
+        int.tryParse(response?.headers.value('retry-after') ?? '');
+    final template = seconds != null && seconds > 0
+        ? unavailable
+            ? 'Service is temporarily busy. Please try again in {seconds} seconds.'
+            : 'Please try again in {seconds} seconds.'
+        : 'Please wait a moment and try again.';
+    final language =
+        LanguageManager.shared.currentLanguage.code.split('-').first;
+    final message = (fitnessCopyData[language]?[template] ?? template)
+        .replaceAll('{seconds}', seconds?.toString() ?? '');
+
+    if (response != null) {
+      response.data = <String, dynamic>{
+        if (data is Map) ...Map<String, dynamic>.from(data),
+        'error': message,
+      };
+    }
+    return error.copyWith(message: message);
   }
 
   Future<bool> _renewSession(String expiredToken) async {

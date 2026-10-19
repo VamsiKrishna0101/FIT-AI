@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/localization/app_language.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/storage/onboarding_draft.dart';
+import 'onboarding_controller.dart';
 import '../models/lifestyle_nutrition_models.dart';
 
 // MARK: - Lifestyle preferences view model
@@ -10,7 +11,9 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
   final int currentStep = 6;
   final int totalSteps = 8;
 
-  OnboardingDraft draft = OnboardingDraft();
+  final OnboardingController controller;
+  final bool _ownsController;
+  OnboardingDraft get draft => controller.draft;
   bool _isDisposed = false;
 
   ActivityLevelOption _activityLevel = ActivityLevelOption.moderate;
@@ -27,7 +30,9 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
   Set<BodyLimitationOption> _limitations = {BodyLimitationOption.none};
   Set<BodyLimitationOption> get limitations => _limitations;
 
-  LifestyleNutritionViewModel() {
+  LifestyleNutritionViewModel({OnboardingController? controller})
+      : controller = controller ?? OnboardingController(),
+        _ownsController = controller == null {
     LanguageManager.shared.addListener(_onLanguageChanged);
     _loadState();
   }
@@ -39,7 +44,7 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
   AppLanguage get selectedLanguage => LanguageManager.shared.currentLanguage;
 
   Future<void> _loadState() async {
-    draft = await OnboardingDraft.load();
+    if (!controller.ready) await controller.initialize();
     if (_isDisposed) return;
 
     if (draft.languageCode.isNotEmpty) {
@@ -48,7 +53,7 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
         orElse: () => LanguageManager.shared.currentLanguage,
       );
       if (LanguageManager.shared.currentLanguage != match) {
-        LanguageManager.shared.selectLanguage(match);
+        LanguageManager.shared.selectLanguage(match, persistDraft: false);
       }
     }
 
@@ -73,24 +78,33 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
   void selectActivity(ActivityLevelOption opt) {
     if (_activityLevel == opt) return;
     _activityLevel = opt;
+    draft.activityLevel = opt.backendValue;
+    controller.checkpoint();
     notifyListeners();
   }
 
   void selectSleep(SleepDurationOption opt) {
     if (_sleepDuration == opt) return;
     _sleepDuration = opt;
+    draft.sleepDuration = opt.backendValue;
+    controller.checkpoint();
     notifyListeners();
   }
 
   void selectEatingStyle(EatingStyleOption opt) {
     if (_eatingStyle == opt) return;
     _eatingStyle = opt;
+    draft.eatingStyle = opt.backendValue;
+    draft.customEatingStyle =
+        opt == EatingStyleOption.other ? _customEatingStyle.trim() : null;
+    controller.checkpoint();
     notifyListeners();
   }
 
   void setCustomEatingStyle(String value) {
     _customEatingStyle = value;
-    notifyListeners();
+    draft.customEatingStyle = value.trim();
+    controller.checkpoint();
   }
 
   void toggleLimitation(BodyLimitationOption opt) {
@@ -107,6 +121,9 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
         _limitations.add(opt);
       }
     }
+    draft.limitations =
+        _limitations.map((value) => value.backendValue).toList();
+    controller.checkpoint();
     notifyListeners();
   }
 
@@ -123,12 +140,13 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
         ? _customEatingStyle.trim()
         : null;
     draft.completedStep = currentStep;
-    await draft.save();
+    controller.checkpoint();
   }
 
   @override
   void dispose() {
     _isDisposed = true;
+    if (_ownsController) controller.dispose();
     LanguageManager.shared.removeListener(_onLanguageChanged);
     super.dispose();
   }

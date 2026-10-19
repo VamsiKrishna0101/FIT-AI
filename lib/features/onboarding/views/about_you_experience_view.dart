@@ -1,4 +1,4 @@
-import '../../../core/components/motion.dart';
+import '../viewmodels/onboarding_controller.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,13 +19,16 @@ import '../../../core/theme/fitness_theme.dart';
 
 // MARK: - Combined Screen 02 & 03: About You & Your Experience (Apple iOS Premium)
 class AboutYouExperienceView extends StatefulWidget {
-  const AboutYouExperienceView({super.key});
+  final OnboardingController? controller;
+  final VoidCallback? onContinue;
+  const AboutYouExperienceView({super.key, this.controller, this.onContinue});
 
   @override
   State<AboutYouExperienceView> createState() => _AboutYouExperienceViewState();
 }
 
 class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
+  bool _advancing = false;
   late final AboutYouViewModel _viewModel;
   late final TextEditingController _nameController;
   String _selectedMetric = 'weight';
@@ -33,7 +36,8 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = AboutYouViewModel()..addListener(_rebuild);
+    _viewModel = AboutYouViewModel(controller: widget.controller)
+      ..addListener(_rebuild);
     _nameController = TextEditingController(text: _viewModel.name);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,6 +70,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   }
 
   void _onContinue() async {
+    if (_advancing) return;
     final language = _viewModel.selectedLanguage;
     if (!_viewModel.isValid) {
       HapticFeedback.mediumImpact();
@@ -82,11 +87,20 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
       return;
     }
 
-    await _viewModel.continueToNextStep();
-    if (!mounted) return;
-    Navigator.of(context).push(
-      OnboardingPageRoute(page: const ScheduleLocationView()),
-    );
+    setState(() => _advancing = true);
+    try {
+      await _viewModel.continueToNextStep();
+      if (!mounted) return;
+      if (widget.onContinue != null) {
+        widget.onContinue!();
+        return;
+      }
+      await OnboardingPageRoute(
+              page: ScheduleLocationView(controller: _viewModel.controller))
+          .open(context);
+    } finally {
+      if (mounted) setState(() => _advancing = false);
+    }
   }
 
   @override
@@ -100,6 +114,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
       title: language.headlineAboutYou,
       subtitle: 'A few details to build a plan around you.',
       actionTitle: language.continueButtonTitle,
+      loading: _advancing,
       onBack: _onBack,
       onContinue: _onContinue,
       children: [
@@ -134,6 +149,71 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
 
         const SizedBox(height: 10),
 
+        _biometrics(),
+
+        const SizedBox(height: 28),
+
+        // ── SECTION 2: YOUR EXPERIENCE (Text-only header, no stars) ──
+        FitnessText(
+          language.experienceSectionTitle.toUpperCase(),
+          style: const TextStyle(
+            fontFamily: null,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+            color: Color(0xFF8E8E93),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Selection feedback stays local; the route owns the page transition.
+        ...List.generate(ExperienceLevel.values.length, (index) {
+          final level = ExperienceLevel.values[index];
+          return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ExperienceCard(
+                level: level,
+                title: language.experienceTitle(level),
+                subtitle: language.experienceSubtitle(level),
+                isSelected: selectedExperience == level,
+                onTap: () => _viewModel.selectExperience(level),
+              ));
+        }),
+
+        DropdownButtonFormField<String>(
+          key: const ValueKey('onboarding-country'),
+          initialValue: appCountries.containsKey(_viewModel.countryCode)
+              ? _viewModel.countryCode
+              : 'ZZ',
+          isExpanded: true,
+          dropdownColor: const Color(0xFF242424),
+          decoration: InputDecoration(
+            labelText: fitnessText(context, 'Country'),
+            helperText: fitnessText(
+                context, 'Your country helps us suggest practical foods.'),
+            helperMaxLines: 2,
+          ),
+          items: appCountries.entries
+              .map((country) => DropdownMenuItem(
+                    value: country.key,
+                    child: FitnessText(country.value),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            if (value != null) _viewModel.setCountry(value);
+          },
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _biometrics() {
+    final language = _viewModel.selectedLanguage;
+    return ValueListenableBuilder<int>(
+      valueListenable: _viewModel.measurements,
+      builder: (context, value, child) => Column(children: [
         _ruler(),
         const SizedBox(height: 12),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -162,64 +242,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
         AppleGoalSummaryBadge(
           text: _viewModel.weightGoalSummary,
         ),
-
-        const SizedBox(height: 28),
-
-        // ── SECTION 2: YOUR EXPERIENCE (Text-only header, no stars) ──
-        FitnessText(
-          language.experienceSectionTitle.toUpperCase(),
-          style: const TextStyle(
-            fontFamily: null,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: Color(0xFF8E8E93),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // 3 Experience Cards — staggered slide-up entrance
-        ...List.generate(ExperienceLevel.values.length, (index) {
-          final level = ExperienceLevel.values[index];
-          return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: MotionEntrance(
-                  order: index,
-                  child: ExperienceCard(
-                    level: level,
-                    title: language.experienceTitle(level),
-                    subtitle: language.experienceSubtitle(level),
-                    isSelected: selectedExperience == level,
-                    onTap: () => _viewModel.selectExperience(level),
-                  )));
-        }),
-
-        DropdownButtonFormField<String>(
-          key: const ValueKey('onboarding-country'),
-          initialValue: appCountries.containsKey(_viewModel.countryCode)
-              ? _viewModel.countryCode
-              : 'ZZ',
-          isExpanded: true,
-          dropdownColor: const Color(0xFF242424),
-          decoration: InputDecoration(
-            labelText: fitnessText(context, 'Country'),
-            helperText: fitnessText(
-                context, 'Your country helps us suggest practical foods.'),
-            helperMaxLines: 2,
-          ),
-          items: appCountries.entries
-              .map((country) => DropdownMenuItem(
-                    value: country.key,
-                    child: FitnessText(country.value),
-                  ))
-              .toList(),
-          onChanged: (value) {
-            if (value != null) _viewModel.setCountry(value);
-          },
-        ),
-        const SizedBox(height: 16),
-      ],
+      ]),
     );
   }
 

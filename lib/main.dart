@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, LicenseRegistry, LicenseEntryWithLineBreaks;
@@ -35,7 +36,6 @@ void main() async {
 
   // Initialize localization engine from cache
   await LanguageManager.shared.init();
-  await NotificationService.shared.initialize();
 
   // Check persisted auth session token from secure hardware storage
   final token = await SecureSessionStore.shared.accessToken;
@@ -49,6 +49,9 @@ void main() async {
       : const OnboardingView();
 
   runApp(FitAIApp(initialHome: initialHome));
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(NotificationService.shared.initialize());
+  });
 }
 
 // MARK: - Root FitAI Mobile Application

@@ -79,6 +79,10 @@ void main() {
     final font = FontLoader('Inter')
       ..addFont(rootBundle.load('assets/fonts/Inter.ttf'));
     await font.load();
+    await (FontLoader('packages/cupertino_icons/CupertinoIcons')
+          ..addFont(rootBundle
+              .load('packages/cupertino_icons/assets/CupertinoIcons.ttf')))
+        .load();
     final icons = FontLoader('MaterialIcons')
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
@@ -157,6 +161,39 @@ void main() {
     expect(repository.retries, 1);
     expect(find.text('41%'), findsOneWidget);
     expect(find.text('Building your week'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Final-save failure explains changed data and does not offer stale retry',
+      (tester) async {
+    final repository = _ProgressRepository();
+    repository.current = {
+      ...repository.current,
+      'status': 'FAILED',
+      'stage': 'failed',
+      'errorCode': 'STALE_PLAN',
+      'canRetry': false,
+      'progress': {
+        'percent': 91,
+        'completedSteps': [
+          'history',
+          'workouts',
+          'nutrition',
+          'validation',
+        ]
+      },
+    };
+    await tester.pumpWidget(_screen(repository, reducedMotion: true));
+    await tester.pumpAndSettle();
+    expect(find.text('91%'), findsOneWidget);
+    expect(
+        find.text(
+            'Your history or preferences changed. Generate an updated plan.'),
+        findsOneWidget);
+    expect(find.text('Retry planning'), findsNothing);
+    expect(find.text('View weekly plan'), findsNothing);
+    expect(find.text('Back to planner'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

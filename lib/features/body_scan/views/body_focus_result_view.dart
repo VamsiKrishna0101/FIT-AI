@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../models/body_assessment_models.dart';
+import '../models/body_progress_summary.dart';
 import '../repositories/body_assessment_repository.dart';
 import 'widgets/body_focus_panel.dart';
 import 'body_estimate_view.dart';
@@ -15,8 +16,12 @@ import 'widgets/saved_body_photos.dart';
 class BodyFocusResultView extends StatefulWidget {
   final BodyAssessment entry;
   final List<BodyAssessment> baselines;
+  final bool compact;
   const BodyFocusResultView(
-      {super.key, required this.entry, this.baselines = const []});
+      {super.key,
+      required this.entry,
+      this.baselines = const [],
+      this.compact = false});
   @override
   State<BodyFocusResultView> createState() => _BodyFocusResultViewState();
 }
@@ -74,7 +79,7 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
 
   void _photos() => showModalBottomSheet<void>(
       sheetAnimationStyle: DSMotion.sheetStyle(context),
-context: context,
+      context: context,
       backgroundColor: FitnessTheme.canvas,
       showDragHandle: true,
       useSafeArea: true,
@@ -181,6 +186,18 @@ context: context,
                         const SizedBox(height: 18),
                         BodyFocusPanel(
                             assessment: _entry,
+                            compact: widget.compact,
+                            readings: [
+                              for (final metric in _entry.metrics.entries)
+                                if (bodyMetricSpecs.containsKey(metric.key))
+                                  BodyReading(
+                                      key: metric.key,
+                                      date: _entry.recordedDate,
+                                      metric: metric.value,
+                                      series: metric.value.source,
+                                      sourceLabel:
+                                          bodySourceLabel(metric.value.source))
+                            ],
                             onOpenPhotos: _photos,
                             onCompare: widget.baselines.isEmpty || _deleting
                                 ? null
@@ -190,6 +207,21 @@ context: context,
                                             current: _entry,
                                             baselines: widget.baselines))),
                             onRefreshReport: _deleting ? null : _refreshReport),
+                        if (widget.compact) ...[
+                          if (_entry.photos.isNotEmpty)
+                            TextButton.icon(
+                                onPressed: _photos,
+                                icon:
+                                    const Icon(CupertinoIcons.photo, size: 16),
+                                label: const FitnessText('Saved photos',
+                                    style: TextStyle(fontSize: 12))),
+                          TextButton.icon(
+                              onPressed: _deleting ? null : _refreshReport,
+                              icon: const Icon(CupertinoIcons.arrow_clockwise,
+                                  size: 16),
+                              label: const FitnessText('Update body report',
+                                  style: TextStyle(fontSize: 12))),
+                        ],
                         if (_error != null)
                           Padding(
                               padding: const EdgeInsets.only(top: 12),

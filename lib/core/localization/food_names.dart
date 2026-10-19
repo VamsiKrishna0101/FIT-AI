@@ -29,8 +29,7 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Pommes frites eller chips, frysta, förstekta, råa, att fritera",
     "no": "Pommes frites, frossen, forfritert, rå, til frityrsteking",
     "da": "Pommes frites, frosne, forstegte, rå, til friturestegning",
-    "nl":
-        "Franse frietjes of chips, bevroren, voorgebakken, rauw, om te frituren",
+    "nl": "Franse frietjes of chips, bevroren, voorgebakken, rauw, om te frituren",
     "it": "Patatine fritte, surgelate, prefritte, crude, da friggere",
     "es": "Patatas fritas, congeladas, prefritas, crudas, para freír"
   },
@@ -68,19 +67,15 @@ const foodNames = <String, Map<String, String>>{
     "es": "Arroz blanco, vaporizado, cocido, sin sal añadida"
   },
   "00ab69c3-64f9-5b7d-84c4-395e385f58b9": {
-    "en":
-        "Soft-ripened cheese, triple cream, around 3840% fat, from cow's milk",
-    "fr":
-        "Fromage à pâte molle à croûte lavée, triple crème, environ 3840% de matière grasse, au lait de vache",
+    "en": "Soft-ripened cheese, triple cream, around 3840% fat, from cow's milk",
+    "fr": "Fromage à pâte molle à croûte lavée, triple crème, environ 3840% de matière grasse, au lait de vache",
     "de": "Weichkäse, Doppelrahmstufe, ca. 3840% Fett, aus Kuhmilch",
     "sv": "Kitost, trippelgrädde, cirka 3840% fett, från komjölk",
     "no": "Kvit moldost, trippel krem, rundt 3840% fett, av kuhelmelk",
     "da": "Hvidskimmelost, triple cream, omkring 3840% fedt, af komælk",
     "nl": "Zachtgerijpte kaas, driepromille, rond 3840% vet, van koemelk",
-    "es":
-        "Queso de pasta blanda, triple crema, alrededor del 3840% de grasa, de leche de vaca",
-    "it":
-        "Formaggio a pasta molle, tripla crema, circa 3840% grassi, da latte vaccino"
+    "es": "Queso de pasta blanda, triple crema, alrededor del 3840% de grasa, de leche de vaca",
+    "it": "Formaggio a pasta molle, tripla crema, circa 3840% grassi, da latte vaccino"
   },
   "00af6b31-913f-5ccf-86e7-036f59e3ca3a": {
     "en": "Rum",
@@ -127,36 +122,25 @@ const foodNames = <String, Map<String, String>>{
     "es": "Tarta de albaricoques"
   },
   "0103e5e9-c022-5074-9aaa-2da6fa1da584": {
-    "en":
-        "Soft cake filled with chocolate and milk, with chocolate coating, prepacked, refrigerated",
-    "fr":
-        "Gâteau moelleux fourré au chocolat et au lait, avec enrobage au chocolat, préemballé, réfrigéré",
-    "de":
-        "Weicher Kuchen gefüllt mit Schokolade und Milch, mit Schokoladenüberzug, vorverpackt, gekühlt",
-    "sv":
-        "Mjuk kaka fylld med choklad och mjölk, med chokladöverdrag, förpackad, kyld",
-    "no":
-        "Myk kake fylt med sjokolade og melk, med sjokoldetrekk, ferdigpakket, kjølt",
-    "da":
-        "Blød kage fyldt med chokolade og mælk, med chokoladeovertræk, færdigpakket, kølet",
-    "nl":
-        "Zachte koek gevuld met chocolade en melk, met chocoladelaag, voorverpakt, gekoeld",
-    "it":
-        "Dolcetto ripieno di cioccolato e latte, con copertura al cioccolato, preconfezionato, refrigerato",
-    "es":
-        "Bizcocho tierno relleno de chocolate y leche, con cobertura de chocolate, envasado, refrigerado"
+    "en": "Soft cake filled with chocolate and milk, with chocolate coating, prepacked, refrigerated",
+    "fr": "Gâteau moelleux fourré au chocolat et au lait, avec enrobage au chocolat, préemballé, réfrigéré",
+    "de": "Weicher Kuchen gefüllt mit Schokolade und Milch, mit Schokoladenüberzug, vorverpackt, gekühlt",
+    "sv": "Mjuk kaka fylld med choklad och mjölk, med chokladöverdrag, förpackad, kyld",
+    "no": "Myk kake fylt med sjokolade og melk, med sjokoldetrekk, ferdigpakket, kjølt",
+    "da": "Blød kage fyldt med chokolade og mælk, med chokoladeovertræk, færdigpakket, kølet",
+    "nl": "Zachte koek gevuld met chocolade en melk, met chocoladelaag, voorverpakt, gekoeld",
+    "it": "Dolcetto ripieno di cioccolato e latte, con copertura al cioccolato, preconfezionato, refrigerato",
+    "es": "Bizcocho tierno relleno de chocolate y leche, con cobertura de chocolate, envasado, refrigerado"
   },
   "012da777-6d25-5757-aa41-01e13bdd0f7e": {
     "en": "Quark or dairy specialty, with fruits, 7-8% fat, with sugar(s)",
-    "fr":
-        "Quark ou spécialité laitière, aux fruits, 7-8% de matière grasse, avec sucre(s)",
+    "fr": "Quark ou spécialité laitière, aux fruits, 7-8% de matière grasse, avec sucre(s)",
     "de": "Quark oder Milcherzeugnis, mit Früchten, 7-8% Fett, mit Zucker",
     "sv": "Kvarg eller mejerispecialitet, med frukter, 7-8% fett, med socker",
     "no": "Kvarg eller meierispesialitet, med frukt, 7-8 % fett, med sukker",
     "da": "Kvark eller mejerispecialitet, med frugt, 7-8% fedt, med sukker",
     "nl": "Kwark of zuivelspecialiteit, met fruit, 7-8% vet, met suiker(s)",
-    "it":
-        "Quark o specialità lattiero-casearia, con frutta, 7-8% di grassi, con zuccheri",
+    "it": "Quark o specialità lattiero-casearia, con frutta, 7-8% di grassi, con zuccheri",
     "es": "Quark o especialidad láctea, con frutas, 7-8% de grasa, con azúcares"
   },
   "01a48098-de94-50ca-92e1-61368cb1be2d": {
@@ -579,8 +563,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "053d6cad-712f-5eb3-b4a1-8e6214bc611e": {
     "en": "European pilchard or sardine, in olive oil, canned, drained",
-    "fr":
-        "Sardine ou pilchard européen, à l'huile d'olive, en conserve, égoutté",
+    "fr": "Sardine ou pilchard européen, à l'huile d'olive, en conserve, égoutté",
     "de": "Europäische Sardine, in Olivenöl, aus der Dose, abgetropft",
     "sv": "Sardin, i olivolja, konserv, avrunnen",
     "no": "Europeisk sardin, i olivenolje, hermetisert, avrent",
@@ -628,11 +611,9 @@ const foodNames = <String, Map<String, String>>{
     "de": "Baskische Soße oder Tomatensoße mit Paprika, vorgepackt",
     "sv": "Baskisk sås eller tomatsås med söta paprikor, färdigförpackad",
     "no": "Baskisk saus eller tomatsaus med paprika, ferdigpakket",
-    "da":
-        "Baskisk-inspireret sovs eller tomatsauce med peberfrugter, forpakket",
+    "da": "Baskisk-inspireret sovs eller tomatsauce med peberfrugter, forpakket",
     "nl": "Baskische saus of tomatensaus met zoete paprika, voorverpakt",
-    "es":
-        "Salsa estilo vasco o salsa de tomate con pimientos dulces, preenvasada",
+    "es": "Salsa estilo vasco o salsa de tomate con pimientos dulces, preenvasada",
     "it": "Salsa basca o salsa di pomodoro con peperoni dolci, confezionata"
   },
   "058aaa7f-a432-59c8-8ffa-99c6a3625421": {
@@ -660,8 +641,7 @@ const foodNames = <String, Map<String, String>>{
   "05e997dd-4a96-5d7a-aedc-7280c9130dd8": {
     "en": "Pineapple, in light syrup, canned, solids and liquids",
     "fr": "Ananas, au sirop léger, en conserve, morceaux et liquide",
-    "de":
-        "Ananas, in leichtem Sirup, aus der Dose, feste Bestandteile und Flüssigkeit",
+    "de": "Ananas, in leichtem Sirup, aus der Dose, feste Bestandteile und Flüssigkeit",
     "sv": "Ananas, i lätt lag, konserv, fasta beståndsdelar och vätska",
     "no": "Ananas, i lett sirup, hermetisert, faste stoffer og væske",
     "da": "Ananas, i let sirup, på dåse, faste bestanddele og væske",
@@ -703,15 +683,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salsa alla borgognona, confezionata"
   },
   "06c14dc8-a57e-546b-b130-271a243c8a8f": {
-    "en": "Brie cheese, from cow's milk",
-    "fr": "Fromage Brie, au lait de vache",
-    "de": "Brie-Käse, aus Kuhmilch",
-    "sv": "Brieost, på komjölk",
-    "no": "Brie-ost, av kuemelk",
-    "da": "Brie-ost, af komælk",
-    "nl": "Briekaas, van koemelk",
-    "es": "Queso Brie, de leche de vaca",
-    "it": "Formaggio Brie, da latte vaccino"
+    "en": "Brie",
+    "de": "Brie",
+    "fr": "Brie",
+    "no": "Brie",
+    "sv": "Brie",
+    "da": "Brie",
+    "nl": "Brie",
+    "it": "Brie",
+    "es": "Brie"
   },
   "06ca6e4b-c961-543f-9f7b-766e9671b016": {
     "en": "Dark chocolate, 70% cocoa, bar",
@@ -770,21 +750,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "076cc042-080f-5e61-9fd2-932e1323100f": {
     "en": "Mineral sparkling water (St-Alban), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (St-Alban), en bouteille, moyennement minéralisée",
-    "de":
-        "Mergelreiches Mineralwasser mit Kohlensäure (St-Alban), in Flaschen, durchschnittlich mineralisiert",
+    "fr": "Eau minérale gazeuse (St-Alban), en bouteille, moyennement minéralisée",
+    "de": "Mergelreiches Mineralwasser mit Kohlensäure (St-Alban), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (St-Alban), på flaska, medelmineraliserat",
-    "no":
-        "Mineral kullsyreholdig vann (St-Alban), på flaske, gjennomsnittlig mineralisert",
-    "da":
-        "Mineralvand med kulsyre (St-Alban), på flaske, gennemsnitligt mineraliseret",
-    "nl":
-        "Mineraal, bruisend water (St-Alban), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (St-Alban), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale frizzante (St-Alban), in bottiglia, mediamente mineralizzata"
+    "no": "Mineral kullsyreholdig vann (St-Alban), på flaske, gjennomsnittlig mineralisert",
+    "da": "Mineralvand med kulsyre (St-Alban), på flaske, gennemsnitligt mineraliseret",
+    "nl": "Mineraal, bruisend water (St-Alban), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (St-Alban), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale frizzante (St-Alban), in bottiglia, mediamente mineralizzata"
   },
   "0771ac17-8268-5798-a703-5efd7b0a99e8": {
     "en": "Sauce (average)",
@@ -986,20 +959,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "090d7181-22be-510a-918b-39b615c94190": {
     "en": "Mineral sparkling water, bottled, lightly mineralized (average)",
-    "fr":
-        "Eau minérale gazeuse, en bouteille, faiblement minéralisée (moyenne)",
-    "de":
-        "Mineralwasser mit Kohlensäure, in Flaschen, leicht mineralisiert (Durchschnitt)",
+    "fr": "Eau minérale gazeuse, en bouteille, faiblement minéralisée (moyenne)",
+    "de": "Mineralwasser mit Kohlensäure, in Flaschen, leicht mineralisiert (Durchschnitt)",
     "sv": "Kolsyrat mineralvatten, på flaska, lättmineraliserat (genomsnitt)",
-    "no":
-        "Mineral kullsyreholdig vann, på flaske, lett mineralisert (gjennomsnitt)",
+    "no": "Mineral kullsyreholdig vann, på flaske, lett mineralisert (gjennomsnitt)",
     "da": "Mineralvand med kulsyre, på flaske, let mineraliseret (gennemsnit)",
-    "nl":
-        "Mineraal, bruisend water, gebotteld, licht gemineraliseerd (gemiddeld)",
-    "es":
-        "Agua mineral con gas, embotellada, ligeramente mineralizada (promedio)",
-    "it":
-        "Acqua minerale frizzante, in bottiglia, leggermente mineralizzata (media)"
+    "nl": "Mineraal, bruisend water, gebotteld, licht gemineraliseerd (gemiddeld)",
+    "es": "Agua mineral con gas, embotellada, ligeramente mineralizada (promedio)",
+    "it": "Acqua minerale frizzante, in bottiglia, leggermente mineralizzata (media)"
   },
   "093d0865-a001-5f13-a9c7-25eb60d1d398": {
     "en": "Pasta, dry, wholewheat, cooked, no added salt",
@@ -1057,24 +1024,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salmone, selvaggio, crudo"
   },
   "0a04fe0a-1b8f-5212-aed4-d1af9cb0d584": {
-    "en":
-        "Surmullet or red mullet, fillet with skin, frozen, raw (from Thailand or Senegal)",
-    "fr":
-        "Rouget ou surmulot, filet avec peau, surgelé, cru (provenance Thaïlande ou Sénégal)",
-    "de":
-        "Meerbarbe oder Rote Meerbarbe, Filet mit Haut, tiefgekühlt, roh (aus Thailand oder Senegal)",
-    "sv":
-        "Kungsfisk eller mulle, filé med skinn, fryst, rå (från Thailand eller Senegal)",
-    "no":
-        "Multe eller rød mulle, filet med skinn, frossen, rå (fra Thailand eller Senegal)",
-    "da":
-        "Rødmulte eller stribet multe, filet med skind, frossen, rå (fra Thailand eller Senegal)",
-    "nl":
-        "Fenicottero o triglia di roccia of rode mul, filet met huid, bevroren, rauw (uit Thailand of Senegal)",
-    "es":
-        "Salmonete, filete con piel, congelado, crudo (de Tailandia o Senegal)",
-    "it":
-        "Triglia, filetto con pelle, surgelato, crudo (da Thailandia o Senegal)"
+    "en": "Surmullet or red mullet, fillet with skin, frozen, raw (from Thailand or Senegal)",
+    "fr": "Rouget ou surmulot, filet avec peau, surgelé, cru (provenance Thaïlande ou Sénégal)",
+    "de": "Meerbarbe oder Rote Meerbarbe, Filet mit Haut, tiefgekühlt, roh (aus Thailand oder Senegal)",
+    "sv": "Kungsfisk eller mulle, filé med skinn, fryst, rå (från Thailand eller Senegal)",
+    "no": "Multe eller rød mulle, filet med skinn, frossen, rå (fra Thailand eller Senegal)",
+    "da": "Rødmulte eller stribet multe, filet med skind, frossen, rå (fra Thailand eller Senegal)",
+    "nl": "Fenicottero o triglia di roccia of rode mul, filet met huid, bevroren, rauw (uit Thailand of Senegal)",
+    "es": "Salmonete, filete con piel, congelado, crudo (de Tailandia o Senegal)",
+    "it": "Triglia, filetto con pelle, surgelato, crudo (da Thailandia o Senegal)"
   },
   "0a0caa5e-af14-5761-8ef9-038d5b4bfdc1": {
     "en": "Mahimahi, flesh, cooked",
@@ -1090,13 +1048,11 @@ const foodNames = <String, Map<String, String>>{
   "0a15d93c-e49e-5a6d-9260-e33ba00fdc9c": {
     "en": "Sandwich, baguette, tuna, raw vegetables and mayonnaise, homemade",
     "fr": "Sandwich, baguette, thon, crudités et mayonnaise, fait maison",
-    "de":
-        "Sandwich, Baguette, Thunfisch, rohes Gemüse und Mayonnaise, hausgemacht",
+    "de": "Sandwich, Baguette, Thunfisch, rohes Gemüse und Mayonnaise, hausgemacht",
     "sv": "Smörgås, baguette, tonfisk, råa grönsaker och majonnäs, hemgjord",
     "no": "Smørbrød, baguett, tunfisk, rå grønnsaker og majones, hjemmelaget",
     "da": "Sandwich, flute, tun, rå grøntsager og mayonnaise, hjemmelavet",
-    "nl":
-        "Broodje, stokbrood, tonijn, rauwe groenten en mayonaise, zelfgemaakt",
+    "nl": "Broodje, stokbrood, tonijn, rauwe groenten en mayonaise, zelfgemaakt",
     "es": "Sándwich de baguette con atún, vegetales crudos y mayonesa, casero",
     "it": "Panino, baguette, tonno, verdure crude e maionese, fatto in casa"
   },
@@ -1145,23 +1101,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Fagioli bianchi, in scatola, sgocciolati"
   },
   "0a6b980c-bac8-5506-8f93-569b8ba969a9": {
-    "en":
-        "Savoury cake (with cheese, vegetables, meat, fish, poultry, etc.), prepacked",
-    "fr":
-        "Cake salé (au fromage, légumes, viande, poisson, volaille, etc.), préemballé",
-    "de":
-        "Pikanter Kuchen (mit Käse, Gemüse, Fleisch, Fisch, Geflügel etc.), vorverpackt",
+    "en": "Savoury cake (with cheese, vegetables, meat, fish, poultry, etc.), prepacked",
+    "fr": "Cake salé (au fromage, légumes, viande, poisson, volaille, etc.), préemballé",
+    "de": "Pikanter Kuchen (mit Käse, Gemüse, Fleisch, Fisch, Geflügel etc.), vorverpackt",
     "sv": "Matpaj (med ost, grönsaker, kött, fisk, fågel etc.), förpackad",
-    "no":
-        "Matig kake (med ost, grønnsaker, kjøtt, fisk, fjærkre osv.), ferdigpakket",
-    "da":
-        "Salt tærte (med ost, grøntsager, kød, fisk, fjerkræ osv.), forpakket",
-    "nl":
-        "Hartige taart (met kaas, groenten, vlees, vis, gevogelte, etc.), voorverpakt",
-    "es":
-        "Pastel salado (con queso, verduras, carne, pescado, ave, etc.), preenvasado",
-    "it":
-        "Torta salata (con formaggio, verdure, carne, pesce, pollame, ecc.), preconfezionata"
+    "no": "Matig kake (med ost, grønnsaker, kjøtt, fisk, fjærkre osv.), ferdigpakket",
+    "da": "Salt tærte (med ost, grøntsager, kød, fisk, fjerkræ osv.), forpakket",
+    "nl": "Hartige taart (met kaas, groenten, vlees, vis, gevogelte, etc.), voorverpakt",
+    "es": "Pastel salado (con queso, verduras, carne, pescado, ave, etc.), preenvasado",
+    "it": "Torta salata (con formaggio, verdure, carne, pesce, pollame, ecc.), preconfezionata"
   },
   "0a8a19b0-2e4e-53e3-ab66-06c8f59cb1b0": {
     "en": "Semolina pudding with raisins and caramel sauce, refrigerated",
@@ -1197,41 +1145,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Prosciutto cotto, scelto, sgrassato senza cotenna"
   },
   "0ae75e89-61f3-5b51-816b-259ac0a3bdbe": {
-    "en":
-        "Chocolate flavoured milk beverage, with sugar(s), partially skimmed, not fortified",
-    "fr":
-        "Boisson lactée aromatisée au chocolat, avec sucre(s), partiellement écrémée, non enrichie",
-    "de":
-        "Schokoladenmilchgetränk, mit Zucker(n), teilentraimmt, nicht angereichert",
+    "en": "Chocolate flavoured milk beverage, with sugar(s), partially skimmed, not fortified",
+    "fr": "Boisson lactée aromatisée au chocolat, avec sucre(s), partiellement écrémée, non enrichie",
+    "de": "Schokoladenmilchgetränk, mit Zucker(n), teilentraimmt, nicht angereichert",
     "sv": "Chokladsmaksatt mjölkdryck, med socker, lättmjölk, ej berikad",
-    "no":
-        "Melkedrikk med sjokoladesmak, med sukker, delvis skummet, ikke beriket",
+    "no": "Melkedrikk med sjokoladesmak, med sukker, delvis skummet, ikke beriket",
     "da": "Chokoladesmaksmælkedrik, med sukker, delvist skummet, ikke beriget",
     "nl": "Chocolademelk, met suiker(s), gedeeltelijk mager, niet verrijkt",
-    "es":
-        "Bebida láctea sabor chocolate, con azúcares, semidesnatada, no enriquecida",
-    "it":
-        "Bevanda al latte al gusto di cioccolato, con zuccheri, parzialmente scremato, non fortificato"
+    "es": "Bebida láctea sabor chocolate, con azúcares, semidesnatada, no enriquecida",
+    "it": "Bevanda al latte al gusto di cioccolato, con zuccheri, parzialmente scremato, non fortificato"
   },
   "0b006ee6-f096-5f35-a28a-1f0ede21f500": {
-    "en":
-        "Tartiflette (cheese fondue with potatoes, reblochon cheese, bacon bits…), prepacked",
-    "fr":
-        "Tartiflette (gratin de pommes de terre au reblochon, lardons…), préemballée",
-    "de":
-        "Tartiflette (Käsefondue mit Kartoffeln, Reblochon-Käse, Speckwürfeln...), vorverpackt",
-    "sv":
-        "Tartiflette (ostfondue med potatis, reblochonost, baconbitar…), förpackad",
-    "no":
-        "Tartiflette (ostefondue med poteter, reblochon-ost, baconbiter…), ferdigpakket",
-    "da":
-        "Tartiflette (ostefondue med kartofler, reblochon-ost, baconstykker…), forpakket",
-    "nl":
-        "Tartiflette (kaasfondue met aardappelen, reblochon-kaas, spekblokjes…), voorverpakt",
-    "es":
-        "Tartiflette (fondue de queso con patatas, queso reblochon, trocitos de tocino...), preenvasada",
-    "it":
-        "Tartiflette (fonduta di formaggio con patate, formaggio Reblochon, pancetta…), preconfezionata"
+    "en": "Tartiflette (cheese fondue with potatoes, reblochon cheese, bacon bits…), prepacked",
+    "fr": "Tartiflette (gratin de pommes de terre au reblochon, lardons…), préemballée",
+    "de": "Tartiflette (Käsefondue mit Kartoffeln, Reblochon-Käse, Speckwürfeln...), vorverpackt",
+    "sv": "Tartiflette (ostfondue med potatis, reblochonost, baconbitar…), förpackad",
+    "no": "Tartiflette (ostefondue med poteter, reblochon-ost, baconbiter…), ferdigpakket",
+    "da": "Tartiflette (ostefondue med kartofler, reblochon-ost, baconstykker…), forpakket",
+    "nl": "Tartiflette (kaasfondue met aardappelen, reblochon-kaas, spekblokjes…), voorverpakt",
+    "es": "Tartiflette (fondue de queso con patatas, queso reblochon, trocitos de tocino...), preenvasada",
+    "it": "Tartiflette (fonduta di formaggio con patate, formaggio Reblochon, pancetta…), preconfezionata"
   },
   "0b6e9b5d-95b7-54d9-af31-f98b73ed0065": {
     "en": "Carbonara-style pasta (spaghetti, tagliatelle…), prepacked",
@@ -1311,24 +1244,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pancetta di maiale, stagionata, affumicata, cruda"
   },
   "0c90085f-9aa0-5f8a-a3c1-8d5acdae4b89": {
-    "en":
-        "Pasta salad, with chicken, egg, cheese and raw vegetables, with sauce, prepacked",
-    "fr":
-        "Salade de pâtes, au poulet, œuf, fromage et crudités, avec sauce, préemballée",
-    "de":
-        "Nudelsalat, mit Hähnchen, Ei, Käse und rohem Gemüse, mit Soße, vorverpackt",
-    "sv":
-        "Pastasallad, med kyckling, ägg, ost och råa grönsaker, med sås, förpackad",
-    "no":
-        "Pastasalat, med kylling, egg, ost og rå grønnsaker, med saus, ferdigpakket",
-    "da":
-        "Pastasalat, med kylling, æg, ost og rå grøntsager, med sauce, forpakket",
-    "nl":
-        "Pastasalade, met kip, ei, kaas en rauwe groenten, met saus, voorverpakt",
-    "es":
-        "Ensalada de pasta, con pollo, huevo, queso y verduras crudas, con salsa, preenvasada",
-    "it":
-        "Insalata di pasta, con pollo, uova, formaggio e verdure crude, con salsa, preconfezionata"
+    "en": "Pasta salad, with chicken, egg, cheese and raw vegetables, with sauce, prepacked",
+    "fr": "Salade de pâtes, au poulet, œuf, fromage et crudités, avec sauce, préemballée",
+    "de": "Nudelsalat, mit Hähnchen, Ei, Käse und rohem Gemüse, mit Soße, vorverpackt",
+    "sv": "Pastasallad, med kyckling, ägg, ost och råa grönsaker, med sås, förpackad",
+    "no": "Pastasalat, med kylling, egg, ost og rå grønnsaker, med saus, ferdigpakket",
+    "da": "Pastasalat, med kylling, æg, ost og rå grøntsager, med sauce, forpakket",
+    "nl": "Pastasalade, met kip, ei, kaas en rauwe groenten, met saus, voorverpakt",
+    "es": "Ensalada de pasta, con pollo, huevo, queso y verduras crudas, con salsa, preenvasada",
+    "it": "Insalata di pasta, con pollo, uova, formaggio e verdure crude, con salsa, preconfezionata"
   },
   "0ca666ee-f81c-5b22-ba70-1b80b93d7f4c": {
     "en": "Pizza dough, prepacked, cooked",
@@ -1361,8 +1285,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Mineralvand (Velleminfroy), på flaske, stærkt mineraliseret",
     "nl": "Mineraalwater (Velleminfroy), gebotteld, sterk gemineraliseerd",
     "es": "Agua mineral (Velleminfroy), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale (Velleminfroy), in bottiglia, fortemente mineralizzata"
+    "it": "Acqua minerale (Velleminfroy), in bottiglia, fortemente mineralizzata"
   },
   "0cf76c2b-742e-592c-a683-80ef689e06d1": {
     "en": "Spicy pork sausage with red pepper",
@@ -1420,15 +1343,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pasta alla bolognese (spaghetti, tagliatelle…), preconfezionata"
   },
   "0d3595a3-d421-553a-b7c1-a93edd1eff45": {
-    "en": "Quark, plain, 2-3% fat",
-    "fr": "Quark, nature, 2-3 % de matière grasse",
-    "de": "Quark, natur, 2-3 % Fett",
-    "sv": "Kvarg, naturell, 2-3 % fett",
-    "no": "Kvarg, naturell, 2-3% fett",
-    "da": "Kvark, natural, 2-3% fedt",
-    "nl": "Kwark, mager, 2-3% vet",
-    "es": "Queso quark, natural, 2-3% grasa",
-    "it": "Quark, naturale, 2-3% grassi"
+    "en": "Plain quark — 2–3% fat",
+    "de": "Magerquark — 2–3% Fett",
+    "fr": "Quark nature — 2–3% de matières grasses",
+    "no": "Naturell kvarg – 2–3% fett",
+    "sv": "Naturell kvarg — 2–3% fett",
+    "da": "Almindelig kvark — 2–3% fedt",
+    "nl": "Magere kwark — 2–3% vet",
+    "it": "Quark magro — 2–3% grassi",
+    "es": "Quark natural — 2–3% grasa"
   },
   "0d4e9cc4-4a80-5b5e-a369-af4a26791f1f": {
     "en": "Celery stalk, canned, drained",
@@ -1479,8 +1402,7 @@ const foodNames = <String, Map<String, String>>{
     "fr": "Burger ou bouchée au soja et au blé (non végane), préemballé",
     "de": "Soja-Weizen-Burger oder -Happen (nicht vegan), vorverpackt",
     "sv": "Soja- och vete-burgare eller bit (ej vegansk), förpackad",
-    "no":
-        "Burger eller bit av soyabønner og hvete (ikke vegansk), ferdigpakket",
+    "no": "Burger eller bit av soyabønner og hvete (ikke vegansk), ferdigpakket",
     "da": "Soja- og hvedebøf eller -bid (ikke vegansk), forpakket",
     "nl": "Soja- en tarweburger of hapje (niet veganistisch), voorverpakt",
     "es": "Hamburguesa o bocado de soja y trigo (no vegano), preenvasado",
@@ -1571,10 +1493,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Melkesjokolade, uten tilsatt sukker, med søtningsmidler, plate",
     "da": "Mælkechokolade, uden tilsat sukker, med sødestoffer, plade",
     "nl": "Melkchocolade, zonder toegevoegde suikers, met zoetstoffen, reep",
-    "es":
-        "Chocolate con leche, sin azúcares añadidos, con edulcorantes, tableta",
-    "it":
-        "Cioccolato al latte, senza zuccheri aggiunti, con edulcoranti, tavoletta"
+    "es": "Chocolate con leche, sin azúcares añadidos, con edulcorantes, tableta",
+    "it": "Cioccolato al latte, senza zuccheri aggiunti, con edulcoranti, tavoletta"
   },
   "0ea74024-390f-5264-8e61-95f320cae893": {
     "en": "Meal replacement, low calorie, custard cream dessert type",
@@ -1584,10 +1504,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Måltidserstatning, lavkalori, desserttype med eggekrem",
     "da": "Måltidserstatning, lavt kalorieindhold, budding-creme desserttype",
     "nl": "Maaltijdvervanger, caloriearm, vla- en roomdesserttype",
-    "es":
-        "Sustitutivo de comida, bajo en calorías, tipo postre de crema pastelera",
-    "it":
-        "Sostitutivo del pasto, ipocalorico, tipo dessert alla crema pasticcera"
+    "es": "Sustitutivo de comida, bajo en calorías, tipo postre de crema pastelera",
+    "it": "Sostitutivo del pasto, ipocalorico, tipo dessert alla crema pasticcera"
   },
   "0ecd50f4-7a12-59f9-b0cb-e0aea339a6d8": {
     "en": "Brioche rusk, sliced, prepacked",
@@ -1645,20 +1563,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Boudin blanc, al tartufo, da cuocere"
   },
   "0fd58915-d19c-5ad4-ab9c-4c94fcf03e4d": {
-    "en":
-        "Profiteroles (chou pastry), with vanilla ice cream and chocolate sauce",
-    "fr":
-        "Profiteroles (pâte à choux), avec glace à la vanille et sauce au chocolat",
-    "de":
-        "Profiteroles (Brandteigkrapfen), mit Vanilleeis und Schokoladensauce",
+    "en": "Profiteroles (chou pastry), with vanilla ice cream and chocolate sauce",
+    "fr": "Profiteroles (pâte à choux), avec glace à la vanille et sauce au chocolat",
+    "de": "Profiteroles (Brandteigkrapfen), mit Vanilleeis und Schokoladensauce",
     "sv": "Profiteroles (atten), med vaniljglass och chokladsås",
     "no": "Profiteroles (vannbakkels), med vaniljeis og sjokoladesaus",
     "da": "Profiteroles (vandbakkelse), med vaniljeis og chokoladesauce",
     "nl": "Profiteroles (soesjes), met vanilleroomijs en chocoladesaus",
-    "es":
-        "Profiteroles (pasta choux), con helado de vainilla y salsa de chocolate",
-    "it":
-        "Profiterole (pasta choux), con gelato alla vaniglia e salsa al cioccolato"
+    "es": "Profiteroles (pasta choux), con helado de vainilla y salsa de chocolate",
+    "it": "Profiterole (pasta choux), con gelato alla vaniglia e salsa al cioccolato"
   },
   "0fdcd5c1-329e-5b3c-9cf8-c8827809c277": {
     "en": "Tomato sauce, with olives, prepacked",
@@ -1684,20 +1597,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "101bce70-aa47-5052-b5c1-393c17ad675f": {
     "en": "Potato crisps and similar, plain or flavoured, reduced fat",
-    "fr":
-        "Chips de pommes de terre et similaires, nature ou aromatisées, allégées en matières grasses",
+    "fr": "Chips de pommes de terre et similaires, nature ou aromatisées, allégées en matières grasses",
     "de": "Kartoffelchips und ähnliche, natur oder aromatisiert, fettreduziert",
-    "sv":
-        "Potatischips och liknande, naturella eller smaksatta, med reducerad fetthalt",
+    "sv": "Potatischips och liknande, naturella eller smaksatta, med reducerad fetthalt",
     "no": "Potetgull og lignende, naturell eller med smak, redusert fett",
-    "da":
-        "Kartoffelchips og lignende, naturel eller med smag, reduceret fedtindhold",
-    "nl":
-        "Aardappelchips en dergelijke, naturel of met smaakje, verlaagd vetgehalte",
-    "es":
-        "Patatas fritas de bolsa y similares, naturales o aromatizadas, bajas en grasa",
-    "it":
-        "Patatine e simili, naturali o aromatizzate, a ridotto contenuto di grassi"
+    "da": "Kartoffelchips og lignende, naturel eller med smag, reduceret fedtindhold",
+    "nl": "Aardappelchips en dergelijke, naturel of met smaakje, verlaagd vetgehalte",
+    "es": "Patatas fritas de bolsa y similares, naturales o aromatizadas, bajas en grasa",
+    "it": "Patatine e simili, naturali o aromatizzate, a ridotto contenuto di grassi"
   },
   "103685fe-81be-5043-89c9-3f6bf023005d": {
     "en": "Pork, spare-ribs, braised",
@@ -1713,13 +1620,11 @@ const foodNames = <String, Map<String, String>>{
   "1043a371-5ee7-5047-8818-56935b81418b": {
     "en": "Yogurt or fermented milk, on a fruit layer, with sugar(s)",
     "fr": "Yaourt ou lait fermenté, sur lit de fruits, avec sucre(s)",
-    "de":
-        "Joghurt oder fermentierte Milch, auf einer Fruchtschicht, mit Zucker(n)",
+    "de": "Joghurt oder fermentierte Milch, auf einer Fruchtschicht, mit Zucker(n)",
     "sv": "Yoghurt eller syrad mjölk, på fruktskikt, med socker",
     "no": "Yoghurt eller syrnet melk, på et fruktlag, med sukker",
     "da": "Yogurt eller syrnet mælk, på frugtlag, med sukker",
-    "nl":
-        "Yoghurt of gefermenteerde melk, op een vruchtenlaagje, met suiker(s)",
+    "nl": "Yoghurt of gefermenteerde melk, op een vruchtenlaagje, met suiker(s)",
     "es": "Yogur o leche fermentada, con capa de fruta, con azúcar(es)",
     "it": "Yogurt o latte fermentato, su letto di frutta, con zuccheri"
   },
@@ -1747,16 +1652,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "109bd903-4421-58d0-9fb2-bf820794f459": {
     "en": "Fermented milk drink, flavoured, with sugar(s), with L Casei",
-    "fr":
-        "Boisson à base de lait fermenté, aromatisée, avec sucre(s), avec L Casei",
-    "de":
-        "Fermentiertes Milchgetränk, aromatisiert, mit Zucker(n), mit L Casei",
+    "fr": "Boisson à base de lait fermenté, aromatisée, avec sucre(s), avec L Casei",
+    "de": "Fermentiertes Milchgetränk, aromatisiert, mit Zucker(n), mit L Casei",
     "sv": "Syrad mjölkdryck, smaksatt, med socker, med L Casei",
     "no": "Syrnet melkedrikk, med smak, med sukker, med L Casei",
     "da": "Syret mælkedrik, med smag, med sukker, med L Casei",
     "nl": "Gefermenteerde melkdrank, met smaakje, met suiker(s), met L. casei",
-    "es":
-        "Bebida de leche fermentada, aromatizada, con azúcar(es), con L Casei",
+    "es": "Bebida de leche fermentada, aromatizada, con azúcar(es), con L Casei",
     "it": "Latte fermentato da bere, aromatizzato, con zuccheri, con L. casei"
   },
   "10c2c30c-67d6-570c-b6a1-f78bf81153f3": {
@@ -1805,17 +1707,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "1122ec69-7045-5d2c-9afd-89e464d9ceed": {
     "en": "Mineral still water (Aix-les-Bains), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale plate (Aix-les-Bains), en bouteille, faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Aix-les-Bains), in Flaschen, leicht mineralisiert",
+    "fr": "Eau minérale plate (Aix-les-Bains), en bouteille, faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Aix-les-Bains), in Flaschen, leicht mineralisiert",
     "sv": "Stilla mineralvatten (Aix-les-Bains), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Aix-les-Bains), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Aix-les-Bains), på flaske, let mineraliseret",
-    "nl":
-        "Plat mineraalwater (Aix-les-Bains), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Aix-les-Bains), embotellada, débilmente mineralizada",
+    "nl": "Plat mineraalwater (Aix-les-Bains), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral sin gas (Aix-les-Bains), embotellada, débilmente mineralizada",
     "it": "Acqua minerale naturale (Aix-les-Bains), in bottiglia, oligominerale"
   },
   "113c8662-814f-5c78-80ed-77a8b38d5819": {
@@ -1837,8 +1735,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Stille mineralvann (Montclar), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Montclar), på flaske, let mineraliseret",
     "nl": "Plat mineraalwater (Montclar), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Montclar), embotellada, débilmente mineralizada",
+    "es": "Agua mineral sin gas (Montclar), embotellada, débilmente mineralizada",
     "it": "Acqua minerale naturale (Montclar), in bottiglia, oligominerale"
   },
   "117dfd87-2a58-5cc4-ab65-135be0a1f315": {
@@ -1974,24 +1871,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Lasagne o cannelloni con carne (sugo alla bolognese), confezionati"
   },
   "14448dce-10f0-5d1b-800c-0b570db2ac5c": {
-    "en":
-        "Stewed fruits, sweetened (pulp or mixed fruits, with sugar(s), but always with other ingredient), prepacked, refrigerated",
-    "fr":
-        "Compote de fruits, sucrée (pulpe ou mélange de fruits, avec sucre(s), mais toujours avec un autre ingrédient), préemballée, réfrigérée",
-    "de":
-        "Gedünstetes Obst, gezuckert (Fruchtpulp oder Fruchtmischungen, mit Zucker(n), aber immer mit anderen Zutaten), vorverpackt, gekühlt",
-    "sv":
-        "Kokta frukter, sötade (puré eller blandade frukter, med socker, men alltid med annan ingrediens), förpackade, kända",
-    "no":
-        "Fruktmos, søtet (fruktmos eller blandet frukt, med sukker, men alltid med annen ingrediens), ferdigpakket, kjølt",
-    "da":
-        "Frugtmos, sødet (pulp eller blandet frugt, med sukker, men altid med anden ingrediens), forkromet, på køl",
-    "nl":
-        "Stoofperen of vruchtenmoes, gezoet (pulp of gemengde vruchten, met suiker(s), maar altijd met andere ingrediënten), voorverpakt, gekoeld",
-    "es":
-        "Compota de frutas, azucarada (pulpa o mezcla de frutas, con azúcar(es), pero siempre con otro ingrediente), envasada, refrigerada",
-    "it":
-        "Composta di frutta, zuccherata (polpa o macedonia, con zuccheri, ma sempre con altro ingrediente), confezionata, refrigerata"
+    "en": "Stewed fruits, sweetened (pulp or mixed fruits, with sugar(s), but always with other ingredient), prepacked, refrigerated",
+    "fr": "Compote de fruits, sucrée (pulpe ou mélange de fruits, avec sucre(s), mais toujours avec un autre ingrédient), préemballée, réfrigérée",
+    "de": "Gedünstetes Obst, gezuckert (Fruchtpulp oder Fruchtmischungen, mit Zucker(n), aber immer mit anderen Zutaten), vorverpackt, gekühlt",
+    "sv": "Kokta frukter, sötade (puré eller blandade frukter, med socker, men alltid med annan ingrediens), förpackade, kända",
+    "no": "Fruktmos, søtet (fruktmos eller blandet frukt, med sukker, men alltid med annen ingrediens), ferdigpakket, kjølt",
+    "da": "Frugtmos, sødet (pulp eller blandet frugt, med sukker, men altid med anden ingrediens), forkromet, på køl",
+    "nl": "Stoofperen of vruchtenmoes, gezoet (pulp of gemengde vruchten, met suiker(s), maar altijd met andere ingrediënten), voorverpakt, gekoeld",
+    "es": "Compota de frutas, azucarada (pulpa o mezcla de frutas, con azúcar(es), pero siempre con otro ingrediente), envasada, refrigerada",
+    "it": "Composta di frutta, zuccherata (polpa o macedonia, con zuccheri, ma sempre con altro ingrediente), confezionata, refrigerata"
   },
   "1457281f-2617-5aea-bcbf-c7a4d4f982d2": {
     "en": "Lentil salad with smoked sausage, prepacked",
@@ -2050,14 +1938,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "14a58c0b-d22a-59c4-918a-7c4c746d2019": {
     "en": "Milk kefir",
-    "fr": "Képhir de lait",
     "de": "Milchkefir",
-    "sv": "Mjölkkefir",
+    "fr": "Kéfir de lait",
     "no": "Melkekefir",
+    "sv": "Mjölkkefir",
     "da": "Mælkekefir",
     "nl": "Melkkefir",
-    "es": "Kéfir de leche",
-    "it": "Kefir di latte"
+    "it": "Kefir di latte",
+    "es": "Kéfir de leche"
   },
   "14bd4550-2b23-5b00-98ab-e910f8416489": {
     "en": "Breakfast biscuit (cookie), without chocolate, not fortified",
@@ -2082,24 +1970,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Gnocchi/ravioli, al vapore, con gamberetti, cotti"
   },
   "14fc9623-f85f-5087-9ddd-195b25b2f389": {
-    "en":
-        "Carbonated beverage or soft drink, without fruit, with sugar(s) and with sweetener(s)",
-    "fr":
-        "Boisson gazeuse ou soda, sans fruit, avec sucre(s) et avec édulcorant(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Erfrischungsgetränk, ohne Früchte, mit Zucker(n) und mit Süßungsmitteln",
-    "sv":
-        "Kolsyrad dryck eller läskedryck, utan frukt, med socker och med sötningsmedel",
-    "no":
-        "Kullsyreholdig drikke eller brus, uten frukt, med sukker og med søtningsmiddel",
-    "da":
-        "Kulsyreholdig drik eller sodavand, uden frugt, med sukker og med sødestoffer",
-    "nl":
-        "Koolzuurhoudende drank of frisdrank, zonder fruit, met suiker(s) en met zoetstof(fen)",
-    "es":
-        "Bebida carbonatada o refresco, sin fruta, con azúcar(es) y con edulcorante(s)",
-    "it":
-        "Bevanda gassata o bibita, senza frutta, con zuccheri e con edulcoranti"
+    "en": "Carbonated beverage or soft drink, without fruit, with sugar(s) and with sweetener(s)",
+    "fr": "Boisson gazeuse ou soda, sans fruit, avec sucre(s) et avec édulcorant(s)",
+    "de": "Kohlensäurehaltiges Getränk oder Erfrischungsgetränk, ohne Früchte, mit Zucker(n) und mit Süßungsmitteln",
+    "sv": "Kolsyrad dryck eller läskedryck, utan frukt, med socker och med sötningsmedel",
+    "no": "Kullsyreholdig drikke eller brus, uten frukt, med sukker og med søtningsmiddel",
+    "da": "Kulsyreholdig drik eller sodavand, uden frugt, med sukker og med sødestoffer",
+    "nl": "Koolzuurhoudende drank of frisdrank, zonder fruit, met suiker(s) en met zoetstof(fen)",
+    "es": "Bebida carbonatada o refresco, sin fruta, con azúcar(es) y con edulcorante(s)",
+    "it": "Bevanda gassata o bibita, senza frutta, con zuccheri e con edulcoranti"
   },
   "150fee1d-555e-5d03-9359-a384813621be": {
     "en": "Whelk, raw",
@@ -2214,13 +2093,11 @@ const foodNames = <String, Map<String, String>>{
   "1647d71a-9dc1-51de-acd0-6f5b254f1de5": {
     "en": "Tapenade (puree of capers, black olives, anchovy and herbs)",
     "fr": "Tapenade (purée de câpres, olives noires, anchois et herbes)",
-    "de":
-        "Tapenade (PÃ¼ree aus Kapern, schwarzen Oliven, Anchovis und KrÃ¤utern)",
+    "de": "Tapenade (PÃ¼ree aus Kapern, schwarzen Oliven, Anchovis und KrÃ¤utern)",
     "sv": "Tapenade (puré på kapris, svarta oliver, ansjovis och örter)",
     "no": "Tapenade (puré av kapers, svarte oliven, ansjos og urter)",
     "da": "Tapenade (pure af kapers, sorte oliven, ansjos og krydderurter)",
-    "nl":
-        "Tapenade (puree van kappertjes, zwarte olijven, ansjovis en kruiden)",
+    "nl": "Tapenade (puree van kappertjes, zwarte olijven, ansjovis en kruiden)",
     "es": "Tapenade (puré de alcaparras, aceitunas negras, anchoas y hierbas)",
     "it": "Tapenade (purea di capperi, olive nere, acciughe ed erbe aromatiche)"
   },
@@ -2233,8 +2110,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Stille sodavand, frugtindhold <10%, med sukker",
     "nl": "Platte frisse drank, vruchtengehalte <10%, met suiker(s)",
     "es": "Bebida refrescante sin gas, contenido de fruta <10%, con azúcar(es)",
-    "it":
-        "Bevanda analcolica non gassata, contenuto di frutta <10%, con zuccheri"
+    "it": "Bevanda analcolica non gassata, contenuto di frutta <10%, con zuccheri"
   },
   "1651bbc9-c702-55bc-9749-c89ba84cb0be": {
     "en": "Bread, French bread, prepacked",
@@ -2270,24 +2146,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Caffè decaffeinato, in polvere, istantaneo"
   },
   "167ed7e1-d8a8-57a1-b3c2-8727e8788bb4": {
-    "en":
-        "Fruits dessert, all types (sugar content is less than fruits compote but more than fruits compote reduced sugar), prepacked (average)",
-    "fr":
-        "Dessert de fruits, tous types (teneur en sucre inférieure à la compote de fruits mais supérieure à la compote de fruits allégée en sucre), emballé (moyen)",
-    "de":
-        "Frucht-Dessert, alle Sorten (Zuckergehalt weniger als Fruchtkompott, aber mehr als Fruchtkompott mit reduziertem Zucker), vorverpackt (Durchschnitt)",
-    "sv":
-        "Fruktdessert, alla typer (sockerhalt är lägre än fruktkompott men högre än fruktkompott med reducerat socker), förpackad (genomsnitt)",
-    "no":
-        "Fruktdesserter, alle typer (sukkerinnhold lavere enn fruktsyltetøy, men høyere enn fruktsyltetøy med redusert sukker), ferdigpakket (gjennomsnitt)",
-    "da":
-        "Frugtdessert, alle typer (sukkerindhold er mindre end frugtkompot, men mere end frugtkompot med reduceret sukkerindhold), forpakket (gennemsnit)",
-    "nl":
-        "Vruchtendessert, alle soorten (suikergehalte is lager dan vruchtencompote maar hoger dan vruchtencompote met verlaagd suikergehalte), voorverpakt (gemiddeld)",
-    "es":
-        "Postre de frutas, todo tipo (contenido de azúcar menor que la compota de frutas pero mayor que la compota de frutas reducida en azúcar), envasado (promedio)",
-    "it":
-        "Dessert alla frutta, tutti i tipi (contenuto di zucchero inferiore alla composta di frutta ma superiore alla composta di frutta a ridotto contenuto di zuccheri), confezionato (media)"
+    "en": "Fruits dessert, all types (sugar content is less than fruits compote but more than fruits compote reduced sugar), prepacked (average)",
+    "fr": "Dessert de fruits, tous types (teneur en sucre inférieure à la compote de fruits mais supérieure à la compote de fruits allégée en sucre), emballé (moyen)",
+    "de": "Frucht-Dessert, alle Sorten (Zuckergehalt weniger als Fruchtkompott, aber mehr als Fruchtkompott mit reduziertem Zucker), vorverpackt (Durchschnitt)",
+    "sv": "Fruktdessert, alla typer (sockerhalt är lägre än fruktkompott men högre än fruktkompott med reducerat socker), förpackad (genomsnitt)",
+    "no": "Fruktdesserter, alle typer (sukkerinnhold lavere enn fruktsyltetøy, men høyere enn fruktsyltetøy med redusert sukker), ferdigpakket (gjennomsnitt)",
+    "da": "Frugtdessert, alle typer (sukkerindhold er mindre end frugtkompot, men mere end frugtkompot med reduceret sukkerindhold), forpakket (gennemsnit)",
+    "nl": "Vruchtendessert, alle soorten (suikergehalte is lager dan vruchtencompote maar hoger dan vruchtencompote met verlaagd suikergehalte), voorverpakt (gemiddeld)",
+    "es": "Postre de frutas, todo tipo (contenido de azúcar menor que la compota de frutas pero mayor que la compota de frutas reducida en azúcar), envasado (promedio)",
+    "it": "Dessert alla frutta, tutti i tipi (contenuto di zucchero inferiore alla composta di frutta ma superiore alla composta di frutta a ridotto contenuto di zuccheri), confezionato (media)"
   },
   "16a4b7aa-87f5-5450-b42d-30493fb2cf54": {
     "en": "Yogurt, ewe's milk, plain, around 6% fat",
@@ -2303,15 +2170,13 @@ const foodNames = <String, Map<String, String>>{
   "16b217c5-7c75-558b-8440-6c0fcd1a62a9": {
     "en": "Mineral water (Orée du bois), bottled, averagely mineralized",
     "fr": "Eau minérale (Orée du bois), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser (OrÃ©e du bois), in Flaschen, durchschnittlich mineralisiert",
+    "de": "Mineralwasser (OrÃ©e du bois), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Mineralvatten (Orée du bois), på flaska, medelmineraliserat",
     "no": "Mineralvann (Orée du bois), på flaske, moderat mineralisert",
     "da": "Mineralvand (Orée du bois), på flaske, moderat mineraliseret",
     "nl": "Mineraalwater (Orée du bois), in fles, matig gemineraliseerd",
     "es": "Agua mineral (Orée du bois), embotellada, mineralización media",
-    "it":
-        "Acqua minerale (Orée du bois), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale (Orée du bois), in bottiglia, mediamente mineralizzata"
   },
   "16cd1a2e-3ea1-5c2d-a7a7-300000d581aa": {
     "en": "Spiny lobster, boiled/cooked in water",
@@ -2325,24 +2190,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Aragosta, bollita/cotta in acqua"
   },
   "16db7453-7c32-550c-b112-b09f3c5f826e": {
-    "en":
-        "Carbonated beverage or fruit soft drink, fruit content < 10% , with sugar(s) and with sweetener(s)",
-    "fr":
-        "Boisson gazeuse ou boisson aux fruits, teneur en fruits < 10 %, avec sucre(s) et avec édulcorant(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Frucht-Erfrischungsgetränk, Fruchtgehalt < 10 %, mit Zucker(n) und Süßungsmittel(n)",
-    "sv":
-        "Kolsyrad dryck eller fruktdryck, frukthalt < 10% , med socker och sötningsmedel",
-    "no":
-        "Kullsyreholdig brus eller fruktdrikk, fruktopprinnelse < 10 %, med sukker og søtstoffer",
-    "da":
-        "Kulsyholdig læskedrik eller frugtsodavand, frugtindhold < 10%, med sukker og sødestof",
-    "nl":
-        "Koolzuurhoudende drank of vruchtenfrissdrank, vruchtengehalte < 10% , met suiker(s) en met zoetstof(fen)",
-    "es":
-        "Bebida carbonatada o refresco de frutas, contenido de fruta < 10%, con azúcar(es) y edulcorante(s)",
-    "it":
-        "Bevanda gassata o bibita alla frutta, contenuto di frutta < 10%, con zuccheri e con edulcoranti"
+    "en": "Carbonated beverage or fruit soft drink, fruit content < 10% , with sugar(s) and with sweetener(s)",
+    "fr": "Boisson gazeuse ou boisson aux fruits, teneur en fruits < 10 %, avec sucre(s) et avec édulcorant(s)",
+    "de": "Kohlensäurehaltiges Getränk oder Frucht-Erfrischungsgetränk, Fruchtgehalt < 10 %, mit Zucker(n) und Süßungsmittel(n)",
+    "sv": "Kolsyrad dryck eller fruktdryck, frukthalt < 10% , med socker och sötningsmedel",
+    "no": "Kullsyreholdig brus eller fruktdrikk, fruktopprinnelse < 10 %, med sukker og søtstoffer",
+    "da": "Kulsyholdig læskedrik eller frugtsodavand, frugtindhold < 10%, med sukker og sødestof",
+    "nl": "Koolzuurhoudende drank of vruchtenfrissdrank, vruchtengehalte < 10% , met suiker(s) en met zoetstof(fen)",
+    "es": "Bebida carbonatada o refresco de frutas, contenido de fruta < 10%, con azúcar(es) y edulcorante(s)",
+    "it": "Bevanda gassata o bibita alla frutta, contenuto di frutta < 10%, con zuccheri e con edulcoranti"
   },
   "16e41467-caaf-5563-b823-040731fe8845": {
     "en": "White cabbage, raw",
@@ -2378,24 +2234,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Maiale, pancetta, senza filetto, cruda"
   },
   "16f38aba-145a-53e7-b7b1-afacea596aeb": {
-    "en":
-        "Spring vegetables, frozen, raw (green peas, potatoes, green beans, carrots, onions)",
-    "fr":
-        "Légumes nouveaux, surgelés, crus (petits pois, pommes de terre, haricots verts, carottes, oignons)",
-    "de":
-        "Frühlingsgemüse, tiefgekühlt, roh (grüne Erbsen, Kartoffeln, grüne Bohnen, Karotten, Zwiebeln)",
-    "sv":
-        "Vårgrönsaker, frysta, råa (gröna ärtor, potatis, gröna bönor, morötter, lök)",
-    "no":
-        "Vårgrønnsaker, frosne, rå (grønne erter, poteter, grønne bønner, gulrøtter, løk)",
-    "da":
-        "Forårsgrøntsager, frosne, rå (ærter, kartofler, grønne bønner, gulerødder, løg)",
-    "nl":
-        "Lentegroenten, diepgevroren, rauw (doperwten, aardappelen, sperziebonen, wortelen, uien)",
-    "es":
-        "Verduras de primavera, congeladas, crudas (guisantes, patatas, judías verdes, zanahorias, cebollas)",
-    "it":
-        "Verdure primaverili, surgelate, crude (piselli, patate, fagiolini, carote, cipolle)"
+    "en": "Spring vegetables, frozen, raw (green peas, potatoes, green beans, carrots, onions)",
+    "fr": "Légumes nouveaux, surgelés, crus (petits pois, pommes de terre, haricots verts, carottes, oignons)",
+    "de": "Frühlingsgemüse, tiefgekühlt, roh (grüne Erbsen, Kartoffeln, grüne Bohnen, Karotten, Zwiebeln)",
+    "sv": "Vårgrönsaker, frysta, råa (gröna ärtor, potatis, gröna bönor, morötter, lök)",
+    "no": "Vårgrønnsaker, frosne, rå (grønne erter, poteter, grønne bønner, gulrøtter, løk)",
+    "da": "Forårsgrøntsager, frosne, rå (ærter, kartofler, grønne bønner, gulerødder, løg)",
+    "nl": "Lentegroenten, diepgevroren, rauw (doperwten, aardappelen, sperziebonen, wortelen, uien)",
+    "es": "Verduras de primavera, congeladas, crudas (guisantes, patatas, judías verdes, zanahorias, cebollas)",
+    "it": "Verdure primaverili, surgelate, crude (piselli, patate, fagiolini, carote, cipolle)"
   },
   "170f5a17-c025-509f-976d-82772d2ce2a9": {
     "en": "Coconut, pulp, dried",
@@ -2421,10 +2268,8 @@ const foodNames = <String, Map<String, String>>{
   },
   "1727f173-30dd-5e75-b443-22119581c32e": {
     "en": "Yogurt or fermented milk, with fruits, with cream, with sugar(s)",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits, avec de la crème, avec sucre(s)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten, mit Sahne, mit Zucker(n)",
+    "fr": "Yaourt ou lait fermenté, aux fruits, avec de la crème, avec sucre(s)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten, mit Sahne, mit Zucker(n)",
     "sv": "Yoghurt eller syrad mjölk, med frukt, med grädde, med socker",
     "no": "Yoghurt eller syrnet melk, med frukt, med fløte, med sukker",
     "da": "Yoghurt eller syrnet mælk, med frugt, med fløde, med sukker",
@@ -2521,24 +2366,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Kir (vino bianco con liquore al ribes nero)"
   },
   "180d101e-c06c-57d7-acb5-ad8d4630ad67": {
-    "en":
-        "Brioche, (italian pastry filled with raisins and orange candied peel), prepacked",
-    "fr":
-        "Brioche (pâtisserie italienne garnie de raisins secs et d'écorces d'orange confites), emballée",
-    "de":
-        "Brioche (italienisches Gebäck gefüllt mit Rosinen und kandierter Orangenhaut), vorverpackt",
-    "sv":
-        "Brioche (italiensk bulle fylld med russin och kanderat apelsinskal), förpackad",
-    "no":
-        "Brioche (italiensk bakverk fylt med rosiner og krystallisert appelsinskall), ferdigpakket",
-    "da":
-        "Brioche (italiensk kage fyldt med rosiner og kandeiseret appelsinskal), forpakket",
-    "nl":
-        "Brioche (italiaans gebak gevuld met rozijnen en geconfijte sinaasappelschil), voorverpakt",
-    "es":
-        "Brioche, (bollería italiana rellena de pasas y piel de naranja confitada), envasado",
-    "it":
-        "Brioche (pasta italiana con uvetta e scorza d'arancia candita), confezionata"
+    "en": "Brioche, (italian pastry filled with raisins and orange candied peel), prepacked",
+    "fr": "Brioche (pâtisserie italienne garnie de raisins secs et d'écorces d'orange confites), emballée",
+    "de": "Brioche (italienisches Gebäck gefüllt mit Rosinen und kandierter Orangenhaut), vorverpackt",
+    "sv": "Brioche (italiensk bulle fylld med russin och kanderat apelsinskal), förpackad",
+    "no": "Brioche (italiensk bakverk fylt med rosiner og krystallisert appelsinskall), ferdigpakket",
+    "da": "Brioche (italiensk kage fyldt med rosiner og kandeiseret appelsinskal), forpakket",
+    "nl": "Brioche (italiaans gebak gevuld met rozijnen en geconfijte sinaasappelschil), voorverpakt",
+    "es": "Brioche, (bollería italiana rellena de pasas y piel de naranja confitada), envasado",
+    "it": "Brioche (pasta italiana con uvetta e scorza d'arancia candita), confezionata"
   },
   "1842054b-b54a-5ff1-b7c5-bdaf09bc3c96": {
     "en": "Peanut butter or peanut paste",
@@ -2655,8 +2491,7 @@ const foodNames = <String, Map<String, String>>{
     "fr": "Salade de légumes mélangés en dés, avec sauce, préemballée",
     "de": "Gemischter Gemüsesalat in Würfeln, mit Soße, vorgepackt",
     "sv": "Blandad tärnad grönsakssallad, med sås, färdigförpackad",
-    "no":
-        "Blanding av terningkuttede grønnsaker i salat, med saus, ferdigpakket",
+    "no": "Blanding av terningkuttede grønnsaker i salat, med saus, ferdigpakket",
     "da": "Blandet snittet grøntsagssalat, med dressing, færdigpakket",
     "nl": "Gemengde groentesalade in blokjes, met saus, voorverpakt",
     "es": "Ensalada de verduras variadas en dados, con salsa, envasada",
@@ -2707,20 +2542,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Marshmallow, ricoperto di cioccolato"
   },
   "19a79cfe-3a4b-5fa5-a2c0-5c78ebe1b8e4": {
-    "en":
-        "Fresh cream cheese, petit-suisse type, chocolate flavoured, with sugar(s)",
-    "fr":
-        "Fromage frais type petit-suisse, aromatisé au chocolat, avec sucre(s)",
-    "de":
-        "Frischer Frischkäse, Typ Petit-Suisse, mit Schokoladengeschmack, mit Zucker",
+    "en": "Fresh cream cheese, petit-suisse type, chocolate flavoured, with sugar(s)",
+    "fr": "Fromage frais type petit-suisse, aromatisé au chocolat, avec sucre(s)",
+    "de": "Frischer Frischkäse, Typ Petit-Suisse, mit Schokoladengeschmack, mit Zucker",
     "sv": "Färsk färskost, petit-suisse-typ, chokladsmak, med socker",
     "no": "Frisk kremost, petit-suisse-type, sjokoladesmak, med sukker",
     "da": "Frisk flødeost, petit-suisse-type, med chokoladesmag, med sukker",
-    "nl":
-        "Vers roomkaasje, petit-suissetType, met chocoladesmaak, met suiker(s)",
+    "nl": "Vers roomkaasje, petit-suissetType, met chocoladesmaak, met suiker(s)",
     "es": "Queso crema fresco tipo petit-suisse, sabor chocolate, con azúcares",
-    "it":
-        "Formaggio fresco cremoso, tipo petit-suisse, aromatizzato al cioccolato, con zuccheri"
+    "it": "Formaggio fresco cremoso, tipo petit-suisse, aromatizzato al cioccolato, con zuccheri"
   },
   "19b46859-6581-5502-a3a2-0abb0dd0cdc7": {
     "en": "Romanesco cauliflower or romanesco broccoli, raw",
@@ -2746,16 +2576,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "19f66f0d-c7e7-59f4-af54-d8561902359a": {
     "en": "Spreadable fat, fat % unknown, unsalted (average)",
-    "fr":
-        "Matière grasse à tartiner, % de matières grasses inconnu, non salée (moyenne)",
+    "fr": "Matière grasse à tartiner, % de matières grasses inconnu, non salée (moyenne)",
     "de": "Streichfett, Fettgehalt unbekannt, ungesalzen (Durchschnitt)",
     "sv": "Bredbart fett, fett % okänd, osaltat (medel)",
     "no": "Smørbart fett, fettprosent ukjent, usaltet (gjennomsnitt)",
     "da": "Smørbart fedtstof, fedtprocent ukendt, usaltet (gennemsnit)",
     "nl": "Smeerbaar vet, vet % onbekend, ongezouten (gemiddeld)",
     "es": "Grasa para untar, % de grasa desconocido, sin sal (promedio)",
-    "it":
-        "Grasso spalmabile, percentuale di grassi sconosciuta, non salato (media)"
+    "it": "Grasso spalmabile, percentuale di grassi sconosciuta, non salato (media)"
   },
   "19fd2cf6-ba32-5cf9-98ad-fd706f4c2c18": {
     "en": "Pizza, ham cheese and mushrooms (Regina), prepacked",
@@ -2769,22 +2597,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pizza, prosciutto, formaggio e funghi (Regina), preconfezionata"
   },
   "1a28f7c2-cc8c-5bc5-8308-3a26d8778113": {
-    "en":
-        "Uncured soft cheese, spreadable, plain, in tray, reduced fat, from cow's milk",
-    "fr":
-        "Fromage frais non affiné, à tartiner, nature, en barquette, allégé, au lait de vache",
-    "de":
-        "Frischkäse ungesäuert, streichfähig, natur, in Schale, fettreduziert, aus Kuhmilch",
+    "en": "Uncured soft cheese, spreadable, plain, in tray, reduced fat, from cow's milk",
+    "fr": "Fromage frais non affiné, à tartiner, nature, en barquette, allégé, au lait de vache",
+    "de": "Frischkäse ungesäuert, streichfähig, natur, in Schale, fettreduziert, aus Kuhmilch",
     "sv": "Bredbar mjukost, naturell, i tråg, reducerad fetthalt, av komjölk",
-    "no":
-        "Usyret mykost, smørbar, naturell, i brett, redusert fettinnhold, av kumelk",
+    "no": "Usyret mykost, smørbar, naturell, i brett, redusert fettinnhold, av kumelk",
     "da": "Umodnet blød ost, smørbar, neutral, i bakke, fedtfattig, af komælk",
-    "nl":
-        "Ongebrande zachte kaas, smeerbaar, naturel, in kuipje, mager, van koemelk",
-    "es":
-        "Queso tierno sin curar, para untar, natural, en bandeja, reducido en grasa, de leche de vaca",
-    "it":
-        "Formaggio fresco spalmabile, semplice, in vaschetta, a ridotto contenuto di grassi, di latte vaccino"
+    "nl": "Ongebrande zachte kaas, smeerbaar, naturel, in kuipje, mager, van koemelk",
+    "es": "Queso tierno sin curar, para untar, natural, en bandeja, reducido en grasa, de leche de vaca",
+    "it": "Formaggio fresco spalmabile, semplice, in vaschetta, a ridotto contenuto di grassi, di latte vaccino"
   },
   "1a555e0b-a2fb-5494-9b8e-4eead36c3463": {
     "en": "Tuna salad, with vegetables, canned",
@@ -2854,8 +2675,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "1adba4dd-76e4-5ea5-9a20-66c5ae80995d": {
     "en": "Spreadable fat <= 41% fat, unsalted, rich in omega 3",
-    "fr":
-        "Matière grasse à tartiner <= 41% de mat. gr., non salée, riche en oméga 3",
+    "fr": "Matière grasse à tartiner <= 41% de mat. gr., non salée, riche en oméga 3",
     "de": "Streichfett <= 41% Fett, ungesalzen, reich an Omega-3",
     "sv": "Bredbart fett <= 41% fett, osaltat, rik på omega 3",
     "no": "Smørbart fett <= 41 % fett, usaltet, rik på omega-3",
@@ -2909,22 +2729,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Purè di patate (medio)"
   },
   "1b2b4c06-c11b-5f1e-a8c4-0d8ad46f6266": {
-    "en":
-        "Soy dessert, with fruits, with sugar(s), not fortified, fermented, refrigerated",
-    "fr":
-        "Dessert au soja, aux fruits, avec sucre(s), non enrichi, fermenté, réfrigéré",
-    "de":
-        "Sojadessert, mit Früchten, mit Zucker, nicht angereichert, fermentiert, gekühlt",
-    "sv":
-        "Sojadessert, med frukt, med socker, ej berikad, fermenterad, kylskåpsförvarad",
+    "en": "Soy dessert, with fruits, with sugar(s), not fortified, fermented, refrigerated",
+    "fr": "Dessert au soja, aux fruits, avec sucre(s), non enrichi, fermenté, réfrigéré",
+    "de": "Sojadessert, mit Früchten, mit Zucker, nicht angereichert, fermentiert, gekühlt",
+    "sv": "Sojadessert, med frukt, med socker, ej berikad, fermenterad, kylskåpsförvarad",
     "no": "Soyadessert, med frukt, med sukker, ikke beriket, fermentert, kjølt",
     "da": "Sojadessert, med frugt, med sukker, ikke beriget, gæret, på køl",
-    "nl":
-        "Soyadessert, met fruit, met suiker(s), niet verrijkt, gefermenteerd, gekoeld",
-    "es":
-        "Postre de soja, con frutas, con azúcares, no fortificado, fermentado, refrigerado",
-    "it":
-        "Dessert alla soia, con frutta, con zuccheri, non fortificato, fermentato, refrigerato"
+    "nl": "Soyadessert, met fruit, met suiker(s), niet verrijkt, gefermenteerd, gekoeld",
+    "es": "Postre de soja, con frutas, con azúcares, no fortificado, fermentado, refrigerado",
+    "it": "Dessert alla soia, con frutta, con zuccheri, non fortificato, fermentato, refrigerato"
   },
   "1b324f3d-07e1-5a38-9f3e-ef3bcbfb8953": {
     "en": "Hazelnut oil",
@@ -2938,24 +2751,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Olio di nocciole"
   },
   "1b334a3b-b292-5637-b13f-72db4d2aecc0": {
-    "en":
-        "Lemon speciality to be diluted, for beverages or culinary use, no added sugars",
-    "fr":
-        "Spécialité de citron à diluer, pour boissons ou usage culinaire, sans sucres ajoutés",
-    "de":
-        "Zitronenspezialität zum Verdünnen, für Getränke oder kulinarische Zwecke, ohne Zuckerzusatz",
-    "sv":
-        "Citronspecialitet att späda ut, för drycker eller matlagning, utan tillsatt socker",
-    "no":
-        "Sitronspesialitet som skal tynnes ut, til drikke eller kulinarisk bruk, uten tilsatt sukker",
-    "da":
-        "Citronspecialitet til opblanding, til drikkevarer eller madlavning, uden tilsat sukker",
-    "nl":
-        "Citroenspecialiteit te verdunnen, voor dranken of culinair gebruik, zonder toegevoegde suikers",
-    "es":
-        "Especialidad de limón para diluir, para bebidas o uso culinario, sin azúcares añadidos",
-    "it":
-        "Specialità al limone da diluire, per bevande o uso culinario, senza zuccheri aggiunti"
+    "en": "Lemon speciality to be diluted, for beverages or culinary use, no added sugars",
+    "fr": "Spécialité de citron à diluer, pour boissons ou usage culinaire, sans sucres ajoutés",
+    "de": "Zitronenspezialität zum Verdünnen, für Getränke oder kulinarische Zwecke, ohne Zuckerzusatz",
+    "sv": "Citronspecialitet att späda ut, för drycker eller matlagning, utan tillsatt socker",
+    "no": "Sitronspesialitet som skal tynnes ut, til drikke eller kulinarisk bruk, uten tilsatt sukker",
+    "da": "Citronspecialitet til opblanding, til drikkevarer eller madlavning, uden tilsat sukker",
+    "nl": "Citroenspecialiteit te verdunnen, voor dranken of culinair gebruik, zonder toegevoegde suikers",
+    "es": "Especialidad de limón para diluir, para bebidas o uso culinario, sin azúcares añadidos",
+    "it": "Specialità al limone da diluire, per bevande o uso culinario, senza zuccheri aggiunti"
   },
   "1b4860b1-485d-5007-9495-447836595af0": {
     "en": "Pork, roast, cooked",
@@ -2970,17 +2774,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "1b69e270-5290-5dd3-bdd6-9527fb1d1f59": {
     "en": "White fish with Parisian-style sauce (mushrooms sauce), prepacked",
-    "fr":
-        "Poisson blanc en sauce parisienne (sauce aux champignons), préemballé",
+    "fr": "Poisson blanc en sauce parisienne (sauce aux champignons), préemballé",
     "de": "Weißfisch mit Soße nach Pariser Art (Pilzsoße), vorgepackt",
     "sv": "Vit fisk med sås på parisiskt vis (svampsås), färdigförpackad",
     "no": "Hvit fisk med Paris-saus (soppsaus), ferdigpakket",
     "da": "Hvid fisk med pariser-sovs (svampesovs), færdigpakket",
     "nl": "Witte vis met Parijse saus (champignonsaus), voorverpakt",
-    "es":
-        "Pescado blanco con salsa estilo parisino (salsa de champiñones), envasado",
-    "it":
-        "Pesce bianco con salsa alla parigina (salsa ai funghi), preconfezionato"
+    "es": "Pescado blanco con salsa estilo parisino (salsa de champiñones), envasado",
+    "it": "Pesce bianco con salsa alla parigina (salsa ai funghi), preconfezionato"
   },
   "1b873170-e72a-5d0c-9847-8261bae03050": {
     "en": "Hemp, seed, hulled",
@@ -3057,8 +2858,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Kildevand (Ogeu), på flaske, let mineralholdig",
     "nl": "Plat mineraalwater (Ogeu), gebotteld, licht gemineraliseerd",
     "es": "Agua mineral natural (Ogeu), embotellada, débilmente mineralizada",
-    "it":
-        "Acqua minerale naturale (Ogeu), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Ogeu), in bottiglia, leggermente mineralizzata"
   },
   "1c7de768-29f2-59aa-be1e-abd2157485dd": {
     "en": "Carambola, flesh and skin, raw",
@@ -3094,24 +2894,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cavallo, carne, arrostita/cotta al forno"
   },
   "1cbb45e8-f473-506e-a558-1a200deec58b": {
-    "en":
-        "Carbonated beverage or fruit soft drink, fruit content >= 10% and < 50%, with sugar(s) and with sweetener(s)",
-    "fr":
-        "Boisson gazeuse ou soda aux fruits, teneur en fruits >= 10% et < 50%, avec sucre(s) et avec édulcorant(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Fruchtlimonade, Fruchtgehalt >= 10% und < 50%, mit Zucker und Süßungsmitteln",
-    "sv":
-        "Kolsyrad dryck eller fruktdryck, fruktinnehåll >= 10% och < 50%, med socker och med sötningsmedel",
-    "no":
-        "Kullsyreholdig drikke eller fruktdrikk, fruktdel >= 10 % og < 50 %, med sukker og søtstoff",
-    "da":
-        "Kulsyreholdig drik eller frugtsodavand, frugtindhold >= 10% og < 50%, med sukker og sødestof",
-    "nl":
-        "Koolzuurhoudende drank of vruchtenlimonade, fruitgehalte >= 10% en < 50%, met suiker(s) en met zoetstof(fen)",
-    "es":
-        "Bebida carbonatada o refresco de frutas, contenido en fruta >= 10% y < 50%, con azúcares y edulcorantes",
-    "it":
-        "Bevanda gassata o bibita alla frutta, contenuto di frutta >= 10% e < 50%, con zuccheri e dolcificanti"
+    "en": "Carbonated beverage or fruit soft drink, fruit content >= 10% and < 50%, with sugar(s) and with sweetener(s)",
+    "fr": "Boisson gazeuse ou soda aux fruits, teneur en fruits >= 10% et < 50%, avec sucre(s) et avec édulcorant(s)",
+    "de": "Kohlensäurehaltiges Getränk oder Fruchtlimonade, Fruchtgehalt >= 10% und < 50%, mit Zucker und Süßungsmitteln",
+    "sv": "Kolsyrad dryck eller fruktdryck, fruktinnehåll >= 10% och < 50%, med socker och med sötningsmedel",
+    "no": "Kullsyreholdig drikke eller fruktdrikk, fruktdel >= 10 % og < 50 %, med sukker og søtstoff",
+    "da": "Kulsyreholdig drik eller frugtsodavand, frugtindhold >= 10% og < 50%, med sukker og sødestof",
+    "nl": "Koolzuurhoudende drank of vruchtenlimonade, fruitgehalte >= 10% en < 50%, met suiker(s) en met zoetstof(fen)",
+    "es": "Bebida carbonatada o refresco de frutas, contenido en fruta >= 10% y < 50%, con azúcares y edulcorantes",
+    "it": "Bevanda gassata o bibita alla frutta, contenuto di frutta >= 10% e < 50%, con zuccheri e dolcificanti"
   },
   "1cecf9e7-f424-5c66-a4fd-e73d98075d71": {
     "en": "Sausage in a brioche crust, cooked",
@@ -3147,24 +2938,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Fegato, pollo, cotto"
   },
   "1d5e3d7f-1800-5c11-b076-fd3f0506b675": {
-    "en":
-        "Coffee with milk or white coffee or cappuccino, instant or non instant coffee, no added sugars, ready-to-drink",
-    "fr":
-        "Café au lait ou café blanc ou cappuccino, café instantané ou non, sans sucres ajoutés, prêt à boire",
-    "de":
-        "Kaffee mit Milch oder Milchkaffee oder Cappuccino, lösliches oder nicht lösliches Kaffeeprodukt, ohne Zuckerzusatz, verzehrfertig",
-    "sv":
-        "Kaffe med mjölk eller vitt kaffe eller cappuccino, snabbkaffe eller inte, utan tillsatt socker, färdigt att dricka",
-    "no":
-        "Kaffe med melk eller hvit kaffe eller cappuccino, pulverkaffe eller flytende kaffe, uten tilsatt sukker, drikkeklar",
-    "da":
-        "Kaffe med mælk eller hvid kaffe eller cappuccino, instant eller ikke-instant kaffe, uden tilsat sukker, drikkeklar",
-    "nl":
-        "Koffie met melk of koffie verkeerd of cappuccino, instant of niet-instant koffie, geen toegevoegde suikers, kant-en-klaar",
-    "es":
-        "Café con leche o café blanco o capuchino, café instantáneo o no instantáneo, sin azúcares añadidos, listo para beber",
-    "it":
-        "Caffè macchiato o cappuccino, caffè istantaneo o non, senza zuccheri aggiunti, pronto da bere"
+    "en": "Coffee with milk or white coffee or cappuccino, instant or non instant coffee, no added sugars, ready-to-drink",
+    "fr": "Café au lait ou café blanc ou cappuccino, café instantané ou non, sans sucres ajoutés, prêt à boire",
+    "de": "Kaffee mit Milch oder Milchkaffee oder Cappuccino, lösliches oder nicht lösliches Kaffeeprodukt, ohne Zuckerzusatz, verzehrfertig",
+    "sv": "Kaffe med mjölk eller vitt kaffe eller cappuccino, snabbkaffe eller inte, utan tillsatt socker, färdigt att dricka",
+    "no": "Kaffe med melk eller hvit kaffe eller cappuccino, pulverkaffe eller flytende kaffe, uten tilsatt sukker, drikkeklar",
+    "da": "Kaffe med mælk eller hvid kaffe eller cappuccino, instant eller ikke-instant kaffe, uden tilsat sukker, drikkeklar",
+    "nl": "Koffie met melk of koffie verkeerd of cappuccino, instant of niet-instant koffie, geen toegevoegde suikers, kant-en-klaar",
+    "es": "Café con leche o café blanco o capuchino, café instantáneo o no instantáneo, sin azúcares añadidos, listo para beber",
+    "it": "Caffè macchiato o cappuccino, caffè istantaneo o non, senza zuccheri aggiunti, pronto da bere"
   },
   "1d60df35-6bf0-5ab5-8e43-0d726e54e6d1": {
     "en": "Pizza, raclette or tartiflette cheese, prepacked",
@@ -3294,8 +3076,7 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Fisk eller skaldjur i smördeg, förpackad, för tillagning",
     "no": "Fisk eller sjømat i wienerbrøddeig, ferdigpakket, for tilberedning",
     "da": "Fisk eller skaldyr i wienerbrøddej, færdigpakket, til tilberedning",
-    "nl":
-        "Vis of schaal- en schelpdieren in bladerdeeg, voorverpakt, te bereiden",
+    "nl": "Vis of schaal- en schelpdieren in bladerdeeg, voorverpakt, te bereiden",
     "es": "Pescado o marisco en hojaldre, envasado, para cocinar",
     "it": "Pesce o frutti di mare in pasta sfoglia, preconfezionati, da cuocere"
   },
@@ -3620,40 +3401,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "21faf5fb-ad40-55aa-be2d-16a7958533be": {
     "en": "Mineral still water (La Française), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale plate (La Française), en bouteille, fortement minéralisée",
-    "de":
-        "Stilles Mineralwasser (La Française), in Flaschen, stark mineralisiert",
-    "sv":
-        "Stilla mineralvatten (La Française), på flaska, kraftigt mineraliserat",
-    "no":
-        "Mineralvann uten kullsyre (La Française), på flaske, sterkt mineralisert",
+    "fr": "Eau minérale plate (La Française), en bouteille, fortement minéralisée",
+    "de": "Stilles Mineralwasser (La Française), in Flaschen, stark mineralisiert",
+    "sv": "Stilla mineralvatten (La Française), på flaska, kraftigt mineraliserat",
+    "no": "Mineralvann uten kullsyre (La Française), på flaske, sterkt mineralisert",
     "da": "Stille kildevand (La Française), på flaske, stærkt mineraliseret",
     "nl": "Plat mineraalwater (La Française), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (La Française), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (La Française), imbottigliata, fortemente mineralizzata"
+    "es": "Agua mineral sin gas (La Française), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (La Française), imbottigliata, fortemente mineralizzata"
   },
   "21ff7c61-ba9e-59f8-ad58-7579e52e0f2f": {
-    "en":
-        "Still soft drink with tea extract, flavoured, no added sugars and with sweetener(s)",
-    "fr":
-        "Boisson rafraîchissante plate à l'extrait de thé, aromatisée, sans sucres ajoutés et avec édulcorant(s)",
-    "de":
-        "Stilles Erfrischungsgetränk mit Tee-Extrakt, aromatisiert, ohne zugesetzten Zucker und mit Süßungsmittel(n)",
-    "sv":
-        "Stillande läskedryck med teextrakt, smaksatt, utan tillsatt socker och med sötningsmedel",
-    "no":
-        "Stille mineraldrikk med teekstrakt, med smak, uten tilsatt sukker og med søtstoff(er)",
-    "da":
-        "Stille sodavand med teekstrakt, med smag, uden tilsat sukker og med sødestof(fer)",
-    "nl":
-        "Platte frisse drank met thee-extract, op smaak gebracht, zonder toegevoegde suikers en met zoetstof(fen)",
-    "es":
-        "Bebida sin gas con extracto de té, aromatizada, sin azúcares añadidos y con edulcorante(s)",
-    "it":
-        "Bevanda analcolica non gassata all'estratto di tè, aromatizzata, senza zuccheri aggiunti e con dolcificanti"
+    "en": "Still soft drink with tea extract, flavoured, no added sugars and with sweetener(s)",
+    "fr": "Boisson rafraîchissante plate à l'extrait de thé, aromatisée, sans sucres ajoutés et avec édulcorant(s)",
+    "de": "Stilles Erfrischungsgetränk mit Tee-Extrakt, aromatisiert, ohne zugesetzten Zucker und mit Süßungsmittel(n)",
+    "sv": "Stillande läskedryck med teextrakt, smaksatt, utan tillsatt socker och med sötningsmedel",
+    "no": "Stille mineraldrikk med teekstrakt, med smak, uten tilsatt sukker og med søtstoff(er)",
+    "da": "Stille sodavand med teekstrakt, med smag, uden tilsat sukker og med sødestof(fer)",
+    "nl": "Platte frisse drank met thee-extract, op smaak gebracht, zonder toegevoegde suikers en met zoetstof(fen)",
+    "es": "Bebida sin gas con extracto de té, aromatizada, sin azúcares añadidos y con edulcorante(s)",
+    "it": "Bevanda analcolica non gassata all'estratto di tè, aromatizzata, senza zuccheri aggiunti e con dolcificanti"
   },
   "22058438-4374-5192-8a68-a999c6161692": {
     "en": "Egg white, cooked",
@@ -3733,38 +3499,25 @@ const foodNames = <String, Map<String, String>>{
     "it": "Torta bretone alle prugne"
   },
   "22f2216c-5652-599e-90a6-4151a1cad765": {
-    "en":
-        "Soy dessert, plain, no added sugars, not fortified, fermented, refrigerated",
-    "fr":
-        "Dessert au soja, nature, sans sucres ajoutés, non enrichi, fermenté, réfrigéré",
-    "de":
-        "Sojadessert, natur, ohne Zuckerzusatz, nicht angereichert, fermentiert, gekühlt",
-    "sv":
-        "Sojadessert, naturell, inget tillställt socker, ej berikad, syrad, kylskåpsförvarad",
-    "no":
-        "Soyadessert, naturell, uten tilsatt sukker, ikke beriket, fermentert, kjølt",
-    "da":
-        "Soyadesserte, naturel, uden tilsat sukker, ikke beriget, gæret, på køl",
-    "nl":
-        "Sojadessert, naturel, zonder toegevoegde suikers, niet verrijkt, gefermenteerd, gekoeld",
-    "es":
-        "Postre de soja, natural, sin azúcares añadidos, no enriquecido, fermentado, refrigerado",
-    "it":
-        "Dessert alla soia, naturale, senza zuccheri aggiunti, non fortificato, fermentato, refrigerato"
+    "en": "Soy dessert, plain, no added sugars, not fortified, fermented, refrigerated",
+    "fr": "Dessert au soja, nature, sans sucres ajoutés, non enrichi, fermenté, réfrigéré",
+    "de": "Sojadessert, natur, ohne Zuckerzusatz, nicht angereichert, fermentiert, gekühlt",
+    "sv": "Sojadessert, naturell, inget tillställt socker, ej berikad, syrad, kylskåpsförvarad",
+    "no": "Soyadessert, naturell, uten tilsatt sukker, ikke beriket, fermentert, kjølt",
+    "da": "Soyadesserte, naturel, uden tilsat sukker, ikke beriget, gæret, på køl",
+    "nl": "Sojadessert, naturel, zonder toegevoegde suikers, niet verrijkt, gefermenteerd, gekoeld",
+    "es": "Postre de soja, natural, sin azúcares añadidos, no enriquecido, fermentado, refrigerado",
+    "it": "Dessert alla soia, naturale, senza zuccheri aggiunti, non fortificato, fermentato, refrigerato"
   },
   "22f8eb1e-d045-5d2d-9808-81a4b6379abd": {
     "en": "Meat balls, pork and beef (Swedish-style), prepacked, cooked",
-    "fr":
-        "Boulettes de viande, porc et bœuf (à la suédoise), préemballées, cuites",
-    "de":
-        "Fleischbällchen, Schwein und Rind (schwedische Art), vorgepackt, gekocht",
+    "fr": "Boulettes de viande, porc et bœuf (à la suédoise), préemballées, cuites",
+    "de": "Fleischbällchen, Schwein und Rind (schwedische Art), vorgepackt, gekocht",
     "sv": "Köttbullar, fläsk- och nötkött (svensk stil), förpackade, tillagade",
     "no": "Kjøttboller, av svin og storfe (svensk stil), ferdigpakket, kokt",
     "da": "Kødboller, svine- og oksekød (svensk stil), færdigpakket, tilberedt",
-    "nl":
-        "Gehaktballetjes, varkens- en rundvlees (Zweedse stijl), voorverpakt, gekookt",
-    "es":
-        "Albóndigas de cerdo y ternera (estilo sueco), preenvasadas, cocinadas",
+    "nl": "Gehaktballetjes, varkens- en rundvlees (Zweedse stijl), voorverpakt, gekookt",
+    "es": "Albóndigas de cerdo y ternera (estilo sueco), preenvasadas, cocinadas",
     "it": "Polpette, maiale e manzo (stile svedese), preconfezionate, cotte"
   },
   "23227977-56df-5e88-87ad-87477c0ffba3": {
@@ -3780,19 +3533,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "23287de8-2019-5911-b425-62fe9a62e949": {
     "en": "Mineral sparkling water (Quézac), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Quézac), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Quézac), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Mineralmottad kolsyrad vatten (Quézac), på flaska, medelmåttigt mineraliserat",
-    "no":
-        "Mineralholdig kullsyrevann (Quézac), på flaske, moderat mineralisert",
+    "fr": "Eau minérale gazeuse (Quézac), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Quézac), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Mineralmottad kolsyrad vatten (Quézac), på flaska, medelmåttigt mineraliserat",
+    "no": "Mineralholdig kullsyrevann (Quézac), på flaske, moderat mineralisert",
     "da": "Mineralholdigt danskvand (Quézac), på flaske, moderat mineraliseret",
     "nl": "Mineraal bruiswater (Quézac), gebotteld, gemiddeld gemineraliseerd",
     "es": "Agua mineral con gas (Quézac), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (Quézac), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale frizzante (Quézac), in bottiglia, mediamente mineralizzata"
   },
   "2334acf7-29d1-538e-9cd2-5d54270c1dbd": {
     "en": "Muesli, not fortified (average food)",
@@ -3830,17 +3578,13 @@ const foodNames = <String, Map<String, String>>{
   "240185f8-52a5-5dd4-9ddc-a23cc9588e09": {
     "en": "Peach, pitted, canned in light syrup, solids and liquids",
     "fr": "Pêche, dénoyautée, en conserve au sirop léger, morceaux et liquide",
-    "de":
-        "Pfirsich, entsteint, in leichtem Sirup eingemacht, feste und flüssige Bestandteile",
-    "sv":
-        "Persika, urkärnad, konserverad i lätt sockerlag, fasta beståndsdelar och lag",
-    "no":
-        "Fersken, steinfri, hermetisert i lett sirup, faste bestanddeler og væske",
+    "de": "Pfirsich, entsteint, in leichtem Sirup eingemacht, feste und flüssige Bestandteile",
+    "sv": "Persika, urkärnad, konserverad i lätt sockerlag, fasta beståndsdelar och lag",
+    "no": "Fersken, steinfri, hermetisert i lett sirup, faste bestanddeler og væske",
     "da": "Fersken, udstenet, konserveret i let sirup, fast stof og væske",
     "nl": "Perzik, ontpit, op siroop in blik, vaste bestanddelen en vloeistof",
     "es": "Melocotón, deshuesado, en almíbar ligero, sólidos y líquidos",
-    "it":
-        "Pesche, denocciolate, sciroppate in sciroppo leggero, frutti e liquido"
+    "it": "Pesche, denocciolate, sciroppate in sciroppo leggero, frutti e liquido"
   },
   "242f70d3-d50a-5264-942c-b78f2223667b": {
     "en": "Tapioca, raw",
@@ -3899,18 +3643,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "24f61ef4-b7f9-528b-8a5e-45a584bf6ba5": {
     "en": "Mineral still water (Luso), bottled, very lightly mineralized",
-    "fr":
-        "Eau minérale plate (Luso), en bouteille, très faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Luso), in Flaschen, sehr leicht mineralisiert",
+    "fr": "Eau minérale plate (Luso), en bouteille, très faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Luso), in Flaschen, sehr leicht mineralisiert",
     "sv": "Mineralstilla vatten (Luso), på flaska, mycket svagt mineraliserat",
-    "no":
-        "Kildevann/stille mineralvann (Luso), på flaske, svært lett mineralisert",
+    "no": "Kildevann/stille mineralvann (Luso), på flaske, svært lett mineralisert",
     "da": "Stille mineralvand (Luso), på flaske, meget let mineraliseret",
     "nl": "Mineraal plat water (Luso), gebotteld, zeer licht gemineraliseerd",
     "es": "Agua mineral sin gas (Luso), embotellada, mineralización muy débil",
-    "it":
-        "Acqua minerale naturale (Luso), in bottiglia, molto leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Luso), in bottiglia, molto leggermente mineralizzata"
   },
   "25ab5d4b-3082-55fb-b139-b715fd4f9607": {
     "en": "Heart, beef, raw",
@@ -3990,23 +3730,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Patate, sbucciate, arrostite/al forno"
   },
   "26504fad-8d42-5b83-bf2e-b41181db278d": {
-    "en":
-        "Crepe or buckwheat pancake, filled with egg, ham and cheese, prepacked",
-    "fr":
-        "Crêpe ou galette de sarrasin, garnie d'œuf, de jambon et de fromage, préemballée",
-    "de":
-        "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Ei, Schinken und Käse, vorgepackt",
-    "sv":
-        "Crêpe eller bovetepannkaka, fylld med ägg, skinka och ost, förpackad",
-    "no":
-        "Crepe eller bokhvetepannekake, fylt med egg, skinke og ost, ferdigpakket",
-    "da":
-        "Pandekage eller boghvedepandekage, fyldt med æg, skinke og ost, færdigpakket",
+    "en": "Crepe or buckwheat pancake, filled with egg, ham and cheese, prepacked",
+    "fr": "Crêpe ou galette de sarrasin, garnie d'œuf, de jambon et de fromage, préemballée",
+    "de": "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Ei, Schinken und Käse, vorgepackt",
+    "sv": "Crêpe eller bovetepannkaka, fylld med ägg, skinka och ost, förpackad",
+    "no": "Crepe eller bokhvetepannekake, fylt med egg, skinke og ost, ferdigpakket",
+    "da": "Pandekage eller boghvedepandekage, fyldt med æg, skinke og ost, færdigpakket",
     "nl": "Crepe of boekweitpannekoek, gevuld met ei, ham en kaas, voorverpakt",
-    "es":
-        "Crepe o galette de trigo sarraceno, relleno de huevo, jamón y queso, preenvasado",
-    "it":
-        "Crêpe o galette di grano saraceno, ripiena con uovo, prosciutto e formaggio, preconfezionata"
+    "es": "Crepe o galette de trigo sarraceno, relleno de huevo, jamón y queso, preenvasado",
+    "it": "Crêpe o galette di grano saraceno, ripiena con uovo, prosciutto e formaggio, preconfezionata"
   },
   "2658939a-cb9e-5ef1-a54e-21a9f3c7d221": {
     "en": "Broth or stock, meat and vegetables, dehydrated and reconstituted",
@@ -4137,29 +3869,19 @@ const foodNames = <String, Map<String, String>>{
     "no": "Blandede grønnsakterninger, forkokt, for ny tilberedning, frosset",
     "da": "Blandede ternede grøntsager, forkogt, til genoptagning, frosset",
     "nl": "Gemengde groenteblokjes, voorgekookt, te bereiden, diepgevroren",
-    "es":
-        "Verduras variadas en dados, precocinadas, para terminar de cocinar, congeladas",
+    "es": "Verduras variadas en dados, precocinadas, para terminar de cocinar, congeladas",
     "it": "Macedonia di verdure, precotta, da ricuocere, surgelata"
   },
   "27f07349-5021-51d2-82df-05305a3c77b8": {
-    "en":
-        "Stewed fruits, sweetened (pulp or mixed fruits, with sugar(s), but always with other ingredient), prepacked, room temperature",
-    "fr":
-        "Compote de fruits, sucrée (pulpe ou fruits mixés, avec sucre(s), mais toujours avec un autre ingrédient), préemballée, température ambiante",
-    "de":
-        "Obstmark, gesüßt (Püree oder gemischtes Obst, mit Zucker, aber immer mit anderen Zutaten), vorgepackt, bei Raumtemperatur",
-    "sv":
-        "Fruktpuré, sötad (puré eller blandade frukter, med socker, men alltid med andra ingredienser), förpackad, rumstemperatur",
-    "no":
-        "Fruktmos, søtet (pulp eller blandet frukt, med sukker, men alltid med annen ingrediens), ferdigpakket, romtemperatur",
-    "da":
-        "Frugtmos, sødet (pulp eller blandet frugt, med sukker, men altid med anden ingrediens), færdigpakket, stuetemperatur",
-    "nl":
-        "Fruitmoes, zoet (pulp of gemengd fruit, met suiker(s), maar altijd met ander ingrediënt), voorverpakt, kamertemperatuur",
-    "es":
-        "Compota de frutas azucarada (pulpa o mezcla de frutas, con azúcar(es), pero siempre con otros ingredientes), preenvasada, a temperatura ambiente",
-    "it":
-        "Composta di frutta, zuccherata (polpa o macedonia di frutta, con zuccheri, ma sempre con altri ingredienti), preconfezionata, a temperatura ambiente"
+    "en": "Stewed fruits, sweetened (pulp or mixed fruits, with sugar(s), but always with other ingredient), prepacked, room temperature",
+    "fr": "Compote de fruits, sucrée (pulpe ou fruits mixés, avec sucre(s), mais toujours avec un autre ingrédient), préemballée, température ambiante",
+    "de": "Obstmark, gesüßt (Püree oder gemischtes Obst, mit Zucker, aber immer mit anderen Zutaten), vorgepackt, bei Raumtemperatur",
+    "sv": "Fruktpuré, sötad (puré eller blandade frukter, med socker, men alltid med andra ingredienser), förpackad, rumstemperatur",
+    "no": "Fruktmos, søtet (pulp eller blandet frukt, med sukker, men alltid med annen ingrediens), ferdigpakket, romtemperatur",
+    "da": "Frugtmos, sødet (pulp eller blandet frugt, med sukker, men altid med anden ingrediens), færdigpakket, stuetemperatur",
+    "nl": "Fruitmoes, zoet (pulp of gemengd fruit, met suiker(s), maar altijd met ander ingrediënt), voorverpakt, kamertemperatuur",
+    "es": "Compota de frutas azucarada (pulpa o mezcla de frutas, con azúcar(es), pero siempre con otros ingredientes), preenvasada, a temperatura ambiente",
+    "it": "Composta di frutta, zuccherata (polpa o macedonia di frutta, con zuccheri, ma sempre con altri ingredienti), preconfezionata, a temperatura ambiente"
   },
   "280b2ced-f5d5-54e0-aea5-f7ccdaadf6d4": {
     "en": "Couscous royal (with different meats), prepacked",
@@ -4250,23 +3972,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Farina di orzo"
   },
   "2901d1ea-e4e4-56ab-a291-47f924cbe494": {
-    "en":
-        "Pasta salad, with chicken, cheese and raw vegetables, with sauce, prepacked",
-    "fr":
-        "Salade de pâtes, au poulet, fromage et légumes crus, avec sauce, préemballée",
-    "de":
-        "Nudelsalat, mit Hähnchen, Käse und rohem Gemüse, mit Soße, vorverpackt",
-    "sv":
-        "Pastasallad, med kyckling, ost och råa grönsaker, med sås, färdigförpackad",
-    "no":
-        "Pastasalat, med kylling, ost og rå grønnsaker, med saus, ferdigpakket",
-    "da":
-        "Pastasalat, med kylling, ost og rå grøntsager, med sovs, færdigpakket",
+    "en": "Pasta salad, with chicken, cheese and raw vegetables, with sauce, prepacked",
+    "fr": "Salade de pâtes, au poulet, fromage et légumes crus, avec sauce, préemballée",
+    "de": "Nudelsalat, mit Hähnchen, Käse und rohem Gemüse, mit Soße, vorverpackt",
+    "sv": "Pastasallad, med kyckling, ost och råa grönsaker, med sås, färdigförpackad",
+    "no": "Pastasalat, med kylling, ost og rå grønnsaker, med saus, ferdigpakket",
+    "da": "Pastasalat, med kylling, ost og rå grøntsager, med sovs, færdigpakket",
     "nl": "Pastasalade, met kip, kaas en rauwe groenten, met saus, voorverpakt",
-    "es":
-        "Ensalada de pasta con pollo, queso y verduras crudas, con salsa, envasada",
-    "it":
-        "Insalata di pasta, con pollo, formaggio e verdure crude, con salsa, preconfezionata"
+    "es": "Ensalada de pasta con pollo, queso y verduras crudas, con salsa, envasada",
+    "it": "Insalata di pasta, con pollo, formaggio e verdure crude, con salsa, preconfezionata"
   },
   "29258906-3d66-5cc2-bd6b-b5fd2f571540": {
     "en": "Pasta, dry, gluten-free, raw",
@@ -4336,18 +4050,12 @@ const foodNames = <String, Map<String, String>>{
   },
   "29e80d8c-8308-5368-9bca-bce2729267ec": {
     "en": "Fruit cocktail or salad, canned in light syrup, solids and liquids",
-    "fr":
-        "Cocktail ou salade de fruits, en conserve au sirop léger, morceaux et jus",
-    "de":
-        "Fruchtcocktail oder -salat, in leichtem Sirup eingemacht, feste Bestandteile und Flüssigkeit",
-    "sv":
-        "Fruktcocktail eller sallad, konserverad i lätt sockerlag, bitar och lag",
-    "no":
-        "Fruktcocktail eller salat, hermetisert i lett sirup, fast stoff og væske",
-    "da":
-        "Frugtcocktail eller -salat, på dåse i let sirup, faste bestanddele og væske",
-    "nl":
-        "Fruitcocktail of -salade, in blik op lichte siroop, vaste bestanddelen en vocht",
+    "fr": "Cocktail ou salade de fruits, en conserve au sirop léger, morceaux et jus",
+    "de": "Fruchtcocktail oder -salat, in leichtem Sirup eingemacht, feste Bestandteile und Flüssigkeit",
+    "sv": "Fruktcocktail eller sallad, konserverad i lätt sockerlag, bitar och lag",
+    "no": "Fruktcocktail eller salat, hermetisert i lett sirup, fast stoff og væske",
+    "da": "Frugtcocktail eller -salat, på dåse i let sirup, faste bestanddele og væske",
+    "nl": "Fruitcocktail of -salade, in blik op lichte siroop, vaste bestanddelen en vocht",
     "es": "Cóctel o macedonia de frutas, en almíbar ligero, sólidos y líquidos",
     "it": "Macedonia di frutta, in sciroppo leggero, parti solide e liquide"
   },
@@ -4376,16 +4084,13 @@ const foodNames = <String, Map<String, String>>{
   "2a0e1ee5-a6ff-577b-8979-5ed1bd2d8527": {
     "en": "Doughnut filled with fruit filling (e.g. jam), prepacked-> ARCHIVE",
     "fr": "Beignet fourré aux fruits (ex. confiture), préemballé-> ARCHIVE",
-    "de":
-        "Berliner gefüllt mit Fruchtfüllung (z. B. Marmelade), vorverpackt-> ARCHIVE",
+    "de": "Berliner gefüllt mit Fruchtfüllung (z. B. Marmelade), vorverpackt-> ARCHIVE",
     "sv": "Munk fylld med fruktfyllning (t.ex. sylt), färdigförpackad-> ARKIV",
-    "no":
-        "Smultring fylt med fruktfyll (f.eks. syltetøy), ferdigpakket-> ARCHIVE",
+    "no": "Smultring fylt med fruktfyll (f.eks. syltetøy), ferdigpakket-> ARCHIVE",
     "da": "Donut fyldt med frugtfyld (f.eks. syltetøj), færdigpakket-> ARCHIVE",
     "nl": "Donut gevuld met fruitvulling (bijv. jam), voorverpakt-> ARCHIVE",
     "es": "Dónut relleno de fruta (ej. mermelada), envasado-> ARCHIVO",
-    "it":
-        "Krapfen farcito con ripieno alla frutta (es. marmellata), preconfezionato-> ARCHIVIO"
+    "it": "Krapfen farcito con ripieno alla frutta (es. marmellata), preconfezionato-> ARCHIVIO"
   },
   "2a2775d3-0c8d-5824-8f17-97ac6553293c": {
     "en": "Broccoli, puree",
@@ -4411,36 +4116,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "2a2ff142-194a-5441-828a-a20a94b1abc9": {
     "en": "Mineral still water (Chantemerle), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale plate (Chantemerle), en bouteille, faiblement minéralisée",
+    "fr": "Eau minérale plate (Chantemerle), en bouteille, faiblement minéralisée",
     "de": "Still mineral water (Chantemerle), bottled, lightly mineralized",
     "sv": "Stilla mineralvatten (Chantemerle), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Chantemerle), på flaske, lett mineralisert",
     "da": "Stille kildevand (Chantemerle), på flaske, let mineralholdigt",
     "nl": "Mineraalwater plat (Chantemerle), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Chantemerle), embotellada, débilmente mineralizada",
+    "es": "Agua mineral sin gas (Chantemerle), embotellada, débilmente mineralizada",
     "it": "Acqua minerale naturale (Chantemerle), in bottiglia, oligominerale"
   },
   "2a722706-d462-594e-8d71-32f5a013456f": {
-    "en":
-        "Breakfast cereals, rich in fibre, with fruits or nuts, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, riches en fibres, aux fruits ou fruits à coque, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien, ballaststoffreich, mit Früchten oder Nüssen, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Frukostflingor, rika på fiber, med frukt eller nötter, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, rik på fiber, med frukt eller nøtter, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadscerealier, rig på fibre, med frugt eller nødder, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, rijk aan vezels, met fruit of noten, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, ricos en fibra, con frutas o frutos secos, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione, ricchi di fibre, con frutta o noci, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals, rich in fibre, with fruits or nuts, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, riches en fibres, aux fruits ou fruits à coque, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien, ballaststoffreich, mit Früchten oder Nüssen, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Frukostflingor, rika på fiber, med frukt eller nötter, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, rik på fiber, med frukt eller nøtter, beriket med vitaminer og mineraler",
+    "da": "Morgenmadscerealier, rig på fibre, med frugt eller nødder, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, rijk aan vezels, met fruit of noten, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, ricos en fibra, con frutas o frutos secos, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione, ricchi di fibre, con frutta o noci, fortificati con vitamine e minerali"
   },
   "2a9c3d80-74f2-5494-87fd-4f905508f666": {
     "en": "Butter, 80% fat minimum, half-salted",
@@ -4498,24 +4192,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Nuggets di pollo, crocchette impanate, preconfezionate"
   },
   "2b66fd9f-9f53-5306-8f2d-9356b31744fe": {
-    "en":
-        "Carbonated beverage or fruit soft drink, fruit content < 10% , no added sugars and no sweetener(s)",
-    "fr":
-        "Boisson gazeuse ou boisson rafraîchissante aux fruits, teneur en fruits < 10% , sans sucres ajoutés et sans édulcorant(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Fruchtweichgetränk, Fruchtgehalt < 10 %, ohne Zuckerzusatz und ohne Süßungsmittel",
-    "sv":
-        "Kolsyrad dryck eller fruktdryck, frukthalt < 10 %, inget tillsatt socker och inga sötningsmedel",
-    "no":
-        "Kullsyreholdig drikke eller fruktdrikk, fruktinnhold < 10 %, uten tilsatt sukker og uten søtstoff(er)",
-    "da":
-        "Kulsyresat drik eller frugtlæskedrik, frugtindhold < 10% , uden tilsat sukker og uden sødemiddel(er)",
-    "nl":
-        "Koolzuurhoudende drank of vruchtenfrissdrank, vruchtengehalte < 10%, zonder toegevoegde suikers en zonder zoetstof(fen)",
-    "es":
-        "Bebida carbonatada o refresco de frutas, contenido en fruta < 10%, sin azúcares añadidos ni edulcorantes",
-    "it":
-        "Bevanda gassata o bibita alla frutta, contenuto di frutta < 10% , senza zuccheri aggiunti e senza dolcificanti"
+    "en": "Carbonated beverage or fruit soft drink, fruit content < 10% , no added sugars and no sweetener(s)",
+    "fr": "Boisson gazeuse ou boisson rafraîchissante aux fruits, teneur en fruits < 10% , sans sucres ajoutés et sans édulcorant(s)",
+    "de": "Kohlensäurehaltiges Getränk oder Fruchtweichgetränk, Fruchtgehalt < 10 %, ohne Zuckerzusatz und ohne Süßungsmittel",
+    "sv": "Kolsyrad dryck eller fruktdryck, frukthalt < 10 %, inget tillsatt socker och inga sötningsmedel",
+    "no": "Kullsyreholdig drikke eller fruktdrikk, fruktinnhold < 10 %, uten tilsatt sukker og uten søtstoff(er)",
+    "da": "Kulsyresat drik eller frugtlæskedrik, frugtindhold < 10% , uden tilsat sukker og uden sødemiddel(er)",
+    "nl": "Koolzuurhoudende drank of vruchtenfrissdrank, vruchtengehalte < 10%, zonder toegevoegde suikers en zonder zoetstof(fen)",
+    "es": "Bebida carbonatada o refresco de frutas, contenido en fruta < 10%, sin azúcares añadidos ni edulcorantes",
+    "it": "Bevanda gassata o bibita alla frutta, contenuto di frutta < 10% , senza zuccheri aggiunti e senza dolcificanti"
   },
   "2b68f009-964f-530c-b757-b2058625cfd8": {
     "en": "Veal, roast, raw",
@@ -4576,16 +4261,11 @@ const foodNames = <String, Map<String, String>>{
     "en": "Asian noodles, seasoned (beef, chicken, vegetables), cooked",
     "fr": "Nouilles asiatiques, assaisonnées (bœuf, poulet, légumes), cuites",
     "de": "Asiatische Nudeln, gewürzt (Rind, Hähnchen, Gemüse), gekocht",
-    "sv":
-        "Asiatiska nudlar, kryddade (nötkött, kyckling, grönsaker), tillagade",
-    "no":
-        "Asiatiske nudler, krydret (storfekjøtt, kylling, grønnsaker), tilberedt",
-    "da":
-        "Asiatiske nudler, krydrede (oksekød, kylling, grøntsager), tilberedt",
-    "nl":
-        "Noedels op Aziatische wijze, gekruid (rundvlees, kip, groenten), gaar",
-    "es":
-        "Fideos asiáticos, condimentados (ternera, pollo, verduras), cocinados",
+    "sv": "Asiatiska nudlar, kryddade (nötkött, kyckling, grönsaker), tillagade",
+    "no": "Asiatiske nudler, krydret (storfekjøtt, kylling, grønnsaker), tilberedt",
+    "da": "Asiatiske nudler, krydrede (oksekød, kylling, grøntsager), tilberedt",
+    "nl": "Noedels op Aziatische wijze, gekruid (rundvlees, kip, groenten), gaar",
+    "es": "Fideos asiáticos, condimentados (ternera, pollo, verduras), cocinados",
     "it": "Noodles asiatici, conditi (manzo, pollo, verdure), cotti"
   },
   "2bea6a12-c297-5e66-ac5c-cf2558be3ba8": {
@@ -4622,23 +4302,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Brandy, tipo Armagnac o Cognac"
   },
   "2cb2bfdf-1705-5082-bf82-6b6c90a25ec2": {
-    "en":
-        "Fresh cream cheese, petit-suisse type, with fruits, 2-3% fat, with sugar(s)",
-    "fr":
-        "Fromage frais, de type petit-suisse, aux fruits, 2-3% de matière grasse, avec sucre(s)",
-    "de":
-        "Frischer Frischkäse, Typ Petit-Suisse, mit Früchten, 2–3 % Fett, mit Zucker",
-    "sv":
-        "Färsk färskost, av petit-suisse-typ, med frukt, 2-3 % fett, med socker",
+    "en": "Fresh cream cheese, petit-suisse type, with fruits, 2-3% fat, with sugar(s)",
+    "fr": "Fromage frais, de type petit-suisse, aux fruits, 2-3% de matière grasse, avec sucre(s)",
+    "de": "Frischer Frischkäse, Typ Petit-Suisse, mit Früchten, 2–3 % Fett, mit Zucker",
+    "sv": "Färsk färskost, av petit-suisse-typ, med frukt, 2-3 % fett, med socker",
     "no": "Frisk kremost, petit-suisse-type, med frukt, 2-3 % fett, med sukker",
-    "da":
-        "Frisk flødeost, af petit-suisse-typen, med frugt, 2-3% fedt, med sukker",
-    "nl":
-        "Verse roomkaas, van het type petit-suisse, met fruit, 2-3% vet, met suiker(s)",
-    "es":
-        "Queso crema fresco, tipo petit-suisse, con frutas, 2-3% grasa, con azúcar(es)",
-    "it":
-        "Formaggio fresco cremoso, tipo petit-suisse, con frutta, 2-3% grassi, con zuccheri"
+    "da": "Frisk flødeost, af petit-suisse-typen, med frugt, 2-3% fedt, med sukker",
+    "nl": "Verse roomkaas, van het type petit-suisse, met fruit, 2-3% vet, met suiker(s)",
+    "es": "Queso crema fresco, tipo petit-suisse, con frutas, 2-3% grasa, con azúcar(es)",
+    "it": "Formaggio fresco cremoso, tipo petit-suisse, con frutta, 2-3% grassi, con zuccheri"
   },
   "2cccd8a6-0245-5eb0-92ac-6ba980236032": {
     "en": "Dandelion, raw",
@@ -4720,8 +4392,7 @@ const foodNames = <String, Map<String, String>>{
   "2d75175a-7256-5bdd-a66e-4a1e5cb6d8f7": {
     "en": "Potato, sautéed/pan-fried, pre-fried, frozen, raw",
     "fr": "Pomme de terre, sautée/poêlée, préfrite, surgelée, crue",
-    "de":
-        "Kartoffeln, sautiert/in der Pfanne gebraten, vorgebacken, tiefgekühlt, roh",
+    "de": "Kartoffeln, sautiert/in der Pfanne gebraten, vorgebacken, tiefgekühlt, roh",
     "sv": "Potatis, sauterad/stekt i panna, förfriterad, fryst, rå",
     "no": "Potet, sautert/stekt i panne, forstekt, frossen, rå",
     "da": "Kartoffel, sauteret/stegt på pande, forstegt, frossen, rå",
@@ -4731,18 +4402,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "2d76b589-c256-5c5e-a186-27220313eb7a": {
     "en": "Mineral still water (Prince Noir), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale plate (Prince Noir), en bouteille, fortement minéralisée",
+    "fr": "Eau minérale plate (Prince Noir), en bouteille, fortement minéralisée",
     "de": "Still mineral water (Prince Noir), bottled, strongly mineralized",
-    "sv":
-        "Stilla mineralvatten (Prince Noir), på flaska, kraftigt mineraliserat",
+    "sv": "Stilla mineralvatten (Prince Noir), på flaska, kraftigt mineraliserat",
     "no": "Stille mineralvann (Prince Noir), på flaske, sterkt mineralisert",
     "da": "Stille kildevand (Prince Noir), på flaske, stærkt mineralholdigt",
     "nl": "Mineraalwater plat (Prince Noir), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Prince Noir), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (Prince Noir), in bottiglia, riccamente mineralizzata"
+    "es": "Agua mineral sin gas (Prince Noir), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (Prince Noir), in bottiglia, riccamente mineralizzata"
   },
   "2d857147-25ef-5794-8e36-36d4ecf272e3": {
     "en": "Corsica soft ripened cheese, from ewe's milk",
@@ -4819,19 +4486,18 @@ const foodNames = <String, Map<String, String>>{
     "da": "Milanese-inspireret kalkunschnitzel eller paneret kalkunschnitzel",
     "nl": "Kalkoonschnitzel op Milanese wijze of gepaneerde kalkoonschnitzel",
     "es": "Escalope de pavo a la milanesa o escalope de pavo empanado",
-    "it":
-        "Scaloppina di tacchino alla milanese o scaloppina di tacchino impanata"
+    "it": "Scaloppina di tacchino alla milanese o scaloppina di tacchino impanata"
   },
   "2ef32729-5e24-5b50-9ad2-c2a412895be2": {
-    "en": "Potato, boiled/cooked in water",
-    "fr": "Pomme de terre, bouillie/cuite à l'eau",
-    "de": "Kartoffeln, in Wasser gekocht",
-    "sv": "Potatis, kokt/tillagad i vatten",
-    "no": "Potet, kokt/tilberedt i vann",
-    "da": "Kartoffel, kogt i vand",
-    "nl": "Aardappel, gekookt in water",
-    "es": "Patata, hervida/cocida en agua",
-    "it": "Patate, bollite/cotte in acqua"
+    "en": "Potato — boiled",
+    "de": "Kartoffel — gekocht",
+    "fr": "Pomme de terre — bouillie",
+    "no": "Potet – kokt",
+    "sv": "Potatis — kokt",
+    "da": "Kartoffel — kogt",
+    "nl": "Aardappel — gekookt",
+    "it": "Patata — bollita",
+    "es": "Patata — hervida"
   },
   "2f047a28-3e18-5052-84d3-0832a8a2610e": {
     "en": "Pangasius, filets, cooked",
@@ -4879,18 +4545,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "2f904c0b-3c25-5230-a91f-c25d47ee23b0": {
     "en": "Quark or dairy specialty, flavoured, 2-3% fat, with sugar(s)",
-    "fr":
-        "Quark ou spécialité laitière, aromatisée, 2-3 % de matière grasse, avec sucre(s)",
-    "de":
-        "Quark oder Milchprodukt-Spezialität, aromatisiert, 2-3 % Fett, mit Zucker",
+    "fr": "Quark ou spécialité laitière, aromatisée, 2-3 % de matière grasse, avec sucre(s)",
+    "de": "Quark oder Milchprodukt-Spezialität, aromatisiert, 2-3 % Fett, mit Zucker",
     "sv": "Kvarg eller mejerispecialitet, smaksatt, 2-3 % fett, med socker",
     "no": "Krepse- eller meierispesialitet, smakssatt, 2-3 % fett, med sukker",
     "da": "Kvark eller mejerispecialitet, tilsat smag, 2-3% fedt, med sukker",
     "nl": "Kwark of zuivelspecialiteit, met smaakje, 2-3% vet, met suiker(s)",
-    "es":
-        "Queso quark o especialidad láctea, saborizado, 2-3% grasa, con azúcar(es)",
-    "it":
-        "Quark o specialità lattiero-casearia, aromatizzato, 2-3% grassi, con zuccheri"
+    "es": "Queso quark o especialidad láctea, saborizado, 2-3% grasa, con azúcar(es)",
+    "it": "Quark o specialità lattiero-casearia, aromatizzato, 2-3% grassi, con zuccheri"
   },
   "2fb3dbe6-7135-52cd-b2c8-ee894190b924": {
     "en": "Muesli, fortified with vitamins and minerals (average)",
@@ -4917,16 +4579,13 @@ const foodNames = <String, Map<String, String>>{
   "2fe5c3c6-266c-58b9-80bb-ef540576aeea": {
     "en": "Rice, mix of species (white, wholegrain, wild, red, etc.), raw",
     "fr": "Riz, mélange d'espèces (blanc, complet, sauvage, rouge, etc.), cru",
-    "de":
-        "Reis, Mischung verschiedener Sorten (weiß, Vollkorn, Wildreis, rot usw.), roh",
+    "de": "Reis, Mischung verschiedener Sorten (weiß, Vollkorn, Wildreis, rot usw.), roh",
     "sv": "Ris, blandning av arter (vitt, fullkorn, vildris, rött, etc.), rått",
     "no": "Ris, blanding av arter (hvit, fullkorn, vill, rød osv.), rå",
     "da": "Ris, blanding af sorter (hvide, fuldkorn, vilde, røde osv.), rå",
     "nl": "Rijst, mix van soorten (wit, volkoren, wild, rood, enz.), rauw",
-    "es":
-        "Arroz, mezcla de especies (blanco, integral, salvaje, rojo, etc.), crudo",
-    "it":
-        "Riso, mix di varietà (bianco, integrale, selvatico, rosso, ecc.), crudo"
+    "es": "Arroz, mezcla de especies (blanco, integral, salvaje, rojo, etc.), crudo",
+    "it": "Riso, mix di varietà (bianco, integrale, selvatico, rosso, ecc.), crudo"
   },
   "30390b7b-0470-5e65-a382-12f8df1432c3": {
     "en": "Soup, chicken and vegetables, dehydrated and reconstituted",
@@ -4984,15 +4643,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Stinco di prosciutto, cotto"
   },
   "309f7eeb-292f-5771-a141-bbe16d8cea18": {
-    "en": "Quark, plain, 7-8% fat",
-    "fr": "Quark, nature, 7-8 % de matière grasse",
-    "de": "Quark, Natur, 7-8 % Fett",
-    "sv": "Kvarg, naturell, 7-8 % fett",
-    "no": "Kvarg, naturell, 7-8 % fett",
-    "da": "Kvark, almindelig, 7-8% fedt",
-    "nl": "Kwark, naturel, 7-8% vet",
-    "es": "Queso quark, natural, 7-8% grasa",
-    "it": "Quark, semplice, 7-8% grassi"
+    "en": "Plain quark — 7–8% fat",
+    "de": "Quark — 7–8% Fett",
+    "fr": "Quark nature — 7–8% de matières grasses",
+    "no": "Naturell kvarg – 7–8% fett",
+    "sv": "Naturell kvarg — 7–8% fett",
+    "da": "Almindelig kvark — 7–8% fedt",
+    "nl": "Volle kwark — 7–8% vet",
+    "it": "Quark magro — 7–8% grassi",
+    "es": "Quark natural — 7–8% grasa"
   },
   "30becee3-8fbe-543f-9704-00725cd0d157": {
     "en": "Pork, filet mignon, raw",
@@ -5028,24 +4687,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Succo di melograno, succo puro"
   },
   "3144cdd2-84af-5c41-824f-a25129a6f691": {
-    "en":
-        "Floating island (meringue poached in milk and served in a light custard cream), refrigerated",
-    "fr":
-        "Île flottante (œufs à la neige pochés dans le lait et servis dans une crème anglaise légère), réfrigérée",
-    "de":
-        "Schneeeier (in Milch pochierter Eischnee in leichter Vanillesoße), gekühlt",
-    "sv":
-        "Flygande ö (maräng pocherad i mjölk och serverad i lätt vaniljkräm), kyld",
-    "no":
-        "Flytende øy (marengs posjert i melk og servert i en lett vaniljekrem), kjølt",
-    "da":
-        "Flydende øl (pocheret marengs i mælk serveret i let vaniljesovs), kølet",
-    "nl":
-        "Floating island (meringue gepocheerd in melk en geserveerd in lichte vanillesaus), gekoeld",
-    "es":
-        "Isla flotante (merengue escalfado en leche y servido en crema inglesa ligera), refrigerado",
-    "it":
-        "Ile flottante (meringa in camicia nel latte servita con crema pasticcera leggera), refrigerata"
+    "en": "Floating island (meringue poached in milk and served in a light custard cream), refrigerated",
+    "fr": "Île flottante (œufs à la neige pochés dans le lait et servis dans une crème anglaise légère), réfrigérée",
+    "de": "Schneeeier (in Milch pochierter Eischnee in leichter Vanillesoße), gekühlt",
+    "sv": "Flygande ö (maräng pocherad i mjölk och serverad i lätt vaniljkräm), kyld",
+    "no": "Flytende øy (marengs posjert i melk og servert i en lett vaniljekrem), kjølt",
+    "da": "Flydende øl (pocheret marengs i mælk serveret i let vaniljesovs), kølet",
+    "nl": "Floating island (meringue gepocheerd in melk en geserveerd in lichte vanillesaus), gekoeld",
+    "es": "Isla flotante (merengue escalfado en leche y servido en crema inglesa ligera), refrigerado",
+    "it": "Ile flottante (meringa in camicia nel latte servita con crema pasticcera leggera), refrigerata"
   },
   "314aca4b-08a8-5d1c-b3b0-d6f3cc02f08c": {
     "en": "Cheese sauce for risotto or pasta, prepacked",
@@ -5114,24 +4764,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Ciclottero, crudo"
   },
   "32270d77-9b4b-523f-aefb-b4cbc7c97752": {
-    "en":
-        "Muesli, with fruits, nuts and/or seeds, no added sugars, not fortified",
-    "fr":
-        "Muesli, aux fruits, noix et/ou graines, sans sucres ajoutés, non enrichi",
-    "de":
-        "Müsli, mit Früchten, Nüssen und/oder Samen, ohne Zuckerzusatz, nicht angereichert",
-    "sv":
-        "Müsli, med frukt, nötter och/eller frön, inget tillsatt socker, ej berikad",
-    "no":
-        "Musli, med frukt, nøtter og/eller frø, uten tilsatt sukker, ikke beriket",
-    "da":
-        "Mysli med frugt, nødder og/eller frø, uden tilsat sukker, ikke beriget",
-    "nl":
-        "Muesli, met fruit, noten en/of zaden, zonder toegevoegde suikers, niet verrijkt",
-    "es":
-        "Muesli, con frutas, frutos secos y/o semillas, sin azúcares añadidos, no enriquecido",
-    "it":
-        "Muesli, con frutta, frutta a guscio e/o semi, senza zuccheri aggiunti, non fortificato"
+    "en": "Muesli — fruit and nuts, no added sugar",
+    "de": "Müsli — Früchte und Nüsse, ohne Zuckerzusatz",
+    "fr": "Muesli — fruits et noix, sans sucre ajouté",
+    "no": "Müsli – frukt og nøtter, uten tilsatt sukker",
+    "sv": "Müsli — frukt och nötter, inget tillsatt socker",
+    "da": "Müsli — frugt og nødder, uden tilsat sukker",
+    "nl": "Muesli — fruit en noten, zonder toegevoegde suiker",
+    "it": "Muesli — frutta e noci, senza zuccheri aggiunti",
+    "es": "Muesli — frutas y frutos secos, sin azúcar añadido"
   },
   "322e0f80-8410-5074-afb8-2735cbf21844": {
     "en": "Vodka",
@@ -5239,8 +4880,7 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Kokt fläskbog, standard, svålfri och avfettad",
     "no": "Kokt svinebog, standard, svorløs avfettet",
     "da": "Kogt svinebov, standard, uden svor og fedtkant",
-    "nl":
-        "Gekookte varkensschouder, standaard, zonder zwoerd en ontdaan van vet",
+    "nl": "Gekookte varkensschouder, standaard, zonder zwoerd en ontdaan van vet",
     "es": "Paleta de cerdo cocida, estándar, sin corteza y desgrasada",
     "it": "Spalla di maiale cotta, standard, senza cotenna e sgrassata"
   },
@@ -5284,8 +4924,7 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Kokt skinka, överlägsen kvalitet, svålfri och avfettad",
     "no": "Kokt skinke, overlegen kvalitet, svorløs avfettet",
     "da": "Kogt skinke, overlegen kvalitet, uden svor og fedtkant",
-    "nl":
-        "Gekookte ham, superieure kwaliteit, zonder zwoerd en ontdaan van vet",
+    "nl": "Gekookte ham, superieure kwaliteit, zonder zwoerd en ontdaan van vet",
     "es": "Jamón cocido, calidad superior, sin corteza y desgrasado",
     "it": "Prosciutto cotto, qualità superiore, senza cotenna e sgrassato"
   },
@@ -5324,19 +4963,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "34101595-3ce4-5489-9961-0b79d4bb9ef0": {
     "en": "Spreadable fat > 41% fat and <= 62% fat, unsalted, rich in omega 3",
-    "fr":
-        "Matière grasse à tartiner > 41 % de mg et <= 62 % de mg, non salée, riche en oméga 3",
-    "de":
-        "Streichfett > 41% Fett und <= 62% Fett, ungesalzen, reich an Omega-3",
+    "fr": "Matière grasse à tartiner > 41 % de mg et <= 62 % de mg, non salée, riche en oméga 3",
+    "de": "Streichfett > 41% Fett und <= 62% Fett, ungesalzen, reich an Omega-3",
     "sv": "Bredbart fett > 41% fett och <= 62% fett, osaltat, rikt på omega 3",
     "no": "Smørbart fett > 41 % fett og <= 62 % fett, usaltet, rik på omega 3",
-    "da":
-        "Smørbart fedtstof > 41% fedt og <= 62% fedt, usaltet, rig på omega 3",
+    "da": "Smørbart fedtstof > 41% fedt og <= 62% fedt, usaltet, rig på omega 3",
     "nl": "Smeerbaar vet > 41% vet en <= 62% vet, ongezouten, rijk aan omega 3",
-    "es":
-        "Grasa para untar > 41% materia grasa y <= 62% materia grasa, sin sal, rica en omega 3",
-    "it":
-        "Grasso spalmabile > 41% grassi e <= 62% grassi, non salato, ricco di omega 3"
+    "es": "Grasa para untar > 41% materia grasa y <= 62% materia grasa, sin sal, rica en omega 3",
+    "it": "Grasso spalmabile > 41% grassi e <= 62% grassi, non salato, ricco di omega 3"
   },
   "348d410c-2603-5857-a9fd-4401ed0b37db": {
     "en": "Nutmeg",
@@ -5483,8 +5117,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "35fd4914-f2c3-58fe-82d3-8af19938f778": {
     "en": "Brown French bread, with flour type 80 or 110",
-    "fr":
-        "Pain de tradition française bis, avec de la farine de type 80 ou 110",
+    "fr": "Pain de tradition française bis, avec de la farine de type 80 ou 110",
     "de": "Braunes französisches Brot, mit Mehltyp 80 oder 110",
     "sv": "Brunt franskt bröd, med mjöltyp 80 eller 110",
     "no": "Brunt fransk brød, med meltype 80 eller 110",
@@ -5505,44 +5138,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Germogli di bambù, in scatola, sgocciolati"
   },
   "362fd206-9c11-5b9c-b3ed-a004e087e69b": {
-    "en":
-        "Mineral sparkling water (Puits St Georges), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Puits St Georges), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Puits St Georges), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Puits St Georges), på flaska, medelmineraliserat",
-    "no":
-        "Mineralholdig kullsyrevann (Puits St Georges), på flaske, moderat mineralisert",
-    "da":
-        "Mineralholdigt danskvand (Puits St Georges), på flaske, middelmineraliseret",
-    "nl":
-        "Mineraal bruiswater (Puits St Georges), in fles, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Puits St Georges), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (Puits St Georges), in bottiglia, mediamente mineralizzata"
+    "en": "Mineral sparkling water (Puits St Georges), bottled, averagely mineralized",
+    "fr": "Eau minérale gazeuse (Puits St Georges), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Puits St Georges), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Puits St Georges), på flaska, medelmineraliserat",
+    "no": "Mineralholdig kullsyrevann (Puits St Georges), på flaske, moderat mineralisert",
+    "da": "Mineralholdigt danskvand (Puits St Georges), på flaske, middelmineraliseret",
+    "nl": "Mineraal bruiswater (Puits St Georges), in fles, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (Puits St Georges), embotellada, mineralización media",
+    "it": "Acqua minerale frizzante (Puits St Georges), in bottiglia, mediamente mineralizzata"
   },
   "3638e58f-6f6b-53f0-9246-d4959adfe310": {
-    "en":
-        "Spanish-style tortilla with onions (omelette with potatoes and onions), prepacked",
-    "fr":
-        "Tortilla à l'espagnole aux oignons (omelette aux pommes de terre et aux oignons), préemballée",
-    "de":
-        "Spanische Tortilla mit Zwiebeln (Omelett mit Kartoffeln und Zwiebeln), vorgepackt",
-    "sv":
-        "Spansk-stil tortilla med lök (omelett med potatis och lök), färdigförpackad",
-    "no":
-        "Spansk-stil tortilla med løk (omelett med poteter og løk), ferdigpakket",
-    "da":
-        "Spansk-stilet tortilla med løg (omelet med kartofler og løg), færdigpakket",
-    "nl":
-        "Spaanse tortilla met uien (omelet met aardappelen en uien), voorverpakt",
-    "es":
-        "Tortilla española con cebolla (omelet de patatas y cebolla), preenvasada",
-    "it":
-        "Tortilla spagnola con cipolle (frittata con patate e cipolle), preconfezionata"
+    "en": "Spanish-style tortilla with onions (omelette with potatoes and onions), prepacked",
+    "fr": "Tortilla à l'espagnole aux oignons (omelette aux pommes de terre et aux oignons), préemballée",
+    "de": "Spanische Tortilla mit Zwiebeln (Omelett mit Kartoffeln und Zwiebeln), vorgepackt",
+    "sv": "Spansk-stil tortilla med lök (omelett med potatis och lök), färdigförpackad",
+    "no": "Spansk-stil tortilla med løk (omelett med poteter og løk), ferdigpakket",
+    "da": "Spansk-stilet tortilla med løg (omelet med kartofler og løg), færdigpakket",
+    "nl": "Spaanse tortilla met uien (omelet met aardappelen en uien), voorverpakt",
+    "es": "Tortilla española con cebolla (omelet de patatas y cebolla), preenvasada",
+    "it": "Tortilla spagnola con cipolle (frittata con patate e cipolle), preconfezionata"
   },
   "367d943e-6df5-5c0c-9227-8ed9939bff2c": {
     "en": "Country-style pâté or terrine",
@@ -5596,8 +5211,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Smørbart fett > 41 % fett og <= 62 % fett, halvsaltet",
     "da": "Smørbart fedtstof > 41% fedt og <= 62% fedt, halvsaltet",
     "nl": "Smeerbaar vet > 41% vet en <= 62% vet, halfgezouten",
-    "es":
-        "Grasa para untar > 41% materia grasa y <= 62% materia grasa, semisalada",
+    "es": "Grasa para untar > 41% materia grasa y <= 62% materia grasa, semisalada",
     "it": "Grasso spalmabile > 41% grassi e <= 62% grassi, semisalato"
   },
   "36f5d22b-66a9-596d-a475-8770d72238c7": {
@@ -5689,24 +5303,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Nettare di frutta, con edulcorante/i, ridotto contenuto di zuccheri"
   },
   "375673a8-ed92-5e12-a6c2-5d36ea3e80f9": {
-    "en":
-        "Crepe or buckwheat pancake, filled with mushrooms and béchamel sauce, prepacked, frozen",
-    "fr":
-        "Crêpe ou galette de sarrasin, fourrée aux champignons et sauce béchamel, préemballée, surgelée",
-    "de":
-        "Crpe oder Buchweizenpfannkuchen, gefüllt mit Pilzen und Béchamelsoße, vorgepackt, tiefgekühlt",
-    "sv":
-        "Crêpe eller bovetepannkaka, fylld med svamp och béchamelsås, färdigförpackad, fryst",
-    "no":
-        "Crepe eller bokhvetepannekake, fylt med sopp og bechamelsaus, ferdigpakket, frossen",
-    "da":
-        "Pandekage eller bokhvedepandekage, fyldt med svampe og bechamelsauce, færdigpakket, frossen",
-    "nl":
-        "Crêpe of boekweitpannenkoek, gevuld met champignons en bechamelsaus, voorverpakt, bevroren",
-    "es":
-        "Crepe o galette de trigo sarraceno, rellena de champiñones y salsa bechamel, preenvasada, congelada",
-    "it":
-        "Crepe o galette di grano saraceno, ripiena di funghi e besciamella, preconfezionata, surgelata"
+    "en": "Crepe or buckwheat pancake, filled with mushrooms and béchamel sauce, prepacked, frozen",
+    "fr": "Crêpe ou galette de sarrasin, fourrée aux champignons et sauce béchamel, préemballée, surgelée",
+    "de": "Crpe oder Buchweizenpfannkuchen, gefüllt mit Pilzen und Béchamelsoße, vorgepackt, tiefgekühlt",
+    "sv": "Crêpe eller bovetepannkaka, fylld med svamp och béchamelsås, färdigförpackad, fryst",
+    "no": "Crepe eller bokhvetepannekake, fylt med sopp og bechamelsaus, ferdigpakket, frossen",
+    "da": "Pandekage eller bokhvedepandekage, fyldt med svampe og bechamelsauce, færdigpakket, frossen",
+    "nl": "Crêpe of boekweitpannenkoek, gevuld met champignons en bechamelsaus, voorverpakt, bevroren",
+    "es": "Crepe o galette de trigo sarraceno, rellena de champiñones y salsa bechamel, preenvasada, congelada",
+    "it": "Crepe o galette di grano saraceno, ripiena di funghi e besciamella, preconfezionata, surgelata"
   },
   "3757c03d-cf26-5b20-b520-316a125f7d3f": {
     "en": "Spicy pork sausage with red pepper, dry",
@@ -5754,18 +5359,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "38246769-8936-58e1-8f3d-051e90cffec7": {
     "en": "Cereal flakes with nuts, fortified with vitamins and minerals",
-    "fr":
-        "Flocons de céréales aux fruits à coque, enrichis en vitamines et minéraux",
-    "de":
-        "Getreideflocken mit Nüssen, angereichert mit Vitaminen und Mineralstoffen",
+    "fr": "Flocons de céréales aux fruits à coque, enrichis en vitamines et minéraux",
+    "de": "Getreideflocken mit Nüssen, angereichert mit Vitaminen und Mineralstoffen",
     "sv": "Cerealieflingor med nötter, berikade med vitaminer och mineraler",
     "no": "Frokostblanding med nøtter, beriket med vitaminer og mineraler",
     "da": "Morgenmadscerealier med nødder, beriget med vitaminer og mineraler",
     "nl": "Ontbijtgranen met noten, verrijkt met vitaminen en mineralen",
-    "es":
-        "Copos de cereales con frutos secos, enriquecidos con vitaminas y minerales",
-    "it":
-        "Fiocchi di cereali con frutta a guscio, fortificati con vitamine e minerali"
+    "es": "Copos de cereales con frutos secos, enriquecidos con vitaminas y minerales",
+    "it": "Fiocchi di cereali con frutta a guscio, fortificati con vitamine e minerali"
   },
   "384883e2-e753-5bf4-85ae-76ed8c08765d": {
     "en": "Sweet potato, raw",
@@ -5791,17 +5392,12 @@ const foodNames = <String, Map<String, String>>{
   },
   "389a7a76-81d5-5ad6-925a-964989eb1b3b": {
     "en": "Fish or seafood au gratin, intended to be cooked, prepacked, raw",
-    "fr":
-        "Poisson ou fruits de mer en gratin, destiné à être cuit, préemballé, cru",
-    "de":
-        "Fisch- oder Meeresfrüchte-Auflauf, zum Kochen bestimmt, vorgepackt, roh",
-    "sv":
-        "Fisk- eller skaldjursgratäng, avsedd att tillagas, färdigförpackad, rå",
+    "fr": "Poisson ou fruits de mer en gratin, destiné à être cuit, préemballé, cru",
+    "de": "Fisch- oder Meeresfrüchte-Auflauf, zum Kochen bestimmt, vorgepackt, roh",
+    "sv": "Fisk- eller skaldjursgratäng, avsedd att tillagas, färdigförpackad, rå",
     "no": "Fisk- eller skalldyrgrateng, tiltenkt tilbereding, ferdigpakket, rå",
-    "da":
-        "Fisk eller skaldyr au gratin, beregnet til tilberedning, færdigpakket, rå",
-    "nl":
-        "Vis of schaal- en schelpdieren au gratin, te bereiden, voorverpakt, rauw",
+    "da": "Fisk eller skaldyr au gratin, beregnet til tilberedning, færdigpakket, rå",
+    "nl": "Vis of schaal- en schelpdieren au gratin, te bereiden, voorverpakt, rauw",
     "es": "Pescado o marisco gratinado, para cocinar, preenvasado, crudo",
     "it": "Pesce o frutti di mare gratinati, da cuocere, preconfezionati, crudi"
   },
@@ -5894,24 +5490,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Nori (Porphyra sp.), essiccata o disidratata"
   },
   "3a21e68e-bd02-5e45-8494-d8756e54b065": {
-    "en":
-        "Mineral sparkling water (St-Michel-de-Mourcairol), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (St-Michel-de-Mourcairol), en bouteille, moyennement minéralisée",
-    "de":
-        "Natürliches Mineralwasser (St-Michel-de-Mourcairol), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (St-Michel-de-Mourcairol), på flaska, medelmineraliserat",
-    "no":
-        "Mineralvann med kullsyre (St-Michel-de-Mourcairol), på flaske, moderat mineralisert",
-    "da":
-        "Mineralvand med kulsyre (St-Michel-de-Mourcairol), på flaske, moderat mineraliseret",
-    "nl":
-        "Mineraalwater, bruisend (St-Michel-de-Mourcairol), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (St-Michel-de-Mourcairol), embotellada, mineralización media",
-    "it":
-        "Acqua minerale gassata (St-Michel-de-Mourcairol), imbottigliata, mediamente mineralizzata"
+    "en": "Mineral sparkling water (St-Michel-de-Mourcairol), bottled, averagely mineralized",
+    "fr": "Eau minérale gazeuse (St-Michel-de-Mourcairol), en bouteille, moyennement minéralisée",
+    "de": "Natürliches Mineralwasser (St-Michel-de-Mourcairol), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (St-Michel-de-Mourcairol), på flaska, medelmineraliserat",
+    "no": "Mineralvann med kullsyre (St-Michel-de-Mourcairol), på flaske, moderat mineralisert",
+    "da": "Mineralvand med kulsyre (St-Michel-de-Mourcairol), på flaske, moderat mineraliseret",
+    "nl": "Mineraalwater, bruisend (St-Michel-de-Mourcairol), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (St-Michel-de-Mourcairol), embotellada, mineralización media",
+    "it": "Acqua minerale gassata (St-Michel-de-Mourcairol), imbottigliata, mediamente mineralizzata"
   },
   "3a522c55-0d9e-5d40-838b-2c645b7b745f": {
     "en": "Rabbit, meat, braised",
@@ -6013,20 +5600,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Agnello, collo, crudo"
   },
   "3b6aaf46-6b4d-5ee9-a4f2-9aedf45df44f": {
-    "en":
-        "Savoy-style fondue cheese preparation (cheese, white wine …), prepacked",
-    "fr":
-        "Préparation pour fondue savoyarde (fromage, vin blanc...), préemballée",
-    "de":
-        "Käsezubereitung für Fondue nach Savoyer Art (Käse, Weißwein ...), vorverpackt",
+    "en": "Savoy-style fondue cheese preparation (cheese, white wine …), prepacked",
+    "fr": "Préparation pour fondue savoyarde (fromage, vin blanc...), préemballée",
+    "de": "Käsezubereitung für Fondue nach Savoyer Art (Käse, Weißwein ...), vorverpackt",
     "sv": "Fondueostpreparering i savojardstil (ost, vitt vin ...), förpackad",
     "no": "Fondueostforberedelse i savoyardstil (ost, hvitvin …), ferdigpakket",
     "da": "Fondueost i savoyard-stil (ost, hvidvin ...), pakning",
     "nl": "Savooische fonduekaasbereiding (kaas, witte wijn ...), voorverpakt",
-    "es":
-        "Preparado para fondue estilo saboyano (queso, vino blanco...), envasado",
-    "it":
-        "Preparazione per fonduta stile savoiardo (formaggio, vino bianco...), preincartato"
+    "es": "Preparado para fondue estilo saboyano (queso, vino blanco...), envasado",
+    "it": "Preparazione per fonduta stile savoiardo (formaggio, vino bianco...), preincartato"
   },
   "3b6c778b-4ee1-594e-84b4-8548d3a0bbdc": {
     "en": "Tiramisu with coffee, refrigerated",
@@ -6150,15 +5732,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Formaggio, di latte caprino, da latte crudo"
   },
   "3c70ad9f-342c-5bd8-a430-ac7d79feca21": {
-    "en": "Rye bread, whole grain, prepacked",
-    "fr": "Pain de seigle, complet, préemballé",
-    "de": "Roggenbrot, Vollkorn, vorverpackt",
-    "sv": "Rågbröd, fullkorn, förpackat",
-    "no": "Rugbrød, fullkorn, ferdigpakket",
-    "da": "Rugbrød, fuldkorn, pakket",
-    "nl": "Roggebrood, volkoren, voorverpakt",
-    "es": "Pan de centeno, integral, envasado",
-    "it": "Pane di segale, integrale, preincartato"
+    "en": "Wholegrain rye bread",
+    "de": "Vollkornroggenbrot",
+    "fr": "Pain de seigle complet",
+    "no": "Fullkornsrugbrød",
+    "sv": "Fullkorns-rågbröd",
+    "da": "Fuldkornsrugbrød",
+    "nl": "Volkoren roggebrood",
+    "it": "Pane di segale integrale",
+    "es": "Pan de centeno integral"
   },
   "3c81bdf4-8044-5432-8633-8be08cefe95d": {
     "en": "Mushroom, all types, canned, drained",
@@ -6172,24 +5754,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Funghi, tutti i tipi, in scatola, sgocciolati"
   },
   "3ca7c358-95bf-5cad-b8f0-bb0b8d1d6546": {
-    "en":
-        "Soy dessert, plain, no added sugars, fortified with calcium, fermented, refrigerated",
-    "fr":
-        "Dessert au soja, nature, sans sucres ajoutés, enrichi en calcium, fermenté, réfrigéré",
-    "de":
-        "Sojadessert, pur, ohne Zuckerzusatz, mit Calcium angereichert, fermentiert, gekühlt",
-    "sv":
-        "Sojadessert, naturell, utan tillsatt socker, berikad med kalcium, fermenterad, kyld",
-    "no":
-        "Soyadessert, naturell, uten tilsatt sukker, beriket med kalsium, fermentert, kjølt",
-    "da":
-        "Sojadessert, neutral, uden tilsat sukker, beriget med calcium, fermenteret, kølet",
-    "nl":
-        "Sojadessert, naturel, zonder toegevoegde suikers, verrijkt met calcium, gefermenteerd, gekoeld",
-    "es":
-        "Postre de soja, natural, sin azúcares añadidos, enriquecido con calcio, fermentado, refrigerado",
-    "it":
-        "Dessert di soia, naturale, senza zuccheri aggiunti, arricchito con calcio, fermentato, refrigerato"
+    "en": "Soy dessert, plain, no added sugars, fortified with calcium, fermented, refrigerated",
+    "fr": "Dessert au soja, nature, sans sucres ajoutés, enrichi en calcium, fermenté, réfrigéré",
+    "de": "Sojadessert, pur, ohne Zuckerzusatz, mit Calcium angereichert, fermentiert, gekühlt",
+    "sv": "Sojadessert, naturell, utan tillsatt socker, berikad med kalcium, fermenterad, kyld",
+    "no": "Soyadessert, naturell, uten tilsatt sukker, beriket med kalsium, fermentert, kjølt",
+    "da": "Sojadessert, neutral, uden tilsat sukker, beriget med calcium, fermenteret, kølet",
+    "nl": "Sojadessert, naturel, zonder toegevoegde suikers, verrijkt met calcium, gefermenteerd, gekoeld",
+    "es": "Postre de soja, natural, sin azúcares añadidos, enriquecido con calcio, fermentado, refrigerado",
+    "it": "Dessert di soia, naturale, senza zuccheri aggiunti, arricchito con calcio, fermentato, refrigerato"
   },
   "3cc249d1-6c29-5644-89ee-af75af8ff0c3": {
     "en": "Oat, raw",
@@ -6468,18 +6041,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "3fc08178-eb4c-5dd1-9496-01d4c76e3eba": {
     "en": "Cream based preparation with aromatic herbs 12% fat, to cook",
-    "fr":
-        "Préparation à base de crème aux herbes aromatiques à 12% de matière grasse, à cuisiner",
-    "de":
-        "Zubereitung auf Rahmbasis mit aromatischen Kräutern 12% Fett, zum Kochen",
+    "fr": "Préparation à base de crème aux herbes aromatiques à 12% de matière grasse, à cuisiner",
+    "de": "Zubereitung auf Rahmbasis mit aromatischen Kräutern 12% Fett, zum Kochen",
     "sv": "Gräddbaserad beredning med örter 12% fett, för matlagning",
     "no": "Fløtebasert preparat med aromatiske urter 12% fett, til matlaging",
     "da": "Flødebaseret tilberedning med krydderurter 12% fedt, til madlavning",
     "nl": "Bereiding op basis van room met fijne kruiden 12% vet, om te koken",
-    "es":
-        "Preparado a base de nata con hierbas aromáticas 12% grasa, para cocinar",
-    "it":
-        "Preparazione a base di panna con erbe aromatiche 12% grassi, da cucinare"
+    "es": "Preparado a base de nata con hierbas aromáticas 12% grasa, para cocinar",
+    "it": "Preparazione a base di panna con erbe aromatiche 12% grassi, da cucinare"
   },
   "3fc36604-abfd-5ce3-a288-2b09a7b5c1c5": {
     "en": "Breakfast biscuit (cookie), with chocolate, not fortified",
@@ -6504,42 +6073,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Chayote, crudo"
   },
   "3fe7d128-e31c-578e-8473-e58eebe79bd4": {
-    "en":
-        "Fermented milk drink, with fruits, with sugar(s), fortified with vitamin D",
-    "fr":
-        "Boisson làctée fermentée, aux fruits, avec sucre(s), enrichie en vitamine D",
-    "de":
-        "Fermentiertes Milchgetränk, mit Früchten, mit Zucker(n), mit Vitamin D angereichert",
-    "sv":
-        "Fermenterad mjölkdryck, med frukt, med socker, berikad med vitamin D",
-    "no":
-        "Fermentert melkedrikk, med frukter, med sukker, beriket med vitamin D",
+    "en": "Fermented milk drink, with fruits, with sugar(s), fortified with vitamin D",
+    "fr": "Boisson làctée fermentée, aux fruits, avec sucre(s), enrichie en vitamine D",
+    "de": "Fermentiertes Milchgetränk, mit Früchten, mit Zucker(n), mit Vitamin D angereichert",
+    "sv": "Fermenterad mjölkdryck, med frukt, med socker, berikad med vitamin D",
+    "no": "Fermentert melkedrikk, med frukter, med sukker, beriket med vitamin D",
     "da": "Syrnet mælkedrik, med frugt, med sukker, beriget med vitamin D",
-    "nl":
-        "Gefermenteerde melkdrank, met fruit, met suiker(s), verrijkt met vitamine D",
-    "es":
-        "Bebida de leche fermentada, con frutas, con azúcares, enriquecida con vitamina D",
-    "it":
-        "Bevanda a base di latte fermentato, con frutta, con zuccheri, fortificata con vitamina D"
+    "nl": "Gefermenteerde melkdrank, met fruit, met suiker(s), verrijkt met vitamine D",
+    "es": "Bebida de leche fermentada, con frutas, con azúcares, enriquecida con vitamina D",
+    "it": "Bevanda a base di latte fermentato, con frutta, con zuccheri, fortificata con vitamina D"
   },
   "3ff89157-a8d4-5a65-b4aa-a4d5228cfd09": {
-    "en":
-        "Wafer biscuit, crunchy (thin or dried), plain or with sugar(s), prepacked",
-    "fr":
-        "Biscuit gaufrette, croustillant (à mince ou séché), nature ou avec sucre(s), préemballé",
-    "de":
-        "Waffelkeks, knusprig (dünn oder getrocknet), natur oder mit Zucker(n), vorverpackt",
-    "sv":
-        "Rån, krispigt (tunt eller torkat), naturellt eller med socker, förpackat",
-    "no":
-        "Kjeks, sprø (tynn eller tørket), naturell eller med sukker, ferdigpakket",
+    "en": "Wafer biscuit, crunchy (thin or dried), plain or with sugar(s), prepacked",
+    "fr": "Biscuit gaufrette, croustillant (à mince ou séché), nature ou avec sucre(s), préemballé",
+    "de": "Waffelkeks, knusprig (dünn oder getrocknet), natur oder mit Zucker(n), vorverpackt",
+    "sv": "Rån, krispigt (tunt eller torkat), naturellt eller med socker, förpackat",
+    "no": "Kjeks, sprø (tynn eller tørket), naturell eller med sukker, ferdigpakket",
     "da": "Røiskiks, sprød (tynd eller tørret), plain eller med sukker, pakke",
-    "nl":
-        "Wafeltje, krokant (dun of gedroogd), naturel of met suiker(s), voorverpakt",
-    "es":
-        "Barquillo, crujiente (fino o seco), natural o con azúcares, envasado",
-    "it":
-        "Cialda, croccante (sottile o secca), semplice o con zuccheri, confezionata"
+    "nl": "Wafeltje, krokant (dun of gedroogd), naturel of met suiker(s), voorverpakt",
+    "es": "Barquillo, crujiente (fino o seco), natural o con azúcares, envasado",
+    "it": "Cialda, croccante (sottile o secca), semplice o con zuccheri, confezionata"
   },
   "400781e8-1326-54dc-a767-5ba0b81b1270": {
     "en": "Still beverage with fruit juice and milk",
@@ -6553,24 +6106,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Bevanda analcolica con succo di frutta e latte"
   },
   "40565cca-0ee1-5d1b-9145-933e16b0b1ca": {
-    "en":
-        "Breakfast cereals, chocolate or chocolate-hazelnut filling, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, fourrage chocolat ou chocolat-noisette, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien, Schoko- oder Schoko-Haselnuss-Füllung, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Frukostflingor, choklad- eller choklad-hasselnötsfyllning, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, sjokolade- eller sjokolade-hasselnøttfyll, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter, chokolade- eller chokolade-hasselnøddefyld, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, chocolade- of chocolade-hazelnootvulling, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, relleno de chocolate o chocolate-avellana, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione, ripieno al cioccolato o cioccolato-nocciola, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals, chocolate or chocolate-hazelnut filling, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, fourrage chocolat ou chocolat-noisette, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien, Schoko- oder Schoko-Haselnuss-Füllung, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Frukostflingor, choklad- eller choklad-hasselnötsfyllning, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, sjokolade- eller sjokolade-hasselnøttfyll, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter, chokolade- eller chokolade-hasselnøddefyld, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, chocolade- of chocolade-hazelnootvulling, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, relleno de chocolate o chocolate-avellana, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione, ripieno al cioccolato o cioccolato-nocciola, fortificati con vitamine e minerali"
   },
   "405a2e52-221b-5024-91c4-cb98deba0586": {
     "en": "Cream 30% fat, liquid, UHT",
@@ -6760,24 +6304,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Sgombro, filetto al vino bianco, in scatola, sgocciolato"
   },
   "4254c260-7318-5bd4-bcb9-09e3b685de7a": {
-    "en":
-        "Quark or dairy specialty, with fruits, 0% fat, with sweetener(s), with sugar(s), fortified with vitamin D",
-    "fr":
-        "Fromage blanc ou spécialité laitière, aux fruits, à 0% de matière grasse, avec édulcorant(s), avec sucre(s), enrichi en vitamine D",
-    "de":
-        "Quark oder Milchspeise, mit Früchten, 0% Fett, mit Süßungsmitteln, mit Zucker(n), mit Vitamin D angereichert",
-    "sv":
-        "Kvarg eller mejerispecialitet, med frukt, 0% fett, med sötningsmedel, med socker, berikad med vitamin D",
-    "no":
-        "Kvarg eller meierispesialitet, med frukter, 0% fett, med søtningsmiddel, med sukker, beriket med vitamin D",
-    "da":
-        "Kvark eller mejerispecialitet, med frugt, 0% fedt, med sødemiddel, med sukker, beriget med vitamin D",
-    "nl":
-        "Kwark of zuivelspecialiteit, met fruit, 0% vet, met zoetstof(fen), met suiker(s), verrijkt met vitamine D",
-    "es":
-        "Queso quark o especialidad láctea, con frutas, 0% grasa, con edulcorante(s), con azúcar(es), enriquecido con vitamina D",
-    "it":
-        "Quark o specialità casearia, con frutta, 0% grassi, con dolcificanti, con zuccheri, fortificata con vitamina D"
+    "en": "Quark or dairy specialty, with fruits, 0% fat, with sweetener(s), with sugar(s), fortified with vitamin D",
+    "fr": "Fromage blanc ou spécialité laitière, aux fruits, à 0% de matière grasse, avec édulcorant(s), avec sucre(s), enrichi en vitamine D",
+    "de": "Quark oder Milchspeise, mit Früchten, 0% Fett, mit Süßungsmitteln, mit Zucker(n), mit Vitamin D angereichert",
+    "sv": "Kvarg eller mejerispecialitet, med frukt, 0% fett, med sötningsmedel, med socker, berikad med vitamin D",
+    "no": "Kvarg eller meierispesialitet, med frukter, 0% fett, med søtningsmiddel, med sukker, beriket med vitamin D",
+    "da": "Kvark eller mejerispecialitet, med frugt, 0% fedt, med sødemiddel, med sukker, beriget med vitamin D",
+    "nl": "Kwark of zuivelspecialiteit, met fruit, 0% vet, met zoetstof(fen), met suiker(s), verrijkt met vitamine D",
+    "es": "Queso quark o especialidad láctea, con frutas, 0% grasa, con edulcorante(s), con azúcar(es), enriquecido con vitamina D",
+    "it": "Quark o specialità casearia, con frutta, 0% grassi, con dolcificanti, con zuccheri, fortificata con vitamina D"
   },
   "42669420-ae69-5c6f-be95-3ff1f9f1472b": {
     "en": "Yogurt or fermented milk, flavoured, with sugar(s)",
@@ -6901,42 +6436,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Zuppa, verdure con formaggio, confezionata, da riscaldare"
   },
   "4369161f-bf9e-5e9b-b596-93b26469f2a9": {
-    "en":
-        "Molokhia,beef-based mdish with jute mallow (or nalta jute), home-made",
-    "fr":
-        "Mloukhiya, plat à base de bœuf avec de la jute mauve (ou corète potagère), fait maison",
-    "de":
-        "Molokhia, Rindfleisch-basiertes Hauptgericht mit Judendorn (oder Nalta-Jute), hausgemacht",
-    "sv":
-        "Molokhia, nötköttsbaserad varmrätt med juteväxt (eller naltajute), hemlagad",
-    "no":
-        "Molokhia, oksekjøttbasert matrett med juteblad (eller naltajute), hjemmelaget",
-    "da":
-        "Molokhia, oksekødsbaseret ret med juteskærm (eller nalta jute), hjemmelavet",
-    "nl":
-        "Molokhia, rundvlees-gebaseerd hoofdgerecht met jute mallow (of nalta jute), zelfgemaakt",
+    "en": "Molokhia,beef-based mdish with jute mallow (or nalta jute), home-made",
+    "fr": "Mloukhiya, plat à base de bœuf avec de la jute mauve (ou corète potagère), fait maison",
+    "de": "Molokhia, Rindfleisch-basiertes Hauptgericht mit Judendorn (oder Nalta-Jute), hausgemacht",
+    "sv": "Molokhia, nötköttsbaserad varmrätt med juteväxt (eller naltajute), hemlagad",
+    "no": "Molokhia, oksekjøttbasert matrett med juteblad (eller naltajute), hjemmelaget",
+    "da": "Molokhia, oksekødsbaseret ret med juteskærm (eller nalta jute), hjemmelavet",
+    "nl": "Molokhia, rundvlees-gebaseerd hoofdgerecht met jute mallow (of nalta jute), zelfgemaakt",
     "es": "Molokhia, plato a base de ternera con malva yute, casero",
-    "it":
-        "Molokhia, piatto a base di manzo con malva degli ebrei (o iuta), fatto in casa"
+    "it": "Molokhia, piatto a base di manzo con malva degli ebrei (o iuta), fatto in casa"
   },
   "43783f39-e2c5-5e9b-b09f-c1989bb36408": {
-    "en":
-        "Fruits dessert, all types (sugar content is less than fruits compote but more than fruits compote reduced sugar), prepacked, refrigerated",
-    "fr":
-        "Dessert de fruits, tous types (teneur en sucre inférieure à la compote de fruits mais supérieure à la compote de fruits allégée en sucre), préemballé, réfrigéré",
-    "de":
-        "Frucht-Dessert, alle Sorten (Zuckergehalt weniger als Fruchtkompott, aber mehr als Fruchtkompott mit reduziertem Zucker), vorverpackt, gekühlt",
-    "sv":
-        "Fruktdessert, alla typer (sockerhalt är mindre än fruktkompott men mer än fruktkompott med reducerat socker), förpackad, kyld",
-    "no":
-        "Fruktdesserter, alle typer (sukkerinnhold lavere enn fruktsyltetøy, men høyere enn fruktsyltetøy med redusert sukker), ferdigpakket, kjølt",
-    "da":
-        "Frugtdesserter, alle typer (sukkerindholdet er lavere end frugtkompot, men højere end reduceret sukker frugtkompot), pakkes, kølet",
-    "nl":
-        "Fruitdessert, alle soorten (suikergehalte is minder dan fruitcompote maar meer dan fruitcompote met verlaagd suikergehalte), voorverpakt, gekoeld",
+    "en": "Fruits dessert, all types (sugar content is less than fruits compote but more than fruits compote reduced sugar), prepacked, refrigerated",
+    "fr": "Dessert de fruits, tous types (teneur en sucre inférieure à la compote de fruits mais supérieure à la compote de fruits allégée en sucre), préemballé, réfrigéré",
+    "de": "Frucht-Dessert, alle Sorten (Zuckergehalt weniger als Fruchtkompott, aber mehr als Fruchtkompott mit reduziertem Zucker), vorverpackt, gekühlt",
+    "sv": "Fruktdessert, alla typer (sockerhalt är mindre än fruktkompott men mer än fruktkompott med reducerat socker), förpackad, kyld",
+    "no": "Fruktdesserter, alle typer (sukkerinnhold lavere enn fruktsyltetøy, men høyere enn fruktsyltetøy med redusert sukker), ferdigpakket, kjølt",
+    "da": "Frugtdesserter, alle typer (sukkerindholdet er lavere end frugtkompot, men højere end reduceret sukker frugtkompot), pakkes, kølet",
+    "nl": "Fruitdessert, alle soorten (suikergehalte is minder dan fruitcompote maar meer dan fruitcompote met verlaagd suikergehalte), voorverpakt, gekoeld",
     "es": "Postre de frutas, todos los tipos, envasado, refrigerado",
-    "it":
-        "Dessert di frutta, tutti i tipi (contenuto di zucchero inferiore alla composta di frutta ma superiore a quella a ridotto contenuto di zuccheri), preconfezionato, refrigerato"
+    "it": "Dessert di frutta, tutti i tipi (contenuto di zucchero inferiore alla composta di frutta ma superiore a quella a ridotto contenuto di zuccheri), preconfezionato, refrigerato"
   },
   "43841ff8-41ad-5270-8f55-93e79bb9c959": {
     "en": "Cereal flakes with fruits, not fortified",
@@ -6996,14 +6515,12 @@ const foodNames = <String, Map<String, String>>{
   "43f9cad9-b335-5720-aeb1-b4a980602301": {
     "en": "Sandwich, baguette, ham, hard-boiled egg, raw vegetables and butter",
     "fr": "Sandwich, baguette, jambon, œuf dur, crudités et beurre",
-    "de":
-        "Sandwich, Baguette, Schinken, hartgekochtes Ei, rohes Gemüse und Butter",
+    "de": "Sandwich, Baguette, Schinken, hartgekochtes Ei, rohes Gemüse und Butter",
     "sv": "Smörgås, baguette, skinka, hårdkokt ägg, råa grönsaker och smör",
     "no": "Sandwich, baguette, skinke, hardkokt egg, rå grønnsaker og smør",
     "da": "Sandwich, baguette, skinke, hårdkogt æg, rå grøntsager og smør",
     "nl": "Broodje, stokbrood, ham, hardgekookt ei, rauwe groenten en boter",
-    "es":
-        "Sándwich, baguette, jamón, huevo duro, vegetales crudos y mantequilla",
+    "es": "Sándwich, baguette, jamón, huevo duro, vegetales crudos y mantequilla",
     "it": "Panino, baguette, prosciutto, uovo sodo, verdure crude e burro"
   },
   "4464c7ce-1b3f-5869-b14c-a23f387faf98": {
@@ -7095,24 +6612,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Succo di arancia rossa, puro"
   },
   "4602b319-132d-5944-9ff7-d6fb0c0ba37c": {
-    "en":
-        "Syrup (eg. Mint, strawberry etc.), sugar content unknown, diluted in water (average)",
-    "fr":
-        "Sirop (ex. menthe, fraise, etc.), teneur en sucre inconnue, dilué dans l'eau (moyenne)",
-    "de":
-        "Sirup (z. B. Minze, Erdbeere usw.), Zuckergehalt unbekannt, in Wasser verdünnt (Durchschnitt)",
-    "sv":
-        "Sirap (t.ex. mint, jordgubb etc.), okänd sockerhalt, utspädd i vatten (genomsnitt)",
-    "no":
-        "Sirup (f.eks. mint, jordbær osv.), ukjent sukkerinnhold, utvannet (gjennomsnitt)",
-    "da":
-        "Sirup (f.eks. Mynte, jordbær osv.), sukkerindhold ukendt, fortyndet i vand (gennemsnit)",
-    "nl":
-        "Siroop (bijv. munt, aardbei etc.), suikergehalte onbekend, verdund in water (gemiddeld)",
-    "es":
-        "Jarabe (ej. menta, fresa, etc.), contenido de azúcar desconocido, diluido en agua (promedio)",
-    "it":
-        "Sciroppo (es. menta, fragola ecc.), contenuto di zucchero sconosciuto, diluito in acqua (media)"
+    "en": "Syrup (eg. Mint, strawberry etc.), sugar content unknown, diluted in water (average)",
+    "fr": "Sirop (ex. menthe, fraise, etc.), teneur en sucre inconnue, dilué dans l'eau (moyenne)",
+    "de": "Sirup (z. B. Minze, Erdbeere usw.), Zuckergehalt unbekannt, in Wasser verdünnt (Durchschnitt)",
+    "sv": "Sirap (t.ex. mint, jordgubb etc.), okänd sockerhalt, utspädd i vatten (genomsnitt)",
+    "no": "Sirup (f.eks. mint, jordbær osv.), ukjent sukkerinnhold, utvannet (gjennomsnitt)",
+    "da": "Sirup (f.eks. Mynte, jordbær osv.), sukkerindhold ukendt, fortyndet i vand (gennemsnit)",
+    "nl": "Siroop (bijv. munt, aardbei etc.), suikergehalte onbekend, verdund in water (gemiddeld)",
+    "es": "Jarabe (ej. menta, fresa, etc.), contenido de azúcar desconocido, diluido en agua (promedio)",
+    "it": "Sciroppo (es. menta, fragola ecc.), contenuto di zucchero sconosciuto, diluito in acqua (media)"
   },
   "460c423f-7a60-5523-91b7-29b79d7b567c": {
     "en": "Kid meat, cooked",
@@ -7139,8 +6647,7 @@ const foodNames = <String, Map<String, String>>{
   "4623e009-7c12-5eb6-977d-dc3384598842": {
     "en": "Ice cream or sorbet or ice pop, any flavour (average)",
     "fr": "Crème glacée ou sorbet ou glace à l'eau, tous parfums (moyenne)",
-    "de":
-        "Speiseeis, Sorbet oder Wassereis, jede Geschmacksrichtung (Durchschnitt)",
+    "de": "Speiseeis, Sorbet oder Wassereis, jede Geschmacksrichtung (Durchschnitt)",
     "sv": "Glass eller sorbet eller isglass, valfri smak (genomsnitt)",
     "no": "Iskrem, sorbet eller ispinnar, valgfri smak (gjennomsnitt)",
     "da": "Is eller sorbet eller sodavandsis, enhver smag (gennemsnit)",
@@ -7193,24 +6700,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Corn flakes, semplici, fortificati con vitamine e minerali"
   },
   "46946fdb-6da8-55a2-b5ea-59f98a02178f": {
-    "en":
-        "Fruit compote and similar, any fruit, sugar content unknown (average)",
-    "fr":
-        "Compote de fruits et similaires, tous fruits, teneur en sucre inconnue (moyenne)",
-    "de":
-        "Fruchtkompott und Ähnliches, beliebige Früchte, Zuckergehalt unbekannt (Durchschnitt)",
-    "sv":
-        "Fruktkompott och liknande, valfri frukt, okänd sockerhalt (genomsnitt)",
-    "no":
-        "Fruktkompott og lignende, all frukt, ukjent sukkerinnhold (gjennomsnitt)",
-    "da":
-        "Frugtkompot og lignende, enhver frugt, sukkerindhold ukendt (gennemsnit)",
-    "nl":
-        "Fruitcompote en dergelijke, elk fruit, suikergehalte onbekend (gemiddeld)",
-    "es":
-        "Compota de frutas y similares, cualquier fruta, contenido de azúcar desconocido (promedio)",
-    "it":
-        "Composta di frutta e simili, qualsiasi frutta, contenuto di zucchero sconosciuto (media)"
+    "en": "Fruit compote and similar, any fruit, sugar content unknown (average)",
+    "fr": "Compote de fruits et similaires, tous fruits, teneur en sucre inconnue (moyenne)",
+    "de": "Fruchtkompott und Ähnliches, beliebige Früchte, Zuckergehalt unbekannt (Durchschnitt)",
+    "sv": "Fruktkompott och liknande, valfri frukt, okänd sockerhalt (genomsnitt)",
+    "no": "Fruktkompott og lignende, all frukt, ukjent sukkerinnhold (gjennomsnitt)",
+    "da": "Frugtkompot og lignende, enhver frugt, sukkerindhold ukendt (gennemsnit)",
+    "nl": "Fruitcompote en dergelijke, elk fruit, suikergehalte onbekend (gemiddeld)",
+    "es": "Compota de frutas y similares, cualquier fruta, contenido de azúcar desconocido (promedio)",
+    "it": "Composta di frutta e simili, qualsiasi frutta, contenuto di zucchero sconosciuto (media)"
   },
   "46a13134-a0de-5a4a-b7ff-a051356eff8f": {
     "en": "Chestnut drink, plain, prepacked",
@@ -7264,8 +6762,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Salte snacks, kjeks, laget av hvete, naturell eller med smak",
     "da": "Salte snacks, kiks, lavet af hvede, plain eller med smag",
     "nl": "Zoute snacks, crackers, gemaakt van tarwe, naturel of gekruid",
-    "es":
-        "Aperitivos salados, galletas saladas, hechas de trigo, naturales o saborizadas",
+    "es": "Aperitivos salados, galletas saladas, hechas de trigo, naturales o saborizadas",
     "it": "Snack salati, cracker di frumento, semplici o aromatizzati"
   },
   "47d07699-8f6a-59ab-95d1-829df5e0cbe8": {
@@ -7303,22 +6800,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "47ebe342-7ec0-5efe-ba25-a2f6709ccaef": {
     "en": "Mineral sparkling water (Salvetat), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Salvetat), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Salvetat), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Salvetat), på flaska, måttligt mineraliserat",
-    "no":
-        "Frambrusende mineralvann (Salvetat), på flaske, middels mineralisert",
-    "da":
-        "Mineralvand med kulsyre (Salvetat), på flaske, gennemsnitligt mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Salvetat), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Salvetat), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Salvetat), in bottiglia, mediamente mineralizzata"
+    "fr": "Eau minérale gazeuse (Salvetat), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Salvetat), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Salvetat), på flaska, måttligt mineraliserat",
+    "no": "Frambrusende mineralvann (Salvetat), på flaske, middels mineralisert",
+    "da": "Mineralvand med kulsyre (Salvetat), på flaske, gennemsnitligt mineraliseret",
+    "nl": "Bruisend mineraalwater (Salvetat), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (Salvetat), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale frizzante (Salvetat), in bottiglia, mediamente mineralizzata"
   },
   "47f4933a-a602-5978-972b-738828471c5c": {
     "en": "Roman rocket, raw",
@@ -7343,22 +6832,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Piselli spezzati, bolliti/cotti in acqua"
   },
   "48364fff-f940-5070-9e1c-78a3dafc24ae": {
-    "en":
-        "Wafer biscuit, thin, filled with honey, caramel or soft brown sugar, prepacked",
-    "fr":
-        "Gaufrette, fine, fourrée au miel, au caramel ou à la cassonade, préemballée",
-    "de":
-        "Waffelkeks, dünn, gefüllt mit Honig, Karamell oder weichem braunen Zucker, vorverpackt",
+    "en": "Wafer biscuit, thin, filled with honey, caramel or soft brown sugar, prepacked",
+    "fr": "Gaufrette, fine, fourrée au miel, au caramel ou à la cassonade, préemballée",
+    "de": "Waffelkeks, dünn, gefüllt mit Honig, Karamell oder weichem braunen Zucker, vorverpackt",
     "sv": "Rån, tunt, fyllt med honung, kola eller mjukt rörsocker, förpackat",
-    "no":
-        "Vaffelkjeks, tynn, fylt med honning, karamell eller lyst brunt sukker, ferdigpakket",
+    "no": "Vaffelkjeks, tynn, fylt med honning, karamell eller lyst brunt sukker, ferdigpakket",
     "da": "Vafler, tynde, fyldt med honning, karamel eller farin, forpakket",
-    "nl":
-        "Wafelbiscuit, dun, gevuld met honing, karamel of zachte bruine suiker, voorverpakt",
-    "es":
-        "Galleta barquillo, fina, rellena de miel, caramelo o azúcar moreno suave, envasada",
-    "it":
-        "Waffle, sottile, ripieno di miele, caramello o zucchero di canna morbido, preconfezionato"
+    "nl": "Wafelbiscuit, dun, gevuld met honing, karamel of zachte bruine suiker, voorverpakt",
+    "es": "Galleta barquillo, fina, rellena de miel, caramelo o azúcar moreno suave, envasada",
+    "it": "Waffle, sottile, ripieno di miele, caramello o zucchero di canna morbido, preconfezionato"
   },
   "483f4697-8043-5dc2-9dde-8ffe66797650": {
     "en": "Butter, 60-62% fat, light, half-salted",
@@ -7450,8 +6932,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "4906d794-e59c-5d08-90df-dd93311d84b7": {
     "en": "Mashed potatoes, prepared with milk and butter, no added salt",
-    "fr":
-        "Purée de pommes de terre, préparée avec du lait et du beurre, sans sel ajouté",
+    "fr": "Purée de pommes de terre, préparée avec du lait et du beurre, sans sel ajouté",
     "de": "Kartoffelpüree, zubereitet mit Milch und Butter, ohne Salzzusatz",
     "sv": "Potatismos, tillagat med mjölk och smör, inget tillsatt salt",
     "no": "Potetmos, tilberedt med melk og smør, uten tilsatt salt",
@@ -7472,39 +6953,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Agnello, sella, magro, arrosto/al forno"
   },
   "490c4b7f-728d-5e01-b277-ed7afe926ec9": {
-    "en":
-        "Yogurt or fermented milk, with fruits or flavoured, with sweetener(s) (average)",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits ou aromatisé, avec édulcorant(s) (moyenne)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, mit Süßungsmitteln (Durchschnitt)",
-    "sv":
-        "Yoghurt eller syrad mjölk, med frukt eller smaksatt, med sötningsmedel (genomsnitt)",
-    "no":
-        "Yoghurt eller surmelk, med frukt eller smakssatt, med søtstoff(er) (gjennomsnitt)",
-    "da":
-        "Yoghurt eller syrnet mælk, med frugt eller smagsat, med sødestof(-fer) (gennemsnit)",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit of gearomatiseerd, met zoetstof(fen) (gemiddeld)",
-    "es":
-        "Yogur o leche fermentada, con frutas o aromatizado, con edulcorante(s) (promedio)",
-    "it":
-        "Yogurt o latte fermentato, con frutta o aromatizzato, con edulcorante(i) (media)"
+    "en": "Yogurt or fermented milk, with fruits or flavoured, with sweetener(s) (average)",
+    "fr": "Yaourt ou lait fermenté, aux fruits ou aromatisé, avec édulcorant(s) (moyenne)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, mit Süßungsmitteln (Durchschnitt)",
+    "sv": "Yoghurt eller syrad mjölk, med frukt eller smaksatt, med sötningsmedel (genomsnitt)",
+    "no": "Yoghurt eller surmelk, med frukt eller smakssatt, med søtstoff(er) (gjennomsnitt)",
+    "da": "Yoghurt eller syrnet mælk, med frugt eller smagsat, med sødestof(-fer) (gennemsnit)",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit of gearomatiseerd, met zoetstof(fen) (gemiddeld)",
+    "es": "Yogur o leche fermentada, con frutas o aromatizado, con edulcorante(s) (promedio)",
+    "it": "Yogurt o latte fermentato, con frutta o aromatizzato, con edulcorante(i) (media)"
   },
   "491287ac-fdf7-54f9-aaf7-a6102b56b7c6": {
     "en": "White fish with Florentine-style sauce (spinach sauce), prepacked",
     "fr": "Poisson blanc avec sauce florentine (sauce épinards), préemballé",
     "de": "Weißfisch mit Florentiner Sauce (Spinatsauce), vorverpackt",
-    "sv":
-        "Vit fisk med sås på florentinsk gyllene stilen (spenatsås), förpackad",
+    "sv": "Vit fisk med sås på florentinsk gyllene stilen (spenatsås), förpackad",
     "no": "Hvit fisk med saus à la Florentine (spinatsaus), ferdigpakket",
     "da": "Hvidfisk med flødensessovs (spinatsauce), færdigpakket",
-    "nl":
-        "Witte vis met saus in Florentijnse stijl (spinaziesaus), voorverpakt",
-    "es":
-        "Pescado blanco con salsa a la florentina (salsa de espinacas), preenvasado",
-    "it":
-        "Pesce bianco con salsa alla fiorentina (salsa agli spinaci), preconfezionato"
+    "nl": "Witte vis met saus in Florentijnse stijl (spinaziesaus), voorverpakt",
+    "es": "Pescado blanco con salsa a la florentina (salsa de espinacas), preenvasado",
+    "it": "Pesce bianco con salsa alla fiorentina (salsa agli spinaci), preconfezionato"
   },
   "49134968-fe92-5cde-9966-bc4b6f3e0cf9": {
     "en": "Egg roll or nem, prepacked, cooked (average)",
@@ -7563,20 +7031,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "49f9a80e-6843-5ed8-ab2a-72d3dc09b736": {
     "en": "Mineral sparkling water (Vernière), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Vernière), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Vernière), in Flaschen, durchschnittlich mineralisiert",
+    "fr": "Eau minérale gazeuse (Vernière), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Vernière), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (Vernière), på flaska, medelmineraliserat",
-    "no":
-        "Mineralvann med kullsyre (Vernière), på flaske, moderat mineralisert",
+    "no": "Mineralvann med kullsyre (Vernière), på flaske, moderat mineralisert",
     "da": "Mineralsk danskvand (Vernière), på flaske, middelmineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Vernière), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Vernière), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Vernière), in bottiglia, mediamente mineralizzata"
+    "nl": "Bruisend mineraalwater (Vernière), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (Vernière), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale frizzante (Vernière), in bottiglia, mediamente mineralizzata"
   },
   "49fc1d1f-7a24-5f2f-bfd6-38896792165f": {
     "en": "Ice cream, in individual cup",
@@ -7612,38 +7074,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Manzo, arrosto di manzo, arrosto/al forno"
   },
   "4a4c2508-10ed-5433-a8aa-35a362ca2135": {
-    "en":
-        "Soybean and wheat-based nuggets, breaded croquette (vegan), prepacked",
-    "fr":
-        "Nuggets à base de soja et de blé, croquette panée (végétalien), préemballé",
-    "de":
-        "Nuggets auf Soja- und Weizenbasis, panierte Kroketten (vegan), vorverpackt",
-    "sv":
-        "Soja- och vete-baserade nuggets, panerad krokett (vegansk), förpackad",
-    "no":
-        "Soyaoch hvetebaserte nuggets, panert kroketter (vegansk), ferdigpakket",
-    "da":
-        "Soja- og hvede-baserede nuggets, paneret kroket (vegansk), færdigpakket",
-    "nl":
-        "Nuggets op basis van soja en tarwe, gepaneerde kroket (veganistisch), voorverpakt",
-    "es":
-        "Nuggets a base de soja y trigo, croqueta empanada (vegana), preenvasados",
-    "it":
-        "Nuggets a base di soia e grano, crocchetta impanata (vegano), preconfezionati"
+    "en": "Soybean and wheat-based nuggets, breaded croquette (vegan), prepacked",
+    "fr": "Nuggets à base de soja et de blé, croquette panée (végétalien), préemballé",
+    "de": "Nuggets auf Soja- und Weizenbasis, panierte Kroketten (vegan), vorverpackt",
+    "sv": "Soja- och vete-baserade nuggets, panerad krokett (vegansk), förpackad",
+    "no": "Soyaoch hvetebaserte nuggets, panert kroketter (vegansk), ferdigpakket",
+    "da": "Soja- og hvede-baserede nuggets, paneret kroket (vegansk), færdigpakket",
+    "nl": "Nuggets op basis van soja en tarwe, gepaneerde kroket (veganistisch), voorverpakt",
+    "es": "Nuggets a base de soja y trigo, croqueta empanada (vegana), preenvasados",
+    "it": "Nuggets a base di soia e grano, crocchetta impanata (vegano), preconfezionati"
   },
   "4a66f909-b935-54fd-a3be-60047b0f879f": {
     "en": "Fresh pasta, stuffed with vegetables (e.g. ravioli), prepacked, raw",
-    "fr":
-        "Pâtes fraîches, farcies aux légumes (ex. raviolis), préemballées, crues",
+    "fr": "Pâtes fraîches, farcies aux légumes (ex. raviolis), préemballées, crues",
     "de": "Frische Pasta, gefüllt mit Gemüse (z. B. Ravioli), vorverpackt, roh",
     "sv": "Färsk pasta, fylld med grönsaker (t.ex. ravioli), förpackad, rå",
     "no": "Fersk pasta, fylt med grønnsaker (f.eks. ravioli), ferdigpakket, rå",
-    "da":
-        "Frisk pasta, fyldt med grøntsager (f.eks. ravioli), færdigpakket, rå",
+    "da": "Frisk pasta, fyldt med grøntsager (f.eks. ravioli), færdigpakket, rå",
     "nl": "Verse pasta, gevuld met groenten (bijv. ravioli), voorverpakt, rauw",
     "es": "Pasta fresca, rellena de verduras (ej. ravioli), preenvasada, cruda",
-    "it":
-        "Pasta fresca, ripiena di verdure (es. ravioli), preconfezionata, cruda"
+    "it": "Pasta fresca, ripiena di verdure (es. ravioli), preconfezionata, cruda"
   },
   "4a93d041-609e-5d41-a9de-a14341ab1eb7": {
     "en": "Beef, short ribs, raw",
@@ -7714,14 +7164,12 @@ const foodNames = <String, Map<String, String>>{
   "4ba5d2db-ea8e-5fce-bb22-87109d6d2c31": {
     "en": "Cereal flakes with fruits, fortified with vitamins and minerals",
     "fr": "Flocons de céréales aux fruits, enrichis en vitamines et minéraux",
-    "de":
-        "Getreideflocken mit Früchten, angereichert mit Vitaminen und Mineralstoffen",
+    "de": "Getreideflocken mit Früchten, angereichert mit Vitaminen und Mineralstoffen",
     "sv": "Flingor med frukt, berikade med vitaminer och mineraler",
     "no": "Frokostblanding med frukt, beriket med vitaminer og mineraler",
     "da": "Morgenmadscerealier med frugt, beriget med vitaminer og mineraler",
     "nl": "Ontbijtgranen met fruit, verrijkt met vitaminen en mineralen",
-    "es":
-        "Copos de cereales con frutas, enriquecidos con vitaminas y minerales",
+    "es": "Copos de cereales con frutas, enriquecidos con vitaminas y minerales",
     "it": "Fiocchi di cereali con frutta, fortificati con vitamine e minerali"
   },
   "4be6e1a0-9431-537f-ad08-0e858f154000": {
@@ -7792,17 +7240,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "4c5e8b0a-d399-5bb0-a597-286212386bdf": {
     "en": "Salty snacks, crackers, made from wheat, plain, reduced fat",
-    "fr":
-        "Snacks salés, crackers, à base de blé, nature, allégés en matières grasses",
+    "fr": "Snacks salés, crackers, à base de blé, nature, allégés en matières grasses",
     "de": "Salzige Snacks, Cracker, aus Weizen, natur, fettreduziert",
     "sv": "Salta snacks, kex, gjorda på vete, naturella, reducerat fett",
     "no": "Salt snacks, kjeks, laget av hvete, naturelle, redusert fett",
     "da": "Salte snacks, kiks, lavet af hvede, neutrale, fedtfattige",
     "nl": "Zoute snacks, crackers, gemaakt van tarwe, naturel, vetarm",
-    "es":
-        "Snacks salados, galletas saladas, de trigo, naturales, reducidas en grasa",
-    "it":
-        "Snack salati, cracker, a base di grano, semplici, a ridotto contenuto di grassi"
+    "es": "Snacks salados, galletas saladas, de trigo, naturales, reducidas en grasa",
+    "it": "Snack salati, cracker, a base di grano, semplici, a ridotto contenuto di grassi"
   },
   "4c8bd8c4-7076-5f7b-a727-1dbd21c46470": {
     "en": "Pizza, tuna, prepacked",
@@ -8003,24 +7448,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Anatra, filetto di petto, crudo"
   },
   "4ea9870c-a05c-5997-83f6-a8846528c129": {
-    "en":
-        "Stewed fruits, no added sugars (pulp or mixed fruits,), prepacked (average)",
-    "fr":
-        "Compotes de fruits, sans sucres ajoutés (de fruits ou mélange de fruits), préemballé (moyenne)",
-    "de":
-        "Obstkompott, ohne Zuckerzusatz (Mark oder Fruchtmischung), vorverpackt (Durchschnitt)",
-    "sv":
-        "Fruktpuré, inget tillsatt socker (puré eller blandad frukt), förpackad (genomsnitt)",
-    "no":
-        "Fruktmos, uten tilsatt sukker (fruktmos eller blandet frukt), ferdigpakket (gjennomsnitt)",
-    "da":
-        "Frugtmos, uden tilsat sukker (pulp eller blandet frugt), færdigpakket (gennemsnit)",
-    "nl":
-        "Stoofvruchten, zonder toegevoegde suikers (pulp of gemengd fruit), voorverpakt (gemiddeld)",
-    "es":
-        "Frutas en almíbar, sin azúcares añadidos (pulpa o mezcla de frutas), preenvasado (promedio)",
-    "it":
-        "Frutta in umido, senza zuccheri aggiunti (polpa o frutta mista), preimballata (media)"
+    "en": "Stewed fruits, no added sugars (pulp or mixed fruits,), prepacked (average)",
+    "fr": "Compotes de fruits, sans sucres ajoutés (de fruits ou mélange de fruits), préemballé (moyenne)",
+    "de": "Obstkompott, ohne Zuckerzusatz (Mark oder Fruchtmischung), vorverpackt (Durchschnitt)",
+    "sv": "Fruktpuré, inget tillsatt socker (puré eller blandad frukt), förpackad (genomsnitt)",
+    "no": "Fruktmos, uten tilsatt sukker (fruktmos eller blandet frukt), ferdigpakket (gjennomsnitt)",
+    "da": "Frugtmos, uden tilsat sukker (pulp eller blandet frugt), færdigpakket (gennemsnit)",
+    "nl": "Stoofvruchten, zonder toegevoegde suikers (pulp of gemengd fruit), voorverpakt (gemiddeld)",
+    "es": "Frutas en almíbar, sin azúcares añadidos (pulpa o mezcla de frutas), preenvasado (promedio)",
+    "it": "Frutta in umido, senza zuccheri aggiunti (polpa o frutta mista), preimballata (media)"
   },
   "4eb3f8ea-3817-557a-b873-f62c9d7d7e23": {
     "en": "Yogurt, ewe's milk, flavoured, with sugar(s)",
@@ -8069,13 +7505,10 @@ const foodNames = <String, Map<String, String>>{
   "4ee2cd6e-7d71-5044-bb19-8ef3b5274a18": {
     "en": "Indian-style sauce, tandoori or garam masala type, prepacked",
     "fr": "Sauce de style indien, type tandoori ou garam masala, préemballée",
-    "de":
-        "Soße nach indischer Art, Tandoori- oder Garam-Masala-Typ, vorverpackt",
+    "de": "Soße nach indischer Art, Tandoori- oder Garam-Masala-Typ, vorverpackt",
     "sv": "Indiskinspirerad sås, tandoori- eller garam masala-typ, förpackad",
-    "no":
-        "Indisk-inspirert saus, tandoori- eller garam masala-type, ferdigpakket",
-    "da":
-        "Indisk-inspireret sovs, tandoori- eller garam masala-type, færdigpakket",
+    "no": "Indisk-inspirert saus, tandoori- eller garam masala-type, ferdigpakket",
+    "da": "Indisk-inspireret sovs, tandoori- eller garam masala-type, færdigpakket",
     "nl": "Indische saus, tandoori- of garam masala-type, voorverpakt",
     "es": "Salsa estilo indio, tipo tandoori o garam masala, preenvasado",
     "it": "Salsa in stile indiano, tipo tandoori o garam masala, preimballata"
@@ -8170,57 +7603,36 @@ const foodNames = <String, Map<String, String>>{
   },
   "4f873179-f13d-5dc9-88cb-aeb95796d42e": {
     "en": "Cream based preparation with aromatic herbs 19% fat, to cook",
-    "fr":
-        "Préparation à base de crème aux herbes aromatiques à 19% de matière grasse, à cuisiner",
-    "de":
-        "Zubereitung auf Sahnebasis mit feinen Kräutern, 19 % Fett, zum Kochen",
-    "sv":
-        "Gräddbaserad tillredning med aromatiska örter 19% fett, för matlagning",
+    "fr": "Préparation à base de crème aux herbes aromatiques à 19% de matière grasse, à cuisiner",
+    "de": "Zubereitung auf Sahnebasis mit feinen Kräutern, 19 % Fett, zum Kochen",
+    "sv": "Gräddbaserad tillredning med aromatiska örter 19% fett, för matlagning",
     "no": "Fløtebasert preparat med urter 19% fett, til koking",
     "da": "Flødebaseret præparat med krydderurter 19% fedt, til tilberedning",
-    "nl":
-        "Bereiding op basis van room met aromatische kruiden 19% vet, om te koken",
-    "es":
-        "Preparado a base de crema con hierbas aromáticas 19% materia grasa, para cocinar",
-    "it":
-        "Preparazione a base di panna ed erbe aromatiche, 19% di grassi, da cucinare"
+    "nl": "Bereiding op basis van room met aromatische kruiden 19% vet, om te koken",
+    "es": "Preparado a base de crema con hierbas aromáticas 19% materia grasa, para cocinar",
+    "it": "Preparazione a base di panna ed erbe aromatiche, 19% di grassi, da cucinare"
   },
   "4fcbf3a4-e55b-5761-b8f9-2dcd68bf4fa2": {
-    "en":
-        "Jam or marmalade, miscellaneaous fruits (not reduced sugar) (average)",
-    "fr":
-        "Confiture ou marmelade, fruits divers (teneur en sucre non réduite) (moyenne)",
-    "de":
-        "Marmelade oder Konfitüre, gemischte Früchte (nicht zuckerreduziert) (Durchschnitt)",
-    "sv":
-        "Sylt eller marmelad, blandad frukt (ej reducerat socker) (genomsnitt)",
-    "no":
-        "Syltetøy eller marmelade, diverse frukter (ikke redusert sukker) (gjennomsnitt)",
-    "da":
-        "Syltetøj eller marmelade, blandede frugter (ikke reduceret sukker) (gennemsnit)",
+    "en": "Jam or marmalade, miscellaneaous fruits (not reduced sugar) (average)",
+    "fr": "Confiture ou marmelade, fruits divers (teneur en sucre non réduite) (moyenne)",
+    "de": "Marmelade oder Konfitüre, gemischte Früchte (nicht zuckerreduziert) (Durchschnitt)",
+    "sv": "Sylt eller marmelad, blandad frukt (ej reducerat socker) (genomsnitt)",
+    "no": "Syltetøy eller marmelade, diverse frukter (ikke redusert sukker) (gjennomsnitt)",
+    "da": "Syltetøj eller marmelade, blandede frugter (ikke reduceret sukker) (gennemsnit)",
     "nl": "Jam of marmelade, gemengd fruit (niet suikerverlaagd) (gemiddeld)",
-    "es":
-        "Mermelada o confitura, frutas variadas (no reducida en azúcar) (promedio)",
-    "it":
-        "Confettura o marmellata, frutta varia (non a ridotto contenuto di zuccheri) (media)"
+    "es": "Mermelada o confitura, frutas variadas (no reducida en azúcar) (promedio)",
+    "it": "Confettura o marmellata, frutta varia (non a ridotto contenuto di zuccheri) (media)"
   },
   "5045bf68-a967-53d3-b5e2-6927b49ded49": {
-    "en":
-        "Flamed tart (thin-crusted onion tart with cream and lardoons), prepacked",
-    "fr":
-        "Tarte flambée (tarte fine à l'oignon, crème et lardons), préemballée",
-    "de":
-        "Flammkuchen (dünner Zwiebelkuchen mit Sahne und Speckwürfeln), vorverpackt",
+    "en": "Flamed tart (thin-crusted onion tart with cream and lardoons), prepacked",
+    "fr": "Tarte flambée (tarte fine à l'oignon, crème et lardons), préemballée",
+    "de": "Flammkuchen (dünner Zwiebelkuchen mit Sahne und Speckwürfeln), vorverpackt",
     "sv": "Flammkaka (tunnlaggd löktårta med grädde och sidfläsk), förpackad",
-    "no":
-        "Flammkuche (tynn bunn med løk, rømme og baconterninger), ferdigpakket",
-    "da":
-        "Flammkuchen (tyndbundet løgtærte med fløde og bacontern), færdigpakket",
+    "no": "Flammkuche (tynn bunn med løk, rømme og baconterninger), ferdigpakket",
+    "da": "Flammkuchen (tyndbundet løgtærte med fløde og bacontern), færdigpakket",
     "nl": "Flammkuchen (dunne uientaart met room en spekjes), voorverpakt",
-    "es":
-        "Tarta flambeada (tarta fina de cebolla con crema y tocino), preenvasado",
-    "it":
-        "Flammekueche (crostata sottile con cipolla, panna e pancetta), preimballata"
+    "es": "Tarta flambeada (tarta fina de cebolla con crema y tocino), preenvasado",
+    "it": "Flammekueche (crostata sottile con cipolla, panna e pancetta), preimballata"
   },
   "506a4d24-c065-5235-9303-95a598de9e82": {
     "en": "Brioche, filled with fruits, prepacked",
@@ -8322,22 +7734,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Zampino di maiale, in salamoia"
   },
   "5131a299-a023-5859-99fd-aeeddbad0e66": {
-    "en":
-        "Profiteroles (chou pastry) with custard and chocolate sauce, refrigerated",
-    "fr":
-        "Profiteroles à la crème pâtissière et sauce au chocolat, réfrigérées",
-    "de":
-        "Profiteroles (Brandteigkrapfen) mit Vanillecreme und Schokosoße, gekühlt",
+    "en": "Profiteroles (chou pastry) with custard and chocolate sauce, refrigerated",
+    "fr": "Profiteroles à la crème pâtissière et sauce au chocolat, réfrigérées",
+    "de": "Profiteroles (Brandteigkrapfen) mit Vanillecreme und Schokosoße, gekühlt",
     "sv": "Profiteroles (munkdeg) med vaniljkräm och chokladsås, kylskåpskall",
-    "no":
-        "Profiteroles (vannbakkels) med vaniljekrem og sjokoladesaus, kjølevare",
+    "no": "Profiteroles (vannbakkels) med vaniljekrem og sjokoladesaus, kjølevare",
     "da": "Vandbakkelser (profiteroles) med creme og chokoladesauce, kølet",
-    "nl":
-        "Profiteroles (soesjes) met banketbakkersroom en chocoladesaus, gekoeld",
-    "es":
-        "Profiteroles (masa choux) con crema pastelera y salsa de chocolate, refrigerados",
-    "it":
-        "Profiteroles (pasta choux) con crema pasticcera e salsa al cioccolato, refrigerati"
+    "nl": "Profiteroles (soesjes) met banketbakkersroom en chocoladesaus, gekoeld",
+    "es": "Profiteroles (masa choux) con crema pastelera y salsa de chocolate, refrigerados",
+    "it": "Profiteroles (pasta choux) con crema pasticcera e salsa al cioccolato, refrigerati"
   },
   "516128a8-f081-5a4c-8ce0-362e2ef5da26": {
     "en": "Salad dressing, (50-75% of oil), prepacked",
@@ -8396,18 +7801,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "51b026a2-adf7-53a7-9658-5e2ecaa937f4": {
     "en": "Mineral still water (Montcalm), bottled, very lightly mineralized",
-    "fr":
-        "Eau minérale plate (Montcalm), en bouteille, très faiblement minéralisée",
+    "fr": "Eau minérale plate (Montcalm), en bouteille, très faiblement minéralisée",
     "de": "Stilles Mineralwasser (Montcalm), in Flaschen, sehr mineralarm",
-    "sv":
-        "Stilla mineralvatten (Montcalm), på flaska, mycket lätt mineraliserat",
+    "sv": "Stilla mineralvatten (Montcalm), på flaska, mycket lätt mineraliserat",
     "no": "Stille mineralvann (Montcalm), på flaske, svært lite mineralisert",
     "da": "Stille mineralvand (Montcalm), på flaske, meget let mineraliseret",
     "nl": "Plat mineraalwater (Montcalm), in fles, zeer licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Montcalm), embotellada, muy ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Montcalm), in bottiglia, a bassissimo residuo fisso"
+    "es": "Agua mineral sin gas (Montcalm), embotellada, muy ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Montcalm), in bottiglia, a bassissimo residuo fisso"
   },
   "51ca57e2-d35a-564d-82fa-574b787f2fe5": {
     "en": "Soup, cereals and vegetables, dehydrated and reconstituted",
@@ -8609,29 +8010,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "5403c7e4-3520-5e37-a35a-b58f20626763": {
     "en": "Mineral water (Mont-Roucous, bottled, very lightly mineralized",
-    "fr":
-        "Eau minérale (Mont-Roucous), en bouteille, très faiblement minéralisée",
+    "fr": "Eau minérale (Mont-Roucous), en bouteille, très faiblement minéralisée",
     "de": "Mineralwasser (Mont-Roucous), in Flaschen, sehr mild mineralisiert",
     "sv": "Mineralvatten (Mont-Roucous), på flaska, mycket lätt mineraliserat",
     "no": "Mineralvann (Mont-Roucous), på flaske, svært lett mineralisert",
     "da": "Mineralvand (Mont-Roucous), på flaske, meget let mineraliseret",
     "nl": "Mineraalwater (Mont-Roucous), gebotteld, zeer licht gemineraliseerd",
-    "es":
-        "Agua mineral (Mont-Roucous), embotellada, muy ligeramente mineralizada",
+    "es": "Agua mineral (Mont-Roucous), embotellada, muy ligeramente mineralizada",
     "it": "Acqua minerale (Mont-Roucous), in bottiglia, a basso residuo fisso"
   },
   "54140282-aa9d-5f55-8625-3d52e1390d35": {
     "en": "Salad dressing, reduced fat (25-50% of oil), prepacked",
-    "fr":
-        "Assaisonnement pour salade, allégé en matières grasses (25-50 % d'huile), préemballé",
+    "fr": "Assaisonnement pour salade, allégé en matières grasses (25-50 % d'huile), préemballé",
     "de": "Salatdressing, fettreduziert (25-50 % Öl), vorgepackt",
     "sv": "Salladsdressing, reducerad fetthalt (25-50% olja), färdigförpackad",
     "no": "Salatdressing, redusert fett (25-50% olje), ferdigpakket",
     "da": "Salatdressing, fedtfattig (25-50% olie), færdigpakke",
     "nl": "Saladedressing, verlaagd vetgehalte (25-50% olie), voorverpakt",
     "es": "Aliño de ensalada, bajo en grasa (25-50% de aceite), preenvasado",
-    "it":
-        "Condimento per insalata, ipocalorico (25-50% di olio), preconfezionato"
+    "it": "Condimento per insalata, ipocalorico (25-50% di olio), preconfezionato"
   },
   "542abfe7-7124-5332-ae5d-2362fdc9e3f8": {
     "en": "Brownie (chocolate cake), with nuts, prepacked",
@@ -8645,21 +8042,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Brownie (torta al cioccolato) con noci, preconfezionato"
   },
   "54686b73-7ca0-5aa4-8c3b-3070fa373776": {
-    "en":
-        "Soy drink, flavoured, with sugar(s), fortified in calcium, prepacked",
-    "fr":
-        "Boisson à base de soja, aromatisée, avec sucre(s), enrichie en calcium, préemballée",
-    "de":
-        "Sojagetränk, aromatisiert, mit Zucker(n), mit Calcium angereichert, vorgepackt",
+    "en": "Soy drink, flavoured, with sugar(s), fortified in calcium, prepacked",
+    "fr": "Boisson à base de soja, aromatisée, avec sucre(s), enrichie en calcium, préemballée",
+    "de": "Sojagetränk, aromatisiert, mit Zucker(n), mit Calcium angereichert, vorgepackt",
     "sv": "Sojadryck, smaksatt, med socker, kalciumberikad, färdigförpackad",
     "no": "Soyadrikk, med smak, med sukker, beriket med kalsium, ferdigpakket",
     "da": "Sojadrik, med smag, med sukker, beriget med calcium, færdigpakke",
-    "nl":
-        "Sojadrink, met smaakje, met suiker(s), verrijkt met calcium, voorverpakt",
-    "es":
-        "Bebida de soja, aromatizada, con azúcares, enriquecida en calcio, preenvasada",
-    "it":
-        "Bevanda alla soia, aromatizzata, con zuccheri, fortificata in calcio, preconfezionata"
+    "nl": "Sojadrink, met smaakje, met suiker(s), verrijkt met calcium, voorverpakt",
+    "es": "Bebida de soja, aromatizada, con azúcares, enriquecida en calcio, preenvasada",
+    "it": "Bevanda alla soia, aromatizzata, con zuccheri, fortificata in calcio, preconfezionata"
   },
   "54861fb6-c392-5f63-8ffb-3d4fbd920b71": {
     "en": "Cashew nut, grilled, no added salt",
@@ -8695,37 +8086,25 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salsiccia di pollame, tipo knack"
   },
   "551c1dee-9d11-5d51-ab32-958937014274": {
-    "en":
-        "Yogurt or fermented milk, with fruits or flavoured, 0% fat (average)",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits ou aromatisé, 0 % de matière grasse (moyenne)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, 0 % Fett (Durchschnitt)",
-    "sv":
-        "Yoghurt eller syrad mjölk, med frukt eller smaksatt, 0% fett (genomsnitt)",
-    "no":
-        "Yoghurt eller fermentert melk, med frukt eller smak, 0% fett (gjennomsnitt)",
-    "da":
-        "Yoghurt eller syrnet mælk, med frugt eller smag, 0% fedt (gennemsnit)",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit of smaakje, 0% vet (gemiddeld)",
-    "es":
-        "Yogur o leche fermentada, con frutas o aromatizado, 0% grasa (promedio)",
-    "it":
-        "Yogurt o latte fermentato, con frutta o aromatizzato, 0% grassi (media)"
+    "en": "Yogurt or fermented milk, with fruits or flavoured, 0% fat (average)",
+    "fr": "Yaourt ou lait fermenté, aux fruits ou aromatisé, 0 % de matière grasse (moyenne)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, 0 % Fett (Durchschnitt)",
+    "sv": "Yoghurt eller syrad mjölk, med frukt eller smaksatt, 0% fett (genomsnitt)",
+    "no": "Yoghurt eller fermentert melk, med frukt eller smak, 0% fett (gjennomsnitt)",
+    "da": "Yoghurt eller syrnet mælk, med frugt eller smag, 0% fedt (gennemsnit)",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit of smaakje, 0% vet (gemiddeld)",
+    "es": "Yogur o leche fermentada, con frutas o aromatizado, 0% grasa (promedio)",
+    "it": "Yogurt o latte fermentato, con frutta o aromatizzato, 0% grassi (media)"
   },
   "557b12c1-b6d1-57c4-b7d5-dc9221ec665e": {
     "en": "Large round sandwich with lettuce, tuna, anchovy and black olives",
     "fr": "Panini à la salade, au thon, aux anchois et aux olives noires",
-    "de":
-        "Großes rundes Sandwich mit Salat, Thunfisch, Anchovis und schwarzen Oliven",
+    "de": "Großes rundes Sandwich mit Salat, Thunfisch, Anchovis und schwarzen Oliven",
     "sv": "Stor rund smörgås med sallad, tonfisk, ansjovis och svarta oliver",
-    "no":
-        "Stor rund sandwich med salatblader, tunfisk, ansjos og svarte oliven",
+    "no": "Stor rund sandwich med salatblader, tunfisk, ansjos og svarte oliven",
     "da": "Stort rundt sandwichbrød med salat, tun, ansjos og sorte oliven",
     "nl": "Groot rond broodje met sla, tonijn, ansjovis en zwarte olijven",
-    "es":
-        "Sándwich redondo grande con lechuga, atún, anchoa y aceitunas negras",
+    "es": "Sándwich redondo grande con lechuga, atún, anchoa y aceitunas negras",
     "it": "Panino rotondo grande con lattuga, tonno, acciughe e olive nere"
   },
   "558b3172-6332-591b-8fc8-2a24da45aca7": {
@@ -8742,16 +8121,13 @@ const foodNames = <String, Map<String, String>>{
   "558d5097-de72-5dc9-ae2a-e1f9253ff13a": {
     "en": "Mineral still water (Eden La Goa), bottled, lightly mineralized",
     "fr": "Eau plate (Eden La Goa), en bouteille, faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Eden La Goa), in Flaschen, mild mineralisiert",
+    "de": "Stilles Mineralwasser (Eden La Goa), in Flaschen, mild mineralisiert",
     "sv": "Stilla mineralvatten (Eden La Goa), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Eden La Goa), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Eden La Goa), på flaske, let mineraliseret",
     "nl": "Plat mineraalwater (Eden La Goa), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Eden La Goa), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Eden La Goa), in bottiglia, minimamente mineralizzata"
+    "es": "Agua mineral sin gas (Eden La Goa), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Eden La Goa), in bottiglia, minimamente mineralizzata"
   },
   "55a4be63-d8ff-561c-8552-f5cea853d6ea": {
     "en": "Twelfth Night cake (puff pastry filled with almond paste)",
@@ -8776,24 +8152,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Formaggio Sainte Maure, di latte caprino"
   },
   "55addf76-551f-51cc-8097-92eeeb09eae5": {
-    "en":
-        "Vegetables, pan-fried or stir-fried, seasonned, Asian-style, frozen, raw",
-    "fr":
-        "Légumes, poâlés ou sautés, assaisonnés, style asiatique, surgelés, crus",
-    "de":
-        "Gemüse, in der Pfanne gebraten oder pfannengestürzt, gewürzt, nach asiatischer Art, tiefgekühlt, roh",
-    "sv":
-        "Grönsaker, stekta eller wookade, kryddade, asiatisk stil, frysta, råa",
-    "no":
-        "Grønnsaker, panert eller hurtigstekt, krydret, asiatisk stil, frosne, rå",
-    "da":
-        "Grøntsager, panerede eller lynstegte, krydrede, asiatisk stil, frosne, rå",
-    "nl":
-        "Groenten, gebakken of geroerbakt, gekruid, Aziatische stijl, diepgevroren, rauw",
-    "es":
-        "Verduras salteadas o sofritas, sazonadas, estilo asiático, congeladas, crudas",
-    "it":
-        "Verdure saltate in padella, condite, stile asiatico, surgelate, crude"
+    "en": "Vegetables, pan-fried or stir-fried, seasonned, Asian-style, frozen, raw",
+    "fr": "Légumes, poâlés ou sautés, assaisonnés, style asiatique, surgelés, crus",
+    "de": "Gemüse, in der Pfanne gebraten oder pfannengestürzt, gewürzt, nach asiatischer Art, tiefgekühlt, roh",
+    "sv": "Grönsaker, stekta eller wookade, kryddade, asiatisk stil, frysta, råa",
+    "no": "Grønnsaker, panert eller hurtigstekt, krydret, asiatisk stil, frosne, rå",
+    "da": "Grøntsager, panerede eller lynstegte, krydrede, asiatisk stil, frosne, rå",
+    "nl": "Groenten, gebakken of geroerbakt, gekruid, Aziatische stijl, diepgevroren, rauw",
+    "es": "Verduras salteadas o sofritas, sazonadas, estilo asiático, congeladas, crudas",
+    "it": "Verdure saltate in padella, condite, stile asiatico, surgelate, crude"
   },
   "55bd5bcd-3085-5ed3-a6cd-0f518fcb84ae": {
     "en": "Chicken, meat and skin, raw",
@@ -8884,35 +8251,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Marzapane o pasta di mandorle, preconfezionato"
   },
   "56fc9d49-0098-562d-95b3-4c6d6009c9a2": {
-    "en":
-        "Fruits dessert, all types (sugar content is less than fruits compote but more than fruits compote reduced sugar), prepacked, room temperature",
-    "fr":
-        "Dessert de fruits, tous types (teneur en sucre inférieure à celle de la compote de fruits mais supérieure à celle de la compote allégée en sucre), préemballé, à température ambiante",
-    "de":
-        "Frucht-Dessert, alle Sorten (Zuckergehalt geringer als Fruchtkompott, aber höher als zuckerreduziertes Fruchtkompott), vorgepackt, bei Raumtemperatur",
-    "sv":
-        "Fruktdessert, alla typer (sockerhalt är mindre än fruktkompott men mer än fruktkompott med reducerat socker), färdigförpackad, rumstemperatur",
-    "no":
-        "Fruktdessert, alle typer (sukkerinnhold lavere enn fruktsyltetøy, men høyere enn fruktsyltetøy med redusert sukker), ferdigpakket, romtemperatur",
-    "da":
-        "Frugtdessert, alle typer (sukkerindhold er lavere end frugtmos men højere end frugtmos med reduceret sukker), færdigpakke, stuetemperatur",
-    "nl":
-        "Fruitdessert, alle soorten (suikergehalte is minder dan fruitcompote maar meer dan fruitcompote met verlaagd suikergehalte), voorverpakt, kamertemperatuur",
-    "es":
-        "Postre de frutas, todos los tipos (contenido de azúcar menor que compota de frutas pero mayor que compota de frutas reducida en azúcar), preenvasado, temperatura ambiente",
-    "it":
-        "Dessert alla frutta, tutti i tipi (contenuto di zuccheri inferiore alla composta di frutta ma superiore alla composta di frutta a ridotto contenuto di zuccheri), preconfezionato, a temperatura ambiente"
+    "en": "Fruits dessert, all types (sugar content is less than fruits compote but more than fruits compote reduced sugar), prepacked, room temperature",
+    "fr": "Dessert de fruits, tous types (teneur en sucre inférieure à celle de la compote de fruits mais supérieure à celle de la compote allégée en sucre), préemballé, à température ambiante",
+    "de": "Frucht-Dessert, alle Sorten (Zuckergehalt geringer als Fruchtkompott, aber höher als zuckerreduziertes Fruchtkompott), vorgepackt, bei Raumtemperatur",
+    "sv": "Fruktdessert, alla typer (sockerhalt är mindre än fruktkompott men mer än fruktkompott med reducerat socker), färdigförpackad, rumstemperatur",
+    "no": "Fruktdessert, alle typer (sukkerinnhold lavere enn fruktsyltetøy, men høyere enn fruktsyltetøy med redusert sukker), ferdigpakket, romtemperatur",
+    "da": "Frugtdessert, alle typer (sukkerindhold er lavere end frugtmos men højere end frugtmos med reduceret sukker), færdigpakke, stuetemperatur",
+    "nl": "Fruitdessert, alle soorten (suikergehalte is minder dan fruitcompote maar meer dan fruitcompote met verlaagd suikergehalte), voorverpakt, kamertemperatuur",
+    "es": "Postre de frutas, todos los tipos (contenido de azúcar menor que compota de frutas pero mayor que compota de frutas reducida en azúcar), preenvasado, temperatura ambiente",
+    "it": "Dessert alla frutta, tutti i tipi (contenuto di zuccheri inferiore alla composta di frutta ma superiore alla composta di frutta a ridotto contenuto di zuccheri), preconfezionato, a temperatura ambiente"
   },
   "572d9c86-fa36-5c83-8824-779d4a76cf3f": {
-    "en": "Pasta, dry, regular, cooked, no added salt",
-    "fr": "Pâtes, sèches, ordinaires, cuites, sans sel ajouté",
-    "de": "Teigwaren, trocken, normal, gekocht, ohne Salzzusatz",
-    "sv": "Pasta, torkad, vanliga, kokta, inget tillsatt salt",
-    "no": "Pasta, tørr, vanlige, kokt, uten tilsatt salt",
-    "da": "Pasta, tørret, almindelig, kogt, uden tilsat salt",
-    "nl": "Pasta, droog, normaal, gekookt, geen toegevoegd zout",
-    "es": "Pasta, seca, normal, cocida, sin sal añadida",
-    "it": "Pasta di semola, secca, cotta, senza sale aggiunto"
+    "en": "Pasta — cooked",
+    "de": "Nudeln — gekocht",
+    "fr": "Pâtes — cuites",
+    "no": "Pasta – kokt",
+    "sv": "Pasta — kokt",
+    "da": "Pasta — kogt",
+    "nl": "Pasta — gekookt",
+    "it": "Pasta — cotta",
+    "es": "Pasta — cocida"
   },
   "573d560f-375f-5bc3-a562-f8ad5ba7583a": {
     "en": "Grissini or bread stick, plain (without sesame)",
@@ -8938,8 +8296,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "576ff36e-ac6c-564a-a169-2d667f3a01ab": {
     "en": "Spreadable fat <= 41% fat, half-salted, standard",
-    "fr":
-        "Matière grasse à tartiner ≤ 41 % de matière grasse, demi-sel, standard",
+    "fr": "Matière grasse à tartiner ≤ 41 % de matière grasse, demi-sel, standard",
     "de": "Streichfett <= 41 % Fett, halbsalzig, Standard",
     "sv": "Bredbart matfett <= 41% fett, halvsaltat, standard",
     "no": "Smørbart fett <= 41% fett, halvsaltetet, standard",
@@ -9028,18 +8385,13 @@ const foodNames = <String, Map<String, String>>{
   "57d6d89c-d2cd-5a35-8df9-4b4a66eb7d84": {
     "en": "Mineral still water (Sail-les-Bains), bottled, lightly mineralized",
     "fr": "Eau plate (Sail-les-Bains), en bouteille, faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Sail-les-Bains), in Flaschen, mild mineralisiert",
-    "sv":
-        "Stilla mineralvatten (Sail-les-Bains), på flaska, lätt mineraliserat",
+    "de": "Stilles Mineralwasser (Sail-les-Bains), in Flaschen, mild mineralisiert",
+    "sv": "Stilla mineralvatten (Sail-les-Bains), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Sail-les-Bains), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Sail-les-Bains), på flaske, let mineraliseret",
-    "nl":
-        "Plat mineraalwater (Sail-les-Bains), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Sail-les-Bains), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Sail-les-Bains), in bottiglia, a basso residuo fisso"
+    "nl": "Plat mineraalwater (Sail-les-Bains), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral sin gas (Sail-les-Bains), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Sail-les-Bains), in bottiglia, a basso residuo fisso"
   },
   "57ddd7f7-ae6b-5a39-b535-de413051299b": {
     "en": "Apple, flesh and skin, raw",
@@ -9097,24 +8449,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Vitello, macinato per bistecca, 20% grassi, crudo"
   },
   "58534702-5020-5e44-ac42-aa914ff2001f": {
-    "en":
-        "Crepe or buckwheat pancake, filled with cheese, ham, mushrooms and béchamel sauce, prepacked",
-    "fr":
-        "Crêpe ou galette de sarrasin, garnie de fromage, jambon, champignons et sauce béchamel, préemballée",
-    "de":
-        "Crpe oder Buchweizenpfannkuchen, gefüllt mit Käse, Schinken, Pilzen und Béchamelsauce, vorgepackt",
-    "sv":
-        "Crêpe eller bovetepannkaka, fylld med ost, skinka, svamp och bechamelsås, färdigförpackad",
-    "no":
-        "Crepe eller bokhvetepannekake, fylt med ost, skinke, sopp og béchamelsaus, ferdigpakket",
-    "da":
-        "Crêpe eller bokhvedepandekage, fyldt med ost, skinke, svampe og béchamelsovs, færdigpakket",
-    "nl":
-        "Crepe of boekweitpannenkoek, gevuld met kaas, ham, champignons en bechamelsaus, voorverpakt",
-    "es":
-        "Crepe o tortita de trigo sarraceno, rellena de queso, jamón, champiñones y salsa bechamel, preenvasada",
-    "it":
-        "Crepe o galletta di grano saraceno, ripiena di formaggio, prosciutto, funghi e besciamella, preconfezionata"
+    "en": "Crepe or buckwheat pancake, filled with cheese, ham, mushrooms and béchamel sauce, prepacked",
+    "fr": "Crêpe ou galette de sarrasin, garnie de fromage, jambon, champignons et sauce béchamel, préemballée",
+    "de": "Crpe oder Buchweizenpfannkuchen, gefüllt mit Käse, Schinken, Pilzen und Béchamelsauce, vorgepackt",
+    "sv": "Crêpe eller bovetepannkaka, fylld med ost, skinka, svamp och bechamelsås, färdigförpackad",
+    "no": "Crepe eller bokhvetepannekake, fylt med ost, skinke, sopp og béchamelsaus, ferdigpakket",
+    "da": "Crêpe eller bokhvedepandekage, fyldt med ost, skinke, svampe og béchamelsovs, færdigpakket",
+    "nl": "Crepe of boekweitpannenkoek, gevuld met kaas, ham, champignons en bechamelsaus, voorverpakt",
+    "es": "Crepe o tortita de trigo sarraceno, rellena de queso, jamón, champiñones y salsa bechamel, preenvasada",
+    "it": "Crepe o galletta di grano saraceno, ripiena di formaggio, prosciutto, funghi e besciamella, preconfezionata"
   },
   "58565634-a155-5235-9629-aee5c2e688b6": {
     "en": "Pork on skewer, raw",
@@ -9150,19 +8493,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Tortilla di grano, da farcire"
   },
   "58be2309-58e7-576c-b2d1-c4c57cd202b7": {
-    "en":
-        "Processed cheese, from cow's milk, triangle, fortified with vitamins",
-    "fr":
-        "Fromage fondu, au lait de vache, en portion triangulaire, enrichi en vitamines",
+    "en": "Processed cheese, from cow's milk, triangle, fortified with vitamins",
+    "fr": "Fromage fondu, au lait de vache, en portion triangulaire, enrichi en vitamines",
     "de": "Schmelzkäse, aus Kuhmilch, Dreieck, mit Vitaminen angereichert",
     "sv": "Smältost, av komjölk, triangel, berikad med vitaminer",
     "no": "Smelteost, av kumelk, trekant, beriket med vitaminer",
     "da": "Smelteost, af komælk, trekant, beriget med vitaminer",
     "nl": "Smeltkaas, van koemelk, driehoekje, verrijkt met vitaminen",
-    "es":
-        "Queso procesado, de leche de vaca, en porciones triangulares, enriquecido con vitaminas",
-    "it":
-        "Formaggio fuso, di latte vaccino, a triangoli, fortificato con vitamine"
+    "es": "Queso procesado, de leche de vaca, en porciones triangulares, enriquecido con vitaminas",
+    "it": "Formaggio fuso, di latte vaccino, a triangoli, fortificato con vitamine"
   },
   "58cd0bb4-f47a-5246-8ce9-603564be5793": {
     "en": "Mixed salad, with meat/fish, canned",
@@ -9220,23 +8559,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Maiale, lardo, senza cotenna, crudo"
   },
   "595eb381-c259-5bb1-a6e7-227ffcb93011": {
-    "en":
-        "Energy drink, sugar and artifical sweetener contents unknown (average)",
-    "fr":
-        "Boisson énergisante, teneur en sucre et édulcorant artificiel inconnue (moyenne)",
+    "en": "Energy drink, sugar and artifical sweetener contents unknown (average)",
+    "fr": "Boisson énergisante, teneur en sucre et édulcorant artificiel inconnue (moyenne)",
     "de": "Energy-Drink, Zucker- und Süßstoffgehalt unbekannt (Durchschnitt)",
-    "sv":
-        "Energidryck, okänt innehåll av socker och konstgjort sötningsmedel (genomsnitt)",
-    "no":
-        "Energidrikk, sukker- og kunstig søtningsmiddelinnhold ukjent (gjennomsnitt)",
-    "da":
-        "Energidrik, sukker- og kunstigt sødemiddelindhold ukendt (gennemsnit)",
-    "nl":
-        "Energiedrank, suiker- en kunstmatige zoetstofgehalte onbekend (gemiddeld)",
-    "es":
-        "Bebida energética, contenido de azúcar y edulcorante artificial desconocido (promedio)",
-    "it":
-        "Bevanda energetica, contenuto di zuccheri e dolcificanti artificiali sconosciuto (media)"
+    "sv": "Energidryck, okänt innehåll av socker och konstgjort sötningsmedel (genomsnitt)",
+    "no": "Energidrikk, sukker- og kunstig søtningsmiddelinnhold ukjent (gjennomsnitt)",
+    "da": "Energidrik, sukker- og kunstigt sødemiddelindhold ukendt (gennemsnit)",
+    "nl": "Energiedrank, suiker- en kunstmatige zoetstofgehalte onbekend (gemiddeld)",
+    "es": "Bebida energética, contenido de azúcar y edulcorante artificial desconocido (promedio)",
+    "it": "Bevanda energetica, contenuto di zuccheri e dolcificanti artificiali sconosciuto (media)"
   },
   "5965c308-2b52-5fa2-b50d-e838c6873b8f": {
     "en": "Prawn, \"bouquet\", wild, boiled",
@@ -9275,14 +8606,10 @@ const foodNames = <String, Map<String, String>>{
     "en": "Wheat-based nuggets, breaded croquette (wo soybean), prepacked",
     "fr": "Nuggets à base de blé, croquette panée (sans soja), préemballés",
     "de": "Nuggets auf Weizenbasis, panierte Kroketten (ohne Soja), vorgepackt",
-    "sv":
-        "Vetebaserade nuggets, panerad kroket (utan sojaböna), färdigförpackad",
-    "no":
-        "Hvetebaserte nuggets, panert kroketten (uten soyabønner), ferdigpakket",
-    "da":
-        "Hvedebaserede nuggets, paneret kroket (uden sojabønne), færdigpakket",
-    "nl":
-        "Op tarwe gebaseerde nuggets, gepaneerde kroket (zonder soja), voorverpakt",
+    "sv": "Vetebaserade nuggets, panerad kroket (utan sojaböna), färdigförpackad",
+    "no": "Hvetebaserte nuggets, panert kroketten (uten soyabønner), ferdigpakket",
+    "da": "Hvedebaserede nuggets, paneret kroket (uden sojabønne), færdigpakket",
+    "nl": "Op tarwe gebaseerde nuggets, gepaneerde kroket (zonder soja), voorverpakt",
     "es": "Nuggets a base de trigo, croqueta empanada (sin soja), preenvasada",
     "it": "Crocchette a base di grano, impanate (senza soia), preconfezionate"
   },
@@ -9386,24 +8713,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Grano integrale, precotto, crudo"
   },
   "5ab2c6e1-bdd1-5a6b-9b15-5030f0252878": {
-    "en":
-        "Preparation for beverage diluted in water (eg. mint, strawberry etc.), no added sugars, with sweetener(s), type syrup 0%",
-    "fr":
-        "Préparation pour boisson diluée dans l'eau (ex. menthe, fraise, etc.), sans sucres ajoutés, avec édulcorant(s), type sirop 0%",
-    "de":
-        "Getränkezubereitung in Wasser verdünnt (z.B. Minze, Erdbeere etc.), ohne Zuckerzusatz, mit Süßungsmitteln, Typ Sirup 0%",
-    "sv":
-        "Förberedelse för dryck utspädd i vatten (t.ex. mynta, jordgubbe etc.), inget tillsatt socker, med sötningsmedel, typ sirap 0%",
-    "no":
-        "Konsentrat for drikke utvannet i vann (f.eks. mint, jordbær osv.), uten tilsatt sukker, med søtningsmiddel(er), type sirup 0%",
-    "da":
-        "Forberedelse til drikkevare opblandet i vand (f.eks. mint, jordbær etc.), uden tilsat sukker, med sødemiddel(er), type sirup 0%",
-    "nl":
-        "Bereiding voor drank te verdunnen in water (bijv. munt, aardbei enz.), zonder toegevoegde suikers, met zoetstof(fen), type siroop 0%",
-    "es":
-        "Preparado para bebida diluido en agua (ej. menta, fresa, etc.), sin azúcares añadidos, con edulcorante(s), tipo jarabe 0%",
-    "it":
-        "Preparato per bevanda diluito in acqua (es. menta, fragola ecc.), senza zuccheri aggiunti, con dolcificante(i), tipo sciroppo 0%"
+    "en": "Preparation for beverage diluted in water (eg. mint, strawberry etc.), no added sugars, with sweetener(s), type syrup 0%",
+    "fr": "Préparation pour boisson diluée dans l'eau (ex. menthe, fraise, etc.), sans sucres ajoutés, avec édulcorant(s), type sirop 0%",
+    "de": "Getränkezubereitung in Wasser verdünnt (z.B. Minze, Erdbeere etc.), ohne Zuckerzusatz, mit Süßungsmitteln, Typ Sirup 0%",
+    "sv": "Förberedelse för dryck utspädd i vatten (t.ex. mynta, jordgubbe etc.), inget tillsatt socker, med sötningsmedel, typ sirap 0%",
+    "no": "Konsentrat for drikke utvannet i vann (f.eks. mint, jordbær osv.), uten tilsatt sukker, med søtningsmiddel(er), type sirup 0%",
+    "da": "Forberedelse til drikkevare opblandet i vand (f.eks. mint, jordbær etc.), uden tilsat sukker, med sødemiddel(er), type sirup 0%",
+    "nl": "Bereiding voor drank te verdunnen in water (bijv. munt, aardbei enz.), zonder toegevoegde suikers, met zoetstof(fen), type siroop 0%",
+    "es": "Preparado para bebida diluido en agua (ej. menta, fresa, etc.), sin azúcares añadidos, con edulcorante(s), tipo jarabe 0%",
+    "it": "Preparato per bevanda diluito in acqua (es. menta, fragola ecc.), senza zuccheri aggiunti, con dolcificante(i), tipo sciroppo 0%"
   },
   "5ab3c073-a784-58cb-b758-a3e31250ef28": {
     "en": "Breath mint, with sugar(s)",
@@ -9604,24 +8922,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Dulce de leche o crema di latte"
   },
   "5ca46bb5-431e-5667-aaad-029c288b3967": {
-    "en":
-        "Quark or dairy specialty, with chocolate flakes, 7-8% fat, with sugar(s)",
-    "fr":
-        "Quark ou spécialité laitière, avec des pépites de chocolat, 7-8% de matière grasse, avec sucre(s)",
-    "de":
-        "Quark oder Milchsäurespezialität, mit Schokostückchen, 7-8% Fett, mit Zucker",
-    "sv":
-        "Kvarg eller mejerispecialitet, med chokladflingor, 7-8% fett, med socker",
-    "no":
-        "Kveiteost eller meierispesialitet, med sjokoladeflak, 7-8% fett, med sukker",
-    "da":
-        "Kvark eller mejerispecialitet, med chokoldeflager, 7-8% fedt, med sukker",
-    "nl":
-        "Kwark of zuivelspecialiteit, met chocoladeschilfers, 7-8% vet, met suiker(s)",
-    "es":
-        "Quark o especialidad láctea, con virutas de chocolate, 7-8% materia grasa, con azúcar(es)",
-    "it":
-        "Quark o specialità lattiero-casearia, con scaglie di cioccolato, 7-8% di grassi, con zucchero"
+    "en": "Quark or dairy specialty, with chocolate flakes, 7-8% fat, with sugar(s)",
+    "fr": "Quark ou spécialité laitière, avec des pépites de chocolat, 7-8% de matière grasse, avec sucre(s)",
+    "de": "Quark oder Milchsäurespezialität, mit Schokostückchen, 7-8% Fett, mit Zucker",
+    "sv": "Kvarg eller mejerispecialitet, med chokladflingor, 7-8% fett, med socker",
+    "no": "Kveiteost eller meierispesialitet, med sjokoladeflak, 7-8% fett, med sukker",
+    "da": "Kvark eller mejerispecialitet, med chokoldeflager, 7-8% fedt, med sukker",
+    "nl": "Kwark of zuivelspecialiteit, met chocoladeschilfers, 7-8% vet, met suiker(s)",
+    "es": "Quark o especialidad láctea, con virutas de chocolate, 7-8% materia grasa, con azúcar(es)",
+    "it": "Quark o specialità lattiero-casearia, con scaglie di cioccolato, 7-8% di grassi, con zucchero"
   },
   "5cbfab9e-b214-579a-8bed-8cfa8fcb2a10": {
     "en": "Garden peas, frozen, raw",
@@ -9668,57 +8977,37 @@ const foodNames = <String, Map<String, String>>{
     "it": "Barretta al cocco, ricoperta di cioccolato"
   },
   "5d7ee4dc-093c-5ce4-9359-bc5e6ab99a8c": {
-    "en":
-        "Bottled water, flavoured, sugar and sweetener contents unknown (average)",
-    "fr":
-        "Eau en bouteille, aromatisée, teneurs en sucre et en édulcorant inconnues (moyenne)",
-    "de":
-        "Flaschenwasser, aromatisiert, Zucker- und Süßstoffgehalt unbekannt (Durchschnitt)",
-    "sv":
-        "Flaska vatten, smaksatt, socker- och sötningsmedelsinnehåll okänt (genomsnitt)",
-    "no":
-        "Fludisk flaskevann, med smak, innhold av sukker og søtningsmiddel ukjent (gjennomsnitt)",
-    "da":
-        "Flaskevand, med smag, indhold af sukker og sødemiddel ukendt (gennemsnit)",
-    "nl":
-        "Gebotteld water, met smaakje, suiker- en zoetstofgehalte onbekend (gemiddeld)",
-    "es":
-        "Agua embotellada, saborizada, contenido de azúcar y edulcorante desconocido (promedio)",
-    "it":
-        "Acqua in bottiglia, aromatizzata, contenuto di zuccheri e dolcificanti sconosciuto (media)"
+    "en": "Bottled water, flavoured, sugar and sweetener contents unknown (average)",
+    "fr": "Eau en bouteille, aromatisée, teneurs en sucre et en édulcorant inconnues (moyenne)",
+    "de": "Flaschenwasser, aromatisiert, Zucker- und Süßstoffgehalt unbekannt (Durchschnitt)",
+    "sv": "Flaska vatten, smaksatt, socker- och sötningsmedelsinnehåll okänt (genomsnitt)",
+    "no": "Fludisk flaskevann, med smak, innhold av sukker og søtningsmiddel ukjent (gjennomsnitt)",
+    "da": "Flaskevand, med smag, indhold af sukker og sødemiddel ukendt (gennemsnit)",
+    "nl": "Gebotteld water, met smaakje, suiker- en zoetstofgehalte onbekend (gemiddeld)",
+    "es": "Agua embotellada, saborizada, contenido de azúcar y edulcorante desconocido (promedio)",
+    "it": "Acqua in bottiglia, aromatizzata, contenuto di zuccheri e dolcificanti sconosciuto (media)"
   },
   "5d8029dd-78b0-5125-86f8-10920273c49e": {
-    "en":
-        "Sandwich, club, wholemeal bread, ham, cheese and raw vegetables, prepacked",
-    "fr":
-        "Sandwich, club, pain complet, jambon, fromage et crudités, préemballé",
-    "de":
-        "Club-Sandwich, Vollkornbrot, Schinken, Käse und Rohkost, vorverpackt",
-    "sv":
-        "Sandwich, club, fullkornsbröd, skinka, ost och råa grönsaker, förpackad",
-    "no":
-        "Club sandwich, fullkornsbrød, skinke, ost og rå grønnsaker, ferdigpakket",
+    "en": "Sandwich, club, wholemeal bread, ham, cheese and raw vegetables, prepacked",
+    "fr": "Sandwich, club, pain complet, jambon, fromage et crudités, préemballé",
+    "de": "Club-Sandwich, Vollkornbrot, Schinken, Käse und Rohkost, vorverpackt",
+    "sv": "Sandwich, club, fullkornsbröd, skinka, ost och råa grönsaker, förpackad",
+    "no": "Club sandwich, fullkornsbrød, skinke, ost og rå grønnsaker, ferdigpakket",
     "da": "Sandwich, club, fuldkornsbrød, skinke, ost og rå grøntsager, pakkes",
-    "nl":
-        "Clubsandwich, volkorenbrood, ham, kaas en rauwe groenten, voorverpakt",
-    "es":
-        "Sándwich club, pan integral, jamón, queso y vegetales crudos, preenvasado",
-    "it":
-        "Sandwich, club, pane integrale, prosciutto, formaggio e verdure crude, confezionato"
+    "nl": "Clubsandwich, volkorenbrood, ham, kaas en rauwe groenten, voorverpakt",
+    "es": "Sándwich club, pan integral, jamón, queso y vegetales crudos, preenvasado",
+    "it": "Sandwich, club, pane integrale, prosciutto, formaggio e verdure crude, confezionato"
   },
   "5da92c15-3978-51f5-b404-2de0a253d184": {
     "en": "Uncured soft cheese, spreadable, plain, in tray, from cow's milk",
-    "fr":
-        "Fromage frais non affiné, à tartiner, nature, en barquette, au lait de vache",
+    "fr": "Fromage frais non affiné, à tartiner, nature, en barquette, au lait de vache",
     "de": "Frischkäse, streichzart, natur, in Schale, aus Kuhmilch",
     "sv": "Olagrad mjukost, bredbar, naturell, i tråg, av komjölk",
     "no": "Umodnet mykost, smørbar, naturell, i brett, fra kuemelk",
     "da": "Umodnet blød ost, smørbar, naturel, i bakke, af komælk",
     "nl": "Ongezouten zachte kaas, smeerbaar, naturel, in bakje, van koemelk",
-    "es":
-        "Queso fresco sin curar, para untar, natural, en bandeja, de leche de vaca",
-    "it":
-        "Formaggio fresco spalmabile, semplice, in vaschetta, da latte vaccino"
+    "es": "Queso fresco sin curar, para untar, natural, en bandeja, de leche de vaca",
+    "it": "Formaggio fresco spalmabile, semplice, in vaschetta, da latte vaccino"
   },
   "5da9d63c-04cf-590e-86b2-115a787ae92e": {
     "en": "Celeriac, cooked",
@@ -9809,24 +9098,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Bignè ripieno di crema pasticcera"
   },
   "5eb1f214-e520-5138-b473-c71e752b2a70": {
-    "en":
-        "Plant-based burger or steak from soybean, cheese and vegetables, prepacked",
-    "fr":
-        "Burger ou steak végétal à base de soja, fromage et légumes, préemballé",
-    "de":
-        "Pflanzenbasierter Burger oder Steak aus Sojabohnen, Käse und Gemüse, vorverpackt",
-    "sv":
-        "Växtbaserad burgare eller biff från sojaböna, ost och grönsaker, förpackad",
-    "no":
-        "Plantebasert burger eller biff av soyabønner, ost og grønnsaker, ferdigpakket",
-    "da":
-        "Plantebaseret burger eller steak af sojabønner, ost og grøntsager, pakkes",
-    "nl":
-        "Plantaardige burger of steak van sojaboon, kaas en groenten, voorverpakt",
-    "es":
-        "Hamburguesa o filete vegetal de soja, queso y vegetales, preenvasado",
-    "it":
-        "Burger o bistecca a base vegetale di soia, formaggio e verdure, confezionato"
+    "en": "Plant-based burger or steak from soybean, cheese and vegetables, prepacked",
+    "fr": "Burger ou steak végétal à base de soja, fromage et légumes, préemballé",
+    "de": "Pflanzenbasierter Burger oder Steak aus Sojabohnen, Käse und Gemüse, vorverpackt",
+    "sv": "Växtbaserad burgare eller biff från sojaböna, ost och grönsaker, förpackad",
+    "no": "Plantebasert burger eller biff av soyabønner, ost og grønnsaker, ferdigpakket",
+    "da": "Plantebaseret burger eller steak af sojabønner, ost og grøntsager, pakkes",
+    "nl": "Plantaardige burger of steak van sojaboon, kaas en groenten, voorverpakt",
+    "es": "Hamburguesa o filete vegetal de soja, queso y vegetales, preenvasado",
+    "it": "Burger o bistecca a base vegetale di soia, formaggio e verdure, confezionato"
   },
   "5ec192b8-f40f-51e6-9e4d-109104c61bfb": {
     "en": "Garden peas and carrots, canned, drained",
@@ -9851,24 +9131,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salsa alla carbonara (salsa alla panna con pancetta), confezionata"
   },
   "5f4caeca-8d77-5a52-b2b6-4151dd7f3536": {
-    "en":
-        "Mineral sparkling water (Hydroxydase), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale gazeuse (Hydroxydase), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Hydroxydase), in Flaschen, stark mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Hydroxydase), på flaska, starkt mineraliserat",
-    "no":
-        "Farris/mineralvann med kullsyre (Hydroxydase), på flaske, sterkt mineralisert",
-    "da":
-        "Mineralvand med kulsyre (Hydroxydase), på flaske, stærkt mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Hydroxydase), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Hydroxydase), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Hydroxydase), in bottiglia, fortemente mineralizzata"
+    "en": "Mineral sparkling water (Hydroxydase), bottled, strongly mineralized",
+    "fr": "Eau minérale gazeuse (Hydroxydase), en bouteille, fortement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Hydroxydase), in Flaschen, stark mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Hydroxydase), på flaska, starkt mineraliserat",
+    "no": "Farris/mineralvann med kullsyre (Hydroxydase), på flaske, sterkt mineralisert",
+    "da": "Mineralvand med kulsyre (Hydroxydase), på flaske, stærkt mineraliseret",
+    "nl": "Bruisend mineraalwater (Hydroxydase), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral con gas (Hydroxydase), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (Hydroxydase), in bottiglia, fortemente mineralizzata"
   },
   "5f55ee70-ed29-5353-b734-a99b5ff0f52c": {
     "en": "Pork, chop, raw",
@@ -9906,29 +9177,23 @@ const foodNames = <String, Map<String, String>>{
   "5f6d90cd-6eba-5ce4-8e14-f62dbebbaf0a": {
     "en": "Mineral sparkling water (Parot), bottled, averagely mineralized",
     "fr": "Eau minérale gazeuse (Parot), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Parot), in Flaschen, durchschnittlich mineralisiert",
+    "de": "Mineralwasser mit Kohlensäure (Parot), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (Parot), på flaska, medelmineraliserat",
     "no": "Mineralvann med kullsyre (Parot), på flaske, middels mineralisert",
     "da": "Mineralvand med kulsyre (Parot), på flaske, moderat mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Parot), gebotteld, gemiddeld gemineraliseerd",
+    "nl": "Bruisend mineraalwater (Parot), gebotteld, gemiddeld gemineraliseerd",
     "es": "Agua mineral con gas (Parot), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (Parot), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale frizzante (Parot), in bottiglia, mediamente mineralizzata"
   },
   "5f7df695-d5bd-585f-ac0f-8cd92b9721d6": {
-    "en":
-        "Butter biscuit (cookie), with chocolate (chocolate chips or covering)",
-    "fr":
-        "Biscuit au beurre, avec du chocolat (pépites de chocolat ou enrobage)",
+    "en": "Butter biscuit (cookie), with chocolate (chocolate chips or covering)",
+    "fr": "Biscuit au beurre, avec du chocolat (pépites de chocolat ou enrobage)",
     "de": "Butterkeks, mit Schokolade (Schokostückchen oder Überzug)",
     "sv": "Smörgåskex (kaka), med choklad (chokladbitar eller överdrag)",
     "no": "Smørkjeks, med sjokolade (sjokoladebit eller overtrekk)",
     "da": "Småkage, med chokolade (chokoladestykker eller overtræk)",
     "nl": "Boterkoekje, met chocolade (chocoladestukjes of omhulling)",
-    "es":
-        "Galleta de mantequilla, con chocolate (chips de chocolate o cobertura)",
+    "es": "Galleta de mantequilla, con chocolate (chips de chocolate o cobertura)",
     "it": "Biscotto al burro, con cioccolato (gocce o copertura)"
   },
   "5f98abcd-012f-54aa-85c2-64a5ded97e6d": {
@@ -9976,24 +9241,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Zuppa, tipo gazpacho, fredda, confezionata"
   },
   "5fb5cf74-beac-592d-96da-958ac7bead53": {
-    "en":
-        "Crepe or buckwheat pancake, filled with mushrooms and béchamel sauce, prepacked, cooked",
-    "fr":
-        "Crêpe ou galette de sarrasin, fourrée aux champignons et sauce béchamel, préemballée, cuite",
-    "de":
-        "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Pilzen und Béchamelsoße, vorverpackt, gekocht",
-    "sv":
-        "Crêpe eller bovetepannkaka, fylld med svamp och béchamelsås, förpackad, tillagad",
-    "no":
-        "Crepe eller bokhvetepannekake, fylt med sopp og bechamelsaus, ferdigpakket, kokt/stekt",
-    "da":
-        "Crêpe eller bokhvedepandekage, fyldt med svampe og béchamelsauce, pakkes, tilberedt",
-    "nl":
-        "Crêpe of boekweitpannenkoek, gevuld met champignons en bechamelsaus, voorverpakt, gaar",
-    "es":
-        "Crepe o tortita de trigo sarraceno, rellena de champiñones y salsa bechamel, preenvasada, cocinada",
-    "it":
-        "Crêpe o pancake al grano saraceno, ripieno di funghi e besciamella, confezionato, cotto"
+    "en": "Crepe or buckwheat pancake, filled with mushrooms and béchamel sauce, prepacked, cooked",
+    "fr": "Crêpe ou galette de sarrasin, fourrée aux champignons et sauce béchamel, préemballée, cuite",
+    "de": "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Pilzen und Béchamelsoße, vorverpackt, gekocht",
+    "sv": "Crêpe eller bovetepannkaka, fylld med svamp och béchamelsås, förpackad, tillagad",
+    "no": "Crepe eller bokhvetepannekake, fylt med sopp og bechamelsaus, ferdigpakket, kokt/stekt",
+    "da": "Crêpe eller bokhvedepandekage, fyldt med svampe og béchamelsauce, pakkes, tilberedt",
+    "nl": "Crêpe of boekweitpannenkoek, gevuld met champignons en bechamelsaus, voorverpakt, gaar",
+    "es": "Crepe o tortita de trigo sarraceno, rellena de champiñones y salsa bechamel, preenvasada, cocinada",
+    "it": "Crêpe o pancake al grano saraceno, ripieno di funghi e besciamella, confezionato, cotto"
   },
   "5fde9aca-dcae-5a3c-9364-f4d4d9af5e14": {
     "en": "Pork, loin, raw",
@@ -10084,24 +9340,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Insalata di pasta, con surimi, con salsa, confezionata"
   },
   "60fbd076-b6fe-5c98-8aec-faf3dc573f82": {
-    "en":
-        "Stewed fruits, no added sugars (pulp or mixed fruits, but always with other ingredient), prepacked, refrigerated",
-    "fr":
-        "Compote de fruits, sans sucres ajoutés (pulpe ou mélange de fruits, mais toujours avec un autre ingrédient), préemballée, réfrigérée",
-    "de":
-        "Obstkompott, ohne Zuckerzusatz (Fruchtmark oder -mischung, aber immer mit anderen Zutaten), vorverpackt, gekühlt",
-    "sv":
-        "Fruktmos, inget tillsatt socker (puré eller blandade frukter, men alltid med annan ingrediens), förpackad, kyld",
-    "no":
-        "Fruktmos, uten tilsatt sukker (puré eller blandet frukt, men alltid med annen ingrediens), ferdigpakket, kjølt",
-    "da":
-        "Frugtmos, uden tilsat sukker (frugtmos eller blandet frugt, men altid med anden ingrediens), pakkes, på køl",
-    "nl":
-        "Fruitcompote, zonder toegevoegde suikers (pulp of gemengd fruit, maar altijd met een ander ingrediënt), voorverpakt, gekoeld",
-    "es":
-        "Frutas en compota, sin azúcares añadidos (pulpa o frutas mezcladas, pero siempre con otro ingrediente), preenvasada, refrigerada",
-    "it":
-        "Frutta stufata, senza zuccheri aggiunti (polpa o mista, ma sempre con altri ingredienti), confezionata, refrigerata"
+    "en": "Stewed fruits, no added sugars (pulp or mixed fruits, but always with other ingredient), prepacked, refrigerated",
+    "fr": "Compote de fruits, sans sucres ajoutés (pulpe ou mélange de fruits, mais toujours avec un autre ingrédient), préemballée, réfrigérée",
+    "de": "Obstkompott, ohne Zuckerzusatz (Fruchtmark oder -mischung, aber immer mit anderen Zutaten), vorverpackt, gekühlt",
+    "sv": "Fruktmos, inget tillsatt socker (puré eller blandade frukter, men alltid med annan ingrediens), förpackad, kyld",
+    "no": "Fruktmos, uten tilsatt sukker (puré eller blandet frukt, men alltid med annen ingrediens), ferdigpakket, kjølt",
+    "da": "Frugtmos, uden tilsat sukker (frugtmos eller blandet frugt, men altid med anden ingrediens), pakkes, på køl",
+    "nl": "Fruitcompote, zonder toegevoegde suikers (pulp of gemengd fruit, maar altijd met een ander ingrediënt), voorverpakt, gekoeld",
+    "es": "Frutas en compota, sin azúcares añadidos (pulpa o frutas mezcladas, pero siempre con otro ingrediente), preenvasada, refrigerada",
+    "it": "Frutta stufata, senza zuccheri aggiunti (polpa o mista, ma sempre con altri ingredienti), confezionata, refrigerata"
   },
   "610a9d83-a85c-5cab-bc90-e730180dca05": {
     "en": "Bread (average)",
@@ -10194,8 +9441,7 @@ const foodNames = <String, Map<String, String>>{
   "61e5a9ae-dd5b-5700-9726-d187b81055e8": {
     "en": "Carbonated beverage or soft drink, without fruit, with sugar(s)",
     "fr": "Boisson gazeuse ou soda, sans fruit, avec sucre(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Erfrischungsgetränk, ohne Frucht, mit Zucker",
+    "de": "Kohlensäurehaltiges Getränk oder Erfrischungsgetränk, ohne Frucht, mit Zucker",
     "sv": "Kolsyrad dryck eller läskedryck, utan frukt, med socker",
     "no": "Kullsyreholdig drikke eller brus, uten frukt, med sukker",
     "da": "Kulsyret drik eller sodavand, uden frugt, med sukker",
@@ -10287,8 +9533,7 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Schnitzel, sojaböns- och vete baserad (ej vegansk), förpackad",
     "no": "Schnitzel, soyabønne- og hvetebasert (ikke vegansk), ferdigpakket",
     "da": "Schnitzel, soja- og hvede-baseret (ikke vegansk), færdigpakket",
-    "nl":
-        "Schnitzel, op basis van soja en tarwe (niet veganistisch), voorverpakt",
+    "nl": "Schnitzel, op basis van soja en tarwe (niet veganistisch), voorverpakt",
     "es": "Schnitzel, a base de soja y trigo (no vegano), preenvasado",
     "it": "Cotoletta, a base di soia e grano (non vegana), preconfezionata"
   },
@@ -10491,24 +9736,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Hamburger di manzo e soia, preconfezionato"
   },
   "65a33b01-5993-5ece-82ca-b9784f8ef389": {
-    "en":
-        "Meal replacement, low calorie, powder, reconstituted with skimmed milk, milkshake type",
-    "fr":
-        "Substitut de repas, hypocalorique, en poudre, reconstitué avec du lait écrémé, type milkshake",
-    "de":
-        "Mahlzeitenersatz, kalorienarm, Pulver, mit entrahmter Milch rekonstituiert, milkshakeartig",
-    "sv":
-        "Måltidsersättning, lågkalori, pulver, återställd med skummjölk, milkshake-typ",
-    "no":
-        "Måltidserstatning, lavkalori, pulver, rekonstituert med skummet melk, milkshake-type",
-    "da":
-        "Måltidserstatning, lavt kalorieindhold, pulver, rekonstitueret med skummetmælk, milkshake-type",
-    "nl":
-        "Maaltijdvervanger, caloriearm, poeder, aangemaakt met magere melk, milkshake-type",
-    "es":
-        "Sustituto de comida, bajo en calorías, en polvo, reconstituido con leche desnatada, tipo batido",
-    "it":
-        "Sostituto del pasto, ipocalorico, in polvere, ricostituito con latte scremato, tipo milkshake"
+    "en": "Meal replacement, low calorie, powder, reconstituted with skimmed milk, milkshake type",
+    "fr": "Substitut de repas, hypocalorique, en poudre, reconstitué avec du lait écrémé, type milkshake",
+    "de": "Mahlzeitenersatz, kalorienarm, Pulver, mit entrahmter Milch rekonstituiert, milkshakeartig",
+    "sv": "Måltidsersättning, lågkalori, pulver, återställd med skummjölk, milkshake-typ",
+    "no": "Måltidserstatning, lavkalori, pulver, rekonstituert med skummet melk, milkshake-type",
+    "da": "Måltidserstatning, lavt kalorieindhold, pulver, rekonstitueret med skummetmælk, milkshake-type",
+    "nl": "Maaltijdvervanger, caloriearm, poeder, aangemaakt met magere melk, milkshake-type",
+    "es": "Sustituto de comida, bajo en calorías, en polvo, reconstituido con leche desnatada, tipo batido",
+    "it": "Sostituto del pasto, ipocalorico, in polvere, ricostituito con latte scremato, tipo milkshake"
   },
   "65abedb0-c384-58f9-881f-063f3abbe4c2": {
     "en": "Aioli sauce (garlic and olive oil mayonnaise), prepacked",
@@ -10544,30 +9780,20 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pesce, impanato, fritto, preconfezionato"
   },
   "661a9c8e-49e4-5fc5-9f48-610b86faf130": {
-    "en":
-        "Yogurt or fermented milk, plain, with sugar(s), fortified with vitamin D",
-    "fr":
-        "Yaourt ou lait fermenté, nature, avec sucre(s), enrichi en vitamine D",
-    "de":
-        "Joghurt oder fermentierte Milch, natur, mit Zucker, mit Vitamin D angereichert",
-    "sv":
-        "Yoghurt eller syrad mjölk, naturell, med socker, berikad med vitamin D",
-    "no":
-        "Yoghurt eller syrnet melk, naturell, med sukker, beriket med vitamin D",
-    "da":
-        "Yoghurt eller syrnet mælk, neutral, med sukker, beriget med vitamin D",
-    "nl":
-        "Yoghurt of gefermenteerde melk, naturel, met suiker(s), verrijkt met vitamine D",
-    "es":
-        "Yogur o leche fermentada, natural, con azúcar(es), enriquecido con vitamina D",
-    "it":
-        "Yogurt o latte fermentato, naturale, con zuccheri, fortificato con vitamina D"
+    "en": "Yogurt or fermented milk, plain, with sugar(s), fortified with vitamin D",
+    "fr": "Yaourt ou lait fermenté, nature, avec sucre(s), enrichi en vitamine D",
+    "de": "Joghurt oder fermentierte Milch, natur, mit Zucker, mit Vitamin D angereichert",
+    "sv": "Yoghurt eller syrad mjölk, naturell, med socker, berikad med vitamin D",
+    "no": "Yoghurt eller syrnet melk, naturell, med sukker, beriket med vitamin D",
+    "da": "Yoghurt eller syrnet mælk, neutral, med sukker, beriget med vitamin D",
+    "nl": "Yoghurt of gefermenteerde melk, naturel, met suiker(s), verrijkt met vitamine D",
+    "es": "Yogur o leche fermentada, natural, con azúcar(es), enriquecido con vitamina D",
+    "it": "Yogurt o latte fermentato, naturale, con zuccheri, fortificato con vitamina D"
   },
   "6655dea5-ddb5-5a09-aaf8-432281137536": {
     "en": "Puffed rice, with chocolate, fortified with vitamins and minerals",
     "fr": "Riz soufflé, au chocolat, enrichi en vitamines et minéraux",
-    "de":
-        "Puffreis, mit Schokolade, mit Vitaminen und Mineralstoffen angereichert",
+    "de": "Puffreis, mit Schokolade, mit Vitaminen und Mineralstoffen angereichert",
     "sv": "Puffat ris, med choklad, berikat med vitaminer och mineraler",
     "no": "Puffet ris, med sjokolade, beriket med vitaminer og mineraler",
     "da": "Pustet ris, med chokolade, beriget med vitaminer og mineraler",
@@ -10599,16 +9825,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "66a5ebee-932b-5934-9a62-b41d9b9a9c3c": {
     "en": "Cucumber salad, with fresh cream/cheese sauce, prepacked",
-    "fr":
-        "Salade de concombre, avec sauce à la crème fraîche/au fromage, préemballée",
+    "fr": "Salade de concombre, avec sauce à la crème fraîche/au fromage, préemballée",
     "de": "Gurkensalat, mit frischer Sahne-/Käsesoße, vorverpackt",
     "sv": "Gurksallad, med färsk grädde/ostsås, förpackad",
     "no": "Agurksalat, med rømme-/fløtesaus, ferdigpakket",
     "da": "Agurkesalat, med frisk fløde-/ostesovs, færdigpakket",
     "nl": "Komkommersalade, met verse room/kaassaus, voorverpakt",
     "es": "Ensalada de pepino, con salsa de nata/queso fresco, preenvasada",
-    "it":
-        "Insalata di cetrioli, con salsa di panna fresca/formaggio, preconfezionata"
+    "it": "Insalata di cetrioli, con salsa di panna fresca/formaggio, preconfezionata"
   },
   "66a912e1-5b10-5963-af1b-83f607929585": {
     "en": "Sesame seed",
@@ -10756,10 +9980,8 @@ const foodNames = <String, Map<String, String>>{
   "67762f42-1a4a-5bb1-8457-52cc22c180e6": {
     "en": "Crispbread, extruded and grilled, source or rich in fibre",
     "fr": "Pain croustillant, extrudé et grillé, source ou riche en fibres",
-    "de":
-        "Knäckebrot, extrudiert und geröstet, Ballaststoffquelle oder ballaststoffreich",
-    "sv":
-        "Knäckebröd, extruderat och rostat, källa till eller rikligt med fiber",
+    "de": "Knäckebrot, extrudiert und geröstet, Ballaststoffquelle oder ballaststoffreich",
+    "sv": "Knäckebröd, extruderat och rostat, källa till eller rikligt med fiber",
     "no": "Knekkebrød, ekstrudert og grillstekt, kilde til eller rik på fiber",
     "da": "Knækbrød, ekstruderet og ristet, kilde til eller rig på fibre",
     "nl": "Knäckebröd, geëxtrudeerd en geroosterd, bron van of rijk aan vezels",
@@ -10767,15 +9989,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pane croccante, estruso e tostato, fonte o ricco di fibre"
   },
   "679361d7-c698-5789-b030-9ec0c598df44": {
-    "en": "Bread, French bread, baguette",
-    "fr": "Pain, pain français, baguette",
-    "de": "Brot, französisches Brot, Baguette",
-    "sv": "Bröd, franskbröd, baguette",
-    "no": "Brød, fransk brød, baguette",
-    "da": "Brød, franskbrød, baguette",
-    "nl": "Brood, stokbrood, baguette",
-    "es": "Pan, pan francés, baguette",
-    "it": "Pane, pane francese, baguette"
+    "en": "Baguette",
+    "de": "Baguette",
+    "fr": "Baguette",
+    "no": "Baguett",
+    "sv": "Baguette",
+    "da": "Baguette",
+    "nl": "Baguette",
+    "it": "Baguette",
+    "es": "Baguette"
   },
   "679e5317-dd18-5ac1-986f-404c720a98d2": {
     "en": "Squash, butternut, flesh without skin, raw",
@@ -10801,17 +10023,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "67eb2c13-deb5-59f9-8f0a-c350dde1d418": {
     "en": "Beef carpaccio, with marinade (oil, herbs, cheese), home-made",
-    "fr":
-        "Carpaccio de bœuf, avec marinade (huile, herbes, fromage), fait maison",
+    "fr": "Carpaccio de bœuf, avec marinade (huile, herbes, fromage), fait maison",
     "de": "Rinder-Carpaccio, mit Marinade (Öl, Kräuter, Käse), hausgemacht",
     "sv": "Biffcarpaccio, med marinad (olja, örter, ost), hemgjord",
     "no": "Oksecarpaccio, med marinade (olje, urter, ost), hjemmelaget",
-    "da":
-        "Oksekødscarpaccio, med marinade (olie, krydderurter, ost), hjemmelavet",
+    "da": "Oksekødscarpaccio, med marinade (olie, krydderurter, ost), hjemmelavet",
     "nl": "Rundercarpaccio, met marinade (olie, kruiden, kaas), zelfgemaakt",
     "es": "Carpaccio de ternera con aliño (aceite, hierbas, queso), casero",
-    "it":
-        "Carpaccio di manzo, con marinata (olio, erbe, formaggio), fatto in casa"
+    "it": "Carpaccio di manzo, con marinata (olio, erbe, formaggio), fatto in casa"
   },
   "67f607c7-0bc8-504a-bbed-2efe02fdeb0b": {
     "en": "Pesto sauce, prepacked",
@@ -10880,44 +10099,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cuore, tacchino, crudo"
   },
   "6888235e-8e9d-5edf-a688-93595ceda9a9": {
-    "en":
-        "Flavoured milk beverage, with sugar(s), partially skimmed, fortified with vitamins and/ormineral(s) (average)",
-    "fr":
-        "Boisson lactée aromatisée, avec sucre(s), partiellement écrémée, enrichie en vitamines et/ou minéraux (moyenne)",
-    "de":
-        "Aromatisiertes Milchgetränk, mit Zucker(n), teilentraimmt, angereichert mit Vitaminen und/oder Mineralstoffen (Durchschnitt)",
-    "sv":
-        "Smaksatt mjölkdryck, med socker, delvis skummad, berikad med vitaminer och/eller mineraler (genomsnitt)",
-    "no":
-        "Smaksatt melkedrikk, med sukker, delvis skummet, beriket med vitaminer og/eller mineraler (gjennomsnitt)",
-    "da":
-        "Smagsat mælkedrik, med sukker, delvist skummet, beriget med vitaminer og/eller mineraler (gennemsnit)",
-    "nl":
-        "Gekruide melkdrank, met suiker(s), gedeeltelijk afgeroomd, verrijkt met vitaminen en/of mineralen (gemiddeld)",
-    "es":
-        "Bebida láctea aromatizada, con azúcares, semidesnatada, enriquecida con vitaminas y/o minerales (promedio)",
-    "it":
-        "Bevanda al latte aromatizzata, con zuccheri, parzialmente scremata, arricchita con vitamine e/o minerali (media)"
+    "en": "Flavoured milk beverage, with sugar(s), partially skimmed, fortified with vitamins and/ormineral(s) (average)",
+    "fr": "Boisson lactée aromatisée, avec sucre(s), partiellement écrémée, enrichie en vitamines et/ou minéraux (moyenne)",
+    "de": "Aromatisiertes Milchgetränk, mit Zucker(n), teilentraimmt, angereichert mit Vitaminen und/oder Mineralstoffen (Durchschnitt)",
+    "sv": "Smaksatt mjölkdryck, med socker, delvis skummad, berikad med vitaminer och/eller mineraler (genomsnitt)",
+    "no": "Smaksatt melkedrikk, med sukker, delvis skummet, beriket med vitaminer og/eller mineraler (gjennomsnitt)",
+    "da": "Smagsat mælkedrik, med sukker, delvist skummet, beriget med vitaminer og/eller mineraler (gennemsnit)",
+    "nl": "Gekruide melkdrank, met suiker(s), gedeeltelijk afgeroomd, verrijkt met vitaminen en/of mineralen (gemiddeld)",
+    "es": "Bebida láctea aromatizada, con azúcares, semidesnatada, enriquecida con vitaminas y/o minerales (promedio)",
+    "it": "Bevanda al latte aromatizzata, con zuccheri, parzialmente scremata, arricchita con vitamine e/o minerali (media)"
   },
   "689bd197-c188-577a-803d-8088943eecec": {
-    "en":
-        "Vegetables with mushrooms, pan-fried or stir-fried, seasonned, country-style, frozen",
-    "fr":
-        "Légumes aux champignons, poêlés ou sautés, assaisonnés, à la paysanne, surgelés",
-    "de":
-        "Gemüse mit Pilzen, in der Pfanne gebraten oder pfannengerührt, gewürzt, ländlicher Art, tiefgekühlt",
-    "sv":
-        "Grönsaker med svamp, stekta eller frästa, kryddade, lantstil, frysta",
-    "no":
-        "Grønnsaker med sopp, panna-stekte eller Wok-stekte, krydret, landstil, frosne",
-    "da":
-        "Grøntsager med svampe, paneret eller lynstegt, krydret, landstil, frosne",
-    "nl":
-        "Groenten met champignons, gebakken of roergebakken, gekruid, boerenstijl, diepgevroren",
-    "es":
-        "Verduras con champiñones, salteadas, sazonadas, estilo campestre, congeladas",
-    "it":
-        "Verdure con funghi, saltate in padella, condite, stile rustico, surgelate"
+    "en": "Vegetables with mushrooms, pan-fried or stir-fried, seasonned, country-style, frozen",
+    "fr": "Légumes aux champignons, poêlés ou sautés, assaisonnés, à la paysanne, surgelés",
+    "de": "Gemüse mit Pilzen, in der Pfanne gebraten oder pfannengerührt, gewürzt, ländlicher Art, tiefgekühlt",
+    "sv": "Grönsaker med svamp, stekta eller frästa, kryddade, lantstil, frysta",
+    "no": "Grønnsaker med sopp, panna-stekte eller Wok-stekte, krydret, landstil, frosne",
+    "da": "Grøntsager med svampe, paneret eller lynstegt, krydret, landstil, frosne",
+    "nl": "Groenten met champignons, gebakken of roergebakken, gekruid, boerenstijl, diepgevroren",
+    "es": "Verduras con champiñones, salteadas, sazonadas, estilo campestre, congeladas",
+    "it": "Verdure con funghi, saltate in padella, condite, stile rustico, surgelate"
   },
   "689d236b-9b15-562b-ad7d-5b40afc53d2c": {
     "en": "Pork ham with parsley and jelly",
@@ -10964,23 +10165,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Carote, surgelate, crude"
   },
   "68f6136a-6bee-525a-8b0b-0082af4e55bb": {
-    "en":
-        "Yogurt or fermented milk, with chocolate flakes, with cream, with sugar(s)",
-    "fr":
-        "Yaourt ou lait fermenté, avec des pépites de chocolat, avec de la crème, avec du ou des sucre(s)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Schokoflocken, mit Sahne, mit Zucker(n)",
+    "en": "Yogurt or fermented milk, with chocolate flakes, with cream, with sugar(s)",
+    "fr": "Yaourt ou lait fermenté, avec des pépites de chocolat, avec de la crème, avec du ou des sucre(s)",
+    "de": "Joghurt oder fermentierte Milch, mit Schokoflocken, mit Sahne, mit Zucker(n)",
     "sv": "Yoghurt eller syrad mjölk, med chokladflarn, med grädde, med socker",
-    "no":
-        "Yoghurt eller fermentert melk, med sjokoladeflak, med fløte, med sukker",
-    "da":
-        "Yoghurt eller syrnet mælk, med chokoldeflager, med fløde, med sukker",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met chocoladeschilfers, met room, met suiker(s)",
-    "es":
-        "Yogur o leche fermentada con virutas de chocolate, con nata, con azúcares",
-    "it":
-        "Yogurt o latte fermentato, con scaglie di cioccolato, con panna, con zuccheri"
+    "no": "Yoghurt eller fermentert melk, med sjokoladeflak, med fløte, med sukker",
+    "da": "Yoghurt eller syrnet mælk, med chokoldeflager, med fløde, med sukker",
+    "nl": "Yoghurt of gefermenteerde melk, met chocoladeschilfers, met room, met suiker(s)",
+    "es": "Yogur o leche fermentada con virutas de chocolate, con nata, con azúcares",
+    "it": "Yogurt o latte fermentato, con scaglie di cioccolato, con panna, con zuccheri"
   },
   "68f6d752-01fe-55af-9bcd-568f2fe58ecd": {
     "en": "European bass, roasted/baked",
@@ -11016,22 +10209,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Biscotto frollino, con frutta"
   },
   "690a5989-3153-5804-bb1f-1604b32a5ea7": {
-    "en":
-        "Custard with eggs (small jar of chocolate or vanilla cream), refrigerated",
-    "fr":
-        "Crème dessert aux œufs (petit pot de crème au chocolat ou à la vanille), réfrigérée",
+    "en": "Custard with eggs (small jar of chocolate or vanilla cream), refrigerated",
+    "fr": "Crème dessert aux œufs (petit pot de crème au chocolat ou à la vanille), réfrigérée",
     "de": "Eiercreme (kleines Glas Schokoladen- oder Vanillecreme), gekühlt",
-    "sv":
-        "Kräm med ägg (liten burk med choklad- eller vaniljkräm), kylskåpsförvarad",
-    "no":
-        "Krempudding med egg (lite glass med sjokolade- eller vaniljekrem), kjølt",
-    "da":
-        "Cremet dessert med æg (lille glas chokolade- eller vaniljecreme), kølet",
+    "sv": "Kräm med ägg (liten burk med choklad- eller vaniljkräm), kylskåpsförvarad",
+    "no": "Krempudding med egg (lite glass med sjokolade- eller vaniljekrem), kjølt",
+    "da": "Cremet dessert med æg (lille glas chokolade- eller vaniljecreme), kølet",
     "nl": "Vla met eieren (klein potje chocolade- of vanilleroom), gekoeld",
-    "es":
-        "Natillas con huevo (vasito de crema de chocolate o vainilla), refrigeradas",
-    "it":
-        "Crema pasticcera con uova (vasetto di crema al cioccolato o vaniglia), refrigerata"
+    "es": "Natillas con huevo (vasito de crema de chocolate o vainilla), refrigeradas",
+    "it": "Crema pasticcera con uova (vasetto di crema al cioccolato o vaniglia), refrigerata"
   },
   "69377ac0-04e7-5e6a-bd28-e8427efb20f9": {
     "en": "Cream sauce with shallots, prepacked",
@@ -11067,24 +10253,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Piccione, carne, arrosto/al forno"
   },
   "69c27a11-25ec-5390-a551-4536d698c018": {
-    "en":
-        "Yogurt or fermented milk, with fruits or flavoured, no reduced fat, with sugar(s) (average)",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits ou aromatisé, non allégé en matières grasses, avec du ou des sucre(s) (moyenne)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, nicht fettreduziert, mit Zucker(n) (Durchschnitt)",
-    "sv":
-        "Yoghurt eller syrad mjölk, med frukt eller smaksatt, ej reducerad fetthalt, med socker (genomsnitt)",
-    "no":
-        "Yoghurt eller fermentert melk, med frukt eller smaksatt, ikke redusert fett, med sukker (gjennomsnitt)",
-    "da":
-        "Yoghurt eller syrnet mælk, med frugt eller smagsat, ikke reduceret fedtindhold, med sukker (gennemsnit)",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit of smaakje, niet mager, met suiker(s) (gemiddeld)",
-    "es":
-        "Yogur o leche fermentada, con frutas o aromatizado, no desnatado, con azúcares (promedio)",
-    "it":
-        "Yogurt o latte fermentato, alla frutta o aromatizzato, intero, con zuccheri (media)"
+    "en": "Yogurt or fermented milk, with fruits or flavoured, no reduced fat, with sugar(s) (average)",
+    "fr": "Yaourt ou lait fermenté, aux fruits ou aromatisé, non allégé en matières grasses, avec du ou des sucre(s) (moyenne)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, nicht fettreduziert, mit Zucker(n) (Durchschnitt)",
+    "sv": "Yoghurt eller syrad mjölk, med frukt eller smaksatt, ej reducerad fetthalt, med socker (genomsnitt)",
+    "no": "Yoghurt eller fermentert melk, med frukt eller smaksatt, ikke redusert fett, med sukker (gjennomsnitt)",
+    "da": "Yoghurt eller syrnet mælk, med frugt eller smagsat, ikke reduceret fedtindhold, med sukker (gennemsnit)",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit of smaakje, niet mager, met suiker(s) (gemiddeld)",
+    "es": "Yogur o leche fermentada, con frutas o aromatizado, no desnatado, con azúcares (promedio)",
+    "it": "Yogurt o latte fermentato, alla frutta o aromatizzato, intero, con zuccheri (media)"
   },
   "69d9c0cc-4fe6-5af7-84c1-2e7fa8809a13": {
     "en": "Poultry liver pâté",
@@ -11110,10 +10287,8 @@ const foodNames = <String, Map<String, String>>{
   },
   "6a268069-8a20-50bf-8949-46e314ee55b0": {
     "en": "Syrup (eg. Mint, strawberry etc.), with sugar(s), diluted in water",
-    "fr":
-        "Sirop (ex. menthe, fraise, etc.), avec du ou des sucre(s), dilué dans l'eau",
-    "de":
-        "Sirup (z. B. Minze, Erdbeere usw.), mit Zucker(n), in Wasser verdünnt",
+    "fr": "Sirop (ex. menthe, fraise, etc.), avec du ou des sucre(s), dilué dans l'eau",
+    "de": "Sirup (z. B. Minze, Erdbeere usw.), mit Zucker(n), in Wasser verdünnt",
     "sv": "Sirap (t.ex. mynta, jordgubbe etc.), med socker, utspädd i vatten",
     "no": "Sirup (f.eks.mynte, jordbær osv.), med sukker, utvannet i vann",
     "da": "Sirup (f.eks. mint, jordbær osv.), med sukker, opblandet i vand",
@@ -11135,11 +10310,9 @@ const foodNames = <String, Map<String, String>>{
   "6a509c49-848a-574f-9518-12495aa91334": {
     "en": "Yoghurtor fermented milk, plain or with fruits (average)",
     "fr": "Yaourt ou lait fermenté, nature ou aux fruits (moyenne)",
-    "de":
-        "Joghurt oder fermentierte Milch, natur oder mit Früchten (Durchschnitt)",
+    "de": "Joghurt oder fermentierte Milch, natur oder mit Früchten (Durchschnitt)",
     "sv": "Yoghurt eller syrad mjölk, naturell eller med frukt (genomsnitt)",
-    "no":
-        "Yoghurt eller fermentert melk, naturell eller med frukt (gjennomsnitt)",
+    "no": "Yoghurt eller fermentert melk, naturell eller med frukt (gjennomsnitt)",
     "da": "Yoghurt eller syrnet mælk, plain eller med frugt (gennemsnit)",
     "nl": "Yoghurt of gefermenteerde melk, naturel of met fruit (gemiddeld)",
     "es": "Yogur o leche fermentada, natural o con frutas (promedio)",
@@ -11170,16 +10343,13 @@ const foodNames = <String, Map<String, String>>{
   "6a9129cf-8507-5b3d-885e-d3dfd8f54e49": {
     "en": "Mineral still water (Vauban), bottled, averagely mineralized",
     "fr": "Eau minérale plate (Vauban), en bouteille, moyennement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Vauban), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Stilla mineralvatten (Vauban), på flaska, medelmåttigt mineraliserat",
+    "de": "Stilles Mineralwasser (Vauban), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Stilla mineralvatten (Vauban), på flaska, medelmåttigt mineraliserat",
     "no": "Stille mineralvann (Vauban), på flaske, middels mineralisert",
     "da": "Stille mineralvand (Vauban), på flaske, moderat mineraliseret",
     "nl": "Plat mineraalwater (Vauban), gebotteld, gemiddeld gemineraliseerd",
     "es": "Agua mineral sin gas (Vauban), embotellada, mineralización media",
-    "it":
-        "Acqua minerale naturale (Vauban), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale naturale (Vauban), in bottiglia, mediamente mineralizzata"
   },
   "6a94ae89-90bc-5ec5-86d6-f5808748837d": {
     "en": "Tart, onion, prepacked",
@@ -11215,24 +10385,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Prosciutto cotto di tacchino, a fette"
   },
   "6ab17028-0a55-545f-9260-4d211bc72fc9": {
-    "en":
-        "Milk chocolate, with dried fruits (nuts, almonds, raisins, praliné), bar",
-    "fr":
-        "Chocolat au lait, aux fruits secs (noisettes, amandes, raisins secs, praliné), tablettes",
-    "de":
-        "Milchschokolade, mit Trockenfrüchten (Nüsse, Mandeln, Rosinen, Praliné), Tafel",
-    "sv":
-        "Mjölkchoklad, med torkad frukt (nötter, mandlar, russin, pralin), kaka",
-    "no":
-        "Melkesjokolade, med tørket frukt (nøtter, mandler, rosiner, praliné), plate",
-    "da":
-        "Mælkechokolade, med tørret frugt (nødder, mandler, rosiner, praliné), plade",
-    "nl":
-        "Melkchocolade, met gedroogd fruit (noten, amandelen, rozijnen, praliné), reep",
-    "es":
-        "Chocolate con leche con frutos secos (nueces, almendras, pasas, praliné), tableta",
-    "it":
-        "Cioccolato al latte, con frutta secca (noci, mandorle, uvetta, pralinato), tavoletta"
+    "en": "Milk chocolate, with dried fruits (nuts, almonds, raisins, praliné), bar",
+    "fr": "Chocolat au lait, aux fruits secs (noisettes, amandes, raisins secs, praliné), tablettes",
+    "de": "Milchschokolade, mit Trockenfrüchten (Nüsse, Mandeln, Rosinen, Praliné), Tafel",
+    "sv": "Mjölkchoklad, med torkad frukt (nötter, mandlar, russin, pralin), kaka",
+    "no": "Melkesjokolade, med tørket frukt (nøtter, mandler, rosiner, praliné), plate",
+    "da": "Mælkechokolade, med tørret frugt (nødder, mandler, rosiner, praliné), plade",
+    "nl": "Melkchocolade, met gedroogd fruit (noten, amandelen, rozijnen, praliné), reep",
+    "es": "Chocolate con leche con frutos secos (nueces, almendras, pasas, praliné), tableta",
+    "it": "Cioccolato al latte, con frutta secca (noci, mandorle, uvetta, pralinato), tavoletta"
   },
   "6ab3f9c9-be60-5987-9616-e74dc45b3db5": {
     "en": "Turnip, frozen, raw",
@@ -11312,24 +10473,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Coniglio selvatico, carne, cotta"
   },
   "6b4c343a-64e0-5552-a42b-68c3bf2be1fe": {
-    "en":
-        "Energy drink, no added sugar(s) and with sweetener(s), fortified with vitamins",
-    "fr":
-        "Boisson énergisante, sans sucre(s) ajouté(s) et avec édulcorant(s), enrichie en vitamines",
-    "de":
-        "Energy-Drink, ohne Zuckerzusatz und mit Süßungsmitteln, mit Vitaminen angereichert",
-    "sv":
-        "Energidryck, utan tillsatt socker och med sötningsmedel, berikad med vitaminer",
-    "no":
-        "Energidrikk, uten tilsatt sukker og med søtstoffer, beriket med vitaminer",
-    "da":
-        "Energidrik, uden tilsat sukker og med sødestof, beriget med vitaminer",
-    "nl":
-        "Energiedrank, zonder toegevoegde suiker(s) en met zoetstof(fen), verrijkt met vitaminen",
-    "es":
-        "Bebida energética, sin azúcares añadidos y con edulcorantes, fortificada con vitaminas",
-    "it":
-        "Energy drink, senza zuccheri aggiunti e con edulcoranti, fortificato con vitamine"
+    "en": "Energy drink, no added sugar(s) and with sweetener(s), fortified with vitamins",
+    "fr": "Boisson énergisante, sans sucre(s) ajouté(s) et avec édulcorant(s), enrichie en vitamines",
+    "de": "Energy-Drink, ohne Zuckerzusatz und mit Süßungsmitteln, mit Vitaminen angereichert",
+    "sv": "Energidryck, utan tillsatt socker och med sötningsmedel, berikad med vitaminer",
+    "no": "Energidrikk, uten tilsatt sukker og med søtstoffer, beriket med vitaminer",
+    "da": "Energidrik, uden tilsat sukker og med sødestof, beriget med vitaminer",
+    "nl": "Energiedrank, zonder toegevoegde suiker(s) en met zoetstof(fen), verrijkt met vitaminen",
+    "es": "Bebida energética, sin azúcares añadidos y con edulcorantes, fortificada con vitaminas",
+    "it": "Energy drink, senza zuccheri aggiunti e con edulcoranti, fortificato con vitamine"
   },
   "6b8c004d-cba5-56dc-8792-9b636828b8c5": {
     "en": "Spicy pork sausage with red pepper, in slices",
@@ -11344,8 +10496,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "6b9817de-81c5-5f7f-b039-ebc852989148": {
     "en": "Cream based preparation, light, 5% fat, fluid or thick",
-    "fr":
-        "Préparation à base de crème, légère, 5% de matière grasse, fluide ou épaisse",
+    "fr": "Préparation à base de crème, légère, 5% de matière grasse, fluide ou épaisse",
     "de": "Zubereitung auf Rahmbasis, leicht, 5% Fett, flüssig oder dick",
     "sv": "Gräddbaserad beredning, lätt, 5% fett, flytande eller tjock",
     "no": "Fløtebasert preparat, lett, 5% fett, flytende eller tykk",
@@ -11399,44 +10550,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Gelatina o pasta di frutta"
   },
   "6c258b16-9ae7-568c-a393-94917c2db02f": {
-    "en":
-        "Yogurt or fermented milk, with fruits or flavoured, with sugar(s) (average)",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits ou aromatisé, avec sucre(s) (moyenne)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, mit Zucker (Durchschnitt)",
-    "sv":
-        "Yoghurt eller syrad mjölk, med frukt eller smaksatt, med socker (genomsnitt)",
-    "no":
-        "Yoghurt eller syrnet melk, med frukt eller smaksatt, med sukker (gjennomsnitt)",
-    "da":
-        "Yoghurt eller syrnet mælk, med frugt eller smagsat, med sukker (gennemsnit)",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit of gemaaktheid, met suiker(s) (gemiddeld)",
-    "es":
-        "Yogur o leche fermentada, con frutas o aromatizado, con azúcares (promedio)",
-    "it":
-        "Yogurt o latte fermentato, con frutta o aromatizzato, con zuccheri (media)"
+    "en": "Yogurt or fermented milk, with fruits or flavoured, with sugar(s) (average)",
+    "fr": "Yaourt ou lait fermenté, aux fruits ou aromatisé, avec sucre(s) (moyenne)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, mit Zucker (Durchschnitt)",
+    "sv": "Yoghurt eller syrad mjölk, med frukt eller smaksatt, med socker (genomsnitt)",
+    "no": "Yoghurt eller syrnet melk, med frukt eller smaksatt, med sukker (gjennomsnitt)",
+    "da": "Yoghurt eller syrnet mælk, med frugt eller smagsat, med sukker (gennemsnit)",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit of gemaaktheid, met suiker(s) (gemiddeld)",
+    "es": "Yogur o leche fermentada, con frutas o aromatizado, con azúcares (promedio)",
+    "it": "Yogurt o latte fermentato, con frutta o aromatizzato, con zuccheri (media)"
   },
   "6c444296-345f-56dc-aaae-8cd61c697a1f": {
-    "en":
-        "Cereal flakes with chocolate, with or without nuts, fortified with vitamins and minerals",
-    "fr":
-        "Céréales en flocons au chocolat, avec ou sans fruits à coque, enrichies en vitamines et minéraux",
-    "de":
-        "Getreideflocken mit Schokolade, mit oder ohne Nüsse, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Frukostflingor med choklad, med eller utan nötter, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding med sjokolade, med eller uten nøtter, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadscerealier med chokolade, med eller uden nødder, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen met chocolade, met of zonder noten, verrijkt met vitaminen en mineralen",
-    "es":
-        "Copos de cereales con chocolate, con o sin frutos secos, fortificados con vitaminas y minerales",
-    "it":
-        "Fiocchi di cereali al cioccolato, con o senza frutta a guscio, fortificati con vitamine e minerali"
+    "en": "Cereal flakes with chocolate, with or without nuts, fortified with vitamins and minerals",
+    "fr": "Céréales en flocons au chocolat, avec ou sans fruits à coque, enrichies en vitamines et minéraux",
+    "de": "Getreideflocken mit Schokolade, mit oder ohne Nüsse, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Frukostflingor med choklad, med eller utan nötter, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding med sjokolade, med eller uten nøtter, beriket med vitaminer og mineraler",
+    "da": "Morgenmadscerealier med chokolade, med eller uden nødder, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen met chocolade, met of zonder noten, verrijkt met vitaminen en mineralen",
+    "es": "Copos de cereales con chocolate, con o sin frutos secos, fortificados con vitaminas y minerales",
+    "it": "Fiocchi di cereali al cioccolato, con o senza frutta a guscio, fortificati con vitamine e minerali"
   },
   "6ca38428-da39-55d5-9e3b-7239c2e546ae": {
     "en": "Dry sausage",
@@ -11505,24 +10638,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Paté ai funghi"
   },
   "6df881a8-ed07-522f-b19b-235946e6b905": {
-    "en":
-        "Mashed potatoes, made from flakes, reconstituted with semi-skimmed milk and water, no added salt",
-    "fr":
-        "Purée de pommes de terre, à base de flocons, reconstituée avec du lait demi-écrémé et de l'eau, sans sel ajouté",
-    "de":
-        "Kartoffelpüree, aus Flocken, zubereitet mit halbentrahmtender Milch und Wasser, ohne Salzzusatz",
-    "sv":
-        "Potatismos, gjort på flingor, rekonstituerat med lättmjölk och vatten, inget tillsatt salt",
-    "no":
-        "Potetmos, laget av flak, rekonstituert med ekstra lettmelk og vann, uten tilsatt salt",
-    "da":
-        "Mosede kartofler, lavet af flager, rekonstitueret med letmælk og vand, uden tilsat salt",
-    "nl":
-        "Aardappelpuree, gemaakt van vlokken, aangelengd met halfvolle melk en water, zonder toegevoegd zout",
-    "es":
-        "Puré de patatas, hecho a partir de copos, reconstituido con leche semidesnatada y agua, sin sal añadida",
-    "it":
-        "Purè di patate, preparato con fiocchi, ricostituito con latte parzialmente scremato e acqua, senza aggiunta di sale"
+    "en": "Mashed potatoes, made from flakes, reconstituted with semi-skimmed milk and water, no added salt",
+    "fr": "Purée de pommes de terre, à base de flocons, reconstituée avec du lait demi-écrémé et de l'eau, sans sel ajouté",
+    "de": "Kartoffelpüree, aus Flocken, zubereitet mit halbentrahmtender Milch und Wasser, ohne Salzzusatz",
+    "sv": "Potatismos, gjort på flingor, rekonstituerat med lättmjölk och vatten, inget tillsatt salt",
+    "no": "Potetmos, laget av flak, rekonstituert med ekstra lettmelk og vann, uten tilsatt salt",
+    "da": "Mosede kartofler, lavet af flager, rekonstitueret med letmælk og vand, uden tilsat salt",
+    "nl": "Aardappelpuree, gemaakt van vlokken, aangelengd met halfvolle melk en water, zonder toegevoegd zout",
+    "es": "Puré de patatas, hecho a partir de copos, reconstituido con leche semidesnatada y agua, sin sal añadida",
+    "it": "Purè di patate, preparato con fiocchi, ricostituito con latte parzialmente scremato e acqua, senza aggiunta di sale"
   },
   "6e003562-08fe-58b8-a347-282909c6c7b3": {
     "en": "Onion, dried",
@@ -11587,10 +10711,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Mineralvann uten kullsyre (Didier), på flaske, sterkt mineralisert",
     "da": "Stille mineralvand (Didier), på flaske, stærkt mineraliseret",
     "nl": "Mineraalplat water (Didier), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Didier), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (Didier), in bottiglia, fortemente mineralizzata"
+    "es": "Agua mineral sin gas (Didier), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (Didier), in bottiglia, fortemente mineralizzata"
   },
   "6eb6f446-58be-5b7d-8674-abf3216f7ba1": {
     "en": "Cocoa powder, no added sugars, powder, instant",
@@ -11780,17 +10902,13 @@ const foodNames = <String, Map<String, String>>{
     "it": "Latte cagliato, aromatizzato, refrigerato"
   },
   "718e80b4-df09-5752-b27f-a6977819f2e1": {
-    "en":
-        "Bread, French bread, wholemeal or integral bread (made with flour type 150)",
-    "fr":
-        "Pain, pain français, pain complet ou intégral (fabriqué avec de la farine de type 150)",
-    "de":
-        "Brot, französisches Baguette, Vollkornbrot (hergestellt aus Mehl Type 150)",
+    "en": "Bread, French bread, wholemeal or integral bread (made with flour type 150)",
+    "fr": "Pain, pain français, pain complet ou intégral (fabriqué avec de la farine de type 150)",
+    "de": "Brot, französisches Baguette, Vollkornbrot (hergestellt aus Mehl Type 150)",
     "sv": "Bröd, franskbröd, fullkornsbröd (gjort på mjöl typ 150)",
     "no": "Brød, franskbrød, sammalt eller grovt brød (laget med meltype 150)",
     "da": "Brød, flutes, fuldkornsbrød (lavet med meltype 150)",
-    "nl":
-        "Brood, stokbrood, volkoren of bruin brood (gemaakt met bloem type 150)",
+    "nl": "Brood, stokbrood, volkoren of bruin brood (gemaakt met bloem type 150)",
     "es": "Pan, pan francés, pan integral (hecho con harina tipo 150)",
     "it": "Pane, baguette, pane integrale (fatto con farina tipo 150)"
   },
@@ -11806,24 +10924,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Dolce morbido, alla frutta, confezionato"
   },
   "71ce48e5-0497-5eca-8caf-0f36f9cc2840": {
-    "en":
-        "Soft-ripened cheese, double cream, around 30% fat, with bloomy rind, from cow's milk",
-    "fr":
-        "Fromage à pâte molle, double crème, environ 30 % de matière grasse, à croûte fleuries, au lait de vache",
-    "de":
-        "Weichkäse, Doppelrahmstufe, ca. 30% Fett i.Tr., mit Weißrinde, aus Kuhmilch",
-    "sv":
-        "Krämig vitmögelost, dubbelgrädde, ca 30% fett, med vitmögelkant, på komjölk",
-    "no":
-        "Hvitskimmelost, dobbelkrem, rundt 30% fett, med hvitskimmelrute, av ku",
-    "da":
-        "Hvidskimmelost, double cream, ca. 30% fedt, med hvidskimmelrinde, af komælk",
-    "nl":
-        "Roodschimmelkaas, dubbelroom, circa 30% vet, met witflora korst, van koemelk",
-    "es":
-        "Queso de pasta blanda, doble crema, alrededor del 30% de grasa, corteza florida, leche de vaca",
-    "it":
-        "Formaggio a pasta molle, doppia panna, 30% grassi circa, crosta fiorita, latte vaccino"
+    "en": "Soft-ripened cheese, double cream, around 30% fat, with bloomy rind, from cow's milk",
+    "fr": "Fromage à pâte molle, double crème, environ 30 % de matière grasse, à croûte fleuries, au lait de vache",
+    "de": "Weichkäse, Doppelrahmstufe, ca. 30% Fett i.Tr., mit Weißrinde, aus Kuhmilch",
+    "sv": "Krämig vitmögelost, dubbelgrädde, ca 30% fett, med vitmögelkant, på komjölk",
+    "no": "Hvitskimmelost, dobbelkrem, rundt 30% fett, med hvitskimmelrute, av ku",
+    "da": "Hvidskimmelost, double cream, ca. 30% fedt, med hvidskimmelrinde, af komælk",
+    "nl": "Roodschimmelkaas, dubbelroom, circa 30% vet, met witflora korst, van koemelk",
+    "es": "Queso de pasta blanda, doble crema, alrededor del 30% de grasa, corteza florida, leche de vaca",
+    "it": "Formaggio a pasta molle, doppia panna, 30% grassi circa, crosta fiorita, latte vaccino"
   },
   "71d99573-7ebb-5ff0-8550-55e8072b14bc": {
     "en": "Biscuit (cookie), sponge fingers or lady fingers",
@@ -11960,8 +11069,7 @@ const foodNames = <String, Map<String, String>>{
   "72b5ef36-298a-5f1e-b413-56dab3e27576": {
     "en": "Tomato, peeled, canned, in juice, solids and liquids",
     "fr": "Tomate, pelée, en conserve, au jus, morceaux et jus",
-    "de":
-        "Tomaten, geschält, in Dose, in Saft, feste Bestandteile und Flüssigkeit",
+    "de": "Tomaten, geschält, in Dose, in Saft, feste Bestandteile und Flüssigkeit",
     "sv": "Tomat, skalad, konserverad, i lag, bitar och lag",
     "no": "Tomat, flådd, hermetisk, i juice, biter og væske",
     "da": "Tomat, flået, på dåse, i juice, faste bestanddele og væske",
@@ -12014,24 +11122,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Erbe aromatiche, fresche (media)"
   },
   "73741b76-b9e7-5a85-a35f-9508046a7c23": {
-    "en":
-        "Crepe or buckwheat pancake, filled with cheese and béchamel sauce, prepacked",
-    "fr":
-        "Crêpe ou galette de sarrasin, garnie de fromage et de sauce béchamel, préemballée",
-    "de":
-        "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Käse und Béchamelsauce, verpackt",
-    "sv":
-        "Crêpe eller bovetepannkaka, fylld med ost och bechamelsås, förpackad",
-    "no":
-        "Crêpe eller bokhvetepannekake, fylt med ost og bechamelsaus, ferdigpakket",
-    "da":
-        "Crepe eller bokhvedepandekage, fyldt med ost og béchamelsauce, forpakket",
-    "nl":
-        "Crêpe of boekweitpannekoek, gevuld met kaas en bechamelsaus, voorverpakt",
-    "es":
-        "Crepe o tortita de trigo sarraceno, relleno de queso y salsa bechamel, preenvasado",
-    "it":
-        "Crêpe o galletta di grano saraceno, ripiena di formaggio e besciamella, confezionata"
+    "en": "Crepe or buckwheat pancake, filled with cheese and béchamel sauce, prepacked",
+    "fr": "Crêpe ou galette de sarrasin, garnie de fromage et de sauce béchamel, préemballée",
+    "de": "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Käse und Béchamelsauce, verpackt",
+    "sv": "Crêpe eller bovetepannkaka, fylld med ost och bechamelsås, förpackad",
+    "no": "Crêpe eller bokhvetepannekake, fylt med ost og bechamelsaus, ferdigpakket",
+    "da": "Crepe eller bokhvedepandekage, fyldt med ost og béchamelsauce, forpakket",
+    "nl": "Crêpe of boekweitpannekoek, gevuld met kaas en bechamelsaus, voorverpakt",
+    "es": "Crepe o tortita de trigo sarraceno, relleno de queso y salsa bechamel, preenvasado",
+    "it": "Crêpe o galletta di grano saraceno, ripiena di formaggio e besciamella, confezionata"
   },
   "739d6028-b559-5d2c-8f13-fdc0c2195000": {
     "en": "Puffed salty snacks, potato flavour",
@@ -12100,24 +11199,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cipolla, surgelata, cruda"
   },
   "74739481-936f-56e9-8a4b-c666a2b95fe1": {
-    "en":
-        "Granola with fruits, with or without nut and seeds, fortified with vitamins and minerals",
-    "fr":
-        "Granola aux fruits, avec ou sans fruits à coque et graines, enrichi en vitamines et minéraux",
-    "de":
-        "Granola mit Früchten, mit oder ohne Nüssen und Samen, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Granola med frukt, med eller utan nötter och frön, berikad med vitaminer och mineraler",
-    "no":
-        "Granola med frukt, med eller uten nøtter og frø, beriket med vitaminer og mineraler",
-    "da":
-        "Granola med frugt, med eller uden nødder og frø, beriget med vitaminer og mineraler",
-    "nl":
-        "Granola met fruit, met of zonder noten en zaden, verrijkt met vitaminen en mineralen",
-    "es":
-        "Granola con frutas, con o sin frutos secos y semillas, fortificada con vitaminas y minerales",
-    "it":
-        "Granola alla frutta, con o senza noci e semi, fortificata con vitamine e minerali"
+    "en": "Granola with fruits, with or without nut and seeds, fortified with vitamins and minerals",
+    "fr": "Granola aux fruits, avec ou sans fruits à coque et graines, enrichi en vitamines et minéraux",
+    "de": "Granola mit Früchten, mit oder ohne Nüssen und Samen, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Granola med frukt, med eller utan nötter och frön, berikad med vitaminer och mineraler",
+    "no": "Granola med frukt, med eller uten nøtter og frø, beriket med vitaminer og mineraler",
+    "da": "Granola med frugt, med eller uden nødder og frø, beriget med vitaminer og mineraler",
+    "nl": "Granola met fruit, met of zonder noten en zaden, verrijkt met vitaminen en mineralen",
+    "es": "Granola con frutas, con o sin frutos secos y semillas, fortificada con vitaminas y minerales",
+    "it": "Granola alla frutta, con o senza noci e semi, fortificata con vitamine e minerali"
   },
   "74ada2e7-0a6e-5579-a6f3-6edfe140ca12": {
     "en": "Green cabbage, cooked",
@@ -12221,8 +11311,7 @@ const foodNames = <String, Map<String, String>>{
   "75bf0dd0-6814-5d6c-a3d8-24fa5e8e296e": {
     "en": "Pear, canned in light syrup, solids and liquids",
     "fr": "Poire, en conserve au sirop léger, morceaux et jus",
-    "de":
-        "Birnen, in leichtem Sirup eingemacht, feste Bestandteile und Flüssigkeit",
+    "de": "Birnen, in leichtem Sirup eingemacht, feste Bestandteile und Flüssigkeit",
     "sv": "Päron, konserverat i lätt sockerlag, bitar och lag",
     "no": "Pære, hermetisert i lett sirup, biter og væske",
     "da": "Pære, på dåse i let sirup, faste bestanddele og væske",
@@ -12231,24 +11320,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pere, sciroppate in sciroppo leggero, solidi e liquidi"
   },
   "75c59005-ef79-5140-8509-aede7b4a10ea": {
-    "en":
-        "Chocolate flavoured milk beverage, with sugar(s), partially skimmed, fortified with vitamin(s) and/or mineral(s)",
-    "fr":
-        "Boisson lactée aromatisée au chocolat, avec sucre(s), partiellement écrémée, enrichie en vitamine(s) et/ou minéral(s)",
-    "de":
-        "Schokoladenmilchgetränk, mit Zucker(n), teilnahmsend, angereichert mit Vitamin(en) und/oder Mineralstoff(en)",
-    "sv":
-        "Chokladsmakande mjölkdryck, med socker, lätthaltig, berikad med vitaminer och/eller mineraler",
-    "no":
-        "Sjokoladesmak melkedrikk, med sukker, delvis skummet, beriket med vitamin(er) og/eller mineral(er)",
-    "da":
-        "Chokoladesmagende mælkedrik, med sukker, delvist skummet, beriget med vitamin(er) og/eller mineral(er)",
-    "nl":
-        "Chocolademelkdrank, met suiker(s), halfvolle melk, verrijkt met vitaminen en/of mineralen",
-    "es":
-        "Bebida de leche con sabor a chocolate, con azúcar(es), parcialmente desnatada, fortificada con vitamina(s) y/o mineral(es)",
-    "it":
-        "Bevanda al latte aromatizzata al cioccolato, con zuccheri, parzialmente scremata, fortificata con vitamine e/o minerali"
+    "en": "Chocolate flavoured milk beverage, with sugar(s), partially skimmed, fortified with vitamin(s) and/or mineral(s)",
+    "fr": "Boisson lactée aromatisée au chocolat, avec sucre(s), partiellement écrémée, enrichie en vitamine(s) et/ou minéral(s)",
+    "de": "Schokoladenmilchgetränk, mit Zucker(n), teilnahmsend, angereichert mit Vitamin(en) und/oder Mineralstoff(en)",
+    "sv": "Chokladsmakande mjölkdryck, med socker, lätthaltig, berikad med vitaminer och/eller mineraler",
+    "no": "Sjokoladesmak melkedrikk, med sukker, delvis skummet, beriket med vitamin(er) og/eller mineral(er)",
+    "da": "Chokoladesmagende mælkedrik, med sukker, delvist skummet, beriget med vitamin(er) og/eller mineral(er)",
+    "nl": "Chocolademelkdrank, met suiker(s), halfvolle melk, verrijkt met vitaminen en/of mineralen",
+    "es": "Bebida de leche con sabor a chocolate, con azúcar(es), parcialmente desnatada, fortificada con vitamina(s) y/o mineral(es)",
+    "it": "Bevanda al latte aromatizzata al cioccolato, con zuccheri, parzialmente scremata, fortificata con vitamine e/o minerali"
   },
   "76287c35-486b-5ae9-9d34-da54c0cbacfd": {
     "en": "Ham and cheese puffed pastry, homemade",
@@ -12284,24 +11364,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Dolce, tipo torta Opera"
   },
   "769c976c-af52-5a14-a220-3747d8589656": {
-    "en":
-        "Fruit preparation, sweetened, 35% fruits minimum, with sugars and other ingredient(s)",
-    "fr":
-        "Préparation de fruit, sucrée, 35 % de fruits minimum, avec sucres et autre(s) ingrédient(s)",
-    "de":
-        "Fruchtzubereitung, gezuckert, mindestens 35% Früchte, mit Zucker und anderen Zutaten",
-    "sv":
-        "Fruktberedning, sötad, minst 35% frukt, med sockerarter och andra ingredienser",
-    "no":
-        "Fruktpreparat, søtet, minimum 35% frukt, med sukker og andre ingredienser",
-    "da":
-        "Frugtpræparat, sødet, minimum 35% frugt, med sukker og andre ingredienser",
-    "nl":
-        "Fruitbereiding, zoet, minimaal 35% fruit, met suikers en andere ingrediënten",
-    "es":
-        "Preparado de frutas, azucarado, 35% de frutas mínimo, con azúcares y otro(s) ingrediente(s)",
-    "it":
-        "Preparazione di frutta, zuccherata, 35% frutta minima, con zuccheri e altri ingredienti"
+    "en": "Fruit preparation, sweetened, 35% fruits minimum, with sugars and other ingredient(s)",
+    "fr": "Préparation de fruit, sucrée, 35 % de fruits minimum, avec sucres et autre(s) ingrédient(s)",
+    "de": "Fruchtzubereitung, gezuckert, mindestens 35% Früchte, mit Zucker und anderen Zutaten",
+    "sv": "Fruktberedning, sötad, minst 35% frukt, med sockerarter och andra ingredienser",
+    "no": "Fruktpreparat, søtet, minimum 35% frukt, med sukker og andre ingredienser",
+    "da": "Frugtpræparat, sødet, minimum 35% frugt, med sukker og andre ingredienser",
+    "nl": "Fruitbereiding, zoet, minimaal 35% fruit, met suikers en andere ingrediënten",
+    "es": "Preparado de frutas, azucarado, 35% de frutas mínimo, con azúcares y otro(s) ingrediente(s)",
+    "it": "Preparazione di frutta, zuccherata, 35% frutta minima, con zuccheri e altri ingredienti"
   },
   "76a0bf97-2f8e-52a2-858a-a2ede4ccd3fe": {
     "en": "Mineral still water (Néro), bottled, lightly mineralized",
@@ -12312,8 +11383,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Stille mineralvand (Néro), på flaske, let mineraliseret",
     "nl": "Plat mineraalwater (Néro), gebotteld, licht gemineraliseerd",
     "es": "Agua mineral sin gas (Néro), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Néro), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Néro), in bottiglia, leggermente mineralizzata"
   },
   "7737da06-7c0b-54da-9a6f-0295c844dc0e": {
     "en": "Sheep, foot, raw",
@@ -12345,10 +11415,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Soyadessert, med smak, med sukker, ikke beriket, kjølt",
     "da": "Sojadessert, smagsat, med sukker, ikke beriget, på køl",
     "nl": "Sojadessert, met smaakje, met suiker(s), niet verrijkt, gekoeld",
-    "es":
-        "Postre de soja, aromatizado, con azúcares, no enriquecido, refrigerado",
-    "it":
-        "Dessert alla soia, aromatizzato, con zuccheri, non fortificato, refrigerato"
+    "es": "Postre de soja, aromatizado, con azúcares, no enriquecido, refrigerado",
+    "it": "Dessert alla soia, aromatizzato, con zuccheri, non fortificato, refrigerato"
   },
   "777fba5e-219f-5001-b385-2130b5ff3a19": {
     "en": "Biscuit (cookie), hard, with almonds (e.g. canistrelli)",
@@ -12386,16 +11454,13 @@ const foodNames = <String, Map<String, String>>{
   "7799f1d0-e28c-535a-8e86-ec17b75d046e": {
     "en": "Mineral still water (Vittel), bottled, averagely mineralized",
     "fr": "Eau plate minérale (Vittel), en bouteille, moyennement minéralisée",
-    "de":
-        "Stillstarkes Mineralwasser (Vittel), in Flaschen, durchschnittlich mineralisiert",
+    "de": "Stillstarkes Mineralwasser (Vittel), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Still mineralvatten (Vittel), på flaska, medelmineraliserat",
     "no": "Stille mineralvann (Vittel), på flaske, moderat mineralisert",
     "da": "Mineralvand uden brus (Vittel), på flaske, moderat mineraliseret",
     "nl": "Plat mineraalwater (Vittel), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Vittel), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale naturale (Vittel), in bottiglia, mediamente mineralizzata"
+    "es": "Agua mineral sin gas (Vittel), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale naturale (Vittel), in bottiglia, mediamente mineralizzata"
   },
   "779f1998-adef-5ef3-9182-01f331a03cc1": {
     "en": "Provolone cheese, from cow's milk",
@@ -12443,19 +11508,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "77db5898-74d5-529d-b42d-89814c3c2e6c": {
     "en": "Mineral sparkling water (Arcens), bottled, averagely mineralized",
-    "fr":
-        "Eau gazeuse minérale (Arcens), en bouteille, moyennement minéralisée",
-    "de":
-        "Kohlensäurehaltiges Mineralwasser (Arcens), in Flaschen, durchschnittlich mineralisiert",
+    "fr": "Eau gazeuse minérale (Arcens), en bouteille, moyennement minéralisée",
+    "de": "Kohlensäurehaltiges Mineralwasser (Arcens), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (Arcens), på flaska, medelmineraliserat",
     "no": "Frambrusende mineralvann (Arcens), på flaske, moderat mineralisert",
     "da": "Mineralvand med brus (Arcens), på flaske, moderat mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Arcens), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Arcens), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale gassata (Arcens), in bottiglia, mediamente mineralizzata"
+    "nl": "Bruisend mineraalwater (Arcens), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (Arcens), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale gassata (Arcens), in bottiglia, mediamente mineralizzata"
   },
   "781b28a4-95f4-508b-83f5-fb820295225d": {
     "en": "Garden peas, frozen, cooked",
@@ -12630,21 +11690,19 @@ const foodNames = <String, Map<String, String>>{
     "no": "Stille mineralvann (Biovive), på flaske, lett mineralisert",
     "da": "Mineralvand uden brus (Biovive), på flaske, let mineraliseret",
     "nl": "Plat mineraalwater (Biovive), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Biovive), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Biovive), in bottiglia, leggermente mineralizzata"
+    "es": "Agua mineral sin gas (Biovive), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Biovive), in bottiglia, leggermente mineralizzata"
   },
   "79b559a4-ab66-5537-9b5f-c785b10264e1": {
-    "en": "Bread, bagel",
-    "fr": "Pain, bagel",
-    "de": "Brot, Bagel",
-    "sv": "Bröd, bagel",
-    "no": "Brød, bagel",
-    "da": "Brød, bagel",
-    "nl": "Brood, bagel",
-    "es": "Pan, bagel",
-    "it": "Pane, bagel"
+    "en": "Bagel",
+    "de": "Bagel",
+    "fr": "Bagel",
+    "no": "Bagel",
+    "sv": "Bagel",
+    "da": "Bagel",
+    "nl": "Bagel",
+    "it": "Bagel",
+    "es": "Bagel"
   },
   "79f25d56-e357-5ba4-abdc-30d1af301d95": {
     "en": "Celery stalk, cooked (average)",
@@ -12691,24 +11749,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pane croccante, estruso e grigliato, ripieno al cioccolato"
   },
   "7a2fd49d-3829-50dc-a11c-fdc4d78ae30a": {
-    "en":
-        "Fresh pasta, stuffed with cheese and vegetables (e.g. ravioli), prepacked, raw",
-    "fr":
-        "Pâtes fraiches, farcies au fromage et aux légumes (ex. raviolis), préemballées, crues",
-    "de":
-        "Frische Pasta, gefüllt mit Käse und Gemüse (z. B. Ravioli), vorverpackt, roh",
-    "sv":
-        "Färsk pasta, fylld med ost och grönsaker (t.ex. ravioli), förpackad, rå",
-    "no":
-        "Fersk pasta, fylt med ost og grønnsaker (f.eks. ravioli), ferdigpakket, rå",
-    "da":
-        "Frisk pasta, fyldt med ost og grøntsager (f.eks. ravioli), færdigpakket, rå",
-    "nl":
-        "Verse pasta, gevuld met kaas en groenten (bijv. ravioli), voorverpakt, rauw",
-    "es":
-        "Pasta fresca, rellena de queso y verduras (ej. ravioli), envasada, cruda",
-    "it":
-        "Pasta fresca, ripiena di formaggio e verdure (es. ravioli), confezionata, cruda"
+    "en": "Fresh pasta, stuffed with cheese and vegetables (e.g. ravioli), prepacked, raw",
+    "fr": "Pâtes fraiches, farcies au fromage et aux légumes (ex. raviolis), préemballées, crues",
+    "de": "Frische Pasta, gefüllt mit Käse und Gemüse (z. B. Ravioli), vorverpackt, roh",
+    "sv": "Färsk pasta, fylld med ost och grönsaker (t.ex. ravioli), förpackad, rå",
+    "no": "Fersk pasta, fylt med ost og grønnsaker (f.eks. ravioli), ferdigpakket, rå",
+    "da": "Frisk pasta, fyldt med ost og grøntsager (f.eks. ravioli), færdigpakket, rå",
+    "nl": "Verse pasta, gevuld met kaas en groenten (bijv. ravioli), voorverpakt, rauw",
+    "es": "Pasta fresca, rellena de queso y verduras (ej. ravioli), envasada, cruda",
+    "it": "Pasta fresca, ripiena di formaggio e verdure (es. ravioli), confezionata, cruda"
   },
   "7a47e6c3-e3b0-5b62-8b17-ff2a17462b87": {
     "en": "Wheat germ oil",
@@ -12766,38 +11815,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Grano duro precotto, integrale, cotto, senza aggiunta di sale"
   },
   "7b529522-c3d6-5a8a-93d3-b5fbfb25a712": {
-    "en":
-        "Still soft drink, fruit content unknown, sugar and sweetener contents unknown (average)",
-    "fr":
-        "Boisson rafraîchissante sans alcool plate, teneur en fruits inconnue, teneurs en sucre et édulcorant inconnues (moyenne)",
-    "de":
-        "Still-Erfrischungsgetränk, Fruchtgehalt unbekannt, Zucker- und Süßungsmittelgehalt unbekannt (Durchschnitt)",
-    "sv":
-        "Läsk, frukthalt okänd, socker- och sötningsmedelshalt okänd (genomsnitt)",
-    "no":
-        "Stille brus, fruktinnhold ukjent, sukker- og søtningsmiddelinnhold ukjent (gjennomsnitt)",
-    "da":
-        "Læskedrik uden brus, frugtindhold ukendt, sukker- og sødemiddelindhold ukendt (gennemsnit)",
-    "nl":
-        "Platte frisdrank, vruchtengehalte onbekend, suiker- en zoetstofgehalte onbekend (gemiddeld)",
-    "es":
-        "Bebida refrescante sin gas, contenido de fruta desconocido, contenidos de azúcar y edulcorante desconocidos (promedio)",
-    "it":
-        "Bevanda analcolica non gassata, contenuto di frutta sconosciuto, contenuto di zuccheri e dolcificanti sconosciuto (media)"
+    "en": "Still soft drink, fruit content unknown, sugar and sweetener contents unknown (average)",
+    "fr": "Boisson rafraîchissante sans alcool plate, teneur en fruits inconnue, teneurs en sucre et édulcorant inconnues (moyenne)",
+    "de": "Still-Erfrischungsgetränk, Fruchtgehalt unbekannt, Zucker- und Süßungsmittelgehalt unbekannt (Durchschnitt)",
+    "sv": "Läsk, frukthalt okänd, socker- och sötningsmedelshalt okänd (genomsnitt)",
+    "no": "Stille brus, fruktinnhold ukjent, sukker- og søtningsmiddelinnhold ukjent (gjennomsnitt)",
+    "da": "Læskedrik uden brus, frugtindhold ukendt, sukker- og sødemiddelindhold ukendt (gennemsnit)",
+    "nl": "Platte frisdrank, vruchtengehalte onbekend, suiker- en zoetstofgehalte onbekend (gemiddeld)",
+    "es": "Bebida refrescante sin gas, contenido de fruta desconocido, contenidos de azúcar y edulcorante desconocidos (promedio)",
+    "it": "Bevanda analcolica non gassata, contenuto di frutta sconosciuto, contenuto di zuccheri e dolcificanti sconosciuto (media)"
   },
   "7b56451e-f0f8-548c-a572-5eea4bcf1087": {
     "en": "Soft cake, filled with orange paste and sugar icing coating",
-    "fr":
-        "Gâteau moelleux, fourré à la pâte d'orange et nappé de glaçage sucré",
+    "fr": "Gâteau moelleux, fourré à la pâte d'orange et nappé de glaçage sucré",
     "de": "Weicher Kuchen, gefüllt mit Orangenpaste und Zuckerglasur",
     "sv": "Mjuk kaka, fylld med appelsinpasta och sockerglasyröverdrag",
     "no": "Myk kake, fylt med appelsinpasta og melisglasur",
     "da": "Blød kage, fyldt med appelsinmasse og overtrukket med glasur",
     "nl": "Zachte koek, gevuld met oranjepastalaag en suikerglazuur",
-    "es":
-        "Bizcocho tierno, relleno de pasta de naranja y cobertura de glaseado de azúcar",
-    "it":
-        "Torta soffice, ripiena di pasta all'arancia e rivestimento di glassa di zucchero"
+    "es": "Bizcocho tierno, relleno de pasta de naranja y cobertura de glaseado de azúcar",
+    "it": "Torta soffice, ripiena di pasta all'arancia e rivestimento di glassa di zucchero"
   },
   "7b8688be-7b00-565b-bd19-9d89053de809": {
     "en": "Tuna, canned in brine, drained",
@@ -12834,20 +11871,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "7bb8bde2-e304-5c33-938e-41f170c8936e": {
     "en": "Still soft drink, fruit content >= 10% and < 50%, no added sugars",
-    "fr":
-        "Boisson rafraîchissante sans alcool plate, teneur en fruits >= 10% et < 50%, sans sucres ajoutés",
-    "de":
-        "Still-Erfrischungsgetränk, Fruchtgehalt >= 10% und < 50%, ohne Zuckerzusatz",
+    "fr": "Boisson rafraîchissante sans alcool plate, teneur en fruits >= 10% et < 50%, sans sucres ajoutés",
+    "de": "Still-Erfrischungsgetränk, Fruchtgehalt >= 10% und < 50%, ohne Zuckerzusatz",
     "sv": "Läsk, frukthalt >= 10% och < 50%, inget tillsatt socker",
     "no": "Stille brus, fruktinnhold >= 10% og < 50%, uten tilsatt sukker",
-    "da":
-        "Læskedrik uden brus, frugtindhold >= 10% og < 50%, uden tilsat sukker",
-    "nl":
-        "Platte frisdrank, vruchtengehalte >= 10% en < 50%, geen toegevoegde suikers",
-    "es":
-        "Bebida refrescante sin gas, contenido de fruta >= 10% y < 50%, sin azúcares añadidos",
-    "it":
-        "Bevanda analcolica non gassata, contenuto di frutta >= 10% e < 50%, senza zuccheri aggiunti"
+    "da": "Læskedrik uden brus, frugtindhold >= 10% og < 50%, uden tilsat sukker",
+    "nl": "Platte frisdrank, vruchtengehalte >= 10% en < 50%, geen toegevoegde suikers",
+    "es": "Bebida refrescante sin gas, contenido de fruta >= 10% y < 50%, sin azúcares añadidos",
+    "it": "Bevanda analcolica non gassata, contenuto di frutta >= 10% e < 50%, senza zuccheri aggiunti"
   },
   "7bc5817a-5783-5e79-9582-a1014be31be7": {
     "en": "Sausage (average)",
@@ -12982,24 +12013,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Bacche di Goji, essiccate"
   },
   "7c81e46a-2671-5deb-a3c1-48bc9c0313ba": {
-    "en":
-        "Fresh pasta, stuffed with cheese and vegetables (e.g. ravioli), cooked, prepacked",
-    "fr":
-        "Pâtes fraîches, farcies au fromage et aux légumes (ex. raviolis), cuites, préemballées",
-    "de":
-        "Frische Pasta, gefüllt mit Käse und Gemüse (z. B. Ravioli), gekocht, vorverpackt",
-    "sv":
-        "Färsk pasta, fylld med ost och grönsaker (t.ex. ravioli), kokt, förpackad",
-    "no":
-        "Fersk pasta, fylt med ost og grønnsaker (f.eks. ravioli), kokt, ferdigpakket",
-    "da":
-        "Frisk pasta, fyldt med ost og grøntsager (f.eks. ravioli), kogt, færdigpakket",
-    "nl":
-        "Verse pasta, gevuld met kaas en groenten (bijv. ravioli), gekookt, voorverpakt",
-    "es":
-        "Pasta fresca, rellena de queso y verduras (ej. ravioli), cocinada, envasada",
-    "it":
-        "Pasta fresca ripiena di formaggio e verdure (es. ravioli), cotta, confezionata"
+    "en": "Fresh pasta, stuffed with cheese and vegetables (e.g. ravioli), cooked, prepacked",
+    "fr": "Pâtes fraîches, farcies au fromage et aux légumes (ex. raviolis), cuites, préemballées",
+    "de": "Frische Pasta, gefüllt mit Käse und Gemüse (z. B. Ravioli), gekocht, vorverpackt",
+    "sv": "Färsk pasta, fylld med ost och grönsaker (t.ex. ravioli), kokt, förpackad",
+    "no": "Fersk pasta, fylt med ost og grønnsaker (f.eks. ravioli), kokt, ferdigpakket",
+    "da": "Frisk pasta, fyldt med ost og grøntsager (f.eks. ravioli), kogt, færdigpakket",
+    "nl": "Verse pasta, gevuld met kaas en groenten (bijv. ravioli), gekookt, voorverpakt",
+    "es": "Pasta fresca, rellena de queso y verduras (ej. ravioli), cocinada, envasada",
+    "it": "Pasta fresca ripiena di formaggio e verdure (es. ravioli), cotta, confezionata"
   },
   "7ca86d52-a77d-58aa-acbe-5552b88ace9e": {
     "en": "Biscuit (cookie), snack with dairy or vanilla filling",
@@ -13024,32 +12046,22 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pomodori, pelati, in scatola, sgocciolati"
   },
   "7cfd9d11-e0a0-5df3-bff5-e8cb1110b870": {
-    "en":
-        "Fresh pasta, stuffed with meat (e.g. bolognese-style ravioli), prepacked, raw",
-    "fr":
-        "Pâtes fraîches, farcies à la viande (ex. raviolis à la bolognaise), préemballées, crues",
-    "de":
-        "Frische Pasta, gefüllt mit Fleisch (z. B. Ravioli Bolognese-Art), vorverpackt, roh",
-    "sv":
-        "Färsk pasta, fylld med kött (t.ex. bolognese-ravioli), förpackad, rå",
-    "no":
-        "Fersk pasta, fylt med kjøtt (f.eks. bolognese-ravioli), ferdigpakket, rå",
-    "da":
-        "Frisk pasta, fyldt med kød (f.eks. bolognese-ravioli), færdigpakket, rå",
-    "nl":
-        "Verse pasta, gevuld met vlees (bijv. bolognese-stijl ravioli), voorverpakt, rauw",
-    "es":
-        "Pasta fresca, rellena de carne (ej. ravioli estilo boloñesa), envasada, cruda",
-    "it":
-        "Pasta fresca ripiena di carne (es. ravioli alla bolognese), confezionata, cruda"
+    "en": "Fresh pasta, stuffed with meat (e.g. bolognese-style ravioli), prepacked, raw",
+    "fr": "Pâtes fraîches, farcies à la viande (ex. raviolis à la bolognaise), préemballées, crues",
+    "de": "Frische Pasta, gefüllt mit Fleisch (z. B. Ravioli Bolognese-Art), vorverpackt, roh",
+    "sv": "Färsk pasta, fylld med kött (t.ex. bolognese-ravioli), förpackad, rå",
+    "no": "Fersk pasta, fylt med kjøtt (f.eks. bolognese-ravioli), ferdigpakket, rå",
+    "da": "Frisk pasta, fyldt med kød (f.eks. bolognese-ravioli), færdigpakket, rå",
+    "nl": "Verse pasta, gevuld met vlees (bijv. bolognese-stijl ravioli), voorverpakt, rauw",
+    "es": "Pasta fresca, rellena de carne (ej. ravioli estilo boloñesa), envasada, cruda",
+    "it": "Pasta fresca ripiena di carne (es. ravioli alla bolognese), confezionata, cruda"
   },
   "7d0c7b9c-0856-5657-846c-ab4c5130ab55": {
     "en": "Coffee with milk or cappuccino with chocolate, powder, instant",
     "fr": "Café au lait ou cappuccino au chocolat, en poudre, instantané",
     "de": "Kaffee mit Milch oder Cappuccino mit Schokolade, Pulver, Instant",
     "sv": "Kaffe med mjölk eller cappuccino med choklad, pulver, snabbkaffe",
-    "no":
-        "Kaffe med melk eller cappuccino med sjokolade, pulver, hurtigløselig",
+    "no": "Kaffe med melk eller cappuccino med sjokolade, pulver, hurtigløselig",
     "da": "Kaffe med mælk eller cappuccino med chokolade, pulver, instant",
     "nl": "Koffie met melk of cappuccino met chocolade, poeder, instant",
     "es": "Café con leche o capuchino con chocolate, polvo, instantáneo",
@@ -13111,23 +12123,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Quark e panna montata, naturale"
   },
   "7e461efc-87e9-5c95-bc65-685224859b88": {
-    "en":
-        "Plant-based burger or steak from wheat and soybean (vegan), prepacked",
-    "fr":
-        "Burger ou steak végétal à base de blé et de soja (végétalien), préemballé",
-    "de":
-        "Pflanzenbasierter Burger oder Steak aus Weizen und Sojabohne (vegan), vorverpackt",
-    "sv":
-        "Växtbaserad burgare eller biff av vete och sojaböna (vegansk), förpackad",
-    "no":
-        "Plantebasert burger eller biff av hvete og soyabønner (vegansk), ferdigpakket",
-    "da":
-        "Plantebaseret burger eller steak af hvede og sojabønne (vegansk), færdigpakket",
-    "nl":
-        "Plantaardige burger of steak van tarwe en sojaboon (veganistisch), voorverpakt",
+    "en": "Plant-based burger or steak from wheat and soybean (vegan), prepacked",
+    "fr": "Burger ou steak végétal à base de blé et de soja (végétalien), préemballé",
+    "de": "Pflanzenbasierter Burger oder Steak aus Weizen und Sojabohne (vegan), vorverpackt",
+    "sv": "Växtbaserad burgare eller biff av vete och sojaböna (vegansk), förpackad",
+    "no": "Plantebasert burger eller biff av hvete og soyabønner (vegansk), ferdigpakket",
+    "da": "Plantebaseret burger eller steak af hvede og sojabønne (vegansk), færdigpakket",
+    "nl": "Plantaardige burger of steak van tarwe en sojaboon (veganistisch), voorverpakt",
     "es": "Hamburguesa o filete vegetal de trigo y soja (vegano), envasado",
-    "it":
-        "Burger o bistecca vegetale a base di frumento e soia (vegano), confezionato"
+    "it": "Burger o bistecca vegetale a base di frumento e soia (vegano), confezionato"
   },
   "7e693d19-f933-5ae6-8d99-667923eb3afb": {
     "en": "Merguez sausage, raw",
@@ -13328,24 +12332,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cioccolato fondente, ripieno di praliné, tavoletta"
   },
   "7ff21fe3-9da4-555d-8b3c-c6cb59b7405d": {
-    "en":
-        "Mussels, in Catalan-style sauce or marinade (tomatoes), canned, drained",
-    "fr":
-        "Moules, en sauce ou marinade style catalan (tomates), en conserve, égouttées",
-    "de":
-        "Miesmuscheln, in katalanischer Soße oder Marinade (Tomaten), in Dosen, abgetropft",
-    "sv":
-        "Musslor, i katalansk sås eller marinad (tomater), konserverade, avrunna",
-    "no":
-        "Blåskjell, i katalansk saus eller marinade (tomater), hermetiske, avrente",
-    "da":
-        "Muslinger, i catalansk sovs eller marinade (tomater), på dåse, drænet",
-    "nl":
-        "Mosselen, in Catalaanse saus of marinade (tomaten), in blik, uitgelekt",
-    "es":
-        "Mejillones, en salsa estilo catalán o marinado (tomates), en conserva, escurridos",
-    "it":
-        "Cozze, in salsa alla catalana (pomodoro) o marinata, in scatola, sgocciolate"
+    "en": "Mussels, in Catalan-style sauce or marinade (tomatoes), canned, drained",
+    "fr": "Moules, en sauce ou marinade style catalan (tomates), en conserve, égouttées",
+    "de": "Miesmuscheln, in katalanischer Soße oder Marinade (Tomaten), in Dosen, abgetropft",
+    "sv": "Musslor, i katalansk sås eller marinad (tomater), konserverade, avrunna",
+    "no": "Blåskjell, i katalansk saus eller marinade (tomater), hermetiske, avrente",
+    "da": "Muslinger, i catalansk sovs eller marinade (tomater), på dåse, drænet",
+    "nl": "Mosselen, in Catalaanse saus of marinade (tomaten), in blik, uitgelekt",
+    "es": "Mejillones, en salsa estilo catalán o marinado (tomates), en conserva, escurridos",
+    "it": "Cozze, in salsa alla catalana (pomodoro) o marinata, in scatola, sgocciolate"
   },
   "80171cf3-360a-5f01-8686-a91b5b9c7d29": {
     "en": "Mix of nuts and dried fruit, no added salt",
@@ -13359,24 +12354,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Mix di noci e frutta secca, senza sale aggiunto"
   },
   "802d1d1a-b00b-5a94-b63d-e7df8bbfb055": {
-    "en":
-        "Stewed fruits, no added sugars (pulp or mixed fruits,), prepacked, refrigerated",
-    "fr":
-        "Compote de fruits, sans sucres ajoutés (pulpe ou mélange de fruits), préemballée, réfrigérée",
-    "de":
-        "Obstmark, ohne Zuckerzusatz (Fruchtmark oder gemischte Früchte), vorverpackt, gekühlt",
-    "sv":
-        "Fruktmos, inget tillsatt socker (puré eller blandad frukt), förpackat, kylt",
-    "no":
-        "Fruktmos, uten tilsatt sukker (puré eller fruktblanding), ferdigpakket, kjølt",
-    "da":
-        "Frugtmos, uden tilsat sukker (puré eller blandet frugt), færdigpakket, på køl",
-    "nl":
-        "Fruitmoes, zonder toegevoegde suikers (pulp of gemengd fruit,), voorverpakt, gekoeld",
-    "es":
-        "Compota de frutas, sin azúcares añadidos (pulpa o frutas mezcladas), envasada, refrigerada",
-    "it":
-        "Frutta cotta, senza zuccheri aggiunti (polpa o macedonia), confezionata, refrigerata"
+    "en": "Stewed fruits, no added sugars (pulp or mixed fruits,), prepacked, refrigerated",
+    "fr": "Compote de fruits, sans sucres ajoutés (pulpe ou mélange de fruits), préemballée, réfrigérée",
+    "de": "Obstmark, ohne Zuckerzusatz (Fruchtmark oder gemischte Früchte), vorverpackt, gekühlt",
+    "sv": "Fruktmos, inget tillsatt socker (puré eller blandad frukt), förpackat, kylt",
+    "no": "Fruktmos, uten tilsatt sukker (puré eller fruktblanding), ferdigpakket, kjølt",
+    "da": "Frugtmos, uden tilsat sukker (puré eller blandet frugt), færdigpakket, på køl",
+    "nl": "Fruitmoes, zonder toegevoegde suikers (pulp of gemengd fruit,), voorverpakt, gekoeld",
+    "es": "Compota de frutas, sin azúcares añadidos (pulpa o frutas mezcladas), envasada, refrigerada",
+    "it": "Frutta cotta, senza zuccheri aggiunti (polpa o macedonia), confezionata, refrigerata"
   },
   "80306c2c-06f6-5b13-a22e-de638880c91e": {
     "en": "Poultry roast, brined, cooked",
@@ -13434,16 +12420,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Succo d'arancia, da concentrato"
   },
   "80db1a0a-4d9d-5084-ba29-16f21e991635": {
-    "en": "Granola with nuts and/or seeds only, not fortified",
-    "fr": "Granola aux noix et/ou graines seulement, non enrichi",
-    "de": "Granola nur mit Nüssen und/oder Samen, nicht angereichert",
-    "sv": "Granola med endast nötter och/eller frön, ej berikad",
-    "no": "Granola med nøtter og/eller frø bare, ikke beriket",
-    "da": "Granola med nødder og/eller frø, ikke beriget",
-    "nl": "Granola met noten en/of zaden uitsluitend, niet verrijkt",
-    "es":
-        "Granola con frutos secos y/o semillas exclusivamente, no enriquecida",
-    "it": "Granola solo con noci e/o semi, non fortificata"
+    "en": "Granola — nuts and seeds",
+    "de": "Granola — Nüsse und Samen",
+    "fr": "Granola — noix et graines",
+    "no": "Granola – nøtter og frø",
+    "sv": "Granola — nötter och frön",
+    "da": "Granola — nødder og frø",
+    "nl": "Granola — noten en zaden",
+    "it": "Granola — noci e semi",
+    "es": "Granola — frutos secos y semillas"
   },
   "80efeb11-15a9-5067-a1ce-cbdf83a93b6d": {
     "en": "Cream sauce with herbs",
@@ -13490,39 +12475,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Piselli spezzati, secchi"
   },
   "81d8988a-7d52-5971-81a6-d4d3e9c6262c": {
-    "en":
-        "Country-style bread, French bread, multigrain and/or seeds, prepacked",
-    "fr":
-        "Pain de campagne, pain français, multigrains et/ou aux graines, préemballé",
-    "de":
-        "Landbrot, französisches Brot, Mehrkorn und/oder mit Samen, vorverpackt",
+    "en": "Country-style bread, French bread, multigrain and/or seeds, prepacked",
+    "fr": "Pain de campagne, pain français, multigrains et/ou aux graines, préemballé",
+    "de": "Landbrot, französisches Brot, Mehrkorn und/oder mit Samen, vorverpackt",
     "sv": "Lantbröd, franskt bröd, flerkorn och/or frön, förpackat",
     "no": "Landbrød, fransk brød, flerkorn og/eller frø, ferdigpakket",
     "da": "Landbrød, fransk brød, flerkorn og/eller frø, forpakket",
     "nl": "Landbrood, Frans brood, meergranen en/of zaden, voorverpakt",
     "es": "Pan de campo, pan francés, multigrano y/o con semillas, preenvasado",
-    "it":
-        "Pane tipo rustico, baguette, multicereali e/o con semi, preconfezionato"
+    "it": "Pane tipo rustico, baguette, multicereali e/o con semi, preconfezionato"
   },
   "81e57a4f-ea8d-5bef-a378-a56705bf47c6": {
-    "en":
-        "Soy dessert, with almonds, with sugar(s), fortified with vitamins and minerals, refrigerated",
-    "fr":
-        "Dessert de soja, aux amandes, avec sucre(s), enrichi en vitamines et minéraux, réfrigéré",
-    "de":
-        "Sojadessert, mit Mandeln, mit Zucker(n), mit Vitaminen und Mineralstoffen angereichert, gekühlt",
-    "sv":
-        "Sojadessert, med mandel, med socker, berikad med vitaminer och mineraler, kyld",
-    "no":
-        "Soyadessert, med mandler, med sukker, beriket med vitaminer og mineraler, kjølt",
-    "da":
-        "Sojadessert, med mandler, med sukker, beriget med vitaminer og mineraler, på køl",
-    "nl":
-        "Soja-dessert, met amandelen, met suiker(s), verrijkt met vitaminen en mineralen, gekoeld",
-    "es":
-        "Postre de soja, con almendras, con azúcar(es), enriquecido con vitaminas y minerales, refrigerado",
-    "it":
-        "Dessert di soia, con mandorle, zuccherato, fortificato con vitamine e minerali, refrigerato"
+    "en": "Soy dessert, with almonds, with sugar(s), fortified with vitamins and minerals, refrigerated",
+    "fr": "Dessert de soja, aux amandes, avec sucre(s), enrichi en vitamines et minéraux, réfrigéré",
+    "de": "Sojadessert, mit Mandeln, mit Zucker(n), mit Vitaminen und Mineralstoffen angereichert, gekühlt",
+    "sv": "Sojadessert, med mandel, med socker, berikad med vitaminer och mineraler, kyld",
+    "no": "Soyadessert, med mandler, med sukker, beriket med vitaminer og mineraler, kjølt",
+    "da": "Sojadessert, med mandler, med sukker, beriget med vitaminer og mineraler, på køl",
+    "nl": "Soja-dessert, met amandelen, met suiker(s), verrijkt met vitaminen en mineralen, gekoeld",
+    "es": "Postre de soja, con almendras, con azúcar(es), enriquecido con vitaminas y minerales, refrigerado",
+    "it": "Dessert di soia, con mandorle, zuccherato, fortificato con vitamine e minerali, refrigerato"
   },
   "81ebe23f-944b-5155-b74d-b222f15b0678": {
     "en": "Parsley, fresh",
@@ -13702,20 +12674,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "831e70f8-a1e2-5ef4-8f45-e22c78d02eaa": {
     "en": "Mineral still water (Penacova), bottled, very lightly mineralized",
-    "fr":
-        "Eau plate minérale (Penacova), en bouteille, très faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Penacova), in Flaschen, sehr leicht mineralisiert",
-    "sv":
-        "Stilla mineralvatten (Penacova), på flaska, mycket lätxmineraliserat",
+    "fr": "Eau plate minérale (Penacova), en bouteille, très faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Penacova), in Flaschen, sehr leicht mineralisiert",
+    "sv": "Stilla mineralvatten (Penacova), på flaska, mycket lätxmineraliserat",
     "no": "Stille mineralvann (Penacova), på flaske, svært lett mineralisert",
     "da": "Stille mineralvand (Penacova), på flaske, meget let mineraliseret",
-    "nl":
-        "Plat mineraalwater (Penacova), gebotteld, zeer licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Penacova), embotellada, de mineralización muy débil",
-    "it":
-        "Acqua minerale naturale (Penacova), in bottiglia, minimamente mineralizzata"
+    "nl": "Plat mineraalwater (Penacova), gebotteld, zeer licht gemineraliseerd",
+    "es": "Agua mineral sin gas (Penacova), embotellada, de mineralización muy débil",
+    "it": "Acqua minerale naturale (Penacova), in bottiglia, minimamente mineralizzata"
   },
   "8381e050-bc3f-5bbd-a9bb-afddd4cb1ebd": {
     "en": "Salmon with sorrel, prepacked",
@@ -13872,24 +12838,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Ippoglosso atlantico, crudo"
   },
   "84590c57-45c3-59f5-973c-6e39265ee300": {
-    "en":
-        "Stewed fruits, sugar content unknown (pulp or mixed fruits, w or without sugar, but always with other ingredient), prepacked (average)",
-    "fr":
-        "Compote de fruits, teneur en sucre inconnue (pulpe ou mélange de fruits, avec ou sans sucre, mais toujours avec un autre ingrédient), préemballée (moyenne)",
-    "de":
-        "Gedünstetes Obst, Zuckergehalt unbekannt (Fruchtmark oder gemischtes Obst, mit oder ohne Zucker, aber immer mit anderen Zutaten), vorverpackt (Durchschnitt)",
-    "sv":
-        "Fruktmos, sockerhalt okänd (puré eller blandad frukt, med eller utan socker, men alltid med annan ingrediens), förpackad (genomsnitt)",
-    "no":
-        "Fruktmos, sukkerinnhold ukjent (puré eller blandet frukt, med eller uten sukker, men alltid med annen ingrediens), ferdigpakket (gjennomsnitt)",
-    "da":
-        "Frugtmos, sukkerindhold ukendt (pulp eller blandet frugt, med eller uden sukker, men altid med anden ingrediens), forpakket (gennemsnit)",
-    "nl":
-        "Fruitmoes, suikergehalte onbekend (pulp of gemengd fruit, met of zonder suiker, maar altijd met een ander ingrediënt), voorverpakt (gemiddeld)",
-    "es":
-        "Compota de frutas, contenido de azúcar desconocido (pulpa o frutas mezcladas, con o sin azúcar, siempre con otros ingredientes), preenvasada (promedio)",
-    "it":
-        "Frutta stufata, contenuto di zuccheri sconosciuto (polpa o frutta mista, con o senza zucchero, ma sempre con altro ingrediente), preconfezionata (media)"
+    "en": "Stewed fruits, sugar content unknown (pulp or mixed fruits, w or without sugar, but always with other ingredient), prepacked (average)",
+    "fr": "Compote de fruits, teneur en sucre inconnue (pulpe ou mélange de fruits, avec ou sans sucre, mais toujours avec un autre ingrédient), préemballée (moyenne)",
+    "de": "Gedünstetes Obst, Zuckergehalt unbekannt (Fruchtmark oder gemischtes Obst, mit oder ohne Zucker, aber immer mit anderen Zutaten), vorverpackt (Durchschnitt)",
+    "sv": "Fruktmos, sockerhalt okänd (puré eller blandad frukt, med eller utan socker, men alltid med annan ingrediens), förpackad (genomsnitt)",
+    "no": "Fruktmos, sukkerinnhold ukjent (puré eller blandet frukt, med eller uten sukker, men alltid med annen ingrediens), ferdigpakket (gjennomsnitt)",
+    "da": "Frugtmos, sukkerindhold ukendt (pulp eller blandet frugt, med eller uden sukker, men altid med anden ingrediens), forpakket (gennemsnit)",
+    "nl": "Fruitmoes, suikergehalte onbekend (pulp of gemengd fruit, met of zonder suiker, maar altijd met een ander ingrediënt), voorverpakt (gemiddeld)",
+    "es": "Compota de frutas, contenido de azúcar desconocido (pulpa o frutas mezcladas, con o sin azúcar, siempre con otros ingredientes), preenvasada (promedio)",
+    "it": "Frutta stufata, contenuto di zuccheri sconosciuto (polpa o frutta mista, con o senza zucchero, ma sempre con altro ingrediente), preconfezionata (media)"
   },
   "8489128f-01bc-556c-8917-740ebec61734": {
     "en": "Chocolate bar, chocolate-coated, without biscuit",
@@ -13981,20 +12938,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "8538eab9-c0c1-5236-a9f9-3e5ae91a4df6": {
     "en": "Mineral sparkling water (St-Géron), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (St-Géron), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (St-Géron), in Flaschen, durchschnittlich mineralisiert",
+    "fr": "Eau minérale gazeuse (St-Géron), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (St-Géron), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (St-Géron), på flaska, medelmineraliserat",
-    "no":
-        "Mineralvann med kullsyre (St-Géron), på flaske, middels mineralisert",
-    "da":
-        "Mineralvand med kulsyre (St-Géron), på flaske, moderat mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (St-Géron), gebotteld, gemiddeld gemineraliseerd",
+    "no": "Mineralvann med kullsyre (St-Géron), på flaske, middels mineralisert",
+    "da": "Mineralvand med kulsyre (St-Géron), på flaske, moderat mineraliseret",
+    "nl": "Bruisend mineraalwater (St-Géron), gebotteld, gemiddeld gemineraliseerd",
     "es": "Agua mineral con gas (St-Géron), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (St-Géron), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale frizzante (St-Géron), in bottiglia, mediamente mineralizzata"
   },
   "8575ac99-0165-5075-ae17-6676be23c9e2": {
     "en": "Cider, dry",
@@ -14054,28 +13005,24 @@ const foodNames = <String, Map<String, String>>{
   "85a63005-9bdf-581d-9b85-45e42670943a": {
     "en": "Mineral sparkling water (Vernet), bottled, lightly mineralized",
     "fr": "Eau minérale gazeuse (Vernet), en bouteille, faiblement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Vernet), in Flaschen, leicht mineralisiert",
+    "de": "Mineralwasser mit Kohlensäure (Vernet), in Flaschen, leicht mineralisiert",
     "sv": "Kolsyrat mineralvatten (Vernet), på flaska, lättmineraliserat",
     "no": "Mineralvann med kullsyre (Vernet), på flaske, lett mineralisert",
     "da": "Mineralvand med kulsyre (Vernet), på flaske, let mineraliseret",
     "nl": "Bruisend mineraalwater (Vernet), gebotteld, licht gemineraliseerd",
     "es": "Agua mineral con gas (Vernet), embotellada, mineralización débil",
-    "it":
-        "Acqua minerale frizzante (Vernet), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale frizzante (Vernet), in bottiglia, leggermente mineralizzata"
   },
   "85d7b7b2-c9a3-5a8e-90c6-9d9a58a175b6": {
     "en": "Salad dressing, olive oil (50-75% fat), prepacked",
-    "fr":
-        "Sauce pour salade, huile d'olive (50-75% de matières grasses), préemballée",
+    "fr": "Sauce pour salade, huile d'olive (50-75% de matières grasses), préemballée",
     "de": "Salatsauce, Olivenöl (50-75% Fett), vorgepackt",
     "sv": "Salladsdressing, olivolja (50-75% fett), färdigförpackad",
     "no": "Salatdressing, olivenolje (50-75% fett), ferdigpakket",
     "da": "Salatdressing, olivenolie (50-75% fedt), færdigpakket",
     "nl": "Saladedressing, olijfolie (50-75% vet), voorverpakt",
     "es": "Aliño para ensalada, aceite de oliva (50-75% grasa), envasado",
-    "it":
-        "Condimento per insalata, olio d'oliva (50-75% grassi), preconfezionato"
+    "it": "Condimento per insalata, olio d'oliva (50-75% grassi), preconfezionato"
   },
   "85f1863b-cd62-58d1-b48d-ec9126ae4d1d": {
     "en": "Okra, cooked",
@@ -14090,18 +13037,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "85fa3d7c-639a-5601-8ad5-5204c46de64f": {
     "en": "Mineral sparkling water (Badoit), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Badoit), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Badoit), in Flaschen, durchschnittlich mineralisiert",
+    "fr": "Eau minérale gazeuse (Badoit), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Badoit), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (Badoit), på flaska, medelmineraliserat",
     "no": "Mineralvann med kullsyre (Badoit), på flaske, middels mineralisert",
     "da": "Mineralvand med kulsyre (Badoit), på flaske, moderat mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Badoit), gebotteld, gemiddeld gemineraliseerd",
+    "nl": "Bruisend mineraalwater (Badoit), gebotteld, gemiddeld gemineraliseerd",
     "es": "Agua mineral con gas (Badoit), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (Badoit), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale frizzante (Badoit), in bottiglia, mediamente mineralizzata"
   },
   "866e6225-349c-5f43-b077-2c5962c60dd1": {
     "en": "Liquid caramel",
@@ -14150,28 +13093,24 @@ const foodNames = <String, Map<String, String>>{
   "86ab3220-47b0-570f-9207-748f165feac4": {
     "en": "Mineral sparkling water (Cilaos), bottled, strongly mineralized",
     "fr": "Eau minérale gazeuse (Cilaos), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Cilaos), in Flaschen, stark mineralisiert",
+    "de": "Mineralwasser mit Kohlensäure (Cilaos), in Flaschen, stark mineralisiert",
     "sv": "Kolsyrat mineralvatten (Cilaos), på flaska, starkt mineraliserat",
     "no": "Mineralvann med kullsyre (Cilaos), på flaske, sterkt mineralisert",
     "da": "Mineralvand med kulsyre (Cilaos), på flaske, stærkt mineraliseret",
     "nl": "Bruisend mineraalwater (Cilaos), gebotteld, sterk gemineraliseerd",
     "es": "Agua mineral con gas (Cilaos), embotellada, fuerte mineralización",
-    "it":
-        "Acqua minerale frizzante (Cilaos), in bottiglia, fortemente mineralizzata"
+    "it": "Acqua minerale frizzante (Cilaos), in bottiglia, fortemente mineralizzata"
   },
   "86c0e049-2632-5f33-afb3-f9b19050e3ff": {
     "en": "Mineral still water (Abatilles), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale plate (Abatilles), en bouteille, faiblement minéralisée",
+    "fr": "Eau minérale plate (Abatilles), en bouteille, faiblement minéralisée",
     "de": "Still mineralwasser (Abatilles), in Flaschen, leicht mineralisiert",
     "sv": "Stilla mineralvatten (Abatilles), på flaska, lättmineraliserat",
     "no": "Kildevann uten kullsyre (Abatilles), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Abatilles), på flaske, let mineraliseret",
     "nl": "Plat mineraalwater (Abatilles), gebotteld, licht gemineraliseerd",
     "es": "Agua mineral sin gas (Abatilles), embotellada, mineralización débil",
-    "it":
-        "Acqua minerale naturale (Abatilles), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Abatilles), in bottiglia, leggermente mineralizzata"
   },
   "86cd9b5a-c34d-5ccc-a4fa-9a3791b4e7fa": {
     "en": "Duck, meat and skin, raw",
@@ -14196,24 +13135,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Canelé"
   },
   "86ef3a76-2151-5721-b4f9-377e7add241b": {
-    "en":
-        "Mousse (chocolate, coffee, caramel or vanilla) topped with whipped cream, refrigerated",
-    "fr":
-        "Mousse (chocolat, café, caramel ou vanille) surmontée de chantilly, réfrigérée",
-    "de":
-        "Mousse (Schokolade, Kaffee, Karamell oder Vanille) mit Schlagsahnehube, gekühlt",
-    "sv":
-        "Mousse (choklad, kaffe, kola eller vanilj) toppad med vispgrädde, kylslagen",
-    "no":
-        "Mousse (sjokolade, kaffe, karamell eller vanilje) toppet med pisket krem, kjøleskapsware",
-    "da":
-        "Mousse (chokolade, kaffe, karamel eller vanilje) topstyret med flødeskum, kølet",
-    "nl":
-        "Mousse (chocolade, koffie, karamel of vanille) overgoten met slagroom, gekoeld",
-    "es":
-        "Mousse (chocolate, café, caramelo o vainilla) con nata montada, refrigerada",
-    "it":
-        "Mousse (cioccolato, caffè, caramello o vaniglia) con panna montata, refrigerata"
+    "en": "Mousse (chocolate, coffee, caramel or vanilla) topped with whipped cream, refrigerated",
+    "fr": "Mousse (chocolat, café, caramel ou vanille) surmontée de chantilly, réfrigérée",
+    "de": "Mousse (Schokolade, Kaffee, Karamell oder Vanille) mit Schlagsahnehube, gekühlt",
+    "sv": "Mousse (choklad, kaffe, kola eller vanilj) toppad med vispgrädde, kylslagen",
+    "no": "Mousse (sjokolade, kaffe, karamell eller vanilje) toppet med pisket krem, kjøleskapsware",
+    "da": "Mousse (chokolade, kaffe, karamel eller vanilje) topstyret med flødeskum, kølet",
+    "nl": "Mousse (chocolade, koffie, karamel of vanille) overgoten met slagroom, gekoeld",
+    "es": "Mousse (chocolate, café, caramelo o vainilla) con nata montada, refrigerada",
+    "it": "Mousse (cioccolato, caffè, caramello o vaniglia) con panna montata, refrigerata"
   },
   "8719059f-6ae6-5222-9ff1-04ae5d6f5db2": {
     "en": "Lobster, raw",
@@ -14227,15 +13157,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Aragosta, cruda"
   },
   "873c6fba-99cc-5ba1-8fa1-42d39d1a1812": {
-    "en": "Potato, roasted/baked",
-    "fr": "Pomme de terre, rôtie/cuite au four",
-    "de": "Kartoffel, geröstet/gebacken",
-    "sv": "Potatis, rostad/bakad",
-    "no": "Potet, stekt/bakt",
-    "da": "Kartoffel, ristet/bagt",
-    "nl": "Aardappel, geroosterd/gebakken",
-    "es": "Patata, asada/al horno",
-    "it": "Patata, arrosto/al forno"
+    "en": "Potato — baked",
+    "de": "Kartoffel — gebacken",
+    "fr": "Pomme de terre — au four",
+    "no": "Potet – bakt",
+    "sv": "Potatis — bakad",
+    "da": "Kartoffel — bagt",
+    "nl": "Aardappel — gebakken",
+    "it": "Patata — al forno",
+    "es": "Patata — al horno"
   },
   "876138eb-6207-51a7-b91e-54585485ed20": {
     "en": "Salsify, frozen, raw",
@@ -14249,69 +13179,41 @@ const foodNames = <String, Map<String, String>>{
     "it": "Scorzonera, surgelata, cruda"
   },
   "87628656-a1c5-5b9a-bd44-b3052b570a9f": {
-    "en":
-        "Cocoa or chocolate powder, for beverages, with sugar(s), fortified with vitamins and minerals",
-    "fr":
-        "Poudre de cacao ou de chocolat pour boissons, avec sucre(s), enrichie en vitamines et minéraux",
-    "de":
-        "Kakao- oder Schokoladenpulver, für Getränke, mit Zucker(n), angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Kakor eller chokladpulver, för drycker, med socker, berikat med vitaminer och mineraler",
-    "no":
-        "Kakao eller sjokoladepulver, til drikke, med sukker, beriket med vitaminer og mineraler",
-    "da":
-        "Kakao- eller chokoladepulver, til drikkevarer, med sukker, beriget med vitaminer og mineraler",
-    "nl":
-        "Cacao- of chocoladepoeder, voor dranken, met suiker(s), verrijkt met vitaminen en mineralen",
-    "es":
-        "Cacao o chocolate en polvo, para bebidas, con azúcares, enriquecido con vitaminas y minerales",
-    "it":
-        "Cacao o cioccolato in polvere, per bevande, con zuccheri, arricchito con vitamine e minerali"
+    "en": "Cocoa or chocolate powder, for beverages, with sugar(s), fortified with vitamins and minerals",
+    "fr": "Poudre de cacao ou de chocolat pour boissons, avec sucre(s), enrichie en vitamines et minéraux",
+    "de": "Kakao- oder Schokoladenpulver, für Getränke, mit Zucker(n), angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Kakor eller chokladpulver, för drycker, med socker, berikat med vitaminer och mineraler",
+    "no": "Kakao eller sjokoladepulver, til drikke, med sukker, beriket med vitaminer og mineraler",
+    "da": "Kakao- eller chokoladepulver, til drikkevarer, med sukker, beriget med vitaminer og mineraler",
+    "nl": "Cacao- of chocoladepoeder, voor dranken, met suiker(s), verrijkt met vitaminen en mineralen",
+    "es": "Cacao o chocolate en polvo, para bebidas, con azúcares, enriquecido con vitaminas y minerales",
+    "it": "Cacao o cioccolato in polvere, per bevande, con zuccheri, arricchito con vitamine e minerali"
   },
   "879cb2dd-e22c-5e91-a30b-d5532a2e18e8": {
-    "en":
-        "Fermented milk drink, flavoured, with sweetener(s), reduced sugar, 0% fat, with L Casei",
-    "fr":
-        "Boisson à base de lait fermenté, aromatisée, avec édulcorant(s), allégée en sucre, 0% de matières grasses, avec L Casei",
-    "de":
-        "Fermentiertes Milchgetränk, aromatisiert, mit Süßungsmittel(n), reduziertem Zuckergehalt, 0% Fett, mit L Casei",
-    "sv":
-        "Fermenterad mjölkdryck, smaksatt, med sötningsmedel, reducerat socker, 0% fett, med L Casei",
-    "no":
-        "Fermentert melkedrikk, med smak, med søtningsmiddel, redusert sukker, 0% fett, med L Casei",
-    "da":
-        "Fermenteret mælkedrik, med smag, med sødemiddel, reduceret sukker, 0% fedt, med L Casei",
-    "nl":
-        "Gefermenteerde melkdrank, met smaakje, met zoetstof(fen), suikerarm, 0% vet, met L Casei",
-    "es":
-        "Bebida de leche fermentada, aromatizada, con edulcorantes, reducido en azúcar, 0% grasa, con L Casei",
-    "it":
-        "Bevanda a base di latte fermentato, aromatizzata, con edulcoranti, ridotto contenuto di zuccheri, 0% grassi, con L Casei"
+    "en": "Fermented milk drink, flavoured, with sweetener(s), reduced sugar, 0% fat, with L Casei",
+    "fr": "Boisson à base de lait fermenté, aromatisée, avec édulcorant(s), allégée en sucre, 0% de matières grasses, avec L Casei",
+    "de": "Fermentiertes Milchgetränk, aromatisiert, mit Süßungsmittel(n), reduziertem Zuckergehalt, 0% Fett, mit L Casei",
+    "sv": "Fermenterad mjölkdryck, smaksatt, med sötningsmedel, reducerat socker, 0% fett, med L Casei",
+    "no": "Fermentert melkedrikk, med smak, med søtningsmiddel, redusert sukker, 0% fett, med L Casei",
+    "da": "Fermenteret mælkedrik, med smag, med sødemiddel, reduceret sukker, 0% fedt, med L Casei",
+    "nl": "Gefermenteerde melkdrank, met smaakje, met zoetstof(fen), suikerarm, 0% vet, met L Casei",
+    "es": "Bebida de leche fermentada, aromatizada, con edulcorantes, reducido en azúcar, 0% grasa, con L Casei",
+    "it": "Bevanda a base di latte fermentato, aromatizzata, con edulcoranti, ridotto contenuto di zuccheri, 0% grassi, con L Casei"
   },
   "87e1bf3e-087e-51a6-a773-073a29371097": {
-    "en":
-        "Fermented milk, yogurt type with sterol esters, with fruits, 0% fat, with sweetener(s)",
-    "fr":
-        "Lait fermenté, type yaourt aux esters de stérols, aux fruits, 0% de matières grasses, avec édulcorant(s)",
-    "de":
-        "Fermentierte Milch, Joghurt-Typ mit Sterinestern, mit Früchten, 0% Fett, mit Süßungsmittel(n)",
-    "sv":
-        "Fermenterad mjölk, yoghurttyp med sterolestrar, med frukt, 0% fett, med sötningsmedel",
-    "no":
-        "Fermentert melk, joguitempe med sterolestere, med frukt, 0% fett, med søtningsmiddel",
-    "da":
-        "Fermenteret mælk, yoghurttype med sterolestere, med frugt, 0% fedt, med sødemiddel",
-    "nl":
-        "Gefermenteerde melk, yoghurt-type met sterolesters, met fruit, 0% vet, met zoetstof(fen)",
-    "es":
-        "Leche fermentada, tipo yogur con ésteres de esteroles, con frutas, 0% grasa, con edulcorantes",
-    "it":
-        "Latte fermentato, tipo yogurt con esteri di steroli, alla frutta, 0% grassi, con edulcoranti"
+    "en": "Fermented milk, yogurt type with sterol esters, with fruits, 0% fat, with sweetener(s)",
+    "fr": "Lait fermenté, type yaourt aux esters de stérols, aux fruits, 0% de matières grasses, avec édulcorant(s)",
+    "de": "Fermentierte Milch, Joghurt-Typ mit Sterinestern, mit Früchten, 0% Fett, mit Süßungsmittel(n)",
+    "sv": "Fermenterad mjölk, yoghurttyp med sterolestrar, med frukt, 0% fett, med sötningsmedel",
+    "no": "Fermentert melk, joguitempe med sterolestere, med frukt, 0% fett, med søtningsmiddel",
+    "da": "Fermenteret mælk, yoghurttype med sterolestere, med frugt, 0% fedt, med sødemiddel",
+    "nl": "Gefermenteerde melk, yoghurt-type met sterolesters, met fruit, 0% vet, met zoetstof(fen)",
+    "es": "Leche fermentada, tipo yogur con ésteres de esteroles, con frutas, 0% grasa, con edulcorantes",
+    "it": "Latte fermentato, tipo yogurt con esteri di steroli, alla frutta, 0% grassi, con edulcoranti"
   },
   "87e89d42-25d6-5ba2-912a-487e4afed567": {
     "en": "Button mushroom or cultivated mushroom, boiled/cooked in water",
-    "fr":
-        "Champignon de Paris ou champignon de culture, bouilli/cuit dans l'eau",
+    "fr": "Champignon de Paris ou champignon de culture, bouilli/cuit dans l'eau",
     "de": "Champignon oder Kulturpilz, in Wasser gekocht",
     "sv": "Trädgårdschampinjon eller odlad svamp, kokt i vatten",
     "no": "Hvit sopp eller sjampinjong, kokt i vann",
@@ -14343,24 +13245,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pane in cassetta, senza zuccheri aggiunti, preconfezionato"
   },
   "8815a18a-722f-5c17-a8da-b0c0661378ee": {
-    "en":
-        "Breakfast cereals, chocolate or chocolate-hazelnut filling, not fortified",
-    "fr":
-        "Céréales de petit-déjeuner, fourrage chocolat ou chocolat-noisette, non enrichies",
-    "de":
-        "Frühstückscerealien, Schokoladen- oder Schokoladen-Haselnuss-Füllung, nicht angereichert",
-    "sv":
-        "Frukostflingor, choklad- eller choklad-hasselnötsfyllning, ej berikade",
-    "no":
-        "Frokostblandinger, sjokolade- eller sjokolade-hasselnøttfyll, ikke beriket",
-    "da":
-        "Morgenmadscerealer, chokolade- eller chokolade-hasselnøddefyld, ikke beriget",
-    "nl":
-        "Ontbijtgranen, chocolade- of chocolade-hazelnotenvulling, niet verrijkt",
-    "es":
-        "Cereales de desayuno, relleno de chocolate o chocolate-avellana, no enriquecidos",
-    "it":
-        "Cereali per la colazione, ripieni al cioccolato o cioccolato-nocciola, non arricchiti"
+    "en": "Breakfast cereals, chocolate or chocolate-hazelnut filling, not fortified",
+    "fr": "Céréales de petit-déjeuner, fourrage chocolat ou chocolat-noisette, non enrichies",
+    "de": "Frühstückscerealien, Schokoladen- oder Schokoladen-Haselnuss-Füllung, nicht angereichert",
+    "sv": "Frukostflingor, choklad- eller choklad-hasselnötsfyllning, ej berikade",
+    "no": "Frokostblandinger, sjokolade- eller sjokolade-hasselnøttfyll, ikke beriket",
+    "da": "Morgenmadscerealer, chokolade- eller chokolade-hasselnøddefyld, ikke beriget",
+    "nl": "Ontbijtgranen, chocolade- of chocolade-hazelnotenvulling, niet verrijkt",
+    "es": "Cereales de desayuno, relleno de chocolate o chocolate-avellana, no enriquecidos",
+    "it": "Cereali per la colazione, ripieni al cioccolato o cioccolato-nocciola, non arricchiti"
   },
   "88371cf5-660d-5151-b49e-87a7d977a6e3": {
     "en": "Christmas log cake",
@@ -14474,21 +13367,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "89b252bd-380f-5686-8d0a-02ade1c23f1e": {
     "en": "Egg roll or nem, with shrimp and/or crab, prepacked, cooked",
-    "fr":
-        "Rouleau de printemps ou nems, aux crevettes et/ou au crabe, préemballés, cuits",
-    "de":
-        "Frühlingsrolle oder Nem, mit Garnelen und/oder Krabben, vorgepackt, gekocht",
-    "sv":
-        "Vårrulle eller nem, med räkor och/eller krabba, färdigförpackad, tillagad",
-    "no":
-        "Vårrull eller nem, med reker og/eller krabbe, ferdigpakket, tilberedt",
-    "da":
-        "Forårsrulle eller nem med rejer og/eller krabbe, færdigpakket, tilberedt",
+    "fr": "Rouleau de printemps ou nems, aux crevettes et/ou au crabe, préemballés, cuits",
+    "de": "Frühlingsrolle oder Nem, mit Garnelen und/oder Krabben, vorgepackt, gekocht",
+    "sv": "Vårrulle eller nem, med räkor och/eller krabba, färdigförpackad, tillagad",
+    "no": "Vårrull eller nem, med reker og/eller krabbe, ferdigpakket, tilberedt",
+    "da": "Forårsrulle eller nem med rejer og/eller krabbe, færdigpakket, tilberedt",
     "nl": "Loempia of nem, met garnaal en/of krab, voorverpakt, gekookt",
-    "es":
-        "Rollito de primavera o nem, con gambas y/o cangrejo, preenvasado, cocinado",
-    "it":
-        "Involtino primavera o nem, con gamberi e/o granchio, preconfezionato, cotto"
+    "es": "Rollito de primavera o nem, con gambas y/o cangrejo, preenvasado, cocinado",
+    "it": "Involtino primavera o nem, con gamberi e/o granchio, preconfezionato, cotto"
   },
   "8a202da3-6c39-5759-a830-83bc7f7056b1": {
     "en": "Acerola juice, fresh",
@@ -14524,37 +13410,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Zuppa, marocchina, disidratata e ricostituita"
   },
   "8a4c2800-4c6f-59df-8cf6-192e50b23f3c": {
-    "en":
-        "Mineral still water (Christinen Brunnen), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale plate (Christinen Brunnen), en bouteille, moyennement minéralisée",
-    "de":
-        "Natürliches Mineralwasser (Christinen Brunnen), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Still mineralvatten (Christinen Brunnen), på flaska, medelmineraliserat",
-    "no":
-        "Stille mineralvann (Christinen Brunnen), på flaske, moderat mineralisert",
-    "da":
-        "Stille mineralvand (Christinen Brunnen), på flaske, gennemsnitligt mineraliseret",
-    "nl":
-        "Plat mineraalwater (Christinen Brunnen), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Christinen Brunnen), embotellada, mineralización media",
-    "it":
-        "Acqua minerale naturale (Christinen Brunnen), in bottiglia, mediamente mineralizzata"
+    "en": "Mineral still water (Christinen Brunnen), bottled, averagely mineralized",
+    "fr": "Eau minérale plate (Christinen Brunnen), en bouteille, moyennement minéralisée",
+    "de": "Natürliches Mineralwasser (Christinen Brunnen), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Still mineralvatten (Christinen Brunnen), på flaska, medelmineraliserat",
+    "no": "Stille mineralvann (Christinen Brunnen), på flaske, moderat mineralisert",
+    "da": "Stille mineralvand (Christinen Brunnen), på flaske, gennemsnitligt mineraliseret",
+    "nl": "Plat mineraalwater (Christinen Brunnen), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral sin gas (Christinen Brunnen), embotellada, mineralización media",
+    "it": "Acqua minerale naturale (Christinen Brunnen), in bottiglia, mediamente mineralizzata"
   },
   "8a4ce06d-d9e4-5872-99e6-d884ac0f2fcf": {
     "en": "Lasagna or cannelloni with goat cheese and spinach, prepacked",
-    "fr":
-        "Lasagnes ou cannellonis au fromage de chèvre et aux épinards, préemballés",
+    "fr": "Lasagnes ou cannellonis au fromage de chèvre et aux épinards, préemballés",
     "de": "Lasagne oder Cannelloni mit Ziegenkäse und Spinat, vorgepackt",
     "sv": "Lasagne eller cannelloni med getost och spenat, färdigförpackad",
     "no": "Lasagne eller cannelloni med geitost og spinat, ferdigpakket",
     "da": "Lasagne eller cannelloni med gedeost og spinat, færdigpakket",
     "nl": "Lasagne of cannelloni met geitenkaas en spinazie, voorverpakt",
     "es": "Lasaña o canelones con queso de cabra y espinacas, preenvasados",
-    "it":
-        "Lasagne o cannelloni con formaggio caprino e spinaci, preconfezionati"
+    "it": "Lasagne o cannelloni con formaggio caprino e spinaci, preconfezionati"
   },
   "8a52c2e3-60ed-5f36-971b-e2d31ff01b6b": {
     "en": "Duck terrine",
@@ -14579,20 +13454,14 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pasta fillo, cruda"
   },
   "8aa41836-2e84-5b59-a85d-50633e60946d": {
-    "en":
-        "Sandwich, baguette, tuna, raw vegetables and mayonnaise, from fast food",
-    "fr":
-        "Sandwich, baguette, thon, crudités et mayonnaise, de restauration rapide",
-    "de":
-        "Sandwich, Baguette, Thunfisch, rohes Gemüse und Mayonnaise, aus der Gastronomie",
-    "sv":
-        "Smörgås, baguette, tonfisk, råa grönsaker och majonnäs, från snabbmatsrestaurang",
+    "en": "Sandwich, baguette, tuna, raw vegetables and mayonnaise, from fast food",
+    "fr": "Sandwich, baguette, thon, crudités et mayonnaise, de restauration rapide",
+    "de": "Sandwich, Baguette, Thunfisch, rohes Gemüse und Mayonnaise, aus der Gastronomie",
+    "sv": "Smörgås, baguette, tonfisk, råa grönsaker och majonnäs, från snabbmatsrestaurang",
     "no": "Smørbrød, baguett, tunfisk, rå grønnsaker og majones, fra hurtigmat",
     "da": "Sandwich, baguette, tun, rå grøntsager og mayonnaise, fra fastfood",
-    "nl":
-        "Broodje, stokbrood, tonijn, rauwe groenten en mayonaise, van fastfood",
-    "es":
-        "Bocadillo de baguette, atún, vegetales crudos y mayonesa, de comida rápida",
+    "nl": "Broodje, stokbrood, tonijn, rauwe groenten en mayonaise, van fastfood",
+    "es": "Bocadillo de baguette, atún, vegetales crudos y mayonesa, de comida rápida",
     "it": "Panino, baguette, tonno, verdure crude e maionese, da fast food"
   },
   "8aa9f200-c5fc-5c74-8c9a-c9a0fb7b2c5b": {
@@ -14640,21 +13509,14 @@ const foodNames = <String, Map<String, String>>{
     "it": "Riso, basmati, crudo"
   },
   "8b07d9e1-4f8b-5bb6-8c7c-56b7265b4acf": {
-    "en":
-        "Salty snacks, crackers made from rice and coated peanuts, japanese style",
-    "fr":
-        "Snacks salés, crackers à base de riz et cacahuètes enrobées, style japonais",
-    "de":
-        "Salzgebäck, Cracker aus Reis und ummantelten Erdnüssen, japanischer Art",
-    "sv":
-        "Salta snacks, kex gjorda på ris och överdragna jordnötter, japansk stil",
-    "no":
-        "Salt snacks, kjeks lagd av ris og overtrukne peanøtter, japansk stil",
+    "en": "Salty snacks, crackers made from rice and coated peanuts, japanese style",
+    "fr": "Snacks salés, crackers à base de riz et cacahuètes enrobées, style japonais",
+    "de": "Salzgebäck, Cracker aus Reis und ummantelten Erdnüssen, japanischer Art",
+    "sv": "Salta snacks, kex gjorda på ris och överdragna jordnötter, japansk stil",
+    "no": "Salt snacks, kjeks lagd av ris og overtrukne peanøtter, japansk stil",
     "da": "Salte snacks, kiks lavet af ris og overtrukne peanuts, japansk stil",
-    "nl":
-        "Zoute snacks, crackers van rijst met een laaggje pinda's, Japanse stijl",
-    "es":
-        "Aperitivos salados, galletas de arroz y cacahuetes recubiertos, estilo japonés",
+    "nl": "Zoute snacks, crackers van rijst met een laaggje pinda's, Japanse stijl",
+    "es": "Aperitivos salados, galletas de arroz y cacahuetes recubiertos, estilo japonés",
     "it": "Snack salati, cracker di riso e arachidi ricoperte, stile giapponese"
   },
   "8b1bfa11-64f2-5a18-86ce-27472be7973c": {
@@ -14746,22 +13608,14 @@ const foodNames = <String, Map<String, String>>{
     "it": "Prodotto di pasticceria (media)"
   },
   "8bda59ba-e2f8-58c5-b832-489073a97458": {
-    "en":
-        "Soybean and wheat-based nuggets, breaded croquette (not vegan), prepacked",
-    "fr":
-        "Nuggets à base de soja et de blé, croquette panée (non végane), préemballés",
-    "de":
-        "Nuggets auf Soja- und Weizenbasis, panierte Kroketten (nicht vegan), vorgepackt",
-    "sv":
-        "Soya- och vete-baserade nuggets, panerad kroketten (ej vegansk), färdigförpackad",
-    "no":
-        "Soya- og hvetebaserte nuggets, panert kroketter (ikke veganske), ferdigpakket",
-    "da":
-        "Sojabønne- og hvedebaserede nuggets, paneret kroket (ikke vegansk), færdigpakket",
-    "nl":
-        "Nuggets op basis van soja en tarwe, gepaneerde kroket (niet veganistisch), voorverpakt",
-    "es":
-        "Nuggets a base de soja y trigo, croqueta empanada (no vegana), preenvasada",
+    "en": "Soybean and wheat-based nuggets, breaded croquette (not vegan), prepacked",
+    "fr": "Nuggets à base de soja et de blé, croquette panée (non végane), préemballés",
+    "de": "Nuggets auf Soja- und Weizenbasis, panierte Kroketten (nicht vegan), vorgepackt",
+    "sv": "Soya- och vete-baserade nuggets, panerad kroketten (ej vegansk), färdigförpackad",
+    "no": "Soya- og hvetebaserte nuggets, panert kroketter (ikke veganske), ferdigpakket",
+    "da": "Sojabønne- og hvedebaserede nuggets, paneret kroket (ikke vegansk), færdigpakket",
+    "nl": "Nuggets op basis van soja en tarwe, gepaneerde kroket (niet veganistisch), voorverpakt",
+    "es": "Nuggets a base de soja y trigo, croqueta empanada (no vegana), preenvasada",
     "it": "Crocchette a base di soia e grano (non vegane), preconfezionate"
   },
   "8be03512-afd3-5b9d-b96d-d94edda142bc": {
@@ -14798,24 +13652,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Grissini, con sesamo"
   },
   "8cce694c-4bf1-5c0f-96de-c0051ec96ab6": {
-    "en":
-        "Doughnut filled or covered with chocolate or with chocolate and hazelut paste, prepacked",
-    "fr":
-        "Beignet fourré ou nappé de chocolat ou d'une pâte chocolat-noisette, préemballé",
-    "de":
-        "Donut, gefüllt oder überzogen mit Schokolade oder mit Schokoladen- und Haselnusscreme, vorgepackt",
-    "sv":
-        "Munk fylld eller täckt med choklad eller med choklad- och hasselnötskräm, färdigförpackad",
-    "no":
-        "Dunkut fylt eller dekket med sjokolade eller med sjokolade- og hasselnøttpålegg, ferdigpakket",
-    "da":
-        "Donut fyldt eller overtrukket med chokolade eller med chokolade- og hasselnøddecreme, færdigpakket",
-    "nl":
-        "Donut gevuld of bedekt met chocolade of met chocolade- en hazelnootpasta, voorverpakt",
-    "es":
-        "Dónut relleno o cubierto de chocolate o pasta de chocolate y avellanas, preenvasado",
-    "it":
-        "Krapfen farcito o ricoperto di cioccolato o con crema di cioccolato e nocciole, preconfezionato"
+    "en": "Doughnut filled or covered with chocolate or with chocolate and hazelut paste, prepacked",
+    "fr": "Beignet fourré ou nappé de chocolat ou d'une pâte chocolat-noisette, préemballé",
+    "de": "Donut, gefüllt oder überzogen mit Schokolade oder mit Schokoladen- und Haselnusscreme, vorgepackt",
+    "sv": "Munk fylld eller täckt med choklad eller med choklad- och hasselnötskräm, färdigförpackad",
+    "no": "Dunkut fylt eller dekket med sjokolade eller med sjokolade- og hasselnøttpålegg, ferdigpakket",
+    "da": "Donut fyldt eller overtrukket med chokolade eller med chokolade- og hasselnøddecreme, færdigpakket",
+    "nl": "Donut gevuld of bedekt met chocolade of met chocolade- en hazelnootpasta, voorverpakt",
+    "es": "Dónut relleno o cubierto de chocolate o pasta de chocolate y avellanas, preenvasado",
+    "it": "Krapfen farcito o ricoperto di cioccolato o con crema di cioccolato e nocciole, preconfezionato"
   },
   "8ce8056c-c7dc-5f63-ac82-d5906f27c77d": {
     "en": "Crepe, plain, prepacked, room temperature",
@@ -14864,8 +13709,7 @@ const foodNames = <String, Map<String, String>>{
   "8d8ce075-6021-56b8-8f42-bc7ae4775a18": {
     "en": "Dark chocolate, with fruits (orange, raspberries, pear), bar",
     "fr": "Chocolat noir, aux fruits (orange, framboises, poire), tablette",
-    "de":
-        "Zartbitterschokolade, mit Früchten (Orange, Himbeeren, Birne), Tafel",
+    "de": "Zartbitterschokolade, mit Früchten (Orange, Himbeeren, Birne), Tafel",
     "sv": "Mörk choklad, med frukt (appelsin, hallon, päron), kaka",
     "no": "Mørk sjokolade, med frukt (appelsin, bringebær, pære), plate",
     "da": "Mørk chokolade med frugt (appelsin, hindbær, pære), plade",
@@ -14874,24 +13718,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cioccolato fondente, con frutta (arancia, lamponi, pera), barretta"
   },
   "8da7c4ac-bddf-587c-9572-6c688dd5c24a": {
-    "en":
-        "Fresh cream cheese, petit-suisse type, with fruits, 2-3% fat, with sugar(s), fortified with vitamin D",
-    "fr":
-        "Petit Suisse, aux fruits, 2-3% de matière grasse, avec sucre(s), enrichi en vitamine D",
-    "de":
-        "Frischer Frischkäse, Petit-Suisse-Art, mit Früchten, 2-3 % Fett, mit Zucker(n), mit Vitamin D angereichert",
-    "sv":
-        "Färsk färskost, petit-suisse-typ, med frukt, 2-3% fett, med socker, berikad med D-vitamin",
-    "no":
-        "Frisk kremost, petit-suisse-type, med frukt, 2-3% fett, med sukker, beriket med vitamin D",
-    "da":
-        "Frisk flødeost, petit-suisse-type, med frugt, 2-3% fedt, med sukker, beriget med D-vitamin",
-    "nl":
-        "Verse roomkaas, petit-suisse type, met fruit, 2-3% vet, met suiker(s), verrijkt met vitamine D",
-    "es":
-        "Queso fresco tipo petit-suisse, con frutas, 2-3% grasa, con azúcar(es), enriquecido con vitamina D",
-    "it":
-        "Formaggio fresco cremoso, tipo petit-suisse, con frutta, 2-3% grassi, con zuccheri, fortificato con vitamina D"
+    "en": "Fresh cream cheese, petit-suisse type, with fruits, 2-3% fat, with sugar(s), fortified with vitamin D",
+    "fr": "Petit Suisse, aux fruits, 2-3% de matière grasse, avec sucre(s), enrichi en vitamine D",
+    "de": "Frischer Frischkäse, Petit-Suisse-Art, mit Früchten, 2-3 % Fett, mit Zucker(n), mit Vitamin D angereichert",
+    "sv": "Färsk färskost, petit-suisse-typ, med frukt, 2-3% fett, med socker, berikad med D-vitamin",
+    "no": "Frisk kremost, petit-suisse-type, med frukt, 2-3% fett, med sukker, beriket med vitamin D",
+    "da": "Frisk flødeost, petit-suisse-type, med frugt, 2-3% fedt, med sukker, beriget med D-vitamin",
+    "nl": "Verse roomkaas, petit-suisse type, met fruit, 2-3% vet, met suiker(s), verrijkt met vitamine D",
+    "es": "Queso fresco tipo petit-suisse, con frutas, 2-3% grasa, con azúcar(es), enriquecido con vitamina D",
+    "it": "Formaggio fresco cremoso, tipo petit-suisse, con frutta, 2-3% grassi, con zuccheri, fortificato con vitamina D"
   },
   "8dc0c09f-9a74-5c77-a34a-ed67c24c1346": {
     "en": "Yeast, flakes",
@@ -14939,16 +13774,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "8df873c9-e0a8-5f5a-a31c-dca2971eb619": {
     "en": "Fresh pasta, stuffed with cheese (e.g. ravioli, prepacked, raw",
-    "fr":
-        "Pâtes fraîches, farcies au fromage (ex. ravioles), préemballées, crues",
+    "fr": "Pâtes fraîches, farcies au fromage (ex. ravioles), préemballées, crues",
     "de": "Frische Pasta, gefüllt mit Käse (z. B. Ravioli), vorgepackt, roh",
     "sv": "Färsk pasta, fylld med ost (t.ex. ravioli), färdigförpackad, rå",
     "no": "Fersk pasta, fylt med ost (f.eks. ravioli), ferdigpakket, rå",
     "da": "Frisk pasta, fyldt med ost (f.eks. ravioli), færdigpakket, rå",
     "nl": "Verse pasta, gevuld met kaas (bijv. ravioli), voorverpakt, rauw",
     "es": "Pasta fresca rellena de queso (p.ej. raviolis), preenvasada, cruda",
-    "it":
-        "Pasta fresca, ripiena di formaggio (es. ravioli), preconfezionata, cruda"
+    "it": "Pasta fresca, ripiena di formaggio (es. ravioli), preconfezionata, cruda"
   },
   "8e305d9c-957d-5ab1-a47c-52977b938580": {
     "en": "Processed cheese, in slices, from cow's milk",
@@ -14964,13 +13797,11 @@ const foodNames = <String, Map<String, String>>{
   "8e3e22ba-52c8-5f06-8bd0-3dded5d369f6": {
     "en": "Yogurt or fermented milk, flavoured, with cream, with sugar(s)",
     "fr": "Yaourt ou lait fermenté, aromatisé, à la crème, avec sucre(s)",
-    "de":
-        "Joghurt oder fermentierte Milch, aromatisiert, mit Sahne, mit Zucker(n)",
+    "de": "Joghurt oder fermentierte Milch, aromatisiert, mit Sahne, mit Zucker(n)",
     "sv": "Yoghurt eller syrad mjölk, smaksatt, med grädde, med socker",
     "no": "Yoghurt eller fermentert melk, smakstilsatt, med fløte, med sukker",
     "da": "Yoghurt eller syrnet mælk, smagt til, med fløde, med sukker",
-    "nl":
-        "Yoghurt of gefermenteerde melk, op smaak gebracht, met room, met suiker(s)",
+    "nl": "Yoghurt of gefermenteerde melk, op smaak gebracht, met room, met suiker(s)",
     "es": "Yogur o leche fermentada, aromatizado, con nata, con azúcar(es)",
     "it": "Yogurt o latte fermentato, aromatizzato, con panna, con zuccheri"
   },
@@ -14997,8 +13828,7 @@ const foodNames = <String, Map<String, String>>{
     "it": "Hamburger di pollo, da fast food"
   },
   "8e7f5353-f724-5dce-917f-b02ccf1d0f1d": {
-    "en":
-        "Biscuit (cookie), snack with chocolate filling, whole wheat whole wheat",
+    "en": "Biscuit (cookie), snack with chocolate filling, whole wheat whole wheat",
     "fr": "Biscuit (cookie), en-cas fourré au chocolat, complet",
     "de": "Keks, Snack mit Schokoladenfüllung, Vollkorn",
     "sv": "Kaka (kex), mellanmål med chokladfyllning, fullkorn fullkorn",
@@ -15076,8 +13906,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "8f2304cc-1351-5d40-b471-25ed3588cf6a": {
     "en": "European pilchard or sardine, in tomato sauce, canned, drained",
-    "fr":
-        "Sardine européenne ou sardine, à la sauce tomate, en conserve, égouttée",
+    "fr": "Sardine européenne ou sardine, à la sauce tomate, en conserve, égouttée",
     "de": "Europäische Sardine, in Tomatensauce, in Dosen, abgetropft",
     "sv": "Europeisk sardin, i tomatsås, på burk, avrunnen",
     "no": "Europeisk sardin eller sardin, i tomatsaus, hermetisk, avrent",
@@ -15088,10 +13917,8 @@ const foodNames = <String, Map<String, String>>{
   },
   "8f3448d9-6f52-56d8-be39-a2d2409b6018": {
     "en": "Mineral sparkling water (Aziac), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale pétillante (Aziac), en bouteille, faiblement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Aziac), in Flaschen, leicht mineralisiert",
+    "fr": "Eau minérale pétillante (Aziac), en bouteille, faiblement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Aziac), in Flaschen, leicht mineralisiert",
     "sv": "Kolsyrat mineralvatten (Aziac), på flaska, lätt mineraliserat",
     "no": "Mineralvann med kullsyre (Aziac), på flaske, lett mineralisert",
     "da": "Mineralvand med kulsyre (Aziac), på flaske, let mineraliseret",
@@ -15112,15 +13939,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "8f4ff4e2-b048-54af-8a4d-af6f28125d2c": {
     "en": "Quark or dairy specialty, with fruits, 2-3% fat, with sugar(s)",
-    "fr":
-        "Quark ou spécialité laitière, aux fruits, 2-3% de matière grasse, avec sucre(s)",
+    "fr": "Quark ou spécialité laitière, aux fruits, 2-3% de matière grasse, avec sucre(s)",
     "de": "Quark oder Milcherzeugnis, mit Früchten, 2-3% Fett, mit Zucker",
     "sv": "Kvarg eller mejerispecialitet, med frukt, 2-3% fett, med socker",
     "no": "Kvarg eller meierispesialitet, med frukt, 2-3% fett, med sukker",
     "da": "Kvark eller mejerispecialitet, med frugt, 2-3% fedt, med sukker",
     "nl": "Quark of zuivelspecialiteit, met fruit, 2-3% vet, met suiker(s)",
-    "es":
-        "Queso quark o especialidad láctea, con frutas, 2-3% grasa, con azúcar(es)",
+    "es": "Queso quark o especialidad láctea, con frutas, 2-3% grasa, con azúcar(es)",
     "it": "Quark o specialità casearia, alla frutta, 2-3% grassi, con zuccheri"
   },
   "8f6658f6-f77e-51b7-8d6e-e7b50add36b4": {
@@ -15213,8 +14038,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "9066d31b-ad20-520a-ba5c-c2ecd126ae82": {
     "en": "Spreadable fat > 62% fat, unsalted, standard",
-    "fr":
-        "Matière grasse à tartiner > 62% de matière grasse, non salée, standard",
+    "fr": "Matière grasse à tartiner > 62% de matière grasse, non salée, standard",
     "de": "Streichfett > 62% Fett, ungesalzen, Standard",
     "sv": "Bordsmargarin > 62% fett, osaltat, standard",
     "no": "Smørbar fett > 62% fett, usaltet, standard",
@@ -15257,15 +14081,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pesce bianco con salsa, preconfezionato (media)"
   },
   "90b4e800-55bc-55f5-8479-67d2e11fdae6": {
-    "en": "Trout, raw, farmed",
-    "fr": "Truite, crue, d'élevage",
-    "de": "Forelle, roh, aus Aquakultur",
-    "sv": "Öring, rå, odlad",
-    "no": "Ørret, rå, oppdrett",
-    "da": "Ørred, rå, opdrættet",
-    "nl": "Forel, rauw, gekweekt",
-    "es": "Trucha, cruda, de piscifactoría",
-    "it": "Trota, cruda, allevata"
+    "en": "Farmed trout — raw",
+    "de": "Zuchtforelle — roh",
+    "fr": "Truite d'élevage — crue",
+    "no": "Oppdrettsørret – rå",
+    "sv": "Odlad öring — rå",
+    "da": "Opdrættet ørred — rå",
+    "nl": "Gekweekte forel — rauw",
+    "it": "Trota d'allevamento — cruda",
+    "es": "Trucha de piscifactoría — cruda"
   },
   "90ca6d0b-4b23-54f9-b864-1275f7a3308a": {
     "en": "Custard dessert, vanilla, refrigerated",
@@ -15280,10 +14104,8 @@ const foodNames = <String, Map<String, String>>{
   },
   "90eb090e-70a1-525e-a1bd-cdd709d87abd": {
     "en": "Meat balls, beef and lamb (kefta type), prepacked cooked",
-    "fr":
-        "Boulettes de viande, bœuf et agneau (type kefta), préemballées cuites",
-    "de":
-        "Fleischbällchen, Rind- und Lammfleisch (nach Kofta-Art), vorverpackt gekocht",
+    "fr": "Boulettes de viande, bœuf et agneau (type kefta), préemballées cuites",
+    "de": "Fleischbällchen, Rind- und Lammfleisch (nach Kofta-Art), vorverpackt gekocht",
     "sv": "Köttbullar, nötkött och lamm (kofta-typ), förpackade, tillagade",
     "no": "Kjøttboller, storfe og lam (kefta-type), ferdigpakket kokt",
     "da": "Kødboller, okse- og lammekød (kefta-type), forpakkede, kogte",
@@ -15391,24 +14213,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Formaggio a pasta dura, di latte caprino"
   },
   "9174c227-7137-5285-9b30-5ac4f2d071b6": {
-    "en":
-        "Carbonated beverage or soft drink, without fruit, sugar and sweetener contents unknown (average)",
-    "fr":
-        "Boisson gazeuse ou soda, sans fruit, teneurs en sucre et en édulcorant inconnues (moyenne)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Erfrischungsgetränk, ohne Frucht, Zucker- und Süßstoffgehalt unbekannt (Durchschnitt)",
-    "sv":
-        "Kolsyrad dryck eller läsk, utan frukt, socker- och sötningsmedelshaltsokänd (medelvärde)",
-    "no":
-        "Kullsyreholdig drikke eller brus, uten frukt, sukker- og søtstoffinnhold ukjent (gjennomsnitt)",
-    "da":
-        "Kulsyredrik eller sodavand, uden frugt, sukker- og sødemiddelindhold ukendt (gennemsnit)",
-    "nl":
-        "Koolzuurhoudende drank of frisdrank, zonder fruit, suiker- en zoetstofgehalte onbekend (gemiddeld)",
-    "es":
-        "Bebida carbonatada o refresco, sin fruta, contenido de azúcar y edulcorante desconocido (promedio)",
-    "it":
-        "Bevanda gassata o bibita analcolica, senza frutta, contenuto di zuccheri e dolcificanti ignoto (media)"
+    "en": "Carbonated beverage or soft drink, without fruit, sugar and sweetener contents unknown (average)",
+    "fr": "Boisson gazeuse ou soda, sans fruit, teneurs en sucre et en édulcorant inconnues (moyenne)",
+    "de": "Kohlensäurehaltiges Getränk oder Erfrischungsgetränk, ohne Frucht, Zucker- und Süßstoffgehalt unbekannt (Durchschnitt)",
+    "sv": "Kolsyrad dryck eller läsk, utan frukt, socker- och sötningsmedelshaltsokänd (medelvärde)",
+    "no": "Kullsyreholdig drikke eller brus, uten frukt, sukker- og søtstoffinnhold ukjent (gjennomsnitt)",
+    "da": "Kulsyredrik eller sodavand, uden frugt, sukker- og sødemiddelindhold ukendt (gennemsnit)",
+    "nl": "Koolzuurhoudende drank of frisdrank, zonder fruit, suiker- en zoetstofgehalte onbekend (gemiddeld)",
+    "es": "Bebida carbonatada o refresco, sin fruta, contenido de azúcar y edulcorante desconocido (promedio)",
+    "it": "Bevanda gassata o bibita analcolica, senza frutta, contenuto di zuccheri e dolcificanti ignoto (media)"
   },
   "919100ea-a92f-5fc8-8358-0150e4083e69": {
     "en": "Spinach, frozen, raw",
@@ -15423,17 +14236,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "91e6492d-ae0c-5d08-8e9a-b38c723e1d96": {
     "en": "Mineral sparkling water (Vals), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale pétillante (Vals), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Vals), in Flaschen, durchschnittlich mineralisiert",
+    "fr": "Eau minérale pétillante (Vals), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Vals), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Kolsyrat mineralvatten (Vals), på flaska, medelmineraliserat",
     "no": "Mineralvann med kullsyre (Vals), på flaske, moderat mineralisert",
     "da": "Mineralvand med kulsyre (Vals), på flaske, middel mineraliseret",
     "nl": "Bruisend mineraalwater (Vals), gebotteld, gemiddeld gemineraliseerd",
     "es": "Agua mineral con gas (Vals), embotellada, medianamente mineralizada",
-    "it":
-        "Acqua minerale gassata (Vals), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale gassata (Vals), in bottiglia, mediamente mineralizzata"
   },
   "91fcad42-a744-5e33-aacb-66988aad207a": {
     "en": "Tart, cheese, prepacked",
@@ -15480,26 +14290,20 @@ const foodNames = <String, Map<String, String>>{
     "it": "Grano, bulgur, crudo"
   },
   "92a49875-cd06-5e84-8b52-e731af1b55b4": {
-    "en":
-        "Chocolate biscuit (cookie), with vanilla filling, round, black and white",
-    "fr":
-        "Biscuit au chocolat, avec fourrage à la vanille, rond, noir et blanc",
+    "en": "Chocolate biscuit (cookie), with vanilla filling, round, black and white",
+    "fr": "Biscuit au chocolat, avec fourrage à la vanille, rond, noir et blanc",
     "de": "Schokoladenkeks, mit Vanillefüllung, rund, schwarz-weiß",
     "sv": "Chokladkex, med vaniljfyllning, runda, svart-vita",
     "no": "Sjokoladkjeks, med vaniljefyll, rund, svart og hvit",
     "da": "Chokoladekiks, med vaniljefyld, rund, sort og hvid",
     "nl": "Chocoladekoekje, met vanillevulling, rond, zwart-wit",
-    "es":
-        "Galleta de chocolate, con relleno de vainilla, redonda, blanca y negra",
-    "it":
-        "Biscotto al cioccolato, con farcitura alla vaniglia, tondo, bianco e nero"
+    "es": "Galleta de chocolate, con relleno de vainilla, redonda, blanca y negra",
+    "it": "Biscotto al cioccolato, con farcitura alla vaniglia, tondo, bianco e nero"
   },
   "92b16398-20ac-560b-8640-fdf2a81b753e": {
     "en": "Mineral sparkling water (Ogeu), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale pétillante (Ogeu), en bouteille, faiblement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Ogeu), in Flaschen, leicht mineralisiert",
+    "fr": "Eau minérale pétillante (Ogeu), en bouteille, faiblement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Ogeu), in Flaschen, leicht mineralisiert",
     "sv": "Kolsyrat mineralvatten (Ogeu), på flaska, lätt mineraliserat",
     "no": "Mineralvann med kullsyre (Ogeu), på flaske, lett mineralisert",
     "da": "Mineralvand med kulsyre (Ogeu), på flaske, let mineraliseret",
@@ -15520,19 +14324,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "92cd0a14-79f0-5626-ab4a-5691c8b5660d": {
     "en": "Mineral still water (St-Antonin), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale plate (St-Antonin), en bouteille, fortement minéralisée",
-    "de":
-        "Stilles Mineralwasser (St-Antonin), in Flaschen, stark mineralisiert",
-    "sv":
-        "Stilla mineralvatten (St-Antonin), på flaska, kraftigt mineraliserat",
+    "fr": "Eau minérale plate (St-Antonin), en bouteille, fortement minéralisée",
+    "de": "Stilles Mineralwasser (St-Antonin), in Flaschen, stark mineralisiert",
+    "sv": "Stilla mineralvatten (St-Antonin), på flaska, kraftigt mineraliserat",
     "no": "Stille mineralvann (St-Antonin), på flaske, sterkt mineralisert",
     "da": "Stille mineralvand (St-Antonin), på flaske, stærkt mineraliseret",
     "nl": "Stil mineraalwater (St-Antonin), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (St-Antonin), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (St-Antonin), in bottiglia, riccamente mineralizzata"
+    "es": "Agua mineral sin gas (St-Antonin), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (St-Antonin), in bottiglia, riccamente mineralizzata"
   },
   "92e82d28-e348-572a-ab80-18600b055892": {
     "en": "Pork, eye of shortloin, raw",
@@ -15674,8 +14473,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Frokostbar med frukt, beriket med vitaminer og mineraler",
     "da": "Cerealbar med frugt, beriget med vitaminer og mineraler",
     "nl": "Graanreep met fruit, verrijkt met vitaminen en mineralen",
-    "es":
-        "Barrita de cereales con fruta, fortificada con vitaminas y minerales",
+    "es": "Barrita de cereales con fruta, fortificada con vitaminas y minerales",
     "it": "Barretta ai cereali con frutta, fortificata con vitamine e minerali"
   },
   "948c9598-7400-54e6-9dfc-07f2d9ca581b": {
@@ -15723,23 +14521,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Frollini, da pasticceria"
   },
   "94e7fe80-ad37-5d60-a9be-ab98c5d00494": {
-    "en":
-        "Carbonated beverage or fruit soft drink, fruit content < 10% , with sugar(s)",
-    "fr":
-        "Boisson gazeuse ou boisson aux fruits rafraîchissante, teneur en fruits < 10 %, avec sucre(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Fruchterfrischungsgetränk, Fruchtgehalt < 10% , mit Zucker(n)",
+    "en": "Carbonated beverage or fruit soft drink, fruit content < 10% , with sugar(s)",
+    "fr": "Boisson gazeuse ou boisson aux fruits rafraîchissante, teneur en fruits < 10 %, avec sucre(s)",
+    "de": "Kohlensäurehaltiges Getränk oder Fruchterfrischungsgetränk, Fruchtgehalt < 10% , mit Zucker(n)",
     "sv": "Kolsyrad dryck eller fruktdryck, fruktinnehåll < 10% , med socker",
-    "no":
-        "Kullsyreholdig drikke eller fruktdrikk, fruktinnhold < 10% , med sukker",
-    "da":
-        "Kulsyreholdig drik eller frugtsodavand, frugtindhold < 10% , med sukker",
-    "nl":
-        "Koolzuurhoudende drank of vruchtenfrisdrank, vruchtengehalte < 10% , met suiker(s)",
-    "es":
-        "Bebida carbonatada o refresco de frutas, contenido en fruta < 10% , con azúcar(es)",
-    "it":
-        "Bevanda gassata o bibita alla frutta, contenuto di frutta < 10%, con zuccheri"
+    "no": "Kullsyreholdig drikke eller fruktdrikk, fruktinnhold < 10% , med sukker",
+    "da": "Kulsyreholdig drik eller frugtsodavand, frugtindhold < 10% , med sukker",
+    "nl": "Koolzuurhoudende drank of vruchtenfrisdrank, vruchtengehalte < 10% , met suiker(s)",
+    "es": "Bebida carbonatada o refresco de frutas, contenido en fruta < 10% , con azúcar(es)",
+    "it": "Bevanda gassata o bibita alla frutta, contenuto di frutta < 10%, con zuccheri"
   },
   "94ed9e9b-fa86-5a1d-963e-f686f7045094": {
     "en": "Mix of nuts, grilled, salted",
@@ -16007,15 +14797,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "97dd55af-5dd2-50fc-b374-97f5dad8da4b": {
     "en": "Yakitori (grilled meat on skewers, Japanese-style, with sauce)",
-    "fr":
-        "Yakitori (viande grillée en brochettes, de style japonais, avec sauce)",
+    "fr": "Yakitori (viande grillée en brochettes, de style japonais, avec sauce)",
     "de": "Yakitori (gegrilltes Fleisch am Spieß, japanische Art, mit Sauce)",
     "sv": "Yakitori (grillat kött på spett, japansk stil, med sås)",
     "no": "Yakitori (grillet kjøtt på spyd, japansk stil, med saus)",
     "da": "Yakitori (grillet kød på spyd, japansk stil, med sauce)",
     "nl": "Yakitori (gegrild vlees op spiezen, Japanse stijl, met saus)",
-    "es":
-        "Yakitori (brochetas de carne a la parrilla, al estilo japonés, con salsa)",
+    "es": "Yakitori (brochetas de carne a la parrilla, al estilo japonés, con salsa)",
     "it": "Yakitori (carne grigliata su spiedini, stile giapponese, con salsa)"
   },
   "97f58e92-d1d1-5a9a-809d-af20205ee425": {
@@ -16129,24 +14917,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cavolo verza, crudo"
   },
   "99d0844f-a96d-58bc-abe8-135016ecead3": {
-    "en":
-        "Schnitzel, soybean, wheat and cheese-based, cordon bleu-style, prepacked",
-    "fr":
-        "Escalope, à base de soja, blé et fromage, façon cordon bleu, préemballée",
-    "de":
-        "Schnitzel, auf Basis von Soja, Weizen und Käse, Cordon-bleu-Art, vorgepackt",
-    "sv":
-        "Schnitzel, sojaböne-, vete- och ostbaserad, cordon bleu-stil, färdigpackad",
-    "no":
-        "Schnitzel, soyabønne-, hvepe- og ostebasert, cordon bleu-stil, ferdigpakket",
-    "da":
-        "Schnitzel, sojabønne-, hvede- og ostebaseret, cordon bleu-stil, færdigpakket",
-    "nl":
-        "Schnitzel, op basis van soja, tarwe en kaas, cordon bleu-stijl, voorverpakt",
-    "es":
-        "Schnitzel, a base de soja, trigo y queso, estilo cordon bleu, preenvasado",
-    "it":
-        "Cotoletta, a base di soia, grano e formaggio, tipo cordon bleu, confezionata"
+    "en": "Schnitzel, soybean, wheat and cheese-based, cordon bleu-style, prepacked",
+    "fr": "Escalope, à base de soja, blé et fromage, façon cordon bleu, préemballée",
+    "de": "Schnitzel, auf Basis von Soja, Weizen und Käse, Cordon-bleu-Art, vorgepackt",
+    "sv": "Schnitzel, sojaböne-, vete- och ostbaserad, cordon bleu-stil, färdigpackad",
+    "no": "Schnitzel, soyabønne-, hvepe- og ostebasert, cordon bleu-stil, ferdigpakket",
+    "da": "Schnitzel, sojabønne-, hvede- og ostebaseret, cordon bleu-stil, færdigpakket",
+    "nl": "Schnitzel, op basis van soja, tarwe en kaas, cordon bleu-stijl, voorverpakt",
+    "es": "Schnitzel, a base de soja, trigo y queso, estilo cordon bleu, preenvasado",
+    "it": "Cotoletta, a base di soia, grano e formaggio, tipo cordon bleu, confezionata"
   },
   "99e3450e-069b-50e0-bfe2-1dfab14cbcc9": {
     "en": "Tomato paste, concentrated, canned",
@@ -16215,13 +14994,11 @@ const foodNames = <String, Map<String, String>>{
     "it": "Limonata, senza zuccheri aggiunti, con edulcoranti"
   },
   "9aa0424f-f9f7-5914-88fb-f2282d1b0637": {
-    "en":
-        "Sponge sandwich cake filled and topped with strawberries or raspberries",
+    "en": "Sponge sandwich cake filled and topped with strawberries or raspberries",
     "fr": "Génoise fourrée et garnie de fraises ou de framboises",
     "de": "Biskuitkuchen, gefüllt und belegt mit Erdbeeren oder Himbeeren",
     "sv": "Anslagstårta fylld och toppad med jordgubbar eller hallon",
-    "no":
-        "Suksessterte eller bløtkake fylt og topptet med jordbær eller bringebær",
+    "no": "Suksessterte eller bløtkake fylt og topptet med jordbær eller bringebær",
     "da": "Lagkage med fyld og top af jordbær eller hindbær",
     "nl": "Biscuitgebak gevuld en getopt met aardbeien of frambozen",
     "es": "Pastel de bizcocho relleno y cubierto con fresas o frambuesas",
@@ -16284,19 +15061,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "9b199965-901e-5eea-be48-c65a35570548": {
     "en": "Yogurt or fermented milk, plain, 0% fat, fortified with vitamin D",
-    "fr":
-        "Yaourt ou lait fermenté, nature, 0% de matière grasse, enrichi en vitamine D",
-    "de":
-        "Joghurt oder fermentierte Milch, natur, 0 % Fett, mit Vitamin D angereichert",
+    "fr": "Yaourt ou lait fermenté, nature, 0% de matière grasse, enrichi en vitamine D",
+    "de": "Joghurt oder fermentierte Milch, natur, 0 % Fett, mit Vitamin D angereichert",
     "sv": "Yoghurt eller syrad mjölk, naturell, 0% fett, berikad med vitamin D",
     "no": "Yoghurt eller surmelk, naturell, 0 % fett, beriket med vitamin D",
     "da": "Yoghurt eller syrnet mælk, neutral, 0 % fedt, beriget med vitamin D",
-    "nl":
-        "Yoghurt of gefermenteerde melk, naturel, 0% vet, verrijkt met vitamine D",
-    "es":
-        "Yogur o leche fermentada, natural, 0% materia grasa, fortificado con vitamina D",
-    "it":
-        "Yogurt o latte fermentato, naturale, 0% grassi, fortificato con vitamina D"
+    "nl": "Yoghurt of gefermenteerde melk, naturel, 0% vet, verrijkt met vitamine D",
+    "es": "Yogur o leche fermentada, natural, 0% materia grasa, fortificado con vitamina D",
+    "it": "Yogurt o latte fermentato, naturale, 0% grassi, fortificato con vitamina D"
   },
   "9b2bdf9f-c00b-579b-9d21-d3e26ca4ff6c": {
     "en": "Biscuit shortbread, with butter",
@@ -16339,10 +15111,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Stille mineralvann (Volvic), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Volvic), på flaske, let mineraliseret",
     "nl": "Natuurlijk mineraalwater (Volvic), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Volvic), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Volvic), in bottiglia, leggermente mineralizzata"
+    "es": "Agua mineral sin gas (Volvic), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Volvic), in bottiglia, leggermente mineralizzata"
   },
   "9c12a1fe-5c55-5142-8116-93b1681a7d4f": {
     "en": "Short crust pastry, with vegetal fat, prepacked, cooked",
@@ -16380,8 +15150,7 @@ const foodNames = <String, Map<String, String>>{
   "9c46ec25-8719-50da-88ce-f7f93af6df0e": {
     "en": "Breakfast cereals with chocolate, not filled, not fortified",
     "fr": "Céréales de petit-déjeuner au chocolat, non fourrées, non enrichies",
-    "de":
-        "Frühstückscerealien mit Schokolade, nicht gefüllt, nicht angereichert",
+    "de": "Frühstückscerealien mit Schokolade, nicht gefüllt, nicht angereichert",
     "sv": "Frukostflingor med choklad, ej fyllda, ej berikade",
     "no": "Frokostblanding med sjokolade, ikke fylt, ikke beriket",
     "da": "Morgenmadsprodukt med chokolade, ikke fyldt, ikke beriget",
@@ -16475,27 +15244,18 @@ const foodNames = <String, Map<String, String>>{
     "da": "Stille mineralvand (Avra), på flaske, let mineraliseret",
     "nl": "Natuurlijk mineraalwater (Avra), gebotteld, licht gemineraliseerd",
     "es": "Agua mineral sin gas (Avra), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Avra), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Avra), in bottiglia, leggermente mineralizzata"
   },
   "9d20a7a8-c11e-5d45-88d4-4a492b7c80b5": {
-    "en":
-        "Mineral sparkling water (San Pellegrino), bottled, averagely mineralized",
-    "fr":
-        "Eau gazeuse minérale (San Pellegrino), en bouteille, moyennement minéralisée",
-    "de":
-        "Heilwasser mit Kohlensäure (San Pellegrino), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (San Pellegrino), på flaska, medelmineraliserat",
-    "no":
-        "Farris/musserende mineralvann (San Pellegrino), på flaske, middels mineralisert",
+    "en": "Mineral sparkling water (San Pellegrino), bottled, averagely mineralized",
+    "fr": "Eau gazeuse minérale (San Pellegrino), en bouteille, moyennement minéralisée",
+    "de": "Heilwasser mit Kohlensäure (San Pellegrino), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (San Pellegrino), på flaska, medelmineraliserat",
+    "no": "Farris/musserende mineralvann (San Pellegrino), på flaske, middels mineralisert",
     "da": "Danskvand (San Pellegrino), på flaske, moderat mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (San Pellegrino), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (San Pellegrino), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale frizzante (San Pellegrino), in bottiglia, mediamente mineralizzata"
+    "nl": "Bruisend mineraalwater (San Pellegrino), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (San Pellegrino), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale frizzante (San Pellegrino), in bottiglia, mediamente mineralizzata"
   },
   "9d39b3a6-db06-5e90-a6ed-6f7b032e697d": {
     "en": "Potato crisps, plain or flavoured, old style",
@@ -16513,8 +15273,7 @@ const foodNames = <String, Map<String, String>>{
     "fr": "Viande des Grisons ou viande de bœuf séchée",
     "de": "Bündnerfleisch oder getrocknetes Rindfleisch",
     "sv": "Bündnerfleisch eller torkat nötkött",
-    "no":
-        "Sveitsisk tørket biffkjøtt (Viande des Grisons) eller tørket oksekjøtt",
+    "no": "Sveitsisk tørket biffkjøtt (Viande des Grisons) eller tørket oksekjøtt",
     "da": "Viande des Grisons eller tørret oksekød",
     "nl": "Viande des Grisons of gedroogd rundvlees",
     "es": "Viande des Grisons o carne de vacuno seca",
@@ -16532,24 +15291,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Quiche Lorraine (quiche con uova e pancetta), confezionata"
   },
   "9d696f89-c08e-57fc-81cf-b0e4bd241ce2": {
-    "en":
-        "Mineral still water (Clos de l'Abbaye), bottled, averagely mineralized",
-    "fr":
-        "Eau plate minérale (Clos de l'Abbaye), en bouteille, moyennement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Clos de l'Abbaye), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Stilla mineralvatten (Clos de l'Abbaye), på flaska, medelmineraliserat",
-    "no":
-        "Stille mineralvann (Clos de l'Abbaye), på flaske, middels mineralisert",
-    "da":
-        "Stille mineralvand (Clos de l'Abbaye), på flaske, moderat mineraliseret",
-    "nl":
-        "Natuurlijk mineraalwater (Clos de l'Abbaye), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Clos de l'Abbaye), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale naturale (Clos de l'Abbaye), in bottiglia, mediamente mineralizzata"
+    "en": "Mineral still water (Clos de l'Abbaye), bottled, averagely mineralized",
+    "fr": "Eau plate minérale (Clos de l'Abbaye), en bouteille, moyennement minéralisée",
+    "de": "Stilles Mineralwasser (Clos de l'Abbaye), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Stilla mineralvatten (Clos de l'Abbaye), på flaska, medelmineraliserat",
+    "no": "Stille mineralvann (Clos de l'Abbaye), på flaske, middels mineralisert",
+    "da": "Stille mineralvand (Clos de l'Abbaye), på flaske, moderat mineraliseret",
+    "nl": "Natuurlijk mineraalwater (Clos de l'Abbaye), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral sin gas (Clos de l'Abbaye), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale naturale (Clos de l'Abbaye), in bottiglia, mediamente mineralizzata"
   },
   "9d7c8660-0632-576e-9fd0-e921b53c842b": {
     "en": "Pork fat, raw",
@@ -16569,12 +15319,9 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Stilla mineralvatten (Valvert), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Valvert), på flaske, lett mineralisert",
     "da": "Stille mineralvand (Valvert), på flaske, let mineraliseret",
-    "nl":
-        "Natuurlijk mineraalwater (Valvert), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Valvert), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Valvert), in bottiglia, leggermente mineralizzata"
+    "nl": "Natuurlijk mineraalwater (Valvert), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral sin gas (Valvert), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Valvert), in bottiglia, leggermente mineralizzata"
   },
   "9de094e8-d074-55f6-8732-0b49dc705b59": {
     "en": "White chocolate, bar",
@@ -16600,8 +15347,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "9df7216f-0e67-548d-a174-ce32b9216245": {
     "en": "Broth or stock, meat and vegetables, with fat, dehydrated",
-    "fr":
-        "Bouillon ou consommé, viande et légumes, avec matière grasse, déshydraté",
+    "fr": "Bouillon ou consommé, viande et légumes, avec matière grasse, déshydraté",
     "de": "Brühe oder Fleisch- und Gemüsebrühe, mit Fett, dehydriert",
     "sv": "Buljong eller fond, kött och grönsaker, med fett, torkad",
     "no": "Kjøtt- og grønnsakskraft, med fett, tørket",
@@ -16683,12 +15429,9 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Koffeinfritt snabbkaffe, inget tillsatt socker, färdigt att dricka",
     "no": "Koffeinfritt pulverkaffe, uten tilsatt sukker, drikkeklar",
     "da": "Koffeinfri instant kaffe, uden tilsat sukker, drikkeklar",
-    "nl":
-        "Cafeïnevrije oploskoffie, zonder toegevoegde suikers, klaar voor consumptie",
-    "es":
-        "Café instantáneo descafeinado, sin azúcares añadidos, listo para beber",
-    "it":
-        "Caffè istantaneo decaffeinato, senza zuccheri aggiunti, pronto da bere"
+    "nl": "Cafeïnevrije oploskoffie, zonder toegevoegde suikers, klaar voor consumptie",
+    "es": "Café instantáneo descafeinado, sin azúcares añadidos, listo para beber",
+    "it": "Caffè istantaneo decaffeinato, senza zuccheri aggiunti, pronto da bere"
   },
   "9f77ce03-e8c3-5f3e-b6b5-ed1b273c2d9b": {
     "en": "Chestnut, canned",
@@ -16790,24 +15533,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Gelatina, tutti i frutti"
   },
   "a0b849f4-8f36-52c5-866a-b747ae5c3cf2": {
-    "en":
-        "Yogurt or fermented milk, with fruits, with sugar(s), fortified with vitamin D",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits, avec sucre(s), enrichi en vitamine D",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten, mit Zucker, mit Vitamin D angereichert",
-    "sv":
-        "Yoghurt eller syrad mjölk, med frukt, med socker, berikad med vitamin D",
-    "no":
-        "Yoghurt eller syrnet melk, med frukter, med sukker, beriket med vitamin D",
-    "da":
-        "Yoghurt eller syrnet mælk, med frugt, med sukker, beriget med D-vitamin",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit, met suiker(s), verrijkt met vitamine D",
-    "es":
-        "Yogur o leche fermentada, con frutas, con azúcar(es), fortificado con vitamina D",
-    "it":
-        "Yogurt o latte fermentato, con frutta, con zucchero, fortificato con vitamina D"
+    "en": "Yogurt or fermented milk, with fruits, with sugar(s), fortified with vitamin D",
+    "fr": "Yaourt ou lait fermenté, aux fruits, avec sucre(s), enrichi en vitamine D",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten, mit Zucker, mit Vitamin D angereichert",
+    "sv": "Yoghurt eller syrad mjölk, med frukt, med socker, berikad med vitamin D",
+    "no": "Yoghurt eller syrnet melk, med frukter, med sukker, beriket med vitamin D",
+    "da": "Yoghurt eller syrnet mælk, med frugt, med sukker, beriget med D-vitamin",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit, met suiker(s), verrijkt met vitamine D",
+    "es": "Yogur o leche fermentada, con frutas, con azúcar(es), fortificado con vitamina D",
+    "it": "Yogurt o latte fermentato, con frutta, con zucchero, fortificato con vitamina D"
   },
   "a0d7dec4-63bd-506d-90b7-c306f870e5a8": {
     "en": "Blue ling, raw",
@@ -16876,16 +15610,12 @@ const foodNames = <String, Map<String, String>>{
     "it": "Khatfa (fogli di pasta fillo o filo), preconfezionata"
   },
   "a12e4778-b3b8-5a0e-808c-e07c1f9cb1ab": {
-    "en":
-        "Sandwich, baguette, chicken, raw vegetables and mayonnaise, takeaway",
+    "en": "Sandwich, baguette, chicken, raw vegetables and mayonnaise, takeaway",
     "fr": "Sandwich, baguette, poulet, crudités et mayonnaise, à emporter",
-    "de":
-        "Sandwich, Baguette, Hähnchen, rohes Gemüse und Mayonnaise, zum Mitnehmen",
-    "sv":
-        "Smörgås, baguette, kyckling, råa grönsaker och majonnäs, för avhämtning",
+    "de": "Sandwich, Baguette, Hähnchen, rohes Gemüse und Mayonnaise, zum Mitnehmen",
+    "sv": "Smörgås, baguette, kyckling, råa grönsaker och majonnäs, för avhämtning",
     "no": "Sandwich, baguette, kylling, rå grønnsaker og majones, ta med",
-    "da":
-        "Sandwich, baguette, kylling, rå grøntsager og mayonnaise, ud af huset",
+    "da": "Sandwich, baguette, kylling, rå grøntsager og mayonnaise, ud af huset",
     "nl": "Broodje, baguette, kip, rauwe groenten en mayonaise, meeneem",
     "es": "Sándwich, baguette, pollo, vegetales crudos y mayonesa, para llevar",
     "it": "Panino, baguette, pollo, verdure crude e maionese, da asporto"
@@ -16936,18 +15666,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "a1612d1a-49bc-5244-b200-39380a2d54f1": {
     "en": "Mineral sparkling water (St-Yorre), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale gazeuse (St-Yorre), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (St-Yorre), in Flaschen, stark mineralisiert",
+    "fr": "Eau minérale gazeuse (St-Yorre), en bouteille, fortement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (St-Yorre), in Flaschen, stark mineralisiert",
     "sv": "Kolsyrat mineralvatten (St-Yorre), på flaska, starkt mineraliserat",
     "no": "Mineralvann med kullsyre (St-Yorre), på flaske, sterkt mineralisert",
     "da": "Mineralvand med kulsyre (St-Yorre), på flaske, stærkt mineraliseret",
     "nl": "Mineraal bruiswater (St-Yorre), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (St-Yorre), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (St-Yorre), imbottigliata, fortemente mineralizzata"
+    "es": "Agua mineral con gas (St-Yorre), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (St-Yorre), imbottigliata, fortemente mineralizzata"
   },
   "a16301b7-6591-57d8-8f7f-73eb19f9266b": {
     "en": "Almond, grilled, salted",
@@ -17137,40 +15863,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Macedonia di frutta tropicale, zuccherata, per spuntino, essiccata"
   },
   "a2b657a1-f979-59e4-aca4-7aa084478c19": {
-    "en":
-        "Fermented milk, yogurt type with bifidus, with fruits, 0% fat, with sweetener(s)",
-    "fr":
-        "Lait fermenté, type yaourt au bifidus, aux fruits, 0 % de matière grasse, avec édulcorant(s)",
-    "de":
-        "Fermentierte Milch, Joghurt-Art mit Bifidus, mit Früchten, 0% Fett, mit Süßungsmitteln",
-    "sv":
-        "Fermenterad mjölk, yoghurttyp med bifidus, med frukt, 0% fett, med sötningsmedel",
-    "no":
-        "Fermentert melk, jogurttype med bifidus, med frukt, 0 % fett, med søtningsmiddel",
-    "da":
-        "Fermenteret mælk, yoghurttype med bifidus, med frugt, 0% fedt, med sødestof(fer)",
-    "nl":
-        "Gefermenteerde melk, yoghurt-type met bifidus, met vruchten, 0% vet, met zoetstof(fen)",
-    "es":
-        "Leche fermentada, tipo yogur con bífidus, con frutas, 0% grasa, con edulcorante(s)",
-    "it":
-        "Latte fermentato, tipo yogurt con bifidus, con frutta, 0% grassi, con edulcorante/i"
+    "en": "Fermented milk, yogurt type with bifidus, with fruits, 0% fat, with sweetener(s)",
+    "fr": "Lait fermenté, type yaourt au bifidus, aux fruits, 0 % de matière grasse, avec édulcorant(s)",
+    "de": "Fermentierte Milch, Joghurt-Art mit Bifidus, mit Früchten, 0% Fett, mit Süßungsmitteln",
+    "sv": "Fermenterad mjölk, yoghurttyp med bifidus, med frukt, 0% fett, med sötningsmedel",
+    "no": "Fermentert melk, jogurttype med bifidus, med frukt, 0 % fett, med søtningsmiddel",
+    "da": "Fermenteret mælk, yoghurttype med bifidus, med frugt, 0% fedt, med sødestof(fer)",
+    "nl": "Gefermenteerde melk, yoghurt-type met bifidus, met vruchten, 0% vet, met zoetstof(fen)",
+    "es": "Leche fermentada, tipo yogur con bífidus, con frutas, 0% grasa, con edulcorante(s)",
+    "it": "Latte fermentato, tipo yogurt con bifidus, con frutta, 0% grassi, con edulcorante/i"
   },
   "a2ead926-131a-5110-94e0-b21d771dd229": {
-    "en":
-        "Fermented milk, yogurt type with bifidus, with fruits, with sugar(s)",
+    "en": "Fermented milk, yogurt type with bifidus, with fruits, with sugar(s)",
     "fr": "Lait fermenté, type yaourt au bifidus, aux fruits, avec sucre(s)",
-    "de":
-        "Fermentierte Milch, Joghurt-Art mit Bifidus, mit Früchten, mit Zucker",
+    "de": "Fermentierte Milch, Joghurt-Art mit Bifidus, mit Früchten, mit Zucker",
     "sv": "Fermenterad mjölk, yoghurttyp med bifidus, med frukt, med socker",
     "no": "Fermentert melk, jogurttype med bifidus, med frukt, med sukker",
     "da": "Fermenteret mælk, yoghurttype med bifidus, med frugt, med sukker",
-    "nl":
-        "Gefermenteerde melk, yoghurt-type met bifidus, met vruchten, met suiker(s)",
-    "es":
-        "Leche fermentada, tipo yogur con bífidus, con frutas, con azúcar(es)",
-    "it":
-        "Latte fermentato, tipo yogurt con bifidus, con frutta, con zucchero/i"
+    "nl": "Gefermenteerde melk, yoghurt-type met bifidus, met vruchten, met suiker(s)",
+    "es": "Leche fermentada, tipo yogur con bífidus, con frutas, con azúcar(es)",
+    "it": "Latte fermentato, tipo yogurt con bifidus, con frutta, con zucchero/i"
   },
   "a2fcc50f-2b62-5999-9b5c-96a670402014": {
     "en": "Lamb, shoulder, roasted/baked",
@@ -17195,22 +15907,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Maiale, spalla metà superiore, senza cotenna, grasso e osso, crudo"
   },
   "a355da1c-2db6-5b49-aefa-5cd83d41f6a3": {
-    "en":
-        "Vanilla flavoured milk, with sugar(s), partially skimmed, fortified with vitamin D",
-    "fr":
-        "Lait aromatisé à la vanille, avec sucre(s), partiellement écrémé, enrichi en vitamine D",
-    "de":
-        "Vanillearomatisierte Milch, mit Zucker, teilentrahmt, mit Vitamin D angereichert",
+    "en": "Vanilla flavoured milk, with sugar(s), partially skimmed, fortified with vitamin D",
+    "fr": "Lait aromatisé à la vanille, avec sucre(s), partiellement écrémé, enrichi en vitamine D",
+    "de": "Vanillearomatisierte Milch, mit Zucker, teilentrahmt, mit Vitamin D angereichert",
     "sv": "Vaniljsmakad mjölk, med socker, lättmjölk, berikad med vitamin D",
-    "no":
-        "Vaniljesmakende melk, med sukker, delvis skummet, beriket med vitamin D",
-    "da":
-        "Mælk med vaniljesmag, med sukker, delvist skummet, beriget med vitamin D",
+    "no": "Vaniljesmakende melk, med sukker, delvis skummet, beriket med vitamin D",
+    "da": "Mælk med vaniljesmag, med sukker, delvist skummet, beriget med vitamin D",
     "nl": "Vanillemelk, met suiker(s), halfvol, verrijkt met vitamine D",
-    "es":
-        "Leche sabor vainilla, con azúcar(es), semidesnatada, enriquecida con vitamina D",
-    "it":
-        "Latte aromatizzato alla vaniglia, con zucchero/i, parzialmente scremato, fortificato con vitamina D"
+    "es": "Leche sabor vainilla, con azúcar(es), semidesnatada, enriquecida con vitamina D",
+    "it": "Latte aromatizzato alla vaniglia, con zucchero/i, parzialmente scremato, fortificato con vitamina D"
   },
   "a35ceb7e-c19b-50ba-8e6c-593e1f12361a": {
     "en": "Vol-au-vent with meat/poultry/quenelle",
@@ -17254,8 +15959,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Vinblade fyldt med ris eller dolmas, drænet, færdigpakket",
     "nl": "Wijnblad gevuld met rijst of dolma's, uitgelekt, voorverpakt",
     "es": "Hoja de parra rellena de arroz o dolmas, escurrida, preenvasada",
-    "it":
-        "Foglia di vite ripiena con riso o dolma, sgocciolata, preconfezionata"
+    "it": "Foglia di vite ripiena con riso o dolma, sgocciolata, preconfezionata"
   },
   "a38f9996-9453-5b39-8474-1a4570288fb9": {
     "en": "Macadamia nut, no added salt",
@@ -17280,24 +15984,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Zucca, tutti i tipi, cruda"
   },
   "a3ca6510-e4d8-5100-adc8-3d348013a731": {
-    "en":
-        "Cereal flakes, plain, with sugar(s), fortified with vitamins and minerals",
-    "fr":
-        "Flocons de céréales, nature, avec sucre(s), enrichis en vitamines et minéraux",
-    "de":
-        "Getreideflocken, plain, mit Zucker, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Flingor, naturella, med socker, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, naturell, med sukker, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadskorn, naturel, med sukker, beriget med vitaminer og mineraler",
-    "nl":
-        "Graanvlokken, puur, met suiker(s), verrijkt met vitaminen en mineralen",
-    "es":
-        "Copos de cereales, simples, con azúcar(es), enriquecidos con vitaminas y minerales",
-    "it":
-        "Fiocchi di cereali, semplici, con zucchero/i, fortificati con vitamine e minerali"
+    "en": "Cereal flakes, plain, with sugar(s), fortified with vitamins and minerals",
+    "fr": "Flocons de céréales, nature, avec sucre(s), enrichis en vitamines et minéraux",
+    "de": "Getreideflocken, plain, mit Zucker, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Flingor, naturella, med socker, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, naturell, med sukker, beriket med vitaminer og mineraler",
+    "da": "Morgenmadskorn, naturel, med sukker, beriget med vitaminer og mineraler",
+    "nl": "Graanvlokken, puur, met suiker(s), verrijkt met vitaminen en mineralen",
+    "es": "Copos de cereales, simples, con azúcar(es), enriquecidos con vitaminas y minerales",
+    "it": "Fiocchi di cereali, semplici, con zucchero/i, fortificati con vitamine e minerali"
   },
   "a3e418b2-ecd1-5bb1-86d8-aeb5bc724499": {
     "en": "Pecan nut, no added salt",
@@ -17322,24 +16017,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Yam, sbucciato, crudo"
   },
   "a4105dd0-1ca0-5ab0-aaac-81adb99b521c": {
-    "en":
-        "Breakfast cereals with chocolate and caramel, extruded, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner au chocolat et caramel, extrudées, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien mit Schokolade und Karamell, extrudiert, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Frukostflingor med choklad och karamell, extruderade, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblandinger med sjokolade og karamell, ekstrudert, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter med chokolade og karamel, ekstruderet, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen met chocolade en karamel, geëxtrudeerd, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno con chocolate y caramelo, extrudidos, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione con cioccolato e caramello, estrusi, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals with chocolate and caramel, extruded, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner au chocolat et caramel, extrudées, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien mit Schokolade und Karamell, extrudiert, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Frukostflingor med choklad och karamell, extruderade, berikade med vitaminer och mineraler",
+    "no": "Frokostblandinger med sjokolade og karamell, ekstrudert, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter med chokolade og karamel, ekstruderet, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen met chocolade en karamel, geëxtrudeerd, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno con chocolate y caramelo, extrudidos, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione con cioccolato e caramello, estrusi, fortificati con vitamine e minerali"
   },
   "a42bb91d-edc4-5ed1-aab5-721c01378244": {
     "en": "Rusk, multigrain",
@@ -17465,15 +16151,11 @@ const foodNames = <String, Map<String, String>>{
   "a5083f64-0001-50b6-832d-c92808032819": {
     "en": "Yogurt or fermented milk, with fruits or flavoured (average)",
     "fr": "Yaourt ou lait fermenté, aux fruits ou aromatisé (moyenne)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert (Durchschnitt)",
-    "sv":
-        "Yogurt eller fermenterad mjölk, med frukt eller smaksatt (genomsnitt)",
-    "no":
-        "Jogurt eller fermentert melk, med frukt eller smaksatt (gjennomsnitt)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert (Durchschnitt)",
+    "sv": "Yogurt eller fermenterad mjölk, med frukt eller smaksatt (genomsnitt)",
+    "no": "Jogurt eller fermentert melk, med frukt eller smaksatt (gjennomsnitt)",
     "da": "Yoghurt eller fermenteret mælk, med frugt eller smag (gennemsnit)",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit of gearomatiseerd (gemiddeld)",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit of gearomatiseerd (gemiddeld)",
     "es": "Yogur o leche fermentada, con frutas o saborizado (promedio)",
     "it": "Yogurt o latte fermentato, con frutta o aromatizzato (media)"
   },
@@ -17511,23 +16193,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Barretta ai cereali con frutta"
   },
   "a58db463-60e4-5a0a-b9dd-a629acd0cf4c": {
-    "en":
-        "Mineral sparkling water (Chateauneuf), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale gazeuse (Chateauneuf), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Chateauneuf), in Flaschen, stark mineralisiert",
-    "sv":
-        "Mineralvatten med kolsyra (Chateauneuf), på flaska, starkt mineraliserat",
-    "no":
-        "Mineralvann med kullsyre (Chateauneuf), på flaske, sterkt mineralisert",
+    "en": "Mineral sparkling water (Chateauneuf), bottled, strongly mineralized",
+    "fr": "Eau minérale gazeuse (Chateauneuf), en bouteille, fortement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Chateauneuf), in Flaschen, stark mineralisiert",
+    "sv": "Mineralvatten med kolsyra (Chateauneuf), på flaska, starkt mineraliserat",
+    "no": "Mineralvann med kullsyre (Chateauneuf), på flaske, sterkt mineralisert",
     "da": "Mineralvand med kulsyre (Chateauneuf), flaske, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater met koolzuur (Chateauneuf), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Chateauneuf), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Chateauneuf), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater met koolzuur (Chateauneuf), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral con gas (Chateauneuf), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (Chateauneuf), in bottiglia, fortemente mineralizzata"
   },
   "a5ac556a-aa8d-5d4c-a1d1-ddbe5b7c8215": {
     "en": "Sunflower, seed",
@@ -17641,19 +16315,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "a7527766-4699-5aad-b7b1-3910dfdbd673": {
     "en": "Mineral still water (Courmayer), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale plate (Courmayeur), en bouteille, fortement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Courmayeur), in Flaschen, stark mineralisiert",
+    "fr": "Eau minérale plate (Courmayeur), en bouteille, fortement minéralisée",
+    "de": "Stilles Mineralwasser (Courmayeur), in Flaschen, stark mineralisiert",
     "sv": "Stilla mineralvatten (Courmayer), på flaska, starkt mineraliserat",
     "no": "Stille mineralvann (Courmayer), på flaske, sterkt mineralisert",
     "da": "Mineralvand uden kulsyre (Courmayer), flaske, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Courmayer), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Courmayeur), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (Courmayeur), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Courmayer), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral sin gas (Courmayeur), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (Courmayeur), in bottiglia, fortemente mineralizzata"
   },
   "a76762b1-6fb9-55ea-a91e-a7bb1b5ff470": {
     "en": "Broth or stock, poultry, dehydrated",
@@ -17669,18 +16338,13 @@ const foodNames = <String, Map<String, String>>{
   "a7697fa0-ac2d-5bec-a645-47a5ad13ff4e": {
     "en": "Mineral sparkling water (Didier), bottled, strongly mineralized",
     "fr": "Eau minérale gazeuse (Didier), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Didier), in Flaschen, stark mineralisiert",
-    "sv":
-        "Mineralvatten med kolsyra (Didier), på flaska, kraftigt mineraliserat",
+    "de": "Mineralwasser mit Kohlensäure (Didier), in Flaschen, stark mineralisiert",
+    "sv": "Mineralvatten med kolsyra (Didier), på flaska, kraftigt mineraliserat",
     "no": "Farris med kullsyre (Didier), på flaske, sterkt mineralisert",
     "da": "Mineralvand med brus (Didier), flasket, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater met koolzuur (Didier), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Didier), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Didier), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater met koolzuur (Didier), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral con gas (Didier), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (Didier), in bottiglia, fortemente mineralizzata"
   },
   "a78601a6-c27f-5adf-9f43-3e8dd9666c32": {
     "en": "Egg white, raw",
@@ -17815,24 +16479,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Spiedino di carne mista"
   },
   "a8ef9b13-08a8-55e8-b7be-317a3c909810": {
-    "en":
-        "Breakfast cereals with chocolate, extruded, not filled, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner au chocolat, extrudées, non fourrées, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien mit Schokolade, extrudiert, nicht gefüllt, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Frukostflingor med choklad, extruderade, ej fyllda, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding med sjokolade, ekstrudert, ikke fylt, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukt med chokolade, ekstruderet, ikke fyldt, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen met chocolade, geëxtrudeerd, niet gevuld, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno con chocolate, extrudidos, no rellenos, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali da colazione al cioccolato, estrusi, non ripieni, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals with chocolate, extruded, not filled, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner au chocolat, extrudées, non fourrées, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien mit Schokolade, extrudiert, nicht gefüllt, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Frukostflingor med choklad, extruderade, ej fyllda, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding med sjokolade, ekstrudert, ikke fylt, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukt med chokolade, ekstruderet, ikke fyldt, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen met chocolade, geëxtrudeerd, niet gevuld, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno con chocolate, extrudidos, no rellenos, enriquecidos con vitaminas y minerales",
+    "it": "Cereali da colazione al cioccolato, estrusi, non ripieni, fortificati con vitamine e minerali"
   },
   "a9047028-553a-5e29-884a-3b4fedf4d991": {
     "en": "Infusion, brewed, no added sugars",
@@ -17863,12 +16518,9 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Stilla mineralvatten (Amanda), på flaska, kraftigt mineraliserat",
     "no": "Mineralvann uten kullsyre (Amanda), på flaske, sterkt mineralisert",
     "da": "Mineralvand uden brus (Amanda), flasket, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Amanda), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Amanda), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (Amanda), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Amanda), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral sin gas (Amanda), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (Amanda), in bottiglia, fortemente mineralizzata"
   },
   "a95784c4-5d3c-5c44-b80c-c8cd9d4d4ea8": {
     "en": "Coffee, powder, instant",
@@ -17882,24 +16534,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Caffè in polvere, istantaneo"
   },
   "a9a04c0c-1722-58e9-a626-09b49df97164": {
-    "en":
-        "Mineral sparkling water (Vichy Célestins), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale gazeuse (Vichy Célestins), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Vichy Célestins), in Flaschen, stark mineralisiert",
-    "sv":
-        "Mineralvatten med kolsyra (Vichy Célestins), på flaska, kraftigt mineraliserat",
-    "no":
-        "Mineralvann med kullsyre (Vichy Célestins), på flaske, sterkt mineralisert",
-    "da":
-        "Mineralvand med brus (Vichy Célestins), flasket, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater met koolzuur (Vichy Célestins), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Vichy Célestins), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Vichy Célestins), in bottiglia, fortemente mineralizzata"
+    "en": "Mineral sparkling water (Vichy Célestins), bottled, strongly mineralized",
+    "fr": "Eau minérale gazeuse (Vichy Célestins), en bouteille, fortement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Vichy Célestins), in Flaschen, stark mineralisiert",
+    "sv": "Mineralvatten med kolsyra (Vichy Célestins), på flaska, kraftigt mineraliserat",
+    "no": "Mineralvann med kullsyre (Vichy Célestins), på flaske, sterkt mineralisert",
+    "da": "Mineralvand med brus (Vichy Célestins), flasket, stærkt mineraliseret",
+    "nl": "Mineraalwater met koolzuur (Vichy Célestins), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral con gas (Vichy Célestins), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (Vichy Célestins), in bottiglia, fortemente mineralizzata"
   },
   "a9bc0dee-10b5-5cb0-89c5-e845dd8430bc": {
     "en": "Cola, with sugar(s) and with sweetener(s)",
@@ -17968,44 +16611,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Fagioli bianchi o gialli, surgelati, crudi"
   },
   "aa543897-90f3-537e-85aa-1d408cf81996": {
-    "en":
-        "Plant-based dessert (almond, oat, hemp, coconut, rice), flavoured, with sugar(s), not fortified, refrigerated",
-    "fr":
-        "Dessert végétal (amande, avoine, chanvre, coco, riz), aromatisé, avec sucre(s), non enrichi, réfrigéré",
-    "de":
-        "Pflanzliches Dessert (Mandel, Hafer, Hanf, Kokosnuss, Reis), aromatisiert, mit Zucker, nicht angereichert, gekühlt",
-    "sv":
-        "Växtbaserad dessert (mandel, havre, hampa, kokos, ris), smaksatt, med socker, ej berikad, kylvara",
-    "no":
-        "Plantebasert dessert (mandel, havre, hamp, kokos, ris), med smak, med sukker, ikke beriket, kjølt",
-    "da":
-        "Plantebaseret dessert (mandel, havre, hamp, kokos, ris), aromatiseret, med sukker, ikke beriget, kølevare",
-    "nl":
-        "Plantaardig dessert (amandel, haver, hennep, kokos, rijst), gearomatiseerd, met suiker(s), niet verrijkt, gekoeld",
-    "es":
-        "Postre vegetal (almendra, avena, cáñamo, coco, arroz), aromatizado, con azúcar(es), no enriquecido, refrigerado",
-    "it":
-        "Dessert vegetale (mandorla, avena, canapa, cocco, riso), aromatizzato, con zuccheri, non fortificato, refrigerato"
+    "en": "Plant-based dessert (almond, oat, hemp, coconut, rice), flavoured, with sugar(s), not fortified, refrigerated",
+    "fr": "Dessert végétal (amande, avoine, chanvre, coco, riz), aromatisé, avec sucre(s), non enrichi, réfrigéré",
+    "de": "Pflanzliches Dessert (Mandel, Hafer, Hanf, Kokosnuss, Reis), aromatisiert, mit Zucker, nicht angereichert, gekühlt",
+    "sv": "Växtbaserad dessert (mandel, havre, hampa, kokos, ris), smaksatt, med socker, ej berikad, kylvara",
+    "no": "Plantebasert dessert (mandel, havre, hamp, kokos, ris), med smak, med sukker, ikke beriket, kjølt",
+    "da": "Plantebaseret dessert (mandel, havre, hamp, kokos, ris), aromatiseret, med sukker, ikke beriget, kølevare",
+    "nl": "Plantaardig dessert (amandel, haver, hennep, kokos, rijst), gearomatiseerd, met suiker(s), niet verrijkt, gekoeld",
+    "es": "Postre vegetal (almendra, avena, cáñamo, coco, arroz), aromatizado, con azúcar(es), no enriquecido, refrigerado",
+    "it": "Dessert vegetale (mandorla, avena, canapa, cocco, riso), aromatizzato, con zuccheri, non fortificato, refrigerato"
   },
   "aa877457-d0b7-5fd2-a911-484302e4f55d": {
-    "en":
-        "Mixed salad, Alaska-style, with surimi, pineapple, carrot, with sauce, prepacked",
-    "fr":
-        "Salade composée, style Alaska, au surimi, ananas, carotte, avec sauce, préemballée",
-    "de":
-        "Mischsalat, Art Alaska, mit Surimi, Ananas, Karotte, mit Soße, vorverpackt",
-    "sv":
-        "Blandsallad, Alaska-stil, med surimi, ananas, morot, med sås, färdigpackad",
-    "no":
-        "Blandet salat, Alaska-stil, med surimi, ananas, gulrot, med saus, ferdigpakket",
-    "da":
-        "Blandet salat, Alaska-style, med surimi, ananas, gulerod, med dressing, pakket",
-    "nl":
-        "Gemengde salade, Alaska-stijl, met surimi, ananas, wortel, met saus, voorverpakt",
-    "es":
-        "Ensalada mixta, estilo Alaska, con surimi, piña, zanahoria, con salsa, preenvasada",
-    "it":
-        "Insalata mista stile Alaska, con surimi, ananas, carote, con salsa, confezionata"
+    "en": "Mixed salad, Alaska-style, with surimi, pineapple, carrot, with sauce, prepacked",
+    "fr": "Salade composée, style Alaska, au surimi, ananas, carotte, avec sauce, préemballée",
+    "de": "Mischsalat, Art Alaska, mit Surimi, Ananas, Karotte, mit Soße, vorverpackt",
+    "sv": "Blandsallad, Alaska-stil, med surimi, ananas, morot, med sås, färdigpackad",
+    "no": "Blandet salat, Alaska-stil, med surimi, ananas, gulrot, med saus, ferdigpakket",
+    "da": "Blandet salat, Alaska-style, med surimi, ananas, gulerod, med dressing, pakket",
+    "nl": "Gemengde salade, Alaska-stijl, met surimi, ananas, wortel, met saus, voorverpakt",
+    "es": "Ensalada mixta, estilo Alaska, con surimi, piña, zanahoria, con salsa, preenvasada",
+    "it": "Insalata mista stile Alaska, con surimi, ananas, carote, con salsa, confezionata"
   },
   "aaa16bd5-7fc2-53c1-9d51-5cc8e695d1d9": {
     "en": "Chicken, leg, meat, raw",
@@ -18059,10 +16684,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Myk kake fylt med frukt, type mini-rullekake, ferdigpakket",
     "da": "Blød kage med frugtfyld, mini-rullekagetype, pakket",
     "nl": "Zacht cakeje gevuld met fruit, type mini-cakerol, voorverpakt",
-    "es":
-        "Pastel blando relleno de frutas, tipo brazo de gitano mini, preenvasado",
-    "it":
-        "Dolce morbido farcito alla frutta, tipo rotolo di pasta biscotto, confezionato"
+    "es": "Pastel blando relleno de frutas, tipo brazo de gitano mini, preenvasado",
+    "it": "Dolce morbido farcito alla frutta, tipo rotolo di pasta biscotto, confezionato"
   },
   "ab23e6e5-c71b-5aa4-abe3-ce01876d3fc4": {
     "en": "Frozen dessert, Sundae ice cream type",
@@ -18121,17 +16744,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "abedc5b2-8379-549c-9785-559ff4498531": {
     "en": "Pasta salad, with vegetable and meat/fish, with sauce, prepacked",
-    "fr":
-        "Salade de pâtes, aux légumes et viande/poisson, avec sauce, préemballée",
+    "fr": "Salade de pâtes, aux légumes et viande/poisson, avec sauce, préemballée",
     "de": "Nudelsalat, mit Gemüse und Fleisch/Fisch, mit Soße, vorverpackt",
     "sv": "Pastasallad, med grönsaker och kött/fisk, med sås, färdigpackad",
     "no": "Pastasalat, med grønnsaker og kjøtt/fisk, med saus, ferdigpakket",
     "da": "Pastasalat, med grøntsager og kød/fisk, med dressing, pakket",
     "nl": "Pastasalade, met groente en vlees/vis, met saus, voorverpakt",
-    "es":
-        "Ensalada de pasta, con verdura y carne/pescado, con salsa, preenvasada",
-    "it":
-        "Insalata di pasta, con verdure e carne/pesce, con condimento, confezionata"
+    "es": "Ensalada de pasta, con verdura y carne/pescado, con salsa, preenvasada",
+    "it": "Insalata di pasta, con verdure e carne/pesce, con condimento, confezionata"
   },
   "ac1a193a-d780-5f8b-9824-d93e54622d54": {
     "en": "Lemon tart",
@@ -18233,35 +16853,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Mandorla zuccherata"
   },
   "ad08094b-1ec8-5928-8ebe-f364dd79ed96": {
-    "en": "Potato, new, raw",
-    "fr": "Pomme de terre, nouvelle, crue",
-    "de": "Kartoffel, Frühkartoffel, roh",
-    "sv": "Färskpotatis, rå",
-    "no": "Potet, nypotet, rå",
-    "da": "Kartoffel, nye, rå",
-    "nl": "Aardappel, nieuw, rauw",
-    "es": "Patata nueva, cruda",
-    "it": "Patata novellla, cruda"
+    "en": "New potato — raw",
+    "de": "Frühkartoffel — roh",
+    "fr": "Pomme de terre primeur — crue",
+    "no": "Nypotet – rå",
+    "sv": "Färskpotatis — rå",
+    "da": "Nye kartofler — rå",
+    "nl": "Nieuwe aardappel — rauw",
+    "it": "Patata novella — cruda",
+    "es": "Patata nueva — cruda"
   },
   "ad111103-be3f-57f1-8c6e-a1f4ebea84ea": {
-    "en":
-        "Breakfast cereals, puffed corn with honey, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, maïs soufflé au miel, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien, Puffmais mit Honig, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Frukostflingor, puffad majs med honung, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, puffed mais med honning, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter, puffet majs med honning, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, gepofte maïs met honing, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, maíz inflado con miel, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione, mais soffiato al miele, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals, puffed corn with honey, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, maïs soufflé au miel, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien, Puffmais mit Honig, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Frukostflingor, puffad majs med honung, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, puffed mais med honning, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter, puffet majs med honning, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, gepofte maïs met honing, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, maíz inflado con miel, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione, mais soffiato al miele, fortificati con vitamine e minerali"
   },
   "ad27e838-36c9-5026-8f19-ae2e0fc50d25": {
     "en": "Carragheen mosses (Chondrus crispus), dried or dehydrated",
@@ -18386,32 +16997,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "ae69ea76-0d1e-5e8c-8016-df9a9c00a6bf": {
     "en": "Tempeh",
-    "fr": "Tempeh",
     "de": "Tempeh",
-    "sv": "Tempeh",
+    "fr": "Tempeh",
     "no": "Tempeh",
+    "sv": "Tempeh",
     "da": "Tempeh",
     "nl": "Tempeh",
-    "es": "Tempeh",
-    "it": "Tempeh"
+    "it": "Tempeh",
+    "es": "Tempeh"
   },
   "aecbf511-308f-5f8b-b129-c9c2e9718562": {
-    "en":
-        "Pasta salad, with ham, cheese and raw vegetables, with sauce, prepacked",
-    "fr":
-        "Salade de pâtes, au jambon, fromage et légumes crus, avec sauce, préemballée",
-    "de":
-        "Nudelsalat, mit Schinken, Käse und rohem Gemüse, mit Sauce, vorverpackt",
+    "en": "Pasta salad, with ham, cheese and raw vegetables, with sauce, prepacked",
+    "fr": "Salade de pâtes, au jambon, fromage et légumes crus, avec sauce, préemballée",
+    "de": "Nudelsalat, mit Schinken, Käse und rohem Gemüse, mit Sauce, vorverpackt",
     "sv": "Pastasallad, med skinka, ost och råa grönsaker, med sås, förpackad",
-    "no":
-        "Pastasalat, med skinke, ost og rå grønnsaker, med saus, ferdigpakket",
-    "da":
-        "Pastasalat, med skinke, ost og rå grøntsager, med sauce, forudpakket",
+    "no": "Pastasalat, med skinke, ost og rå grønnsaker, med saus, ferdigpakket",
+    "da": "Pastasalat, med skinke, ost og rå grøntsager, med sauce, forudpakket",
     "nl": "Pastasalade, met ham, kaas en rauwe groenten, met saus, voorverpakt",
-    "es":
-        "Ensalada de pasta, con jamón, queso y verduras crudas, con salsa, preenvasada",
-    "it":
-        "Insalata di pasta, con prosciutto, formaggio e verdure crude, con salsa, preconfezionata"
+    "es": "Ensalada de pasta, con jamón, queso y verduras crudas, con salsa, preenvasada",
+    "it": "Insalata di pasta, con prosciutto, formaggio e verdure crude, con salsa, preconfezionata"
   },
   "af0b061e-1ffd-56ba-aca2-fe6580629021": {
     "en": "Brioche rusk with raisins, sliced, prepacked",
@@ -18436,15 +17040,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Yogurt o latte fermentato, bianco, con panna"
   },
   "af58c17b-b2b4-537e-a8f9-b8db00376bfc": {
-    "en": "Bread, pita",
+    "en": "Pitta bread",
+    "de": "Pita-Brot",
     "fr": "Pain pita",
-    "de": "Brot, Pita",
-    "sv": "Bröd, pita",
-    "no": "Brød, pita",
-    "da": "Brød, pita",
-    "nl": "Brood, pita",
-    "es": "Pan de pita",
-    "it": "Pane, pita"
+    "no": "Pitabrød",
+    "sv": "Pitabröd",
+    "da": "Pitabrød",
+    "nl": "Pitabrood",
+    "it": "Pane pita",
+    "es": "Pan de pita"
   },
   "af611ecb-6444-5222-ad7b-bb98e63c2bce": {
     "en": "Biscuit (cookie), without chocolate, reduced fat",
@@ -18480,24 +17084,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salsiccia merguez, manzo e montone, cruda"
   },
   "afb498cd-96e0-52da-a386-e5b6c8e8dda2": {
-    "en":
-        "Provencal-style tomato (breaded tomatoes stuffed with garlic and parsley), home-made",
-    "fr":
-        "Tomate à la provençale (tomates chapelées farcies à l'ail et au persil), fait maison",
-    "de":
-        "Tomate nach provenzalischer Art (panierte, mit Knoblauch und Petersilie gefüllte Tomaten), hausgemacht",
-    "sv":
-        "Provencalsk tomat (panerade tomater fyllda med vitlök och persilja), hemgjord",
-    "no":
-        "Tomat på provencalsk vis (panerte tomater fylt med hvitløk og persille), hjemmelaget",
-    "da":
-        "Provencalske tomater (panerede tomater fyldt med hvidløg og persille), hjemmelavet",
-    "nl":
-        "Tomaat op z'n Provençaals (gepaneerde tomaten gevuld met knoflook en peterselie), zelfgemaakt",
-    "es":
-        "Tomate a la provenzal (tomates empanados rellenos de ajo y perejil), casero",
-    "it":
-        "Pomodoro alla provenzale (pomodori impanati ripieni di aglio e prezzemolo), fatto in casa"
+    "en": "Provencal-style tomato (breaded tomatoes stuffed with garlic and parsley), home-made",
+    "fr": "Tomate à la provençale (tomates chapelées farcies à l'ail et au persil), fait maison",
+    "de": "Tomate nach provenzalischer Art (panierte, mit Knoblauch und Petersilie gefüllte Tomaten), hausgemacht",
+    "sv": "Provencalsk tomat (panerade tomater fyllda med vitlök och persilja), hemgjord",
+    "no": "Tomat på provencalsk vis (panerte tomater fylt med hvitløk og persille), hjemmelaget",
+    "da": "Provencalske tomater (panerede tomater fyldt med hvidløg og persille), hjemmelavet",
+    "nl": "Tomaat op z'n Provençaals (gepaneerde tomaten gevuld met knoflook en peterselie), zelfgemaakt",
+    "es": "Tomate a la provenzal (tomates empanados rellenos de ajo y perejil), casero",
+    "it": "Pomodoro alla provenzale (pomodori impanati ripieni di aglio e prezzemolo), fatto in casa"
   },
   "afb7b3d3-8523-5bf5-a011-397f010ed749": {
     "en": "Swedish toast, with fruits",
@@ -18533,41 +17128,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Semolino dolce, refrigerato"
   },
   "afd7f5b2-009a-5e92-b54b-e9a37b302afe": {
-    "en":
-        "Breakfast cereals, puffed or extruded, with honey or caramel, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, soufflées ou extrudées, au miel ou au caramel, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien, gepufft oder extrudiert, mit Honig oder Karamell, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Frukostflingor, puffade eller extruderade, med honung eller karamell, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, puffet eller ekstrudert, med honning eller karamell, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter, puffet eller ekstruderet, med honning eller karamel, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, gepoft of geëxtrudeerd, met honing of karamel, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, inflados o extrudidos, con miel o caramelo, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione, soffiati o estrusi, al miele o caramello, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals, puffed or extruded, with honey or caramel, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, soufflées ou extrudées, au miel ou au caramel, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien, gepufft oder extrudiert, mit Honig oder Karamell, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Frukostflingor, puffade eller extruderade, med honung eller karamell, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, puffet eller ekstrudert, med honning eller karamell, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter, puffet eller ekstruderet, med honning eller karamel, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, gepoft of geëxtrudeerd, met honing of karamel, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, inflados o extrudidos, con miel o caramelo, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione, soffiati o estrusi, al miele o caramello, fortificati con vitamine e minerali"
   },
   "affdf696-daf4-53da-a7b6-325132a3b422": {
     "en": "Breakfast cereals, fortified with vitamins and minerals (average)",
-    "fr":
-        "Céréales de petit-déjeuner, enrichies en vitamines et minéraux (moyenne)",
-    "de":
-        "Frühstückscerealien, angereichert mit Vitaminen und Mineralstoffen (Durchschnitt)",
+    "fr": "Céréales de petit-déjeuner, enrichies en vitamines et minéraux (moyenne)",
+    "de": "Frühstückscerealien, angereichert mit Vitaminen und Mineralstoffen (Durchschnitt)",
     "sv": "Frukostflingor, berikade med vitaminer och mineraler (genomsnitt)",
-    "no":
-        "Frokostblandinger, beriket med vitaminer og mineraler (gjennomsnitt)",
-    "da":
-        "Morgenmadsprodukter, beriget med vitaminer og mineraler (gennemsnit)",
+    "no": "Frokostblandinger, beriket med vitaminer og mineraler (gjennomsnitt)",
+    "da": "Morgenmadsprodukter, beriget med vitaminer og mineraler (gennemsnit)",
     "nl": "Ontbijtgranen, verrijkt met vitaminen en mineralen (gemiddeld)",
-    "es":
-        "Cereales de desayuno, enriquecidos con vitaminas y minerales (promedio)",
-    "it":
-        "Cereali per la colazione, fortificati con vitamine e minerali (media)"
+    "es": "Cereales de desayuno, enriquecidos con vitaminas y minerales (promedio)",
+    "it": "Cereali per la colazione, fortificati con vitamine e minerali (media)"
   },
   "b00e9194-881d-55d9-8d1c-1cd32d1ea660": {
     "en": "Pork, 80/20 trimming, raw",
@@ -18592,20 +17172,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Misto verdure per zuppe, surgelato, crudo"
   },
   "b05996f4-0419-517a-a12a-4047777c9b37": {
-    "en":
-        "Processed cheese, from cow's milk, flavoured, in cubes, for aperitif",
-    "fr":
-        "Fromage fondu, au lait de vache, aromatisé, en cubes, pour l'apéritif",
+    "en": "Processed cheese, from cow's milk, flavoured, in cubes, for aperitif",
+    "fr": "Fromage fondu, au lait de vache, aromatisé, en cubes, pour l'apéritif",
     "de": "Schmelzkäse, aus Kuhmilch, aromatisiert, in Würfeln, als Aperitif",
     "sv": "Smältost, av komjölk, smaksatt, i tärningar, till aperitif",
     "no": "Smeltet ost, av kumelk, med smak, i terninger, til aperitiff",
     "da": "Smelteost, af komælk, smagt til, i tern, til aperitif",
-    "nl":
-        "Smeltkaas, van koemelk, op smaak gebracht, in blokjes, voor het aperitief",
-    "es":
-        "Queso fundido, de leche de vaca, aromatizado, en cubitos, para aperitivo",
-    "it":
-        "Formaggio fuso, di latte vaccino, aromatizzato, a cubetti, per aperitivo"
+    "nl": "Smeltkaas, van koemelk, op smaak gebracht, in blokjes, voor het aperitief",
+    "es": "Queso fundido, de leche de vaca, aromatizado, en cubitos, para aperitivo",
+    "it": "Formaggio fuso, di latte vaccino, aromatizzato, a cubetti, per aperitivo"
   },
   "b090313c-8e4c-5044-ae6f-e71412416223": {
     "en": "Montbeliard sausage to cook",
@@ -18729,24 +17304,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Indivia riccia, cruda"
   },
   "b2698e4a-6e13-581f-82aa-f231d8d31f9c": {
-    "en":
-        "Apple pie with custard (flour, eggs, cream, sugar, apple alcohol), from bakery",
-    "fr":
-        "Tarte aux pommes avec flan pâtissier (farine, œufs, crème, sucre, eau-de-vie de pomme), de boulangerie",
-    "de":
-        "Apfelkuchen mit Vanillepudding (Mehl, Eier, Sahne, Zucker, Apfelbrand), von der Bäckerei",
-    "sv":
-        "Äppelpaj med kräm (mjöl, ägg, grädde, socker, äppelalkohol), från bageri",
-    "no":
-        "Eplekake med eggekrem (mel, egg, fløte, sukker, eplesprit), fra bakeri",
-    "da":
-        "Æbletærte med creme (mel, æg, fløde, sukker, æblealkohol), fra bageri",
-    "nl":
-        "Appeltaart met vla (bloem, eieren, room, suiker, appelalcohol), van de bakker",
-    "es":
-        "Tarta de manzana con crema pastelera (harina, huevos, nata, azúcar, alcohol de manzana), de pastelería",
-    "it":
-        "Torta di mele con crema pasticcera (farina, uova, panna, zucchero, alcol di mele), di pasticceria"
+    "en": "Apple pie with custard (flour, eggs, cream, sugar, apple alcohol), from bakery",
+    "fr": "Tarte aux pommes avec flan pâtissier (farine, œufs, crème, sucre, eau-de-vie de pomme), de boulangerie",
+    "de": "Apfelkuchen mit Vanillepudding (Mehl, Eier, Sahne, Zucker, Apfelbrand), von der Bäckerei",
+    "sv": "Äppelpaj med kräm (mjöl, ägg, grädde, socker, äppelalkohol), från bageri",
+    "no": "Eplekake med eggekrem (mel, egg, fløte, sukker, eplesprit), fra bakeri",
+    "da": "Æbletærte med creme (mel, æg, fløde, sukker, æblealkohol), fra bageri",
+    "nl": "Appeltaart met vla (bloem, eieren, room, suiker, appelalcohol), van de bakker",
+    "es": "Tarta de manzana con crema pastelera (harina, huevos, nata, azúcar, alcohol de manzana), de pastelería",
+    "it": "Torta di mele con crema pasticcera (farina, uova, panna, zucchero, alcol di mele), di pasticceria"
   },
   "b2970bc3-3542-5836-9eb4-a63eb601838b": {
     "en": "Veal, escalope, raw",
@@ -18760,17 +17326,14 @@ const foodNames = <String, Map<String, String>>{
     "it": "Vitello, scaloppina, cruda"
   },
   "b2a1b8c7-7109-5b19-9d4a-59ccaca02cc1": {
-    "en":
-        "Processed cheese snack , from cow's milk, with breadsticks, for children",
-    "fr":
-        "En-cas de fromage fondu, au lait de vache, avec gressins, pour enfants",
+    "en": "Processed cheese snack , from cow's milk, with breadsticks, for children",
+    "fr": "En-cas de fromage fondu, au lait de vache, avec gressins, pour enfants",
     "de": "Schmelzkäsesnack, aus Kuhmilch, mit Grissini, für Kinder",
     "sv": "Processerad ostsnack, av komjölk, med brödpinnar, för barn",
     "no": "Behandlet ostesnacks, av kumelk, med grissini, for barn",
     "da": "Forarbejdet ostesnack af komælk med brødstænger, til børn",
     "nl": "Gesmolten kaassnack, van koemelk, met soepstengels, voor kinderen",
-    "es":
-        "Snack de queso procesado, de leche de vaca, con palitos de pan, para niños",
+    "es": "Snack de queso procesado, de leche de vaca, con palitos de pan, para niños",
     "it": "Snack al formaggio fuso, latte vaccino, con grissini, per bambini"
   },
   "b2a86530-340e-59b1-9d9a-3f0cff8181c6": {
@@ -18788,12 +17351,10 @@ const foodNames = <String, Map<String, String>>{
     "en": "French fries or chips, frozen, pre-fried, aw, to be microwave",
     "fr": "Frites, surgelées, pré-frites, crues, à réchauffer au micro-ondes",
     "de": "Pommes Frites, tiefgekühlt, vorgebacken, roh, für die Mikrowelle",
-    "sv":
-        "Pommes frites eller chips, frysta, förfriterade, råa, för mikrovågsugn",
+    "sv": "Pommes frites eller chips, frysta, förfriterade, råa, för mikrovågsugn",
     "no": "Pommes frites, dypfryste, forstekte, rå, til mikroovn",
     "da": "Pommes frites, frost, forstegt, rå, til mikroovn",
-    "nl":
-        "Franse frietjes of chips, diepvries, voorgebakken, rauw, voor magnetron",
+    "nl": "Franse frietjes of chips, diepvries, voorgebakken, rauw, voor magnetron",
     "es": "Patatas fritas, congeladas, prefritas, crudas, para microondas",
     "it": "Patatine fritte, surgelate, pre-fritte, crude, da microonde"
   },
@@ -18831,24 +17392,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Torta salata, formaggio di capra e spinaci, confezionata"
   },
   "b36e9d67-cde6-5793-99a8-c8df535358cc": {
-    "en":
-        "Jam or marmalade, miscellaneaous fruits, sugar content unknown, (average)",
-    "fr":
-        "Confiture ou marmelade, fruits divers, teneur en sucre inconnue, (moyenne)",
-    "de":
-        "Marmelade oder Konfitüre, verschiedene Früchte, Zuckergehalt unbekannt, (Durchschnitt)",
-    "sv":
-        "Sylt eller marmelad, blandade frukter, sockerhalt okänd, (genomsnitt)",
-    "no":
-        "Syltetøy eller marmelade, blandede frukter, sukkerinnhold ukjent, (gjennomsnitt)",
-    "da":
-        "Syltetøj eller marmelade af blandede frugter, sukkerindhold ukendt (gennemsnit)",
-    "nl":
-        "Jam of marmelade, diverse vruchten, suikergehalte onbekend, (gemiddeld)",
-    "es":
-        "Mermelada, de frutas variadas, contenido de azúcar desconocido, (promedio)",
-    "it":
-        "Confettura o marmellata, frutta mista, tenore di zuccheri sconosciuto, (media)"
+    "en": "Jam or marmalade, miscellaneaous fruits, sugar content unknown, (average)",
+    "fr": "Confiture ou marmelade, fruits divers, teneur en sucre inconnue, (moyenne)",
+    "de": "Marmelade oder Konfitüre, verschiedene Früchte, Zuckergehalt unbekannt, (Durchschnitt)",
+    "sv": "Sylt eller marmelad, blandade frukter, sockerhalt okänd, (genomsnitt)",
+    "no": "Syltetøy eller marmelade, blandede frukter, sukkerinnhold ukjent, (gjennomsnitt)",
+    "da": "Syltetøj eller marmelade af blandede frugter, sukkerindhold ukendt (gennemsnit)",
+    "nl": "Jam of marmelade, diverse vruchten, suikergehalte onbekend, (gemiddeld)",
+    "es": "Mermelada, de frutas variadas, contenido de azúcar desconocido, (promedio)",
+    "it": "Confettura o marmellata, frutta mista, tenore di zuccheri sconosciuto, (media)"
   },
   "b3880a03-920b-5d58-8a07-cc1c6fd1ce10": {
     "en": "Common sole, boiled/cooked in water",
@@ -18864,8 +17416,7 @@ const foodNames = <String, Map<String, String>>{
   "b39d6412-09dd-5d8f-b51b-f5be15a6dc1d": {
     "en": "Mineral water (St-Amand), bottled, averagely mineralized",
     "fr": "Eau minérale (St-Amand), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser (St-Amand), in Flaschen, durchschnittlich mineralisiert",
+    "de": "Mineralwasser (St-Amand), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Mineralvatten (St-Amand), på flaska, medelmåttigt mineraliserat",
     "no": "Mineralvann (St-Amand), på flaske, moderat mineralisert",
     "da": "Mineralvand (St-Amand), flaske, gennemsnitligt mineraliseret",
@@ -18875,20 +17426,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "b3bd9e8b-cbd7-56fd-a69e-904c19a95f29": {
     "en": "Mineral sparkling water (Ventadour), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale gazeuse (Ventadour), en bouteille, faiblement minéralisée",
-    "de":
-        "Heilwasser mit Kohlensäure (Ventadour), in Flaschen, leicht mineralisiert",
+    "fr": "Eau minérale gazeuse (Ventadour), en bouteille, faiblement minéralisée",
+    "de": "Heilwasser mit Kohlensäure (Ventadour), in Flaschen, leicht mineralisiert",
     "sv": "Kolsyrat mineralvatten (Ventadour), på flaska, lätt mineraliserat",
-    "no":
-        "Farris eller kullsyreholdig mineralvann (Ventadour), på flaske, lett mineralisert",
+    "no": "Farris eller kullsyreholdig mineralvann (Ventadour), på flaske, lett mineralisert",
     "da": "Mineralholdigt danskvand (Ventadour), flaske, let mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Ventadour), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Ventadour), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Ventadour), in bottiglia, leggermente mineralizzata"
+    "nl": "Bruisend mineraalwater (Ventadour), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral con gas (Ventadour), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale frizzante (Ventadour), in bottiglia, leggermente mineralizzata"
   },
   "b3c803b2-fe0b-5102-b994-ed146add8f4b": {
     "en": "Chicory with ham in sauce, prepacked",
@@ -18948,16 +17493,13 @@ const foodNames = <String, Map<String, String>>{
   "b463544d-eb45-5087-98bc-b38fc0e7be6b": {
     "en": "Mineral sparkling water (Rozana), bottled, strongly mineralized",
     "fr": "Eau minérale gazeuse (Rozana), en bouteille, fortement minéralisée",
-    "de":
-        "Heilwasser mit Kohlensäure (Rozana), in Flaschen, stark mineralisiert",
+    "de": "Heilwasser mit Kohlensäure (Rozana), in Flaschen, stark mineralisiert",
     "sv": "Kolsyrat mineralvatten (Rozana), på flaska, starkt mineraliserat",
     "no": "Kullsyreholdig mineralvann (Rozana), på flaske, sterkt mineralisert",
     "da": "Mineralholdigt danskvand (Rozana), flaske, stærkt mineraliseret",
     "nl": "Bruisend mineraalwater (Rozana), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Rozana), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Rozana), in bottiglia, fortemente mineralizzata"
+    "es": "Agua mineral con gas (Rozana), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (Rozana), in bottiglia, fortemente mineralizzata"
   },
   "b47635d8-f8d9-5e3a-a037-db761f6bb53d": {
     "en": "Samosas or samoosas or filled filo pastry, home-made, cooked",
@@ -18972,20 +17514,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "b4780d70-f7f3-573d-a97f-42f7a1b1e4f7": {
     "en": "Carbonated beverage, apple content >= 50% and <99%, no added sugars",
-    "fr":
-        "Boisson gazeuse, teneur en pomme >= 50 % et < 99 %, sans sucres ajoutés",
-    "de":
-        "Kohlensäurehaltiges Getränk, Apfelgehalt >= 50% und <99%, ohne zugesetzten Zucker",
+    "fr": "Boisson gazeuse, teneur en pomme >= 50 % et < 99 %, sans sucres ajoutés",
+    "de": "Kohlensäurehaltiges Getränk, Apfelgehalt >= 50% und <99%, ohne zugesetzten Zucker",
     "sv": "Kolsyrad dryck, äppelhalt >= 50% och <99%, inget tillsatt socker",
-    "no":
-        "Kullsyreholdig drikk, epleinnhold >= 50% og <99%, uten tilsatt sukker",
+    "no": "Kullsyreholdig drikk, epleinnhold >= 50% og <99%, uten tilsatt sukker",
     "da": "Kulsyreholdig drik, æbleindhold >= 50% og <99%, ingen tilsat sukker",
-    "nl":
-        "Koolzuurhoudende drank, appelgehalte >= 50% en <99%, zonder toegevoegde suikers",
-    "es":
-        "Bebida carbonatada, contenido de manzana >= 50% y < 99%, sin azúcares añadidos",
-    "it":
-        "Bevanda gassata, tenore di mela >= 50% e <99%, senza zuccheri aggiunti"
+    "nl": "Koolzuurhoudende drank, appelgehalte >= 50% en <99%, zonder toegevoegde suikers",
+    "es": "Bebida carbonatada, contenido de manzana >= 50% y < 99%, sin azúcares añadidos",
+    "it": "Bevanda gassata, tenore di mela >= 50% e <99%, senza zuccheri aggiunti"
   },
   "b49a7e62-4c85-55a5-8a26-a3da8e0d382e": {
     "en": "Horse mackerel, oily (autumn, winter), raw",
@@ -19087,24 +17623,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Panino, pane pita, kebab e verdure crude"
   },
   "b560a500-5bb3-597b-9289-671d9fcc93cb": {
-    "en":
-        "Lasagna or cannelloni with vegetables and goat cheese, prepacked, cooked",
-    "fr":
-        "Lasagnes ou cannellonis aux légumes et au fromage de chèvre, préemballés, cuits",
-    "de":
-        "Lasagne oder Cannelloni mit Gemüse und Ziegenkäse, vorverpackt, gekocht",
-    "sv":
-        "Lasagne eller cannelloni med grönsaker och getost, färdigförpackad, tillagad",
-    "no":
-        "Lasagne eller cannelloni med grønnsaker og geitost, ferdigpakket, tilberedt",
-    "da":
-        "Lasagne eller cannelloni med grøntsager og gedeost, færdigpakket, tilberedt",
-    "nl":
-        "Lasagne of cannelloni met groenten en geitenkaas, voorverpakt, bereid",
-    "es":
-        "Lasaña o canelones con verduras y queso de cabra, preenvasados, cocinados",
-    "it":
-        "Lasagne o cannelloni con verdure e formaggio di capra, confezionati, cotti"
+    "en": "Lasagna or cannelloni with vegetables and goat cheese, prepacked, cooked",
+    "fr": "Lasagnes ou cannellonis aux légumes et au fromage de chèvre, préemballés, cuits",
+    "de": "Lasagne oder Cannelloni mit Gemüse und Ziegenkäse, vorverpackt, gekocht",
+    "sv": "Lasagne eller cannelloni med grönsaker och getost, färdigförpackad, tillagad",
+    "no": "Lasagne eller cannelloni med grønnsaker og geitost, ferdigpakket, tilberedt",
+    "da": "Lasagne eller cannelloni med grøntsager og gedeost, færdigpakket, tilberedt",
+    "nl": "Lasagne of cannelloni met groenten en geitenkaas, voorverpakt, bereid",
+    "es": "Lasaña o canelones con verduras y queso de cabra, preenvasados, cocinados",
+    "it": "Lasagne o cannelloni con verdure e formaggio di capra, confezionati, cotti"
   },
   "b587a9ba-6e08-5f09-9fb7-bae47acc8091": {
     "en": "Water, municipal",
@@ -19184,24 +17711,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Confettura, fragola, a ridotto contenuto di zuccheri"
   },
   "b6614a0f-6e5b-5208-b41c-3a65dcb32f1e": {
-    "en":
-        "Puffed wheat, with honey or caramel, fortified with vitamins and minerals",
-    "fr":
-        "Blé soufflé, au miel ou au caramel, enrichi en vitamines et minéraux",
-    "de":
-        "Puffweizen, mit Honig oder Karamel, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Puffat vete, med honung eller karamell, berikat med vitaminer och mineraler",
-    "no":
-        "Puffet hvete, med honning eller karamell, beriket med vitaminer og mineraler",
-    "da":
-        "Pustet hvede med honning eller karamel, beriget med vitaminer og mineraler",
-    "nl":
-        "Gepofte tarwe, met honing of karamel, verrijkt met vitaminen en mineralen",
-    "es":
-        "Trigo inflado, con miel o caramelo, enriquecido con vitaminas y minerales",
-    "it":
-        "Grano soffiato, con miele o caramello, fortificato con vitamine e minerali"
+    "en": "Puffed wheat, with honey or caramel, fortified with vitamins and minerals",
+    "fr": "Blé soufflé, au miel ou au caramel, enrichi en vitamines et minéraux",
+    "de": "Puffweizen, mit Honig oder Karamel, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Puffat vete, med honung eller karamell, berikat med vitaminer och mineraler",
+    "no": "Puffet hvete, med honning eller karamell, beriket med vitaminer og mineraler",
+    "da": "Pustet hvede med honning eller karamel, beriget med vitaminer og mineraler",
+    "nl": "Gepofte tarwe, met honing of karamel, verrijkt met vitaminen en mineralen",
+    "es": "Trigo inflado, con miel o caramelo, enriquecido con vitaminas y minerales",
+    "it": "Grano soffiato, con miele o caramello, fortificato con vitamine e minerali"
   },
   "b663e6ce-f514-5540-8f01-5e75a6acbd3f": {
     "en": "Fruit and vegetable beverage",
@@ -19233,8 +17751,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Knekkebrød, ekstrudert og grillet, fruktfyll",
     "da": "Knækbrød, ekstruderet og grillet, frugtfyld",
     "nl": "Knäckebröd, geëxtrudeerd en gegrild, fruitvulling",
-    "es":
-        "Pan crujiente (crispbread), extrusionado y tostado, relleno de fruta",
+    "es": "Pan crujiente (crispbread), extrusionado y tostado, relleno de fruta",
     "it": "Pane croccante, estruso e grigliato, ripieno di frutta"
   },
   "b7005638-589d-521d-b865-5649a3028d6a": {
@@ -19249,21 +17766,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Insalata di riso, in scatola"
   },
   "b70e557d-dc5b-5f8d-aacc-82708ddac8a6": {
-    "en":
-        "Soy dessert, flavoured, with sugar(s), fortified with calcium, refrigerated",
-    "fr":
-        "Dessert au soja, aromatisé, avec sucre(s), enrichi en calcium, réfrigéré",
-    "de":
-        "Sojadessert, aromatisiert, mit Zucker, mit Calcium angereichert, gekühlt",
+    "en": "Soy dessert, flavoured, with sugar(s), fortified with calcium, refrigerated",
+    "fr": "Dessert au soja, aromatisé, avec sucre(s), enrichi en calcium, réfrigéré",
+    "de": "Sojadessert, aromatisiert, mit Zucker, mit Calcium angereichert, gekühlt",
     "sv": "Sojadessert, smaksatt, med socker, berikad med kalcium, kyld",
     "no": "Soyadessert, med smak, med sukker, beriket med kalsium, kjølt",
     "da": "Sojadessert, med smag, med sukker, beriget med calcium, kølevare",
-    "nl":
-        "Sojadessert, gearomatiseerd, met suiker(s), verrijkt met calcium, gekoeld",
-    "es":
-        "Postre de soja, aromatizado, con azúcares, enriquecido con calcio, refrigerado",
-    "it":
-        "Dessert di soia, aromatizzato, con zuccheri, fortificato con calcio, refrigerato"
+    "nl": "Sojadessert, gearomatiseerd, met suiker(s), verrijkt met calcium, gekoeld",
+    "es": "Postre de soja, aromatizado, con azúcares, enriquecido con calcio, refrigerado",
+    "it": "Dessert di soia, aromatizzato, con zuccheri, fortificato con calcio, refrigerato"
   },
   "b725b949-ba42-5e3e-9ae3-6c2aac5e4bf8": {
     "en": "Rusk, slice, wholewheat, prepacked",
@@ -19310,24 +17821,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Tuorlo d'uovo, crudo"
   },
   "b82411e3-50c1-5de5-8b55-83901213dea6": {
-    "en":
-        "Carbonated beverage or fruit soft drink (fruit juice content unknown), with sugar(s) (average)",
-    "fr":
-        "Boisson gazeuse ou soda aux fruits (teneur en jus de fruits inconnue), avec sucre(s) (moyenne)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Fruchtweichgetränk (Fruchtsaftgehalt unbekannt), mit Zucker (Durchschnitt)",
-    "sv":
-        "Kolsyrad dryck eller fruktdryck (fruktjuicehalt okänd), med socker (genomsnitt)",
-    "no":
-        "Kullsyret drikk eller fruktdrikk med kullsyre (fruktjuiceinnhold ukjent), med sukker (gjennomsnitt)",
-    "da":
-        "Kulsyreholdig drik eller frugtsodavand (frugtjuiceindhold ukendt), med sukker (gennemsnit)",
-    "nl":
-        "Koolzuurhoudende drank of vruchtenfrisdrank (vruchtgehalte onbekend), met suiker(s) (gemiddeld)",
-    "es":
-        "Bebida carbonatada o refresco de frutas (contenido de zumo desconocido), con azúcar(es) (promedio)",
-    "it":
-        "Bevanda gassata o bibita alla frutta (contenuto di succo di frutta sconosciuto), con zuccheri (media)"
+    "en": "Carbonated beverage or fruit soft drink (fruit juice content unknown), with sugar(s) (average)",
+    "fr": "Boisson gazeuse ou soda aux fruits (teneur en jus de fruits inconnue), avec sucre(s) (moyenne)",
+    "de": "Kohlensäurehaltiges Getränk oder Fruchtweichgetränk (Fruchtsaftgehalt unbekannt), mit Zucker (Durchschnitt)",
+    "sv": "Kolsyrad dryck eller fruktdryck (fruktjuicehalt okänd), med socker (genomsnitt)",
+    "no": "Kullsyret drikk eller fruktdrikk med kullsyre (fruktjuiceinnhold ukjent), med sukker (gjennomsnitt)",
+    "da": "Kulsyreholdig drik eller frugtsodavand (frugtjuiceindhold ukendt), med sukker (gennemsnit)",
+    "nl": "Koolzuurhoudende drank of vruchtenfrisdrank (vruchtgehalte onbekend), met suiker(s) (gemiddeld)",
+    "es": "Bebida carbonatada o refresco de frutas (contenido de zumo desconocido), con azúcar(es) (promedio)",
+    "it": "Bevanda gassata o bibita alla frutta (contenuto di succo di frutta sconosciuto), con zuccheri (media)"
   },
   "b84afa62-2a86-555b-8054-3dc94fa7d49c": {
     "en": "Red cabbage, cooked (average)",
@@ -19396,44 +17898,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Sanguinaccio, grigliato/saltato in padella"
   },
   "b8fd7294-b1b8-58ea-b99c-4880b1e26f0e": {
-    "en":
-        "Vegetables, pan-fried or stir-fried, seasonned, Mediterranean-style, frozen, raw",
-    "fr":
-        "Légumes, poêlés ou sautés, assaisonnés, à la méditerranéenne, surgelés, crus",
-    "de":
-        "Gemüse, in der Pfanne oder im Wok gebraten, gewürzt, mediterrane Art, tiefgefroren, roh",
-    "sv":
-        "Grönsaker, stekta eller wookade, kryddade, medelhavsstil, frysta, råa",
-    "no":
-        "Grønnsaker, pannestekt eller woket, krydret, middelhavsstil, frosne, rå",
-    "da":
-        "Grøntsager, pandestegt eller wokstegt, krydret, middelhavsstil, frosne, rå",
-    "nl":
-        "Groenten, gebakken of roergebakken, gekruid, Mediterrane stijl, diepvries, rauw",
-    "es":
-        "Verduras salteadas o sofritas, sazonadas, estilo mediterráneo, congeladas, crudas",
-    "it":
-        "Verdure, saltate in padella o rosolate, condite, stile mediterraneo, surgelate, crude"
+    "en": "Vegetables, pan-fried or stir-fried, seasonned, Mediterranean-style, frozen, raw",
+    "fr": "Légumes, poêlés ou sautés, assaisonnés, à la méditerranéenne, surgelés, crus",
+    "de": "Gemüse, in der Pfanne oder im Wok gebraten, gewürzt, mediterrane Art, tiefgefroren, roh",
+    "sv": "Grönsaker, stekta eller wookade, kryddade, medelhavsstil, frysta, råa",
+    "no": "Grønnsaker, pannestekt eller woket, krydret, middelhavsstil, frosne, rå",
+    "da": "Grøntsager, pandestegt eller wokstegt, krydret, middelhavsstil, frosne, rå",
+    "nl": "Groenten, gebakken of roergebakken, gekruid, Mediterrane stijl, diepvries, rauw",
+    "es": "Verduras salteadas o sofritas, sazonadas, estilo mediterráneo, congeladas, crudas",
+    "it": "Verdure, saltate in padella o rosolate, condite, stile mediterraneo, surgelate, crude"
   },
   "b90376c1-388e-5b87-9ed2-842265e75f8f": {
-    "en":
-        "Yogurt or fermented milk, with fruits or flavoured, no reduced fat (average)",
-    "fr":
-        "Yaourt ou lait fermenté, aux fruits ou aromatisé, non allégé en matières grasses (moyen)",
-    "de":
-        "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, nicht fettreduziert (Durchschnitt)",
-    "sv":
-        "Yoghurt eller syrad mjölk, med frukt eller smaksatt, ej reducerad fetthalt (genomsnitt)",
-    "no":
-        "Yoghurt eller syrnet melk, med frukt eller smakattributt, ikke redusert fett (gjennomsnitt)",
-    "da":
-        "Yoghurt eller fermenteret mælk, med frugt eller aromatiseret, ikke fedtreduceret (gennemsnit)",
-    "nl":
-        "Yoghurt of gefermenteerde melk, met fruit of gearomatiseerd, niet vetarm (gemiddeld)",
-    "es":
-        "Yogur o leche fermentada, con frutas o aromatizado, no bajo en grasa (promedio)",
-    "it":
-        "Yogurt o latte fermentato, con frutta o aromatizzato, non a ridotto contenuto di grassi (media)"
+    "en": "Yogurt or fermented milk, with fruits or flavoured, no reduced fat (average)",
+    "fr": "Yaourt ou lait fermenté, aux fruits ou aromatisé, non allégé en matières grasses (moyen)",
+    "de": "Joghurt oder fermentierte Milch, mit Früchten oder aromatisiert, nicht fettreduziert (Durchschnitt)",
+    "sv": "Yoghurt eller syrad mjölk, med frukt eller smaksatt, ej reducerad fetthalt (genomsnitt)",
+    "no": "Yoghurt eller syrnet melk, med frukt eller smakattributt, ikke redusert fett (gjennomsnitt)",
+    "da": "Yoghurt eller fermenteret mælk, med frugt eller aromatiseret, ikke fedtreduceret (gennemsnit)",
+    "nl": "Yoghurt of gefermenteerde melk, met fruit of gearomatiseerd, niet vetarm (gemiddeld)",
+    "es": "Yogur o leche fermentada, con frutas o aromatizado, no bajo en grasa (promedio)",
+    "it": "Yogurt o latte fermentato, con frutta o aromatizzato, non a ridotto contenuto di grassi (media)"
   },
   "b92793d1-d9d8-58df-82af-c20f80abf616": {
     "en": "Venison, roebuck, raw",
@@ -19488,8 +17972,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Salatdressing, fedtreduceret, forudpakket",
     "nl": "Saus voor salade, vetarm, voorverpakt",
     "es": "Aliño para ensaladas, bajo en grasa, preenvasado",
-    "it":
-        "Condimento per insalata, a ridotto contenuto di grassi, preconfezionato"
+    "it": "Condimento per insalata, a ridotto contenuto di grassi, preconfezionato"
   },
   "b9e66fcc-6efb-5105-83e2-8bb009b90c7b": {
     "en": "Plant-based cheese, with cashew, prepacked",
@@ -19527,18 +18010,13 @@ const foodNames = <String, Map<String, String>>{
   "ba33c329-20f5-5ba9-8abc-0345970e33ad": {
     "en": "Fermented milk, yogurt type with bifidus, flavoured, with sugar(s)",
     "fr": "Lait fermenté, type yaourt au bifidus, aromatisé, avec sucre(s)",
-    "de":
-        "Fermentierte Milch, Joghurt-Typ mit Bifidus, aromatisiert, mit Zucker",
+    "de": "Fermentierte Milch, Joghurt-Typ mit Bifidus, aromatisiert, mit Zucker",
     "sv": "Syrad mjölk, yoghurttyp med bifidus, smaksatt, med socker",
     "no": "Syrnet melk, yoghurt-type med bifidus, smaksatt, med sukker",
-    "da":
-        "Fermenteret mælk, yoghurt-type med bifidus, aromatiseret, med sukker",
-    "nl":
-        "Gefermenteerde melk, yoghurt-type met bifidus, gearomatiseerd, met suiker(s)",
-    "es":
-        "Leche fermentada, tipo yogur con bifidus, aromatizado, con azúcar(es)",
-    "it":
-        "Latte fermentato, tipo yogurt con bifidus, aromatizzato, con zuccheri"
+    "da": "Fermenteret mælk, yoghurt-type med bifidus, aromatiseret, med sukker",
+    "nl": "Gefermenteerde melk, yoghurt-type met bifidus, gearomatiseerd, met suiker(s)",
+    "es": "Leche fermentada, tipo yogur con bifidus, aromatizado, con azúcar(es)",
+    "it": "Latte fermentato, tipo yogurt con bifidus, aromatizzato, con zuccheri"
   },
   "bab9e8b6-56fc-516d-b6a4-6a323340cf8a": {
     "en": "Chicken leg, meat, roasted/baked",
@@ -19653,16 +18131,13 @@ const foodNames = <String, Map<String, String>>{
   "bbab91c7-a380-5ad9-9959-a57cb9ec819c": {
     "en": "Corn flakes, sugar frosted, fortified with vitamins and minerals",
     "fr": "Corn flakes, glacés au sucre, enrichis en vitamines et minéraux",
-    "de":
-        "Cornflakes, mit Zuckerglasur, mit Vitaminen und Mineralstoffen angereichert",
+    "de": "Cornflakes, mit Zuckerglasur, mit Vitaminen und Mineralstoffen angereichert",
     "sv": "Corn flakes, sockerglaserade, berikade med vitaminer och mineraler",
     "no": "Cornflakes, sukret, beriket med vitaminer og mineraler",
     "da": "Cornflakes, sukkerristede, beriget med vitaminer og mineraler",
     "nl": "Cornflakes, met suikerlaagje, verrijkt met vitaminen en mineralen",
-    "es":
-        "Copos de maíz, glaseados con azúcar, enriquecidos con vitaminas y minerales",
-    "it":
-        "Corn flakes, glassati allo zucchero, fortificati con vitamine e minerali"
+    "es": "Copos de maíz, glaseados con azúcar, enriquecidos con vitaminas y minerales",
+    "it": "Corn flakes, glassati allo zucchero, fortificati con vitamine e minerali"
   },
   "bbd5c662-cae5-5dd7-8a6e-b79390303793": {
     "en": "Taramasalata, with smoked salmon, prepacked",
@@ -19764,24 +18239,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Liquore di ribes nero"
   },
   "bcaf9840-f6a6-57f0-9da5-0a001faf8217": {
-    "en":
-        "Stewed fruits, no added sugars (pulp or mixed fruits, but always with other ingredient), prepacked, room temperature",
-    "fr":
-        "Compote de fruits, sans sucres ajoutés (pulpe ou mélange de fruits, mais toujours avec un autre ingrédient), préemballée, température ambiante",
-    "de":
-        "Obstmus, ohne Zuckerzusatz (Fruchtpulpe oder Fruchtmischung, aber immer mit anderen Zutaten), vorverpackt, bei Raumtemperatur",
-    "sv":
-        "Fruktmos, inget tillsatt socker (fruktkött eller blandade frukter, men alltid med annan ingrediens), färdigförpackad, rumstemperatur",
-    "no":
-        "Fruktmos, uten tilsatt sukker (fruktmos eller blandet frukt, men alltid med andre ingredienser), ferdigpakket, romtemperatur",
-    "da":
-        "Frugtkompot, uden tilsat sukker (puré eller blandet frugt, men altid med andre ingredienser), forudpakket, stuetemperatur",
-    "nl":
-        "Stoofvruchten, zonder toegevoegde suikers (moes of gemengd fruit, maar altijd met ander ingrediënt), voorverpakt, kamertemperatuur",
-    "es":
-        "Fruta en compota, sin azúcares añadidos (pulpa o mezcla de frutas, pero siempre con otro ingrediente), preenvasada, a temperatura ambiente",
-    "it":
-        "Frutta cotta, senza zuccheri aggiunti (polpa o macedonia, ma sempre con altri ingredienti), preconfezionata, a temperatura ambiente"
+    "en": "Stewed fruits, no added sugars (pulp or mixed fruits, but always with other ingredient), prepacked, room temperature",
+    "fr": "Compote de fruits, sans sucres ajoutés (pulpe ou mélange de fruits, mais toujours avec un autre ingrédient), préemballée, température ambiante",
+    "de": "Obstmus, ohne Zuckerzusatz (Fruchtpulpe oder Fruchtmischung, aber immer mit anderen Zutaten), vorverpackt, bei Raumtemperatur",
+    "sv": "Fruktmos, inget tillsatt socker (fruktkött eller blandade frukter, men alltid med annan ingrediens), färdigförpackad, rumstemperatur",
+    "no": "Fruktmos, uten tilsatt sukker (fruktmos eller blandet frukt, men alltid med andre ingredienser), ferdigpakket, romtemperatur",
+    "da": "Frugtkompot, uden tilsat sukker (puré eller blandet frugt, men altid med andre ingredienser), forudpakket, stuetemperatur",
+    "nl": "Stoofvruchten, zonder toegevoegde suikers (moes of gemengd fruit, maar altijd met ander ingrediënt), voorverpakt, kamertemperatuur",
+    "es": "Fruta en compota, sin azúcares añadidos (pulpa o mezcla de frutas, pero siempre con otro ingrediente), preenvasada, a temperatura ambiente",
+    "it": "Frutta cotta, senza zuccheri aggiunti (polpa o macedonia, ma sempre con altri ingredienti), preconfezionata, a temperatura ambiente"
   },
   "bcbeaaaa-ba99-53ce-8158-2eca362cb720": {
     "en": "Tonguesole, raw",
@@ -19795,15 +18261,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Sogliola, cruda"
   },
   "bce06bfe-e1e1-5397-8ff3-7f4c8386a0f6": {
-    "en": "Feta-type cheese, 100% from cow's milk",
-    "fr": "Fromage type feta, 100% au lait de vache",
-    "de": "Feta-Art-Käse, 100 % aus Kuhmilch",
-    "sv": "Fetaliknande ost, 100 % på komjölk",
-    "no": "Feta-type ost, 100 % fra kumelk",
-    "da": "Feta-type ost, 100% af komælk",
-    "nl": "Feta-type kaas, 100% van koemelk",
-    "es": "Queso tipo feta, 100% de leche de vaca",
-    "it": "Formaggio tipo Feta, 100% di latte vaccino"
+    "en": "Feta-style cheese — cow's milk",
+    "de": "Käse nach Feta-Art — Kuhmilch",
+    "fr": "Fromage type feta — lait de vache",
+    "no": "Feta-type ost – kumelk",
+    "sv": "Fetaostliknande ost — komjölk",
+    "da": "Feta-type ost — komælk",
+    "nl": "Feta-stijl kaas — koemelk",
+    "it": "Formaggio tipo Feta — latte vaccino",
+    "es": "Queso estilo feta — leche de vaca"
   },
   "bce121fc-73a0-5572-9f17-5089a12a5d78": {
     "en": "Chick pea, dried",
@@ -19817,24 +18283,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Ceci, secchi"
   },
   "bcea1d3a-67b0-52cf-9a86-db7f31ec253a": {
-    "en":
-        "Fresh pasta, stuffed with vegetables (e.g. ravioli), prepacked, cooked",
-    "fr":
-        "Pâtes fraîches, farcies aux légumes (ex. raviolis), préemballées, cuites",
-    "de":
-        "Frische Pasta, gefüllt mit Gemüse (z. B. Ravioli), vorverpackt, gekocht",
-    "sv":
-        "Färsk pasta, fylld med grönsaker (t.ex. ravioli), färdigförpackad, kokt",
-    "no":
-        "Fersk pasta, fylt med grønnsaker (f.eks. ravioli), ferdigpakket, tilberedt",
-    "da":
-        "Frisk pasta, fyldt med grøntsager (f.eks. ravioli), forudpakket, tilberedt",
-    "nl":
-        "Verse pasta, gevuld met groenten (bijv. ravioli), voorverpakt, gekookt",
-    "es":
-        "Pasta fresca, rellena de verduras (p. ej. ravioli), preenvasada, cocinada",
-    "it":
-        "Pasta fresca, ripiena di verdure (es. ravioli), preconfezionata, cotta"
+    "en": "Fresh pasta, stuffed with vegetables (e.g. ravioli), prepacked, cooked",
+    "fr": "Pâtes fraîches, farcies aux légumes (ex. raviolis), préemballées, cuites",
+    "de": "Frische Pasta, gefüllt mit Gemüse (z. B. Ravioli), vorverpackt, gekocht",
+    "sv": "Färsk pasta, fylld med grönsaker (t.ex. ravioli), färdigförpackad, kokt",
+    "no": "Fersk pasta, fylt med grønnsaker (f.eks. ravioli), ferdigpakket, tilberedt",
+    "da": "Frisk pasta, fyldt med grøntsager (f.eks. ravioli), forudpakket, tilberedt",
+    "nl": "Verse pasta, gevuld met groenten (bijv. ravioli), voorverpakt, gekookt",
+    "es": "Pasta fresca, rellena de verduras (p. ej. ravioli), preenvasada, cocinada",
+    "it": "Pasta fresca, ripiena di verdure (es. ravioli), preconfezionata, cotta"
   },
   "bd09c0ce-78e0-50c8-9733-2dfb620253b9": {
     "en": "Cheese puff pastry, prepacked, cooked",
@@ -19903,36 +18360,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Carne in salsa (media)"
   },
   "bd5284ef-b0de-577c-a8d5-4f0f162dc379": {
-    "en":
-        "Crepe filled with chocolate or chocolate and hazelnut spread, home-made",
-    "fr":
-        "Crêpe garnie de chocolat ou de pâte à tartiner chocolat et noisette, faite maison",
-    "de":
-        "Crêpe gefüllt mit Schokoladen- oder Schokoladen-Haselnuss-Creme, hausgemacht",
+    "en": "Crepe filled with chocolate or chocolate and hazelnut spread, home-made",
+    "fr": "Crêpe garnie de chocolat ou de pâte à tartiner chocolat et noisette, faite maison",
+    "de": "Crêpe gefüllt mit Schokoladen- oder Schokoladen-Haselnuss-Creme, hausgemacht",
     "sv": "Crepe fylld med choklad eller choklad- och hasselnötskräm, hemgjord",
-    "no":
-        "Crepe fylt med sjokolade eller sjokolade- og hasselnøttpålegg, hjemmelaget",
-    "da":
-        "Pandekage fyldt med chokolade eller chokolade- og hasselnøddepålæg, hjemmelavet",
+    "no": "Crepe fylt med sjokolade eller sjokolade- og hasselnøttpålegg, hjemmelaget",
+    "da": "Pandekage fyldt med chokolade eller chokolade- og hasselnøddepålæg, hjemmelavet",
     "nl": "Crêpe gevuld met chocolade of chocolade-hazelnootpasta, huisgemaakt",
     "es": "Crepe relleno de chocolate o crema de chocolate y avellanas, casero",
     "it": "Crêpe farcita con crema al cioccolato o alle nocciole, fatta in casa"
   },
   "bd597b41-c840-558c-8192-2b56c97341f7": {
     "en": "Mineral still water (Levissima), bottled, lightly mineralized",
-    "fr":
-        "Eau plate minérale (Levissima), en bouteille, faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Levissima), in Flaschen, leicht mineralisiert",
+    "fr": "Eau plate minérale (Levissima), en bouteille, faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Levissima), in Flaschen, leicht mineralisiert",
     "sv": "Stilla mineralvatten (Levissima), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Levissima), på flaske, lett mineralisert",
     "da": "Mineralvand uden brus (Levissima), flaske, let mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Levissima), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral natural (Levissima), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Levissima), in bottiglia, minimamente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Levissima), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral natural (Levissima), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Levissima), in bottiglia, minimamente mineralizzata"
   },
   "bdae47a9-27ee-5bbc-ad14-148be9be6c4d": {
     "en": "Asparagus, canned, drained",
@@ -19958,19 +18405,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "bdfa4827-5085-51da-9fd2-9ca0649130e5": {
     "en": "Cereal flakes with chocolate, with or without nuts, not fortified",
-    "fr":
-        "Flocons de céréales au chocolat, avec ou sans fruits à coque, non enrichis",
-    "de":
-        "Getreideflocken mit Schokolade, mit oder ohne Nüsse, nicht angereichert",
+    "fr": "Flocons de céréales au chocolat, avec ou sans fruits à coque, non enrichis",
+    "de": "Getreideflocken mit Schokolade, mit oder ohne Nüsse, nicht angereichert",
     "sv": "Frukostflingor med choklad, med eller utan nötter, ej berikade",
     "no": "Frokostblanding med sjokolade, med eller uten nøtter, ikke beriket",
-    "da":
-        "Morgenmadsprodukt med chokolade, med eller uden nødder, ikke beriget",
+    "da": "Morgenmadsprodukt med chokolade, med eller uden nødder, ikke beriget",
     "nl": "Graanvlokken met chocolade, met of zonder noten, niet verrijkt",
-    "es":
-        "Copos de cereales con chocolate, con o sin frutos secos, no enriquecidos",
-    "it":
-        "Fiocchi di cereali al cioccolato, con o senza frutta a guscio, non fortificati"
+    "es": "Copos de cereales con chocolate, con o sin frutos secos, no enriquecidos",
+    "it": "Fiocchi di cereali al cioccolato, con o senza frutta a guscio, non fortificati"
   },
   "be5a0f54-3bf3-5830-8fb4-e69efce94ef4": {
     "en": "Breakfast cereals, puffed corn with honey, not fortified",
@@ -20013,10 +18455,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Hvit fisk med provencalsk saus (tomatsaus), ferdigpakket",
     "da": "Hvid fisk med sauce i provencalsk stil (tomatsovs), færdigpakket",
     "nl": "Witvis met Provençaalse saus (tomatensaus), voorverpakt",
-    "es":
-        "Pescado blanco con salsa al estilo provenzal (salsa de tomate), envasado",
-    "it":
-        "Pesce bianco in salsa alla provenzale (salsa di pomodoro), confezionato"
+    "es": "Pescado blanco con salsa al estilo provenzal (salsa de tomate), envasado",
+    "it": "Pesce bianco in salsa alla provenzale (salsa di pomodoro), confezionato"
   },
   "bea5aa9f-360e-5bfc-b567-0264166b07d8": {
     "en": "Fish brandade or fish shepherd's pie, prepacked",
@@ -20119,18 +18559,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "bfa312c0-20ba-5ea8-80a7-82d6a8ed2b26": {
     "en": "Bottled water, flavoured, no added sugars and no sweetener(s)",
-    "fr":
-        "Eau en bouteille, aromatisée, sans sucres ajoutés et sans édulcorant(s)",
-    "de":
-        "Flüssiges Wasser, aromatisiert, ohne zugesetzte Zucker und ohne Süßungsmittel",
-    "sv":
-        "Flaska vatten, smaksatt, utan tillsatt socker och utan sötningsmedel",
+    "fr": "Eau en bouteille, aromatisée, sans sucres ajoutés et sans édulcorant(s)",
+    "de": "Flüssiges Wasser, aromatisiert, ohne zugesetzte Zucker und ohne Süßungsmittel",
+    "sv": "Flaska vatten, smaksatt, utan tillsatt socker och utan sötningsmedel",
     "no": "Flaskevann, med smak, uten tilsatt sukker og uten søtstoffer",
     "da": "Flaskevand, med smag, uden tilsat sukker og uden sødestoffer",
-    "nl":
-        "Gebotteld water, gearomatiseerd, geen toegevoegde suikers en geen zoetstoffen",
-    "es":
-        "Agua embotellada, aromatizada, sin azúcares añadidos ni edulcorantes",
+    "nl": "Gebotteld water, gearomatiseerd, geen toegevoegde suikers en geen zoetstoffen",
+    "es": "Agua embotellada, aromatizada, sin azúcares añadidos ni edulcorantes",
     "it": "Acqua aromatizzata, senza zuccheri aggiunti e senza dolcificanti"
   },
   "bfa4300e-db61-5da6-8be8-bb6f733b75e2": {
@@ -20189,44 +18624,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Zucchine, polpa e buccia, surgelate, crude"
   },
   "bfe3a75b-b7e5-5067-9cac-1f01a6fa6cd9": {
-    "en":
-        "Fruit preparation, sweetened, less sugar than classic, but not as reduced as in reduced sugar jams",
-    "fr":
-        "Préparation de fruits, sucrée, moins sucrée que les classiques, mais moins allégée que les confitures allégées",
-    "de":
-        "Fruchtzubereitung, gesüßt, weniger Zucker als klassisch, aber nicht so stark reduziert wie in zuckerreduzierten Konfitüren",
-    "sv":
-        "Fruktberedning, sötad, mindre socker än klassisk, men inte lika reducerad som i sylt med reducerat socker",
-    "no":
-        "Fruktpreparering, søtet, mindre sukker enn klassisk, men ikke så redusert som i syltetøy med redusert sukkerinnhold",
-    "da":
-        "Frugtprodukt, sødet, mindre sukker end klassisk, men ikke så reduceret som i syltetøj med reduceret sukker",
-    "nl":
-        "Fruitbereiding, gezoet, minder suiker dan klassiek, maar niet zo suikerarm als suikerarme jam",
-    "es":
-        "Preparado de fruta, azucarado, con menos azúcar que el clásico, pero sin llegar a ser una mermelada reducida en azúcar",
-    "it":
-        "Preparato di frutta, zuccherato, meno zucchero rispetto al classico, ma non ridotto quanto le confetture light"
+    "en": "Fruit preparation, sweetened, less sugar than classic, but not as reduced as in reduced sugar jams",
+    "fr": "Préparation de fruits, sucrée, moins sucrée que les classiques, mais moins allégée que les confitures allégées",
+    "de": "Fruchtzubereitung, gesüßt, weniger Zucker als klassisch, aber nicht so stark reduziert wie in zuckerreduzierten Konfitüren",
+    "sv": "Fruktberedning, sötad, mindre socker än klassisk, men inte lika reducerad som i sylt med reducerat socker",
+    "no": "Fruktpreparering, søtet, mindre sukker enn klassisk, men ikke så redusert som i syltetøy med redusert sukkerinnhold",
+    "da": "Frugtprodukt, sødet, mindre sukker end klassisk, men ikke så reduceret som i syltetøj med reduceret sukker",
+    "nl": "Fruitbereiding, gezoet, minder suiker dan klassiek, maar niet zo suikerarm als suikerarme jam",
+    "es": "Preparado de fruta, azucarado, con menos azúcar que el clásico, pero sin llegar a ser una mermelada reducida en azúcar",
+    "it": "Preparato di frutta, zuccherato, meno zucchero rispetto al classico, ma non ridotto quanto le confetture light"
   },
   "bff837bb-193c-5a09-a4c1-2e921eccc8cd": {
-    "en":
-        "Mineral sparkling water (Ste-Marguerite), bottled, averagely mineralized",
-    "fr":
-        "Eau gazeuse minérale (Ste-Marguerite), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Ste-Marguerite), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Ste-Marguerite), på flaska, medelmineraliserat",
-    "no":
-        "Framisende mineralvann (Ste-Marguerite), på flaske, middels mineralisert",
-    "da":
-        "Mineralvand med brus (Ste-Marguerite), flaske, gennemsnitligt mineraliseret",
-    "nl":
-        "Mineraalwater met koolzuur (Ste-Marguerite), gebotteld, gemiddeld gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Ste-Marguerite), embotellada, moderadamente mineralizada",
-    "it":
-        "Acqua minerale gassata (Ste-Marguerite), in bottiglia, mediamente mineralizzata"
+    "en": "Mineral sparkling water (Ste-Marguerite), bottled, averagely mineralized",
+    "fr": "Eau gazeuse minérale (Ste-Marguerite), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Ste-Marguerite), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Ste-Marguerite), på flaska, medelmineraliserat",
+    "no": "Framisende mineralvann (Ste-Marguerite), på flaske, middels mineralisert",
+    "da": "Mineralvand med brus (Ste-Marguerite), flaske, gennemsnitligt mineraliseret",
+    "nl": "Mineraalwater met koolzuur (Ste-Marguerite), gebotteld, gemiddeld gemineraliseerd",
+    "es": "Agua mineral con gas (Ste-Marguerite), embotellada, moderadamente mineralizada",
+    "it": "Acqua minerale gassata (Ste-Marguerite), in bottiglia, mediamente mineralizzata"
   },
   "c02985c0-2284-59dd-aea3-a95b4bf31aa0": {
     "en": "Yogurt or fermented milk, with cereals",
@@ -20251,24 +18668,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Insalata di riso, con tonno e verdure, con condimento, confezionata"
   },
   "c059445c-104a-5bcd-b29d-72639e273096": {
-    "en":
-        "Belle Helene pear (cooked pear topped with hot chocolate sauce on a bed of vanilla ice cream)",
-    "fr":
-        "Poire Belle-Hélène (poire cuite nappée de sauce au chocolat chaud sur un lit de glace à la vanille)",
-    "de":
-        "Birne Helene (gekochte Birne mit heißer Schokoladensoße auf einem Bett aus Vanilleeis)",
-    "sv":
-        "Poire Belle Hélène (kokt päron toppat med varm chokladsås på en bädd av vaniljglass)",
-    "no":
-        "Pære Belle Helene (kokt pære med varm sjokoladesaus på en seng av vaniljeis)",
-    "da":
-        "Pære Belle Helene (tilberedt pære toppet med varm chokoladesauce på en bund af vaniljeis)",
-    "nl":
-        "Poire Belle Hélène (gepocheerde peer met warme chocoladesaus en vanille-ijs)",
-    "es":
-        "Pera Bella Helena (pera cocida cubierta de salsa de chocolate caliente sobre una base de helado de vainilla)",
-    "it":
-        "Pera Belle Hélène (pera cotta ricoperta di salsa al cioccolato calda su un letto di gelato alla vaniglia)"
+    "en": "Belle Helene pear (cooked pear topped with hot chocolate sauce on a bed of vanilla ice cream)",
+    "fr": "Poire Belle-Hélène (poire cuite nappée de sauce au chocolat chaud sur un lit de glace à la vanille)",
+    "de": "Birne Helene (gekochte Birne mit heißer Schokoladensoße auf einem Bett aus Vanilleeis)",
+    "sv": "Poire Belle Hélène (kokt päron toppat med varm chokladsås på en bädd av vaniljglass)",
+    "no": "Pære Belle Helene (kokt pære med varm sjokoladesaus på en seng av vaniljeis)",
+    "da": "Pære Belle Helene (tilberedt pære toppet med varm chokoladesauce på en bund af vaniljeis)",
+    "nl": "Poire Belle Hélène (gepocheerde peer met warme chocoladesaus en vanille-ijs)",
+    "es": "Pera Bella Helena (pera cocida cubierta de salsa de chocolate caliente sobre una base de helado de vainilla)",
+    "it": "Pera Belle Hélène (pera cotta ricoperta di salsa al cioccolato calda su un letto di gelato alla vaniglia)"
   },
   "c0678e02-777c-5018-a513-b3273f398d36": {
     "en": "Chocolate croissant, prepacked",
@@ -20282,24 +18690,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cornetto al cioccolato, confezionato"
   },
   "c06a40d2-8211-5fca-9ec1-bb56b3b12631": {
-    "en":
-        "Cereal bar, for breakfast, with milk, with chocolate or not, fortified with vitamins and minerals",
-    "fr":
-        "Barre de céréales, pour le petit-déjeuner, au lait, avec ou sans chocolat, enrichie en vitamines et minéraux",
-    "de":
-        "Getreideriegel, zum Frühstück, mit Milch, mit oder ohne Schokolade, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Frukostbar, med mjölk, med eller utan choklad, berikad med vitaminer och mineraler",
-    "no":
-        "Frokostbar, med melk, med eller uten sjokolade, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsproduktbar, med mælk, med eller uden chokolade, beriget med vitaminer og mineraler",
-    "nl":
-        "Graanreep, voor het ontbijt, met melk, met of zonder chocolade, verrijkt met vitaminen en mineralen",
-    "es":
-        "Barrita de cereales, para el desayuno, con leche, con o sin chocolate, enriquecida con vitaminas y minerales",
-    "it":
-        "Barretta ai cereali, per la colazione, con latte, con o senza cioccolato, fortificata con vitamine e minerali"
+    "en": "Cereal bar, for breakfast, with milk, with chocolate or not, fortified with vitamins and minerals",
+    "fr": "Barre de céréales, pour le petit-déjeuner, au lait, avec ou sans chocolat, enrichie en vitamines et minéraux",
+    "de": "Getreideriegel, zum Frühstück, mit Milch, mit oder ohne Schokolade, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Frukostbar, med mjölk, med eller utan choklad, berikad med vitaminer och mineraler",
+    "no": "Frokostbar, med melk, med eller uten sjokolade, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsproduktbar, med mælk, med eller uden chokolade, beriget med vitaminer og mineraler",
+    "nl": "Graanreep, voor het ontbijt, met melk, met of zonder chocolade, verrijkt met vitaminen en mineralen",
+    "es": "Barrita de cereales, para el desayuno, con leche, con o sin chocolate, enriquecida con vitaminas y minerales",
+    "it": "Barretta ai cereali, per la colazione, con latte, con o senza cioccolato, fortificata con vitamine e minerali"
   },
   "c078cb1a-ebbd-544d-a406-a6a19643b5d2": {
     "en": "Soup, mixed vegetables, dehydrated and reconstituted",
@@ -20314,20 +18713,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "c07edff8-c9c7-5af4-b548-f4b7eb960740": {
     "en": "Mineral still water (Treignac), bottled, very lightly mineralized",
-    "fr":
-        "Eau plate minérale (Treignac), en bouteille, très faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Treignac), in Flaschen, sehr leicht mineralisiert",
-    "sv":
-        "Stilla mineralvatten (Treignac), på flaska, mycket lätt mineraliserat",
+    "fr": "Eau plate minérale (Treignac), en bouteille, très faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Treignac), in Flaschen, sehr leicht mineralisiert",
+    "sv": "Stilla mineralvatten (Treignac), på flaska, mycket lätt mineraliserat",
     "no": "Stille mineralvann (Treignac), på flaske, svært lett mineralisert",
     "da": "Mineralvand uden brus (Treignac), flaske, meget let mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Treignac), gebotteld, zeer licht gemineraliseerd",
-    "es":
-        "Agua mineral natural (Treignac), embotellada, muy ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Treignac), in bottiglia, minimamente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Treignac), gebotteld, zeer licht gemineraliseerd",
+    "es": "Agua mineral natural (Treignac), embotellada, muy ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Treignac), in bottiglia, minimamente mineralizzata"
   },
   "c0fd8e95-caa7-541c-9637-701ec473f087": {
     "en": "Egg yolk, cooked",
@@ -20363,24 +18756,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salsiccia tipo cervellata, di Obernai Alsazia"
   },
   "c1418306-14fa-596d-beca-a54361c31136": {
-    "en":
-        "Carbonated beverage or fruit soft drink , fruit content >= 10% and < 50%, with sugar(s)",
-    "fr":
-        "Boisson gazeuse ou boisson aux fruits rafraîchissante, teneur en fruits >= 10% et < 50%, avec sucre(s)",
-    "de":
-        "Kohlensäurehaltiges Getränk oder Frucht-Erfrischungsgetränk, Fruchtgehalt >= 10% und < 50%, mit Zucker(n)",
-    "sv":
-        "Kolsyrad dryck eller fruktdryck, frukthalt >= 10% och < 50%, med socker",
-    "no":
-        "Kullsyreholdig drikk eller fruktdrikk, fruktdel >= 10 % og < 50 %, med sukker",
-    "da":
-        "Kulsyreholdig drik eller frugtsodavand, frugtindhold >= 10% og < 50%, med sukker",
-    "nl":
-        "Koolzuurhoudende drank of vruchtenfrisdrank, fruitgehalte >= 10% en < 50%, met suiker(s)",
-    "es":
-        "Bebida carbonatada o refresco de frutas, contenido en fruta >= 10% y < 50%, con azúcar(es)",
-    "it":
-        "Bevanda gassata o bibita alla frutta, contenuto di frutta >= 10% e < 50%, con zuccheri"
+    "en": "Carbonated beverage or fruit soft drink , fruit content >= 10% and < 50%, with sugar(s)",
+    "fr": "Boisson gazeuse ou boisson aux fruits rafraîchissante, teneur en fruits >= 10% et < 50%, avec sucre(s)",
+    "de": "Kohlensäurehaltiges Getränk oder Frucht-Erfrischungsgetränk, Fruchtgehalt >= 10% und < 50%, mit Zucker(n)",
+    "sv": "Kolsyrad dryck eller fruktdryck, frukthalt >= 10% och < 50%, med socker",
+    "no": "Kullsyreholdig drikk eller fruktdrikk, fruktdel >= 10 % og < 50 %, med sukker",
+    "da": "Kulsyreholdig drik eller frugtsodavand, frugtindhold >= 10% og < 50%, med sukker",
+    "nl": "Koolzuurhoudende drank of vruchtenfrisdrank, fruitgehalte >= 10% en < 50%, met suiker(s)",
+    "es": "Bebida carbonatada o refresco de frutas, contenido en fruta >= 10% y < 50%, con azúcar(es)",
+    "it": "Bevanda gassata o bibita alla frutta, contenuto di frutta >= 10% e < 50%, con zuccheri"
   },
   "c16ecbe3-4327-5057-9ee0-1122ac297a31": {
     "en": "Multifruit nectar, orange base, standard",
@@ -20445,8 +18829,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Sandwich, baguette, tunfisk, mais og rå grønnsaker, ferdigpakket",
     "da": "Sandwich, baguette, tun, majs og rå grøntsager, forudpakket",
     "nl": "Sandwich, stokbrood, tonijn, maïs en rauwe groenten, voorverpakt",
-    "es":
-        "Sándwich de baguette con atún, maíz dulce y verduras crudas, preenvasado",
+    "es": "Sándwich de baguette con atún, maíz dulce y verduras crudas, preenvasado",
     "it": "Panino, baguette, tonno, mais e verdure crude, preconfezionato"
   },
   "c1e6ed24-d910-5a85-b52a-cf1411ac1eee": {
@@ -20500,11 +18883,9 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Stilla mineralvatten (Thonon), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Thonon), på flaske, lett mineralisert",
     "da": "Mineralvand uden brus (Thonon), på flaske, let mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Thonon), gebotteld, licht gemineraliseerd",
+    "nl": "Mineraalwater zonder koolzuur (Thonon), gebotteld, licht gemineraliseerd",
     "es": "Agua mineral sin gas (Thonon), embotellada, débilmente mineralizada",
-    "it":
-        "Acqua minerale naturale (Thonon), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Thonon), in bottiglia, leggermente mineralizzata"
   },
   "c2782fa9-6a0a-5c72-bce3-0279aa091b42": {
     "en": "Pork belly, cured, plain, raw",
@@ -20531,18 +18912,13 @@ const foodNames = <String, Map<String, String>>{
   "c2c08558-a217-5e27-9b30-f0f424c26367": {
     "en": "Decaffeinated non instant coffee, no added sugars, ready-to-drink",
     "fr": "Café décaféiné non instantané, sans sucres ajoutés, prêt à boire",
-    "de":
-        "Entkoffeinierter Bohnenkaffee, kein Instantkaffee, ohne Zuckerzusatz, verzehrfertig",
+    "de": "Entkoffeinierter Bohnenkaffee, kein Instantkaffee, ohne Zuckerzusatz, verzehrfertig",
     "sv": "Koffeinfritt bryggkaffe, inget tillsatt socker, färdigt att dricka",
     "no": "Koffeinfri pulverkaffe, uten tilsatt sukker, drikkeklar",
-    "da":
-        "Koffeinfri kaffe, ikke pulver, uden tilsat sukker, klar til at drikke",
-    "nl":
-        "Cafeïnevrije koffie, niet instant, zonder toegevoegde suikers, drinkklaar",
-    "es":
-        "Café descafeinado no instantáneo, sin azúcares añadidos, listo para beber",
-    "it":
-        "Caffè decaffeinato non istantaneo, senza zuccheri aggiunti, pronto da bere"
+    "da": "Koffeinfri kaffe, ikke pulver, uden tilsat sukker, klar til at drikke",
+    "nl": "Cafeïnevrije koffie, niet instant, zonder toegevoegde suikers, drinkklaar",
+    "es": "Café descafeinado no instantáneo, sin azúcares añadidos, listo para beber",
+    "it": "Caffè decaffeinato non istantaneo, senza zuccheri aggiunti, pronto da bere"
   },
   "c2c61bca-57c0-57f1-af0c-549dac61cd67": {
     "en": "Haricot beans with tomato sauce, canned",
@@ -20600,24 +18976,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Fette biscottate svedesi, integrali, senza zuccheri aggiunti"
   },
   "c2fab6b7-8152-5823-960e-a5e1669d9a51": {
-    "en":
-        "Crepe or buckwheat pancake, filled with cheese, ham and béchamel sauce, prepacked",
-    "fr":
-        "Crêpe ou galette de sarrasin, garnie de fromage, jambon et sauce béchamel, préemballée",
-    "de":
-        "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Käse, Schinken und Béchamelsoße, vorgepackt",
-    "sv":
-        "Crêpe eller bovetepannkaka, fylld med ost, skinka och béchamelsås, färdigförpackad",
-    "no":
-        "Crepe eller bokhvetepannekake, fylt med ost, skinke og béchamelsaus, ferdigpakket",
-    "da":
-        "Crepe eller boghvedepandekage, fyldt med ost, skinke og bechamelsauce, forudpakket",
-    "nl":
-        "Crêpe of boekweitpannenkoek, gevuld met kaas, ham en bechamelsaus, voorverpakt",
-    "es":
-        "Crepe o tortita de trigo sarraceno rellena de queso, jamón y salsa bechamel, preenvasada",
-    "it":
-        "Crêpe o galette di grano saraceno, farcita con formaggio, prosciutto e besciamella, preconfezionata"
+    "en": "Crepe or buckwheat pancake, filled with cheese, ham and béchamel sauce, prepacked",
+    "fr": "Crêpe ou galette de sarrasin, garnie de fromage, jambon et sauce béchamel, préemballée",
+    "de": "Crêpe oder Buchweizenpfannkuchen, gefüllt mit Käse, Schinken und Béchamelsoße, vorgepackt",
+    "sv": "Crêpe eller bovetepannkaka, fylld med ost, skinka och béchamelsås, färdigförpackad",
+    "no": "Crepe eller bokhvetepannekake, fylt med ost, skinke og béchamelsaus, ferdigpakket",
+    "da": "Crepe eller boghvedepandekage, fyldt med ost, skinke og bechamelsauce, forudpakket",
+    "nl": "Crêpe of boekweitpannenkoek, gevuld met kaas, ham en bechamelsaus, voorverpakt",
+    "es": "Crepe o tortita de trigo sarraceno rellena de queso, jamón y salsa bechamel, preenvasada",
+    "it": "Crêpe o galette di grano saraceno, farcita con formaggio, prosciutto e besciamella, preconfezionata"
   },
   "c305ac34-ddc1-5529-9388-55f661a4b2c6": {
     "en": "Breakfast biscuit (cookie), fortified with vitamins and minerals",
@@ -20637,12 +19004,9 @@ const foodNames = <String, Map<String, String>>{
     "sv": "Stilla mineralvatten (Contrex), på flaska, kraftigt mineraliserat",
     "no": "Stille mineralvann (Contrex), på flaske, sterkt mineralisert",
     "da": "Mineralvand uden brus (Contrex), på flaske, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Contrex), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Contrex), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (Contrex), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Contrex), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral sin gas (Contrex), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (Contrex), in bottiglia, fortemente mineralizzata"
   },
   "c31cad10-3044-5ba4-bfe3-7c67fd6f0714": {
     "en": "Breakfast cereals, vanilla or milk filling, not fortified",
@@ -20652,10 +19016,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Frokostblanding, vanilje- eller melkefyll, ikke beriket",
     "da": "Morgenmadsprodukt, vanilje- eller mælkefyld, ikke beriget",
     "nl": "Ontbijtgranen, vanille- of melkvulling, niet verrijkt",
-    "es":
-        "Cereales de desayuno con relleno de vainilla o leche, no enriquecidos",
-    "it":
-        "Cereali per la colazione, ripieno alla vaniglia o latte, non arricchiti"
+    "es": "Cereales de desayuno con relleno de vainilla o leche, no enriquecidos",
+    "it": "Cereali per la colazione, ripieno alla vaniglia o latte, non arricchiti"
   },
   "c35bae03-816f-5356-919c-9bcc2b950e69": {
     "en": "Spinach, canned, drained",
@@ -20670,37 +19032,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "c363c18e-89cb-55c5-b1a4-befed978d426": {
     "en": "Mineral still water (Chaudfontaine), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale plate (Chaudfontaine), en bouteille, faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Chaudfontaine), in Flaschen, leicht mineralisiert",
+    "fr": "Eau minérale plate (Chaudfontaine), en bouteille, faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Chaudfontaine), in Flaschen, leicht mineralisiert",
     "sv": "Stilla mineralvatten (Chaudfontaine), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Chaudfontaine), på flaske, lett mineralisert",
     "da": "Mineralvand uden brus (Chaudfontaine), på flaske, let mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Chaudfontaine), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Chaudfontaine), embotellada, débilmente mineralizada",
-    "it":
-        "Acqua minerale naturale (Chaudfontaine), in bottiglia, leggermente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Chaudfontaine), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral sin gas (Chaudfontaine), embotellada, débilmente mineralizada",
+    "it": "Acqua minerale naturale (Chaudfontaine), in bottiglia, leggermente mineralizzata"
   },
   "c37cfa78-58d3-54c8-a131-3877b68d0a9a": {
-    "en":
-        "Soft cake filled with chocolate and with chocolate coating, prepacked",
-    "fr":
-        "Gâteau moelleux fourré au chocolat et enrobé de chocolat, préemballé",
-    "de":
-        "Weicher Kuchen, mit Schokolade gefüllt und mit Schokoladenüberzug, vorgepackt",
-    "sv":
-        "Mjuk kaka fylld med choklad och med chokladöverdrag, färdigförpackad",
+    "en": "Soft cake filled with chocolate and with chocolate coating, prepacked",
+    "fr": "Gâteau moelleux fourré au chocolat et enrobé de chocolat, préemballé",
+    "de": "Weicher Kuchen, mit Schokolade gefüllt und mit Schokoladenüberzug, vorgepackt",
+    "sv": "Mjuk kaka fylld med choklad och med chokladöverdrag, färdigförpackad",
     "no": "Myk kake fylt med sjokolade og med sjokoladetrekk, ferdigpakket",
     "da": "Blød kage med chokoladefyld og chokoladeovertræk, forudpakket",
-    "nl":
-        "Zachte cake gevuld met chocolade en met chocoladelaagje, voorverpakt",
-    "es":
-        "Pastel suave relleno de chocolate y con cobertura de chocolate, preenvasado",
-    "it":
-        "Torta soffice farcita al cioccolato e con copertura al cioccolato, preconfezionata"
+    "nl": "Zachte cake gevuld met chocolade en met chocoladelaagje, voorverpakt",
+    "es": "Pastel suave relleno de chocolate y con cobertura de chocolate, preenvasado",
+    "it": "Torta soffice farcita al cioccolato e con copertura al cioccolato, preconfezionata"
   },
   "c3e8f092-f1f0-5cd7-9dea-dcca2f969e17": {
     "en": "Noisette potato, frozen, cooked",
@@ -20736,24 +19086,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Torta allo yogurt, preconfezionata"
   },
   "c466ec5f-d482-5199-b424-349b21b80391": {
-    "en":
-        "Piperade, Basque-style (fondue of sweet peppers and tomatoes with onions and garlic), prepacked",
-    "fr":
-        "Pipérade, à la basquaise (fondue de poivrons et tomates aux oignons et ail), préemballée",
-    "de":
-        "Piperade, baskische Art (Fondue aus Paprika und Tomaten mit Zwiebeln und Knoblauch), vorgepackt",
-    "sv":
-        "Piperade, baskisk stil (fondue på söta paprikor och tomater med lök och vitlök), färdigförpackad",
-    "no":
-        "Piperade, baskisk stil (fondue av paprika og tomater med løk og hvitløk), ferdigpakket",
-    "da":
-        "Piperade, baskisk stil (stuvning af sød peber og tomat med løg og hvidløg), forudpakket",
-    "nl":
-        "Piperade, op Baskische wijze (fondue van paprika en tomaten met uien en knoflook), voorverpakt",
-    "es":
-        "Piperade estilo vasco (fondue de pimientos dulces y tomates con cebolla y ajo), preenvasada",
-    "it":
-        "Piperade, stile basco (fonduta di peperoni e pomodori con cipolle e aglio), preconfezionata"
+    "en": "Piperade, Basque-style (fondue of sweet peppers and tomatoes with onions and garlic), prepacked",
+    "fr": "Pipérade, à la basquaise (fondue de poivrons et tomates aux oignons et ail), préemballée",
+    "de": "Piperade, baskische Art (Fondue aus Paprika und Tomaten mit Zwiebeln und Knoblauch), vorgepackt",
+    "sv": "Piperade, baskisk stil (fondue på söta paprikor och tomater med lök och vitlök), färdigförpackad",
+    "no": "Piperade, baskisk stil (fondue av paprika og tomater med løk og hvitløk), ferdigpakket",
+    "da": "Piperade, baskisk stil (stuvning af sød peber og tomat med løg og hvidløg), forudpakket",
+    "nl": "Piperade, op Baskische wijze (fondue van paprika en tomaten met uien en knoflook), voorverpakt",
+    "es": "Piperade estilo vasco (fondue de pimientos dulces y tomates con cebolla y ajo), preenvasada",
+    "it": "Piperade, stile basco (fonduta di peperoni e pomodori con cipolle e aglio), preconfezionata"
   },
   "c47902e7-6406-5f96-8013-877fd48a2c09": {
     "en": "Tomato puree, canned",
@@ -20833,23 +19174,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Riso, integrale, crudo"
   },
   "c5b64d5c-d052-5f5b-b8b8-aa24fa785bfb": {
-    "en":
-        "Fruit compote, miscellaneous fruits, reduced sugar, prepacked, refrigerated",
-    "fr":
-        "Compote de fruits, fruits divers, allégée en sucre, préemballée, au réfrigérateur",
+    "en": "Fruit compote, miscellaneous fruits, reduced sugar, prepacked, refrigerated",
+    "fr": "Compote de fruits, fruits divers, allégée en sucre, préemballée, au réfrigérateur",
     "de": "Fruchtkompott, verschiedene Früchte, zuckerarm, vorgepackt, gekühlt",
-    "sv":
-        "Fruktkompott, blandade frukter, reducerat socker, färdigförpackad, kylvara",
-    "no":
-        "Fruktkompott, diverse frukter, redusert sukkerinnhold, ferdigpakket, kjølevare",
-    "da":
-        "Frugtkompot, blandede frugter, reduceret sukker, forudpakket, på køl",
-    "nl":
-        "Vruchtencompote, diverse vruchten, minder suiker, voorverpakt, gekoeld",
-    "es":
-        "Compota de frutas, variadas, reducida en azúcar, preenvasada, refrigerada",
-    "it":
-        "Composta di frutta, frutti misti, a ridotto contenuto di zuccheri, preconfezionata, refrigerata"
+    "sv": "Fruktkompott, blandade frukter, reducerat socker, färdigförpackad, kylvara",
+    "no": "Fruktkompott, diverse frukter, redusert sukkerinnhold, ferdigpakket, kjølevare",
+    "da": "Frugtkompot, blandede frugter, reduceret sukker, forudpakket, på køl",
+    "nl": "Vruchtencompote, diverse vruchten, minder suiker, voorverpakt, gekoeld",
+    "es": "Compota de frutas, variadas, reducida en azúcar, preenvasada, refrigerada",
+    "it": "Composta di frutta, frutti misti, a ridotto contenuto di zuccheri, preconfezionata, refrigerata"
   },
   "c5b70a28-9a21-559e-9ac1-aabc8cc29ac3": {
     "en": "Béchamel sauce, w butter, homemade",
@@ -20875,18 +19208,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "c600af7a-efd0-5897-839e-89b0f7195b8d": {
     "en": "Smoothie, no precision on fruit content and other ingredients",
-    "fr":
-        "Smoothie, sans précision sur la teneur en fruits et autres ingrédients",
+    "fr": "Smoothie, sans précision sur la teneur en fruits et autres ingrédients",
     "de": "Smoothie, ohne Angabe zum Fruchtgehalt und anderen Zutaten",
     "sv": "Smoothie, ingen information om frukthalt och andra ingredienser",
     "no": "Smoothie, ikke spesifisert fruktinnhold og andre ingredienser",
     "da": "Smoothie, uden præcisering af frugtindhold eller andre ingredienser",
-    "nl":
-        "Smoothie, zonder specificatie van fruitgehalte en andere ingrediënten",
-    "es":
-        "Batido (smoothie), sin especificación de contenido de fruta u otros ingredientes",
-    "it":
-        "Frullato, senza indicazioni sul contenuto di frutta e altri ingredienti"
+    "nl": "Smoothie, zonder specificatie van fruitgehalte en andere ingrediënten",
+    "es": "Batido (smoothie), sin especificación de contenido de fruta u otros ingredientes",
+    "it": "Frullato, senza indicazioni sul contenuto di frutta e altri ingredienti"
   },
   "c620f9e4-39b7-593c-ab87-97d153556e76": {
     "en": "Burger sauce, prepacked",
@@ -20955,24 +19284,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Funghi, tutti i tipi, crudi"
   },
   "c6a16365-b6a5-5c78-81b3-6ff09f5fae97": {
-    "en":
-        "Pre-fried potatoes, pan-fried, with bacon bits or chicken, without green vegetables, prepacked",
-    "fr":
-        "Pommes de terre préfrites, poêlées, avec lardons ou poulet, sans légumes verts, préemballées",
-    "de":
-        "Vorgebratene Kartoffeln, in der Pfanne gebraten, mit Speckwürfeln oder Hühnchen, ohne grünes Gemüse, vorgepackt",
-    "sv":
-        "Förstekta potatisar, stekta i panna, med baconbitar eller kyckling, utan gröna grönsaker, färdigförpackad",
-    "no":
-        "Forstekte poteter, panestekt, med biter av bacon eller kylling, uten grønnsaker, ferdigpakket",
-    "da":
-        "Forstegte kartofler, pandestegte, med baconstykker eller kylling, uden grønne grøntsager, forudpakket",
-    "nl":
-        "Voorgebakken aardappelen, in de pan gebakken, met spekjes of kip, zonder groene groenten, voorverpakt",
-    "es":
-        "Patatas prefritas, salteadas, con trozos de bacon o pollo, sin verduras verdes, preenvasadas",
-    "it":
-        "Patate pre-fritte, spadellate, con pancetta o pollo, senza verdure verdi, preconfezionate"
+    "en": "Pre-fried potatoes, pan-fried, with bacon bits or chicken, without green vegetables, prepacked",
+    "fr": "Pommes de terre préfrites, poêlées, avec lardons ou poulet, sans légumes verts, préemballées",
+    "de": "Vorgebratene Kartoffeln, in der Pfanne gebraten, mit Speckwürfeln oder Hühnchen, ohne grünes Gemüse, vorgepackt",
+    "sv": "Förstekta potatisar, stekta i panna, med baconbitar eller kyckling, utan gröna grönsaker, färdigförpackad",
+    "no": "Forstekte poteter, panestekt, med biter av bacon eller kylling, uten grønnsaker, ferdigpakket",
+    "da": "Forstegte kartofler, pandestegte, med baconstykker eller kylling, uden grønne grøntsager, forudpakket",
+    "nl": "Voorgebakken aardappelen, in de pan gebakken, met spekjes of kip, zonder groene groenten, voorverpakt",
+    "es": "Patatas prefritas, salteadas, con trozos de bacon o pollo, sin verduras verdes, preenvasadas",
+    "it": "Patate pre-fritte, spadellate, con pancetta o pollo, senza verdure verdi, preconfezionate"
   },
   "c6af13c0-77e7-5157-8a6c-33b11b1fa040": {
     "en": "Puffed rice textured bread, with chocolate covering",
@@ -21016,8 +19336,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Tærte med blæksprutte og krydret tomatsovs, færdigpakket",
     "nl": "Pastei, inktvis en pittige tomatensaus, voorverpakt",
     "es": "Empanada, de calamar y salsa de tomate picante, envasada",
-    "it":
-        "Torta salata con calamari e salsa piccante al pomodoro, preconfezionata"
+    "it": "Torta salata con calamari e salsa piccante al pomodoro, preconfezionata"
   },
   "c6f6a509-1fd3-5b98-b13f-9749342c80b5": {
     "en": "Soup, chicken and vermicelli, prepacked, to be reheated",
@@ -21109,19 +19428,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "c845ba91-0ed6-57dc-becc-7e80041561c9": {
     "en": "Mineral still water (Beckerich), bottled, lightly mineralized",
-    "fr":
-        "Eau plate minérale (Beckerich), en bouteille, faiblement minéralisée",
-    "de":
-        "Stilles Mineralwasser (Beckerich), in Flaschen, leicht mineralisiert",
+    "fr": "Eau plate minérale (Beckerich), en bouteille, faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Beckerich), in Flaschen, leicht mineralisiert",
     "sv": "Stilla mineralvatten (Beckerich), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Beckerich), på flaske, lett mineralisert",
     "da": "Mineralvand uden brus (Beckerich), flaske, let mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (Beckerich), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Beckerich), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Beckerich), in bottiglia, leggermente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (Beckerich), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral sin gas (Beckerich), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Beckerich), in bottiglia, leggermente mineralizzata"
   },
   "c852f199-7c3b-5802-8314-b34999d0e163": {
     "en": "Crevalle jack, raw",
@@ -21179,18 +19493,13 @@ const foodNames = <String, Map<String, String>>{
     "it": "Latte di pecora, intero"
   },
   "c8c53e93-e61b-5b4b-a4e0-f9d406789055": {
-    "en":
-        "Brioche, filled with custard cream (Chinese brioche type), prepacked",
-    "fr":
-        "Brioche, fourrée à la crème pâtissière (type brioche chinoise), préemballée",
-    "de":
-        "Brioche, gefüllt mit Vanillecreme (chinesischer Brioche-Typ), vorverpackt",
-    "sv":
-        "Brioche, fylld med vaniljkräm (kinesisk brioche-typ), färdigförpackad",
+    "en": "Brioche, filled with custard cream (Chinese brioche type), prepacked",
+    "fr": "Brioche, fourrée à la crème pâtissière (type brioche chinoise), préemballée",
+    "de": "Brioche, gefüllt mit Vanillecreme (chinesischer Brioche-Typ), vorverpackt",
+    "sv": "Brioche, fylld med vaniljkräm (kinesisk brioche-typ), färdigförpackad",
     "no": "Brioche, fylt med vaniljekrem (kinesisk brioche-type), ferdigpakket",
     "da": "Brioche med creme (kinesisk brioche-type), færdigpakket",
-    "nl":
-        "Brioche, gevuld met banketbakkersroom (Chinese brioche-type), voorverpakt",
+    "nl": "Brioche, gevuld met banketbakkersroom (Chinese brioche-type), voorverpakt",
     "es": "Brioche, relleno de crema pastelera (tipo brioche chino), envasado",
     "it": "Brioche ripiena di crema pasticcera (tipo cinese), preconfezionata"
   },
@@ -21250,24 +19559,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Manzo, carne da stufato, cruda"
   },
   "c92894d1-bf9f-505f-a4f9-64111014bc7e": {
-    "en":
-        "White chocolate, with dried fruits (nuts, almonds, raisins, praliné), bar",
-    "fr":
-        "Chocolat blanc, aux fruits secs (noix, amandes, raisins, praliné), tablette",
-    "de":
-        "Weiße Schokolade, mit Trockenfrüchten (Nüsse, Mandeln, Rosinen, Praliné), Tafel",
-    "sv":
-        "Vit choklad, med torkad frukt (nötter, mandlar, russin, praliné), kaka",
-    "no":
-        "Hvit sjokolade, med tørket frukt (nøtter, mandler, rosiner, Praliné), plate",
-    "da":
-        "Hvid chokolade med tørret frugt (nødder, mandler, rosiner, praliné), bar",
-    "nl":
-        "Witte chocolade, met gedroogd fruit (noten, amandelen, rozijnen, praliné), reep",
-    "es":
-        "Chocolate blanco, con frutos secos (nueces, almendras, pasas, praliné), tableta",
-    "it":
-        "Cioccolato bianco con frutta secca (noci, mandorle, uvetta, pralinato), tavoletta"
+    "en": "White chocolate, with dried fruits (nuts, almonds, raisins, praliné), bar",
+    "fr": "Chocolat blanc, aux fruits secs (noix, amandes, raisins, praliné), tablette",
+    "de": "Weiße Schokolade, mit Trockenfrüchten (Nüsse, Mandeln, Rosinen, Praliné), Tafel",
+    "sv": "Vit choklad, med torkad frukt (nötter, mandlar, russin, praliné), kaka",
+    "no": "Hvit sjokolade, med tørket frukt (nøtter, mandler, rosiner, Praliné), plate",
+    "da": "Hvid chokolade med tørret frugt (nødder, mandler, rosiner, praliné), bar",
+    "nl": "Witte chocolade, met gedroogd fruit (noten, amandelen, rozijnen, praliné), reep",
+    "es": "Chocolate blanco, con frutos secos (nueces, almendras, pasas, praliné), tableta",
+    "it": "Cioccolato bianco con frutta secca (noci, mandorle, uvetta, pralinato), tavoletta"
   },
   "c93a7928-25bd-524b-ad28-ebab68448359": {
     "en": "Pasta, dry, semi-wholewheat, cooked, no added salt",
@@ -21292,23 +19592,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Purè di patate, preparato con latte e burro, salato"
   },
   "c970c972-bd73-5bda-ac56-77cf352df18c": {
-    "en":
-        "Mashed potatoes, made from flakes, reconstituted with whole milk, with added fat",
-    "fr":
-        "Purée de pommes de terre, à base de flocons, reconstituée avec du lait entier, avec ajout de matière grasse",
-    "de":
-        "Kartoffelpüree, aus Flocken, zubereitet mit Vollmilch, mit Fettzusatz",
-    "sv":
-        "Potatismos, gjort på flingor, återställt med standardmjölk, med tillsatt fett",
+    "en": "Mashed potatoes, made from flakes, reconstituted with whole milk, with added fat",
+    "fr": "Purée de pommes de terre, à base de flocons, reconstituée avec du lait entier, avec ajout de matière grasse",
+    "de": "Kartoffelpüree, aus Flocken, zubereitet mit Vollmilch, mit Fettzusatz",
+    "sv": "Potatismos, gjort på flingor, återställt med standardmjölk, med tillsatt fett",
     "no": "Potetmos, laget av flak, tilberedt med helmelk, med tilsatt fett",
-    "da":
-        "Kartoffelmos, lavet af flager, rekonstitueret med sødmælk, med tilsat fedt",
-    "nl":
-        "Aardappelpuree, van vlokken, aangemaakt met volle melk, met toegevoegd vet",
-    "es":
-        "Puré de patatas, hecho de copos, reconstituido con leche entera, con grasa añadida",
-    "it":
-        "Purè di patate, fatto con fiocchi, ricostituito con latte intero, con grassi aggiunti"
+    "da": "Kartoffelmos, lavet af flager, rekonstitueret med sødmælk, med tilsat fedt",
+    "nl": "Aardappelpuree, van vlokken, aangemaakt met volle melk, met toegevoegd vet",
+    "es": "Puré de patatas, hecho de copos, reconstituido con leche entera, con grasa añadida",
+    "it": "Purè di patate, fatto con fiocchi, ricostituito con latte intero, con grassi aggiunti"
   },
   "c9a2658d-2b21-5340-84a7-247424a93c4b": {
     "en": "Common sole, fried",
@@ -21333,15 +19625,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Formaggio di siero di latte ovino"
   },
   "c9b76f5e-9f59-5fab-9746-5e38e2e8812b": {
-    "en": "Shrimp or prawn, boiled",
-    "fr": "Crevettes, bouillies",
-    "de": "Krabbe oder Garnelen, gekocht",
-    "sv": "Räka eller havskräfta, kokt",
-    "no": "Reker eller sjøkreps, kokt",
-    "da": "Rejer, kogte",
-    "nl": "Garnalen, gekookt",
-    "es": "Gambas o langostinos, hervidos",
-    "it": "Gamberi o mazzancolle, bolliti"
+    "en": "Prawns — boiled",
+    "de": "Garnelen — gekocht",
+    "fr": "Crevettes — bouillies",
+    "no": "Reker – kokte",
+    "sv": "Räkor — kokta",
+    "da": "Rejer — kogte",
+    "nl": "Garnalen — gekookt",
+    "it": "Gamberi — bolliti",
+    "es": "Gambas — hervidas"
   },
   "c9edfb64-0b4c-583d-beaa-ea186d65377f": {
     "en": "Broad bean, dried",
@@ -21377,23 +19669,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Biscotto sottile alle mandorle"
   },
   "ca66c91d-55a7-5c2c-baeb-f2c17b53df37": {
-    "en":
-        "Cocoa or chocolate powder, for beverages, with sugar(s), fortified with vitamins",
-    "fr":
-        "Cacao ou chocolat en poudre, pour boissons, avec sucre(s), enrichi en vitamines",
-    "de":
-        "Kakao- oder Schokoladenpulver, für Getränke, mit Zucker, mit Vitaminen angereichert",
-    "sv":
-        "Kakao- eller chokladpulver, för drycker, med socker, berikat med vitaminer",
-    "no":
-        "Kakao- eller sjokoladepulver, til drikke, med sukker, beriket med vitaminer",
+    "en": "Cocoa or chocolate powder, for beverages, with sugar(s), fortified with vitamins",
+    "fr": "Cacao ou chocolat en poudre, pour boissons, avec sucre(s), enrichi en vitamines",
+    "de": "Kakao- oder Schokoladenpulver, für Getränke, mit Zucker, mit Vitaminen angereichert",
+    "sv": "Kakao- eller chokladpulver, för drycker, med socker, berikat med vitaminer",
+    "no": "Kakao- eller sjokoladepulver, til drikke, med sukker, beriket med vitaminer",
     "da": "Kakaopulver til drikke, med sukker, vitaminberiget",
-    "nl":
-        "Cacao of chocoladepoeder, voor dranken, met suiker(s), verrijkt met vitaminen",
-    "es":
-        "Cacao o chocolate en polvo, para bebidas, con azúcar(es), enriquecido con vitaminas",
-    "it":
-        "Cacao o cioccolato in polvere per bevande, con zuccheri, fortificato con vitamine"
+    "nl": "Cacao of chocoladepoeder, voor dranken, met suiker(s), verrijkt met vitaminen",
+    "es": "Cacao o chocolate en polvo, para bebidas, con azúcar(es), enriquecido con vitaminas",
+    "it": "Cacao o cioccolato in polvere per bevande, con zuccheri, fortificato con vitamine"
   },
   "ca713ab7-106e-593f-9991-e511c8fef0bd": {
     "en": "Sweetbread, lamb, raw",
@@ -21487,17 +19771,12 @@ const foodNames = <String, Map<String, String>>{
     "en": "Salt, white (sea, igneous or rock), iodine added, no fluride added",
     "fr": "Sel, blanc (marin, igné ou gemme), iodé, sans fluor ajouté",
     "de": "Salz, weiß (See-, Magmat- oder Steinsalz), mit Jod, ohne Fluorid",
-    "sv":
-        "Salt, vitt (havs-, magmatiskt eller bergs-), jodtillsatt, ej fluoridtillsatt",
-    "no":
-        "Salt, hvit (sjø-, inaktivert eller berg-), tilsatt jod, ikke tilsatt fluor",
-    "da":
-        "Salt, hvidt (hav-, minedrift- eller stensalt), jod tilsat, ingen fluor tilsat",
-    "nl":
-        "Zout, wit (zee-, stollings- of steenzout), jodium toegevoegd, geen fluoride toegevoegd",
+    "sv": "Salt, vitt (havs-, magmatiskt eller bergs-), jodtillsatt, ej fluoridtillsatt",
+    "no": "Salt, hvit (sjø-, inaktivert eller berg-), tilsatt jod, ikke tilsatt fluor",
+    "da": "Salt, hvidt (hav-, minedrift- eller stensalt), jod tilsat, ingen fluor tilsat",
+    "nl": "Zout, wit (zee-, stollings- of steenzout), jodium toegevoegd, geen fluoride toegevoegd",
     "es": "Sal, blanca (marina, ígnea o gema), con yodo, sin flúor",
-    "it":
-        "Sale bianco (marino, igneo o roccioso), iodato, senza fluoro aggiunto"
+    "it": "Sale bianco (marino, igneo o roccioso), iodato, senza fluoro aggiunto"
   },
   "cb752212-2ea7-55e0-8c33-0ae652fb7412": {
     "en": "Bresaola",
@@ -21529,10 +19808,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Stille mineralvatn (Luchon), på flaske, lett mineralisert",
     "da": "Mineralvand (Luchon), flaske, let mineraliseret",
     "nl": "Mineraalwater (Luchon), plat, gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (Luchon), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Luchon), in bottiglia, leggermente mineralizzata"
+    "es": "Agua mineral sin gas (Luchon), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale naturale (Luchon), in bottiglia, leggermente mineralizzata"
   },
   "cb919b22-4319-5899-8fc0-eef381e69809": {
     "en": "Pistachio nut, grilled, salted",
@@ -21601,54 +19878,35 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pane di segale e frumento"
   },
   "cc5d3b7c-d92d-5542-bda7-a51385f2358f": {
-    "en":
-        "Veal escalope cordon bleu (escalope topped with a ham slice and cheese, breaded, prepacked",
-    "fr":
-        "Escalope de veau cordon bleu (escalope garnie d'une tranche de jambon et de fromage, panée), préemballée",
-    "de":
-        "Kalbsschnitzel Cordon bleu (Schnitzel mit einer Schicht Schinken und Käse, paniert, vorverpackt)",
-    "sv":
-        "Kalvsnitsel cordon bleu (snitsel toppad med skinka och ost, panerad, färdigförpackad)",
-    "no":
-        "Kalveescalope cordon bleu (escalope toppet med en skinkeskive og ost, panert, ferdigpakket",
+    "en": "Veal escalope cordon bleu (escalope topped with a ham slice and cheese, breaded, prepacked",
+    "fr": "Escalope de veau cordon bleu (escalope garnie d'une tranche de jambon et de fromage, panée), préemballée",
+    "de": "Kalbsschnitzel Cordon bleu (Schnitzel mit einer Schicht Schinken und Käse, paniert, vorverpackt)",
+    "sv": "Kalvsnitsel cordon bleu (snitsel toppad med skinka och ost, panerad, färdigförpackad)",
+    "no": "Kalveescalope cordon bleu (escalope toppet med en skinkeskive og ost, panert, ferdigpakket",
     "da": "Kalve-cordon bleu (paneret, med skinke og ost), forpakket",
-    "nl":
-        "Kalfsschnitzel cordon bleu (schnitzel belegd met ham en kaas, gepaneerd, voorverpakt",
-    "es":
-        "Cordon bleu de ternera (escalope con jamón y queso, empanado, preenvasado)",
-    "it":
-        "Cordon bleu di vitello (fesa farcita con prosciutto e formaggio, impanata), preconfezionato"
+    "nl": "Kalfsschnitzel cordon bleu (schnitzel belegd met ham en kaas, gepaneerd, voorverpakt",
+    "es": "Cordon bleu de ternera (escalope con jamón y queso, empanado, preenvasado)",
+    "it": "Cordon bleu di vitello (fesa farcita con prosciutto e formaggio, impanata), preconfezionato"
   },
   "cc5d3dba-d440-52a7-b0d1-9cfe47bdc3c0": {
-    "en":
-        "Wafer biscuit, with nuts (hazelnut, almond, praliné, etc.) filling, with chocolate or not, prepacked",
-    "fr":
-        "Biscuit gaufrette, fourré aux fruits à coque (noisette, amande, praliné, etc.), enrobé de chocolat ou non, préemballé",
-    "de":
-        "Waffelkeks, mit Nuss- (Haselnuss, Mandel, Praliné usw.) Füllung, mit oder ohne Schokolade, vorverpackt",
-    "sv":
-        "Rånkex, med fyllning av nötter (hasselnöt, mandel, praliné etc.), med eller utan choklad, färdigförpackat",
-    "no":
-        "Kjeks (wafer), med nøttefyll (hasselnøtt, mandel, praliné osv.), med eller uten sjokolade, ferdigpakket",
-    "da":
-        "Vaffelkiks med nøddefyld (hasselnød, mandel, praliné), med eller uden chokolade, forpakket",
-    "nl":
-        "Wafel, met vulling van noten (hazelnoot, amandel, praliné, enz.), al dan niet met chocolade, voorverpakt",
-    "es":
-        "Barquillo, con relleno de frutos secos (avellana, almendra, praliné, etc.), con o sin chocolate, preenvasado",
-    "it":
-        "Wafer, con ripieno di frutta a guscio (nocciola, mandorla, pralinato, ecc.), con o senza cioccolato, preconfezionato"
+    "en": "Wafer biscuit, with nuts (hazelnut, almond, praliné, etc.) filling, with chocolate or not, prepacked",
+    "fr": "Biscuit gaufrette, fourré aux fruits à coque (noisette, amande, praliné, etc.), enrobé de chocolat ou non, préemballé",
+    "de": "Waffelkeks, mit Nuss- (Haselnuss, Mandel, Praliné usw.) Füllung, mit oder ohne Schokolade, vorverpackt",
+    "sv": "Rånkex, med fyllning av nötter (hasselnöt, mandel, praliné etc.), med eller utan choklad, färdigförpackat",
+    "no": "Kjeks (wafer), med nøttefyll (hasselnøtt, mandel, praliné osv.), med eller uten sjokolade, ferdigpakket",
+    "da": "Vaffelkiks med nøddefyld (hasselnød, mandel, praliné), med eller uden chokolade, forpakket",
+    "nl": "Wafel, met vulling van noten (hazelnoot, amandel, praliné, enz.), al dan niet met chocolade, voorverpakt",
+    "es": "Barquillo, con relleno de frutos secos (avellana, almendra, praliné, etc.), con o sin chocolate, preenvasado",
+    "it": "Wafer, con ripieno di frutta a guscio (nocciola, mandorla, pralinato, ecc.), con o senza cioccolato, preconfezionato"
   },
   "cc831ad2-e5bb-5078-a80d-b6d15153c4b4": {
     "en": "Vegetables, pan-fried without mushrooms, seasonned, frozen, raw",
     "fr": "Légumes, poêlée sans champignons, assaisonnés, surgelés, crus",
-    "de":
-        "Gemüse, in der Pfanne ohne Pilze gebraten, gewürzt, tiefgekühlt, roh",
+    "de": "Gemüse, in der Pfanne ohne Pilze gebraten, gewürzt, tiefgekühlt, roh",
     "sv": "Grönsaker, stekta i panna utan svamp, kryddade, frysta, råa",
     "no": "Grønnsaker, stekepanne-stekt uten sopp, krydret, frosne, rå",
     "da": "Grøntsager, pandestegte uden svampe, krydret, frosne, rå",
-    "nl":
-        "Groenten, in de pan gebakken zonder champignons, gekruid, diepvries, rauw",
+    "nl": "Groenten, in de pan gebakken zonder champignons, gekruid, diepvries, rauw",
     "es": "Verduras, salteadas sin champiñones, sazonadas, congeladas, crudas",
     "it": "Verdure, saltate in padella senza funghi, condite, surgelate, crude"
   },
@@ -21730,45 +19988,37 @@ const foodNames = <String, Map<String, String>>{
     "it": "Uovo, in polvere"
   },
   "cdddcd3a-fdd1-536b-b70a-db6d3acd7c2d": {
-    "en": "Salmon, smoked",
-    "fr": "Saumon, fumé",
-    "de": "Lachs, geräuchert",
-    "sv": "Lax, rökt",
-    "no": "Laks, røkt",
+    "en": "Smoked salmon",
+    "de": "Räucherlachs",
+    "fr": "Saumon fumé",
+    "no": "Røkt laks",
+    "sv": "Rökt lax",
     "da": "Røget laks",
-    "nl": "Zalm, gerookt",
-    "es": "Salmón, ahumado",
-    "it": "Salmone, affumicato"
+    "nl": "Gerookte zalm",
+    "it": "Salmone affumicato",
+    "es": "Salmón ahumado"
   },
   "cdfc67a6-9c20-5e49-b293-3fc7b1d4323e": {
     "en": "Cereal bar with chocolate, fortified with vitamins and minerals",
     "fr": "Barre de céréales au chocolat, enrichie en vitamines et minéraux",
-    "de":
-        "Getreideriegel mit Schokolade, angereichert mit Vitaminen und Mineralstoffen",
+    "de": "Getreideriegel mit Schokolade, angereichert mit Vitaminen und Mineralstoffen",
     "sv": "Spannmålsbar med choklad, berikad med vitaminer och mineraler",
-    "no":
-        "Frokostblandingbar med sjokolade, beriket med vitaminer og mineraler",
+    "no": "Frokostblandingbar med sjokolade, beriket med vitaminer og mineraler",
     "da": "Morgenmadbar med chokolade, beriget med vitaminer og mineraler",
     "nl": "Graanreep met chocolade, verrijkt met vitaminen en mineralen",
-    "es":
-        "Barrita de cereales con chocolate, fortificada con vitaminas y minerales",
-    "it":
-        "Barretta ai cereali con cioccolato, fortificata con vitamine e minerali"
+    "es": "Barrita de cereales con chocolate, fortificada con vitaminas y minerales",
+    "it": "Barretta ai cereali con cioccolato, fortificata con vitamine e minerali"
   },
   "ce14a8d5-4789-5f07-9945-ab4791188cf6": {
     "en": "Flaked crab and/or decorticated crab leg, canned, drained",
-    "fr":
-        "Chair de crabe émiettée et/ou patte de crabe décortiquée, en conserve, égouttée",
-    "de":
-        "Krabbenfleisch in Flocken und/oder ausgelöste Krabbenbeine, aus der Dose, abgetropft",
+    "fr": "Chair de crabe émiettée et/ou patte de crabe décortiquée, en conserve, égouttée",
+    "de": "Krabbenfleisch in Flocken und/oder ausgelöste Krabbenbeine, aus der Dose, abgetropft",
     "sv": "Krabba i flakes och/eller rensat krabbben, på burk, avrunnen",
     "no": "Krabbebitter og/eller avskallet krabbebein, på boks, avrent",
     "da": "Krabbe i flager eller renset krabbekød, dåse, drænet",
     "nl": "Krabsnippers en/of schoongemaakte krabpoot, in blik, uitgelekt",
-    "es":
-        "Cangrejo desmenuzado y/o pata de cangrejo sin cáscara, en conserva, escurrido",
-    "it":
-        "Granchio in fiocchi e/o chele di granchio decorticate, in scatola, sgocciolato"
+    "es": "Cangrejo desmenuzado y/o pata de cangrejo sin cáscara, en conserva, escurrido",
+    "it": "Granchio in fiocchi e/o chele di granchio decorticate, in scatola, sgocciolato"
   },
   "ce22a1be-35b5-5363-b2f9-2b915439a989": {
     "en": "Sandwich, baguette, turkey, raw vegetables and mayonnaise",
@@ -21793,20 +20043,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Grasso di tacchino"
   },
   "ce386fa5-0bda-5a95-ab14-b61347175b3f": {
-    "en":
-        "Meal replacement, low calorie, powder, reconstituted with skimmed milk",
-    "fr":
-        "Substitut de repas, hypocalorique, en poudre, reconstitué avec du lait écrémé",
+    "en": "Meal replacement, low calorie, powder, reconstituted with skimmed milk",
+    "fr": "Substitut de repas, hypocalorique, en poudre, reconstitué avec du lait écrémé",
     "de": "Mahlzeitersatz, kalorienarm, Pulver, mit Magermilch zubereitet",
     "sv": "Måltidsersättning, lågkalori, pulver, rekonstituerad med skummjölk",
-    "no":
-        "Måltidserstatning, lavkalori, pulver, rekonstituert med skummet melk",
+    "no": "Måltidserstatning, lavkalori, pulver, rekonstituert med skummet melk",
     "da": "Måltidserstatning, kaloriefattig, pulver, blandet med skummetmælk",
     "nl": "Maaltijdvervanger, caloriearm, poeder, aangemaakt met magere melk",
-    "es":
-        "Sustitutivo de comida, bajo en calorías, en polvo, reconstituido con leche desnatada",
-    "it":
-        "Sostituto del pasto, ipocalorico, in polvere, ricostituito con latte scremato"
+    "es": "Sustitutivo de comida, bajo en calorías, en polvo, reconstituido con leche desnatada",
+    "it": "Sostituto del pasto, ipocalorico, in polvere, ricostituito con latte scremato"
   },
   "ce3cda91-91e8-5482-bf68-e2c45cf964ec": {
     "en": "Carré de l'Est cheese, from cow's milk",
@@ -21843,37 +20088,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "ce735c48-b1f7-5e36-af1c-47e39ab5a14c": {
     "en": "Quark or dairy specialty, flavoured, 0% fat, with sugar(s)",
-    "fr":
-        "Fromage frais ou spécialité laitière, aromatisé, 0 % de matière grasse, sucré",
+    "fr": "Fromage frais ou spécialité laitière, aromatisé, 0 % de matière grasse, sucré",
     "de": "Quark oder Milchspezialität, aromatisiert, 0% Fett, mit Zucker",
     "sv": "Kvarg eller mejerispecialitet, smaksatt, 0% fett, med socker",
     "no": "Kvarg eller meierispesialitet, smakssatt, 0% fett, med sukker",
     "da": "Kvark eller mejerispecialitet, smagt til, 0% fedt, med sukker",
     "nl": "Kwark of zuivelspecialiteit, gearomatiseerd, 0% vet, met suiker(s)",
-    "es":
-        "Quark o especialidad láctea, aromatizado, 0% materia grasa, con azúcares",
-    "it":
-        "Quark o specialità lattiero-casearia, aromatizzato, 0% grassi, con zuccheri"
+    "es": "Quark o especialidad láctea, aromatizado, 0% materia grasa, con azúcares",
+    "it": "Quark o specialità lattiero-casearia, aromatizzato, 0% grassi, con zuccheri"
   },
   "ce81c18a-b0c5-585c-a33c-abd395311184": {
-    "en":
-        "Dark chocolate, with dried fruits (nuts, almonds, raisin, praliné), bar",
-    "fr":
-        "Chocolat noir, aux fruits secs (fruits à coque, amandes, raisins, praliné), tablettes",
-    "de":
-        "Zartbitterschokolade, mit Trockenfrüchten (Nüsse, Mandeln, Rosinen, Praliné), Tafel",
-    "sv":
-        "Mörk choklad, med torkad frukt (nötter, mandel, russin, praliné), kaka",
-    "no":
-        "Mørk sjokolade, med tørket frukt (nøtter, mandler, rosin, praliné), plate",
-    "da":
-        "Mørk chokolade med tørret frugt (nødder, mandler, rosiner, praliné), plade",
-    "nl":
-        "Pure chocolade, met gedroogde vruchten (noten, amandelen, rozijnen, praliné), reep",
-    "es":
-        "Chocolate negro, con frutos secos (nueces, almendras, pasas, praliné), tableta",
-    "it":
-        "Cioccolato fondente, con frutta secca (noci, mandorle, uvetta, pralinato), tavoletta"
+    "en": "Dark chocolate, with dried fruits (nuts, almonds, raisin, praliné), bar",
+    "fr": "Chocolat noir, aux fruits secs (fruits à coque, amandes, raisins, praliné), tablettes",
+    "de": "Zartbitterschokolade, mit Trockenfrüchten (Nüsse, Mandeln, Rosinen, Praliné), Tafel",
+    "sv": "Mörk choklad, med torkad frukt (nötter, mandel, russin, praliné), kaka",
+    "no": "Mørk sjokolade, med tørket frukt (nøtter, mandler, rosin, praliné), plate",
+    "da": "Mørk chokolade med tørret frugt (nødder, mandler, rosiner, praliné), plade",
+    "nl": "Pure chocolade, met gedroogde vruchten (noten, amandelen, rozijnen, praliné), reep",
+    "es": "Chocolate negro, con frutos secos (nueces, almendras, pasas, praliné), tableta",
+    "it": "Cioccolato fondente, con frutta secca (noci, mandorle, uvetta, pralinato), tavoletta"
   },
   "ce9c6258-3e88-50ba-b532-e30f503dea10": {
     "en": "Croissant filled with ham and cheese, prepacked",
@@ -21922,17 +20155,13 @@ const foodNames = <String, Map<String, String>>{
   "cf1757b3-12fe-5064-80db-ffc69c2fa2e9": {
     "en": "Plant-based burger or steak from soybean and vegetables, prepacked",
     "fr": "Burger ou steak végétal à base de soja et de légumes, préemballé",
-    "de":
-        "Pflanzlicher Burger oder Steak aus Sojabohnen und Gemüse, vorverpackt",
-    "sv":
-        "Växtbaserad burgare eller biff av sojabönor och grönsaker, färdigförpackad",
-    "no":
-        "Plantebasert burger eller biff av soyabønner og grønnsaker, ferdigpakket",
+    "de": "Pflanzlicher Burger oder Steak aus Sojabohnen und Gemüse, vorverpackt",
+    "sv": "Växtbaserad burgare eller biff av sojabönor och grönsaker, färdigförpackad",
+    "no": "Plantebasert burger eller biff av soyabønner og grønnsaker, ferdigpakket",
     "da": "Plantebaseret burger eller steak af soja og grøntsager, forpakket",
     "nl": "Plantaardige burger of steak van soja en groenten, voorverpakt",
     "es": "Hamburguesa o filete vegetal de soja y verduras, preenvasado",
-    "it":
-        "Hamburger o bistecca vegetale a base di soia e verdure, preconfezionato"
+    "it": "Hamburger o bistecca vegetale a base di soia e verdure, preconfezionato"
   },
   "cf24e374-971e-5b72-b925-eb5a8307314c": {
     "en": "Biscuit (cookie) from whole grain cereals",
@@ -21947,20 +20176,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "cf3c9f97-6add-5dbd-b905-c325a165355a": {
     "en": "Mineral sparkling water (St-Diéry), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale gazeuse (St-Diéry), en bouteille, fortement minéralisée",
-    "de":
-        "Kohlensäurehaltiges Mineralwasser (St-Diéry), in Flaschen, stark mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (St-Diéry), på flaska, kraftigt mineraliserat",
+    "fr": "Eau minérale gazeuse (St-Diéry), en bouteille, fortement minéralisée",
+    "de": "Kohlensäurehaltiges Mineralwasser (St-Diéry), in Flaschen, stark mineralisiert",
+    "sv": "Kolsyrat mineralvatten (St-Diéry), på flaska, kraftigt mineraliserat",
     "no": "Musserende mineralvatn (St-Diéry), på flaske, sterkt mineralisert",
     "da": "Mineralvand med brus (St-Diéry), flaske, kraftigt mineraliseret",
-    "nl":
-        "Mineraalwater (St-Diéry), koolzuurhoudend, gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (St-Diéry), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale frizzante (St-Diéry), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater (St-Diéry), koolzuurhoudend, gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral con gas (St-Diéry), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale frizzante (St-Diéry), in bottiglia, fortemente mineralizzata"
   },
   "cf3fb166-bbb6-5c70-94e1-af0f6819f24d": {
     "en": "Multifruit juice, from concentrate, standard",
@@ -22026,8 +20249,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Mineralvand (Evian), flaske, let mineraliseret",
     "nl": "Mineraalwater (Evian), plat, gebotteld, licht gemineraliseerd",
     "es": "Agua mineral sin gas (Evian), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale naturale (Evian), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Evian), in bottiglia, leggermente mineralizzata"
   },
   "cfee3cf3-74d2-51ea-a7a1-a2f0d02b1116": {
     "en": "Red kidney bean, canned, drained",
@@ -22063,24 +20285,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Minestrone, preconfezionato, da riscaldare"
   },
   "d06003a7-20c9-51f1-9983-81800603a869": {
-    "en":
-        "Crepe or buckwheat crepe, filled with fish and/or seafood, prepacked",
-    "fr":
-        "Crêpe ou galette de sarrasin, fourrée au poisson et/ou aux fruits de mer, préemballée",
-    "de":
-        "Crêpe oder Buchweizen-Crêpe, gefüllt mit Fisch und/oder Meeresfrüchten, vorverpackt",
-    "sv":
-        "Crêpe eller bokhvetecrêpe, fylld med fisk och/eller skaldjur, färdigförpackad",
-    "no":
-        "Crepe eller bokhvetecrepe, fylt med fisk og/eller sjømat, ferdigpakket",
-    "da":
-        "Pandekage eller boghvedepandekage, fyldt med fisk og/eller skaldyr, forpakket",
-    "nl":
-        "Crêpe of boekweitcrêpe, gevuld met vis en/of zeevruchten, voorverpakt",
-    "es":
-        "Crepe o crepe de trigo sarraceno, rellena de pescado y/o marisco, preenvasada",
-    "it":
-        "Crêpe o crêpe di grano saraceno, farcita con pesce e/o frutti di mare, preconfezionata"
+    "en": "Crepe or buckwheat crepe, filled with fish and/or seafood, prepacked",
+    "fr": "Crêpe ou galette de sarrasin, fourrée au poisson et/ou aux fruits de mer, préemballée",
+    "de": "Crêpe oder Buchweizen-Crêpe, gefüllt mit Fisch und/oder Meeresfrüchten, vorverpackt",
+    "sv": "Crêpe eller bokhvetecrêpe, fylld med fisk och/eller skaldjur, färdigförpackad",
+    "no": "Crepe eller bokhvetecrepe, fylt med fisk og/eller sjømat, ferdigpakket",
+    "da": "Pandekage eller boghvedepandekage, fyldt med fisk og/eller skaldyr, forpakket",
+    "nl": "Crêpe of boekweitcrêpe, gevuld met vis en/of zeevruchten, voorverpakt",
+    "es": "Crepe o crepe de trigo sarraceno, rellena de pescado y/o marisco, preenvasada",
+    "it": "Crêpe o crêpe di grano saraceno, farcita con pesce e/o frutti di mare, preconfezionata"
   },
   "d07a4589-1972-5c15-89fd-513b3a9c1af7": {
     "en": "Kohlrabi, raw",
@@ -22094,38 +20307,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Cavolo rapa, crudo"
   },
   "d08debc9-dabb-53a6-9d7f-a0551b26d307": {
-    "en":
-        "Salt, white (sea, igneous or rock), iodine added, fluoride added 25 mg/100 g",
+    "en": "Salt, white (sea, igneous or rock), iodine added, fluoride added 25 mg/100 g",
     "fr": "Sel, blanc (marin, igné ou gemme), iodé, fluoré 25 mg/100 g",
-    "de":
-        "Salz, weiss (See-, Siede- oder Steinsalz), mit Jodzusatz, mit Fluoridzusatz 25 mg/100 g",
-    "sv":
-        "Salt, vitt (havssalt, bergsalt eller stensalt), joderat, fluorerat 25 mg/100 g",
-    "no":
-        "Salt, hvitt (sjø-, sjøbunn- eller bergsalt), tilsatt jod, tilsatt fluor 25 mg/100 g",
-    "da":
-        "Salt, hvidt (hav-, vulkansk- eller stensalt), tilsat jod, tilsat fluor 25 mg/100 g",
-    "nl":
-        "Zout, wit (zee-, stollings- of steenzout), jodium toegevoegd, fluoride toegevoegd 25 mg/100 g",
-    "es":
-        "Sal, blanca (marina, ígnea o de mina), con yodo, con flúor 25 mg/100 g",
-    "it":
-        "Sale, bianco (marino, igneo o salgemma), iodio aggiunto, fluoro aggiunto 25 mg/100 g"
+    "de": "Salz, weiss (See-, Siede- oder Steinsalz), mit Jodzusatz, mit Fluoridzusatz 25 mg/100 g",
+    "sv": "Salt, vitt (havssalt, bergsalt eller stensalt), joderat, fluorerat 25 mg/100 g",
+    "no": "Salt, hvitt (sjø-, sjøbunn- eller bergsalt), tilsatt jod, tilsatt fluor 25 mg/100 g",
+    "da": "Salt, hvidt (hav-, vulkansk- eller stensalt), tilsat jod, tilsat fluor 25 mg/100 g",
+    "nl": "Zout, wit (zee-, stollings- of steenzout), jodium toegevoegd, fluoride toegevoegd 25 mg/100 g",
+    "es": "Sal, blanca (marina, ígnea o de mina), con yodo, con flúor 25 mg/100 g",
+    "it": "Sale, bianco (marino, igneo o salgemma), iodio aggiunto, fluoro aggiunto 25 mg/100 g"
   },
   "d0c3bd66-9a3c-5c56-a9bb-40775977e4ae": {
     "en": "Mussels, filled (fat, parsley and garlic…), prepacked, raw",
-    "fr":
-        "Moules, farcies (matière grasse, persil et ail…), préemballées, crues",
-    "de":
-        "Miesmuscheln, gefüllt (Fett, Petersilie und Knoblauch...), vorverpackt, roh",
+    "fr": "Moules, farcies (matière grasse, persil et ail…), préemballées, crues",
+    "de": "Miesmuscheln, gefüllt (Fett, Petersilie und Knoblauch...), vorverpackt, roh",
     "sv": "Musslor, fyllda (fett, persilja och vitlök...), förpackade, råa",
     "no": "Blåskjell, fylte (fett, persille og hvitløk…), ferdigpakket, rå",
     "da": "Muslinger, fyldte (fedtstof, persille og hvidløg...), forpakket, rå",
     "nl": "Mosselen, gevuld (vet, peterselie en knoflook…), voorverpakt, rauw",
-    "es":
-        "Mejillones, rellenos (grasa, perejil y ajo...), preenvasados, crudos",
-    "it":
-        "Cozze ripiene (grasso, prezzemolo e aglio...), preconfezionate, crude"
+    "es": "Mejillones, rellenos (grasa, perejil y ajo...), preenvasados, crudos",
+    "it": "Cozze ripiene (grasso, prezzemolo e aglio...), preconfezionate, crude"
   },
   "d10c993b-fa86-5f50-b0d4-3a4b2699ea5c": {
     "en": "Baking powder or raising agent",
@@ -22183,24 +20384,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Olio di lino"
   },
   "d13e93c5-f078-57cb-865f-31b31fa35891": {
-    "en":
-        "Still soft drink with tea extract, sugar and sweetener contents unknown (average)",
-    "fr":
-        "Boisson rafraîchissante plate à l'extrait de thé, teneur en sucre et en édulcorant inconnue (moyenne)",
-    "de":
-        "Stilles Erfrischungsgetränk mit Tee-Extrakt, Zucker und Süssungsmittelgehalt unbekannt (Durchschnitt)",
-    "sv":
-        "Stilla läskedryck med teextrakt, socker och sötningsmedel okänt innehåll (genomsnitt)",
-    "no":
-        "Stille mineralvann med teekstrakt, sukker- og søtstoffinnhold ukjent (gjennomsnitt)",
-    "da":
-        "Ikke-kulsyreholdig sodavand med teekstrakt, sukker- og sødestofindhold ukendt (gennemsnit)",
-    "nl":
-        "Niet-koolzuurhoudende frisdrank met thee-extract, suiker- en zoetstofgehalte onbekend (gemiddeld)",
-    "es":
-        "Bebida refrescante sin gas con extracto de té, azúcar y edulcorante (promedio)",
-    "it":
-        "Bevanda analcolica non gassata con estratto di tè, contenuto di zucchero e dolcificante sconosciuto (media)"
+    "en": "Still soft drink with tea extract, sugar and sweetener contents unknown (average)",
+    "fr": "Boisson rafraîchissante plate à l'extrait de thé, teneur en sucre et en édulcorant inconnue (moyenne)",
+    "de": "Stilles Erfrischungsgetränk mit Tee-Extrakt, Zucker und Süssungsmittelgehalt unbekannt (Durchschnitt)",
+    "sv": "Stilla läskedryck med teextrakt, socker och sötningsmedel okänt innehåll (genomsnitt)",
+    "no": "Stille mineralvann med teekstrakt, sukker- og søtstoffinnhold ukjent (gjennomsnitt)",
+    "da": "Ikke-kulsyreholdig sodavand med teekstrakt, sukker- og sødestofindhold ukendt (gennemsnit)",
+    "nl": "Niet-koolzuurhoudende frisdrank met thee-extract, suiker- en zoetstofgehalte onbekend (gemiddeld)",
+    "es": "Bebida refrescante sin gas con extracto de té, azúcar y edulcorante (promedio)",
+    "it": "Bevanda analcolica non gassata con estratto di tè, contenuto di zucchero e dolcificante sconosciuto (media)"
   },
   "d1454797-8426-5e3c-9999-fbea791fe861": {
     "en": "Salsify, cooked",
@@ -22225,22 +20417,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Pane in cassetta, senza glutine, preconfezionato"
   },
   "d15a7882-4822-5b1b-9ae3-77f131664de0": {
-    "en":
-        "Strawberry flavoured milk, with sugar(s), partially skimmed, fortified with vitamin D",
-    "fr":
-        "Lait aromatisé à la fraise, avec sucre(s), partiellement écrémé, enrichi en vitamine D",
-    "de":
-        "Erdbeeraromatisiertes Milchgetränk, mit Zucker(n), teilnahmt, mit Vitamin D angereichert",
-    "sv":
-        "Jordgubbsmakande mjölk, med socker, delvis skummad, berikad med vitamin D",
-    "no":
-        "Jordbærsmakt melk, med sukker, delvis skummet, beriket med vitamin D",
+    "en": "Strawberry flavoured milk, with sugar(s), partially skimmed, fortified with vitamin D",
+    "fr": "Lait aromatisé à la fraise, avec sucre(s), partiellement écrémé, enrichi en vitamine D",
+    "de": "Erdbeeraromatisiertes Milchgetränk, mit Zucker(n), teilnahmt, mit Vitamin D angereichert",
+    "sv": "Jordgubbsmakande mjölk, med socker, delvis skummad, berikad med vitamin D",
+    "no": "Jordbærsmakt melk, med sukker, delvis skummet, beriket med vitamin D",
     "da": "Jordbærmælk, med sukker, delvist skummet, beriget med vitamin D",
     "nl": "Aardbeienmelk, met suiker(s), halfvol, verrijkt met vitamine D",
-    "es":
-        "Leche con sabor a fresa, con azúcares, semidesnatada, enriquecida con vitamina D",
-    "it":
-        "Latte al gusto di fragola, con zucchero(i), parzialmente scremato, arricchito con vitamina D"
+    "es": "Leche con sabor a fresa, con azúcares, semidesnatada, enriquecida con vitamina D",
+    "it": "Latte al gusto di fragola, con zucchero(i), parzialmente scremato, arricchito con vitamina D"
   },
   "d15be2b5-cc38-538f-8e4d-bebf2f645573": {
     "en": "Fish burger, from fast food",
@@ -22300,8 +20485,7 @@ const foodNames = <String, Map<String, String>>{
   "d192296d-afc2-5b1b-b398-5e7ad4e7e849": {
     "en": "Apricot, canned in light syrup, solids and liquids",
     "fr": "Abricot, au sirop léger en conserve, morceaux et jus",
-    "de":
-        "Aprikose, in leichtem Sirup eingeweckt, Feste und flüssige Bestandteile",
+    "de": "Aprikose, in leichtem Sirup eingeweckt, Feste und flüssige Bestandteile",
     "sv": "Aprikos, konserverad i lätt sirap, fasta beståndsdelar och vätska",
     "no": "Aprikos, hermetisert i lett sirup, faste bestanddeler og væske",
     "da": "Abrikos, konserveret i let sirup, faste bestanddele og væske",
@@ -22310,38 +20494,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Albicocche, sciroppate, solidi e liquidi"
   },
   "d19869eb-1193-5026-afdf-423338bfcf3a": {
-    "en":
-        "Breakfast cereals, rich in fibre, with chocolate, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, riches en fibres, au chocolat, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstückscerealien, ballaststoffreich, mit Schokolade, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Frukostflingor, rika på fiber, med choklad, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, fiberrik, med sjokolade, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter, fiberholdige, med chokolade, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, rijk aan vezels, met chocolade, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, ricos en fibra, con chocolate, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione, ricchi di fibre, con cioccolato, arricchiti con vitamine e minerali"
+    "en": "Breakfast cereals, rich in fibre, with chocolate, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, riches en fibres, au chocolat, enrichies en vitamines et minéraux",
+    "de": "Frühstückscerealien, ballaststoffreich, mit Schokolade, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Frukostflingor, rika på fiber, med choklad, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, fiberrik, med sjokolade, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter, fiberholdige, med chokolade, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, rijk aan vezels, met chocolade, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, ricos en fibra, con chocolate, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione, ricchi di fibre, con cioccolato, arricchiti con vitamine e minerali"
   },
   "d19d74a9-dcf1-5da8-a5e3-301db664fe93": {
     "en": "Fresh cream cheese, petit-suisse type, plain, around 10% fat",
-    "fr":
-        "Fromage frais, type petit-suisse, nature, environ 10 % de matière grasse",
+    "fr": "Fromage frais, type petit-suisse, nature, environ 10 % de matière grasse",
     "de": "Frischfrischkäse, Petit-Suisse-Art, natur, ca. 10% Fett",
     "sv": "Färsk färskost, petit-suisse-typ, naturell, runt 10% fett",
     "no": "Fersk kremost, petit-suisse-type, naturell, rundt 10% fett",
     "da": "Frisk flødeost, petit-suisse-type, naturel, omkring 10% fedt",
     "nl": "Verse roomkaas, petit-suisse type, naturel, rond 10% vet",
-    "es":
-        "Queso crema fresco, tipo petit-suisse, natural, alrededor del 10% grasa",
-    "it":
-        "Formaggio fresco cremoso, tipo petit-suisse, naturale, circa 10% grassi"
+    "es": "Queso crema fresco, tipo petit-suisse, natural, alrededor del 10% grasa",
+    "it": "Formaggio fresco cremoso, tipo petit-suisse, naturale, circa 10% grassi"
   },
   "d228ab47-f463-5720-8025-012fbb2851d7": {
     "en": "Risotto, with cheeses, prepacked",
@@ -22356,21 +20528,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "d2454167-803f-5807-a7bc-1948d6383e2a": {
     "en": "Spreadable fat, fat % unknown, unsalted, rich in omega 3 (average)",
-    "fr":
-        "Matière grasse à tartiner, % de matière grasse inconnu, non salée, riche en oméga 3 (moyenne)",
-    "de":
-        "Streichfett, Fettgehalt % unbekannt, ungesalzen, reich an Omega 3 (Durchschnitt)",
+    "fr": "Matière grasse à tartiner, % de matière grasse inconnu, non salée, riche en oméga 3 (moyenne)",
+    "de": "Streichfett, Fettgehalt % unbekannt, ungesalzen, reich an Omega 3 (Durchschnitt)",
     "sv": "Bredbart fett, fett % okänt, osaltat, rikt på omega 3 (genomsnitt)",
-    "no":
-        "Smørbart fett, fett % ukjent, usaltet, rik på omega 3 (gjennomsnitt)",
-    "da":
-        "Smørbart fedtstof, fedtprocent ukendt, usaltet, rig på omega 3 (gennemsnit)",
-    "nl":
-        "Smeerbaar vet, vetpercentage onbekend, ongezouten, rijk aan omega 3 (gemiddeld)",
-    "es":
-        "Grasa para untar, % grasa desconocido, sin sal, rico en omega 3 (promedio)",
-    "it":
-        "Grasso spalmabile, % grassi sconosciuta, non salato, ricco di omega 3 (media)"
+    "no": "Smørbart fett, fett % ukjent, usaltet, rik på omega 3 (gjennomsnitt)",
+    "da": "Smørbart fedtstof, fedtprocent ukendt, usaltet, rig på omega 3 (gennemsnit)",
+    "nl": "Smeerbaar vet, vetpercentage onbekend, ongezouten, rijk aan omega 3 (gemiddeld)",
+    "es": "Grasa para untar, % grasa desconocido, sin sal, rico en omega 3 (promedio)",
+    "it": "Grasso spalmabile, % grassi sconosciuta, non salato, ricco di omega 3 (media)"
   },
   "d2593ec7-78ae-5a3a-b2a8-458a1c8aa17e": {
     "en": "Salty snacks, crackers, mini waffle, filled",
@@ -22506,21 +20671,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "d37dc376-c093-59cb-aeb3-374f62bb86e9": {
     "en": "Cream and similar, fat content unknownthick or semi-thick (average)",
-    "fr":
-        "Crème et similaires, teneur en matière grasse inconnue épaisse ou demi-épaisse (moyenne)",
-    "de":
-        "Sahne und Ähnliches, Fettgehalt unbekannt dick oder halbdick (Durchschnitt)",
-    "sv":
-        "Grädde och liknande, fettinnehåll okänt tjock eller halv-tjock (genomsnitt)",
-    "no":
-        "Fløte og lignende, fettinnhold ukjent tykk eller halvtykk (gjennomsnitt)",
-    "da":
-        "Fløde og lignende, fedtindhold ukendt, tyk eller halvtyk (gennemsnit)",
+    "fr": "Crème et similaires, teneur en matière grasse inconnue épaisse ou demi-épaisse (moyenne)",
+    "de": "Sahne und Ähnliches, Fettgehalt unbekannt dick oder halbdick (Durchschnitt)",
+    "sv": "Grädde och liknande, fettinnehåll okänt tjock eller halv-tjock (genomsnitt)",
+    "no": "Fløte og lignende, fettinnhold ukjent tykk eller halvtykk (gjennomsnitt)",
+    "da": "Fløde og lignende, fedtindhold ukendt, tyk eller halvtyk (gennemsnit)",
     "nl": "Room en dergelijke, vetgehalte onbekend, dik of halfdik (gemiddeld)",
-    "es":
-        "Nata y similares, contenido graso desconocido espesa o semiespesa (promedio)",
-    "it":
-        "Panna e simili, contenuto di grassi sconosciuto, densa o semidensa (media)"
+    "es": "Nata y similares, contenido graso desconocido espesa o semiespesa (promedio)",
+    "it": "Panna e simili, contenuto di grassi sconosciuto, densa o semidensa (media)"
   },
   "d3ab6d50-0d15-5c39-9490-40e12c5bfe50": {
     "en": "Tomato paste, double concentrate, canned",
@@ -22547,8 +20705,7 @@ const foodNames = <String, Map<String, String>>{
   "d3fa03c1-78c2-5b19-9089-7db8584b66c7": {
     "en": "Pork, way leg, without rind, fat and bone, raw",
     "fr": "Porc, cuisse, sans couenne, sans gras et sans os, cru",
-    "de":
-        "Schweinefleisch, Schinkenstück, ohne Schwarte, Fett und Knochen, roh",
+    "de": "Schweinefleisch, Schinkenstück, ohne Schwarte, Fett und Knochen, roh",
     "sv": "Fläsk, benfri skinka, utan svål, fett och ben, rå",
     "no": "Svin, skinke, uten svor, fett og bein, rå",
     "da": "Svinekød, skinke, uden svær, fedt og ben, rå",
@@ -22565,8 +20722,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Bresse blåskimmelost, fedtreduceret, af komælk",
     "nl": "Bresse bleu kaas, mager, van koemelk",
     "es": "Queso azul Bresse, bajo en grasa, de leche de vaca",
-    "it":
-        "Formaggio Bresse bleu, a ridotto contenuto di grassi, da latte vaccino"
+    "it": "Formaggio Bresse bleu, a ridotto contenuto di grassi, da latte vaccino"
   },
   "d41418d1-aea9-5d36-94a4-c5235973575d": {
     "en": "Eggplant au gratin, prepacked",
@@ -22602,23 +20758,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Frittelle di carne, pollame o pesce, fatte in casa, cotte"
   },
   "d4549374-255f-5540-be54-a399c354d2da": {
-    "en":
-        "Mineral sparkling water (Volvic active), bottled, lightly mineralized",
-    "fr":
-        "Eau minérale gazeuse (Volvic active), en bouteille, faiblement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Volvic active), in Flaschen, leicht mineralisiert",
-    "sv":
-        "Mineraliskt kolsyrat vatten (Volvic active), på flaska, lättmineraliserat",
-    "no":
-        "Mineralvann med kullsyre (Volvic active), på flaske, lett mineralisert",
+    "en": "Mineral sparkling water (Volvic active), bottled, lightly mineralized",
+    "fr": "Eau minérale gazeuse (Volvic active), en bouteille, faiblement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Volvic active), in Flaschen, leicht mineralisiert",
+    "sv": "Mineraliskt kolsyrat vatten (Volvic active), på flaska, lättmineraliserat",
+    "no": "Mineralvann med kullsyre (Volvic active), på flaske, lett mineralisert",
     "da": "Mineralholdigt danskvand (Volvic active), flaske, let mineraliseret",
-    "nl":
-        "Mineraal bruiswater (Volvic active), gebotteld, licht gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Volvic active), embotellada, ligeramente mineralizada",
-    "it":
-        "Acqua minerale frizzante (Volvic active), in bottiglia, leggermente mineralizzata"
+    "nl": "Mineraal bruiswater (Volvic active), gebotteld, licht gemineraliseerd",
+    "es": "Agua mineral con gas (Volvic active), embotellada, ligeramente mineralizada",
+    "it": "Acqua minerale frizzante (Volvic active), in bottiglia, leggermente mineralizzata"
   },
   "d46b8d1f-97b7-51cf-b494-845fdddb4a4e": {
     "en": "Papaya nectar",
@@ -22644,20 +20792,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "d47fc4c9-a55e-5a8e-85c2-d95e3c576183": {
     "en": "Still soft drink, fruit content >= 10% and < 50%, reduced sugar",
-    "fr":
-        "Boisson plate aux fruits, teneur en fruits >= 10% et < 50%, allégée en sucre",
-    "de":
-        "Stilles Erfrischungsgetränk, Fruchtgehalt >= 10% und < 50%, zuckerreduziert",
+    "fr": "Boisson plate aux fruits, teneur en fruits >= 10% et < 50%, allégée en sucre",
+    "de": "Stilles Erfrischungsgetränk, Fruchtgehalt >= 10% und < 50%, zuckerreduziert",
     "sv": "Still läskedryck, frukthalt >= 10% och < 50%, sockerreducerad",
     "no": "Fruktdrikk, fruktinnhold >= 10% og < 50%, redusert sukkerinnhold",
-    "da":
-        "Stille læskedrik, frugtindhold >= 10% og < 50%, reduceret sukkerindhold",
-    "nl":
-        "Platte frisdrank, fruitgehalte >= 10% en < 50%, verlaagd suikergehalte",
-    "es":
-        "Refresco sin gas, contenido de fruta >= 10% y < 50%, azúcar reducido",
-    "it":
-        "Bibita analcolica non gassata, contenuto di frutta >= 10% e < 50%, a ridotto contenuto di zuccheri"
+    "da": "Stille læskedrik, frugtindhold >= 10% og < 50%, reduceret sukkerindhold",
+    "nl": "Platte frisdrank, fruitgehalte >= 10% en < 50%, verlaagd suikergehalte",
+    "es": "Refresco sin gas, contenido de fruta >= 10% y < 50%, azúcar reducido",
+    "it": "Bibita analcolica non gassata, contenuto di frutta >= 10% e < 50%, a ridotto contenuto di zuccheri"
   },
   "d4f91378-8a39-5b4d-a4a5-621421cbdc2e": {
     "en": "Brioche, pure butter, plain, prepacked",
@@ -22690,8 +20832,7 @@ const foodNames = <String, Map<String, String>>{
     "da": "Stille mineralvand (Hépar), flaske, stærkt mineraliseret",
     "nl": "Plat mineraalwater (Hépar), gebotteld, sterk gemineraliseerd",
     "es": "Agua mineral sin gas (Hépar), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (Hépar), in bottiglia, fortemente mineralizzata"
+    "it": "Acqua minerale naturale (Hépar), in bottiglia, fortemente mineralizzata"
   },
   "d5035ba0-83de-56ac-bc96-51860f651af0": {
     "en": "Carrot, dehydrated",
@@ -22815,38 +20956,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Sciroppo d'acero"
   },
   "d62d890a-64c3-5ed6-b35e-c53610365c24": {
-    "en":
-        "Plant-based burger or steak from wheat (seitan) and vegetables, prepacked",
-    "fr":
-        "Burger ou steak végétal à base de blé (seitan) et de légumes, préemballé",
-    "de":
-        "Pflanzenbasierter Burger oder Steak aus Weizen (Seitan) und Gemüse, vorverpackt",
-    "sv":
-        "Växtbaserad burgare eller biff av vete (seitan) och grönsaker, förpackad",
-    "no":
-        "Plantebasert burger eller biff av hvete (seitan) og grønnsaker, forpakket",
-    "da":
-        "Plantebaseret burger eller steak af hvede (seitan) og grøntsager, færdigpakket",
-    "nl":
-        "Plantaardige burger of biefstuk op basis van tarwe (seitan) en groenten, voorverpakt",
-    "es":
-        "Hamburguesa o filete vegetal a base de trigo (seitán) y verduras, preenvasado",
-    "it":
-        "Burger o bistecca vegetale a base di frumento (seitan) e verdure, preconfezionato"
+    "en": "Plant-based burger or steak from wheat (seitan) and vegetables, prepacked",
+    "fr": "Burger ou steak végétal à base de blé (seitan) et de légumes, préemballé",
+    "de": "Pflanzenbasierter Burger oder Steak aus Weizen (Seitan) und Gemüse, vorverpackt",
+    "sv": "Växtbaserad burgare eller biff av vete (seitan) och grönsaker, förpackad",
+    "no": "Plantebasert burger eller biff av hvete (seitan) og grønnsaker, forpakket",
+    "da": "Plantebaseret burger eller steak af hvede (seitan) og grøntsager, færdigpakket",
+    "nl": "Plantaardige burger of biefstuk op basis van tarwe (seitan) en groenten, voorverpakt",
+    "es": "Hamburguesa o filete vegetal a base de trigo (seitán) y verduras, preenvasado",
+    "it": "Burger o bistecca vegetale a base di frumento (seitan) e verdure, preconfezionato"
   },
   "d645720a-f6d0-5218-a5fe-476330069797": {
     "en": "Mineral sparkling water (Ardesy), bottled, strongly mineralized",
     "fr": "Eau minérale gazeuse (Ardesy), en bouteille, fortement minéralisée",
-    "de":
-        "Kohlensaures Mineralwasser (Ardesy), in Flaschen, stark mineralisiert",
+    "de": "Kohlensaures Mineralwasser (Ardesy), in Flaschen, stark mineralisiert",
     "sv": "Kolsyrat mineralvatten (Ardesy), på flaska, kraftigt mineraliserat",
     "no": "Framtert mineralvann (Ardesy), på flaske, sterkt mineralisert",
     "da": "Danskende mineralvand (Ardesy), flaske, stærkt mineraliseret",
     "nl": "Bruisend mineraalwater (Ardesy), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Ardesy), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale gassata (Ardesy), in bottiglia, fortemente mineralizzata"
+    "es": "Agua mineral con gas (Ardesy), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale gassata (Ardesy), in bottiglia, fortemente mineralizzata"
   },
   "d68fd579-2f9d-5f2d-94ba-ca5955a3f33a": {
     "en": "Khorasan wheat, wholegrain, puffed",
@@ -22884,15 +21013,13 @@ const foodNames = <String, Map<String, String>>{
   "d719e9c9-5bc9-5ac8-b021-f1c9dd32d5d4": {
     "en": "Sandwich, club, wholemeal bread, tuna and raw vegetables, prepacked",
     "fr": "Sandwich, club, pain complet, thon et crudités, préemballé",
-    "de":
-        "Club-Sandwich, Vollkornbrot, Thunfisch und rohes Gemüse, vorverpackt",
+    "de": "Club-Sandwich, Vollkornbrot, Thunfisch und rohes Gemüse, vorverpackt",
     "sv": "Club sandwich, fullkornsbröd, tonfisk och råa grönsaker, förpackad",
     "no": "Club sandwich, grovt brød, tunfisk og rå grønnsaker, forpakket",
     "da": "Club sandwich, fuldkornsbrød, tun og rå grøntsager, færdigpakket",
     "nl": "Clubsandwich, volkorenbrood, tonijn en rauwe groenten, voorverpakt",
     "es": "Sándwich club, pan integral, atún y vegetales crudos, preenvasado",
-    "it":
-        "Sandwich, club, pane integrale, tonno e verdure crude, preconfezionato"
+    "it": "Sandwich, club, pane integrale, tonno e verdure crude, preconfezionato"
   },
   "d71a00f6-5df7-570d-ac0c-c29b41cc819b": {
     "en": "Pork, ham escalope, raw",
@@ -23027,24 +21154,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Sgombro, filetto, in salsa di senape, in scatola, sgocciolato"
   },
   "d89b8379-1068-50e0-8fbf-04fb88686421": {
-    "en":
-        "Mineral sparkling water (Reine des basaltes), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Reine des basaltes), en bouteille, moyennement minéralisée",
-    "de":
-        "Kohlensaures Mineralwasser (Reine des basaltes), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Reine des basaltes), på flaska, medelmåttigt mineraliserat",
-    "no":
-        "Framtert mineralvann (Reine des basaltes), på flaske, moderat mineralisert",
-    "da":
-        "Danskende mineralvand (Reine des basaltes), flaske, middelhøjt mineraliseret",
-    "nl":
-        "Bruisend mineraalwater (Reine des basaltes), gebotteld, matig gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Reine des basaltes), embotellada, medianamente mineralizada",
-    "it":
-        "Acqua minerale gassata (Reine des basaltes), in bottiglia, mediamente mineralizzata"
+    "en": "Mineral sparkling water (Reine des basaltes), bottled, averagely mineralized",
+    "fr": "Eau minérale gazeuse (Reine des basaltes), en bouteille, moyennement minéralisée",
+    "de": "Kohlensaures Mineralwasser (Reine des basaltes), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Reine des basaltes), på flaska, medelmåttigt mineraliserat",
+    "no": "Framtert mineralvann (Reine des basaltes), på flaske, moderat mineralisert",
+    "da": "Danskende mineralvand (Reine des basaltes), flaske, middelhøjt mineraliseret",
+    "nl": "Bruisend mineraalwater (Reine des basaltes), gebotteld, matig gemineraliseerd",
+    "es": "Agua mineral con gas (Reine des basaltes), embotellada, medianamente mineralizada",
+    "it": "Acqua minerale gassata (Reine des basaltes), in bottiglia, mediamente mineralizzata"
   },
   "d8b0090a-caf2-5504-8995-8acc1af19764": {
     "en": "Ratatouille, seasoneded, prepacked",
@@ -23137,28 +21255,22 @@ const foodNames = <String, Map<String, String>>{
   "d95c4f6a-93a4-5504-8368-1ea1d14768e7": {
     "en": "Durum wheat, pre-cooked, seasoned, cooked, in a microwaveable bag",
     "fr": "Blé dur, pré-cuit, assaisonné, cuit, en sachet micro-ondable",
-    "de":
-        "Hartweizen, vorgekocht, gewürzt, gekocht, im mikrowellengeeigneten Beutel",
+    "de": "Hartweizen, vorgekocht, gewürzt, gekocht, im mikrowellengeeigneten Beutel",
     "sv": "Durumvete, förkokt, kryddat, tillagat, i mikrovågsanpassad påse",
     "no": "Durumhveete, forkokt, krydret, kokt, i mikrobølgepose",
     "da": "Durumhvede, forkogt, krydret, tilberedt, i mikrobølgeovnspose",
     "nl": "Durumtarwe, voorgekookt, gekruid, bereid, in een magnetronzak",
-    "es":
-        "Trigo duro, precocinado, condimentado, cocinado, en bolsa para microondas",
+    "es": "Trigo duro, precocinado, condimentado, cocinado, en bolsa para microondas",
     "it": "Grano duro, precotto, condito, cotto, in busta microondabile"
   },
   "d99494cd-9d96-5b16-8f25-3e6ca09ee5d3": {
     "en": "Calisson from Aix en Provence (marzipan and candied melon sweet)",
-    "fr":
-        "Calisson d'Aix-en-Provence (confiserie à la pâte d'amande et au melon confit)",
-    "de":
-        "Calisson aus Aix-en-Provence (Marzipan- und kandierte Melonensüßigkeit)",
-    "sv":
-        "Calisson från Aix-en-Provence (sötsak med marsipan och kanderad melon)",
+    "fr": "Calisson d'Aix-en-Provence (confiserie à la pâte d'amande et au melon confit)",
+    "de": "Calisson aus Aix-en-Provence (Marzipan- und kandierte Melonensüßigkeit)",
+    "sv": "Calisson från Aix-en-Provence (sötsak med marsipan och kanderad melon)",
     "no": "Calisson fra Aix-en-Provence (marsipan- og kandisert melon-søtsak)",
     "da": "Calisson fra Aix-en-Provence (marcipan- og kandiseret melonslik)",
-    "nl":
-        "Calisson uit Aix-en-Provence (snoepje van marsepein en gekonfijte meloen)",
+    "nl": "Calisson uit Aix-en-Provence (snoepje van marsepein en gekonfijte meloen)",
     "es": "Calisson de Aix-en-Provence (dulce de mazapán y melón confitado)",
     "it": "Calisson di Aix-en-Provence (dolce di marzapane e melone candito)"
   },
@@ -23186,10 +21298,8 @@ const foodNames = <String, Map<String, String>>{
   },
   "d9de1bc4-8869-5eef-9912-21957ea70ef7": {
     "en": "Fresh pasta, stuffed with cheese (e.g. ravioli), prepacked, cooked",
-    "fr":
-        "Pâtes fraîches, farcies au fromage (ex. ravioli), préemballées, cuites",
-    "de":
-        "Frische Pasta, mit Käse gefüllt (z. B. Ravioli), vorgepackt, gekocht",
+    "fr": "Pâtes fraîches, farcies au fromage (ex. ravioli), préemballées, cuites",
+    "de": "Frische Pasta, mit Käse gefüllt (z. B. Ravioli), vorgepackt, gekocht",
     "sv": "Färsk pasta, fylld med ost (t.ex. ravioli), förpackad, kokt",
     "no": "Fersk pasta, fylt med ost (f.eks. ravioli), ferdigpakket, kokt",
     "da": "Frisk pasta, fyldt med ost (f.eks. ravioli), færdigpakket, kogt",
@@ -23209,23 +21319,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Macaron ripieno di confettura o crema"
   },
   "da783595-882a-5ebf-9143-e111b2e2ccc2": {
-    "en":
-        "Plant-based burger or steak from wheat and soybean (not vegan), prepacked",
-    "fr":
-        "Burger ou steak à base de végétaux à base de blé et de soja (non végane), préemballé",
-    "de":
-        "Pflanzlicher Burger oder Steak aus Weizen und Sojabohne (nicht vegan), vorgepackt",
-    "sv":
-        "Växtbaserad burgare eller biff av vete och sojaböna (inte vegansk), förpackad",
-    "no":
-        "Plantebasert burger eller biff av hvete og soyabønne (ikke vegansk), ferdigpakket",
-    "da":
-        "Plantebaseret burger eller steak af hvede og soja (ikke vegansk), færdigpakket",
-    "nl":
-        "Plantaardige burger of steak van tarwe en soja (niet veganistisch), voorverpakt",
+    "en": "Plant-based burger or steak from wheat and soybean (not vegan), prepacked",
+    "fr": "Burger ou steak à base de végétaux à base de blé et de soja (non végane), préemballé",
+    "de": "Pflanzlicher Burger oder Steak aus Weizen und Sojabohne (nicht vegan), vorgepackt",
+    "sv": "Växtbaserad burgare eller biff av vete och sojaböna (inte vegansk), förpackad",
+    "no": "Plantebasert burger eller biff av hvete og soyabønne (ikke vegansk), ferdigpakket",
+    "da": "Plantebaseret burger eller steak af hvede og soja (ikke vegansk), færdigpakket",
+    "nl": "Plantaardige burger of steak van tarwe en soja (niet veganistisch), voorverpakt",
     "es": "Hamburguesa o filete vegetal de trigo y soja (no vegano), envasado",
-    "it":
-        "Burger o bistecca a base vegetale di frumento e soia (non vegano), preimballato"
+    "it": "Burger o bistecca a base vegetale di frumento e soia (non vegano), preimballato"
   },
   "da897c29-ac16-5b7d-b4c7-e71120c5b0fd": {
     "en": "Beetroot salad, with sauce, prepacked",
@@ -23261,76 +21363,48 @@ const foodNames = <String, Map<String, String>>{
     "it": "Blocco di foie gras, anatra, 30% pezzi"
   },
   "dad6650c-4325-53e3-aef9-71844bdfc9f9": {
-    "en":
-        "Breakfast cereals, vanilla or milk filling, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, fourrées à la vanille ou au lait, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstücksgetreideflocken, Vanille- oder Milchfüllung, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Frukostflingor, vanilj- eller mjölkfyllning, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, vanilje- eller melkefyll, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter, vanilje- eller mælkefyld, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, vanille- of melkvulling, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, con relleno de vainilla o leche, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali da colazione, ripieni alla vaniglia o al latte, arricchiti con vitamine e minerali"
+    "en": "Breakfast cereals, vanilla or milk filling, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, fourrées à la vanille ou au lait, enrichies en vitamines et minéraux",
+    "de": "Frühstücksgetreideflocken, Vanille- oder Milchfüllung, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Frukostflingor, vanilj- eller mjölkfyllning, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, vanilje- eller melkefyll, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter, vanilje- eller mælkefyld, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, vanille- of melkvulling, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, con relleno de vainilla o leche, enriquecidos con vitaminas y minerales",
+    "it": "Cereali da colazione, ripieni alla vaniglia o al latte, arricchiti con vitamine e minerali"
   },
   "dae3a812-ce02-5f26-b6e0-1bbc29cb645a": {
     "en": "Mineral still water (La Cairolle), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale plate (La Cairolle), en bouteille, fortement minéralisée",
-    "de":
-        "Stilles Mineralwasser (La Cairolle), in Flaschen, stark mineralisiert",
-    "sv":
-        "Mineralvatten, stilla (La Cairolle), på flaska, kraftigt mineraliserat",
+    "fr": "Eau minérale plate (La Cairolle), en bouteille, fortement minéralisée",
+    "de": "Stilles Mineralwasser (La Cairolle), in Flaschen, stark mineralisiert",
+    "sv": "Mineralvatten, stilla (La Cairolle), på flaska, kraftigt mineraliserat",
     "no": "Mineralvann, still (La Cairolle), på flaske, sterkt mineralisert",
     "da": "Mineralvand (La Cairolle), flaske, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater zonder koolzuur (La Cairolle), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral sin gas (La Cairolle), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale naturale (La Cairolle), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater zonder koolzuur (La Cairolle), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral sin gas (La Cairolle), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale naturale (La Cairolle), in bottiglia, fortemente mineralizzata"
   },
   "db599927-71ea-5ae3-b413-34b72db4a3c8": {
     "en": "Mineral water (San Bernardo), bottled, very lightly mineralized",
-    "fr":
-        "Eau minérale (San Bernardo), en bouteille, très faiblement minéralisée",
-    "de":
-        "Mineralwasser (San Bernardo), in Flaschen, sehr leicht mineralisiert",
+    "fr": "Eau minérale (San Bernardo), en bouteille, très faiblement minéralisée",
+    "de": "Mineralwasser (San Bernardo), in Flaschen, sehr leicht mineralisiert",
     "sv": "Mineralvatten (San Bernardo), på flaska, mycket svagt mineraliserat",
     "no": "Mineralvann (San Bernardo), på flaske, svært lett mineralisert",
     "da": "Mineralvand (San Bernardo), flaske, meget let mineraliseret",
     "nl": "Mineraalwater (San Bernardo), gebotteld, zeer licht gemineraliseerd",
-    "es":
-        "Agua mineral (San Bernardo), embotellada, muy ligeramente mineralizada",
-    "it":
-        "Acqua minerale (San Bernardo), in bottiglia, minimamente mineralizzata"
+    "es": "Agua mineral (San Bernardo), embotellada, muy ligeramente mineralizada",
+    "it": "Acqua minerale (San Bernardo), in bottiglia, minimamente mineralizzata"
   },
   "db5a477d-52e4-5e8b-94f8-94d83be0bd65": {
-    "en":
-        "Muesli, with fruits, nuts and/or seeds, fortified with vitamins and minerals",
-    "fr":
-        "Muesli, aux fruits, fruits à coque et/ou graines, enrichi en vitamines et minéraux",
-    "de":
-        "Müsli, mit Früchten, Nüssen und/oder Samen, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Müsli, med frukter, nötter och/eller frön, berikad med vitaminer och mineraler",
-    "no":
-        "Müsli, med frukt, nøtter og/eller frø, beriket med vitaminer og mineraler",
-    "da":
-        "Müsli, med frugt, nødder og/eller frø, beriget med vitaminer og mineraler",
-    "nl":
-        "Muesli, met fruit, noten en/of zaden, verrijkt met vitaminen en mineralen",
-    "es":
-        "Muesli, con frutas, frutos secos y/o semillas, enriquecido con vitaminas y minerales",
-    "it":
-        "Muesli, con frutta, frutta a guscio e/o semi, arricchito con vitamine e minerali"
+    "en": "Muesli, with fruits, nuts and/or seeds, fortified with vitamins and minerals",
+    "fr": "Muesli, aux fruits, fruits à coque et/ou graines, enrichi en vitamines et minéraux",
+    "de": "Müsli, mit Früchten, Nüssen und/oder Samen, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Müsli, med frukter, nötter och/eller frön, berikad med vitaminer och mineraler",
+    "no": "Müsli, med frukt, nøtter og/eller frø, beriket med vitaminer og mineraler",
+    "da": "Müsli, med frugt, nødder og/eller frø, beriget med vitaminer og mineraler",
+    "nl": "Muesli, met fruit, noten en/of zaden, verrijkt met vitaminen en mineralen",
+    "es": "Muesli, con frutas, frutos secos y/o semillas, enriquecido con vitaminas y minerales",
+    "it": "Muesli, con frutta, frutta a guscio e/o semi, arricchito con vitamine e minerali"
   },
   "db77af7a-03ff-5c05-835a-71929ceb2324": {
     "en": "Chocolate mousse, plant-based, refrigerated",
@@ -23345,16 +21419,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "dbea8ade-ec13-557a-8013-da80f4ccd130": {
     "en": "Still soft drink, fruit content unknown, with sugar(s)",
-    "fr":
-        "Boisson rafraîchissante plate, teneur en fruits inconnue, avec sucre(s)",
+    "fr": "Boisson rafraîchissante plate, teneur en fruits inconnue, avec sucre(s)",
     "de": "Stilles Erfrischungsgetränk, Fruchtgehalt unbekannt, mit Zucker(n)",
     "sv": "Stilla läskedryck, frukthalt okänd, med socker",
     "no": "Stille kullsyreholdig leskedrikk, ukjent fruktinnhold, med sukker",
     "da": "Stille sodavand, frugtindhold ukendt, med sukker",
     "nl": "Frisdrank zonder koolzuur, fruitgehalte onbekend, met suiker(s)",
     "es": "Refresco sin gas, contenido de fruta desconocido, con azúcar(es)",
-    "it":
-        "Bevanda analcolica piatta, contenuto di frutta sconosciuto, con zuccheri"
+    "it": "Bevanda analcolica piatta, contenuto di frutta sconosciuto, con zuccheri"
   },
   "dc133db3-9d9a-59a5-9720-973e8d06c06f": {
     "en": "Soup, split peas, prepacked, to be reheated",
@@ -23401,39 +21473,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Salame secco, calibro sottile"
   },
   "dcf4aa77-3b84-5369-9a91-84a3d3ba5991": {
-    "en":
-        "Breakfast cereals, very rich in fibre, plain, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, très riches en fibres, natures, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstücksgetreideflocken, sehr ballaststoffreich, pur, angereichert mit Vitaminen und Mineralstoffen",
-    "sv":
-        "Frukostflingor, mycket rika på fiber, naturella, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, svært rik på fiber, naturell, beriket med vitaminer og mineraler",
-    "da":
-        "Morgenmadsprodukter, meget fiberrige, plain, beriget med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, zeer rijk aan vezels, puur, verrijkt met vitaminen en mineralen",
-    "es":
-        "Cereales de desayuno, muy ricos en fibra, naturales, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali da colazione, molto ricchi di fibre, semplici, arricchiti con vitamine e minerali"
+    "en": "Breakfast cereals, very rich in fibre, plain, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, très riches en fibres, natures, enrichies en vitamines et minéraux",
+    "de": "Frühstücksgetreideflocken, sehr ballaststoffreich, pur, angereichert mit Vitaminen und Mineralstoffen",
+    "sv": "Frukostflingor, mycket rika på fiber, naturella, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, svært rik på fiber, naturell, beriket med vitaminer og mineraler",
+    "da": "Morgenmadsprodukter, meget fiberrige, plain, beriget med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, zeer rijk aan vezels, puur, verrijkt met vitaminen en mineralen",
+    "es": "Cereales de desayuno, muy ricos en fibra, naturales, enriquecidos con vitaminas y minerales",
+    "it": "Cereali da colazione, molto ricchi di fibre, semplici, arricchiti con vitamine e minerali"
   },
   "dd498380-f627-5712-b1b5-eec1f338a3b4": {
-    "en":
-        "Processed cheese, from cow's milk, square, not fortified with vitamins",
+    "en": "Processed cheese, from cow's milk, square, not fortified with vitamins",
     "fr": "Fromage fondu, au lait de vache, carré, non enrichi en vitamines",
-    "de":
-        "Schmelzkäse, aus Kuhmilch, quadratisch, nicht mit Vitaminen angereichert",
+    "de": "Schmelzkäse, aus Kuhmilch, quadratisch, nicht mit Vitaminen angereichert",
     "sv": "Smältost, av komjölk, kvadratisk, inte berikad med vitaminer",
     "no": "Smelteost, av kumelk, firkantet, ikke beriket med vitaminer",
     "da": "Smelteost, af komælk, firkantet, ikke beriget med vitaminer",
     "nl": "Smeltkaas, van koemelk, vierkant, niet verrijkt met vitaminen",
-    "es":
-        "Queso fundido, de leche de vaca, cuadrado, no enriquecido con vitaminas",
-    "it":
-        "Formaggio fuso, da latte vaccino, quadrato, non arricchito con vitamine"
+    "es": "Queso fundido, de leche de vaca, cuadrado, no enriquecido con vitaminas",
+    "it": "Formaggio fuso, da latte vaccino, quadrato, non arricchito con vitamine"
   },
   "dd5fb752-6820-5aea-8913-09b0bb4c5d99": {
     "en": "Short crust pastry, with vegetal fat, prepacked, raw",
@@ -23536,21 +21595,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "deac3146-4049-5c81-b61d-c9bd6e3e6296": {
     "en": "Mineral sparkling water (Chateldon), bottled, strongly mineralized",
-    "fr":
-        "Eau minérale gazeuse (Chateldon), en bouteille, fortement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Chateldon), in Flaschen, stark mineralisiert",
-    "sv":
-        "Mineralvatten, kolsyrat (Chateldon), på flaska, kraftigt mineraliserat",
-    "no":
-        "Mineralvann med kullsyre (Chateldon), på flaske, sterkt mineralisert",
+    "fr": "Eau minérale gazeuse (Chateldon), en bouteille, fortement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Chateldon), in Flaschen, stark mineralisiert",
+    "sv": "Mineralvatten, kolsyrat (Chateldon), på flaska, kraftigt mineraliserat",
+    "no": "Mineralvann med kullsyre (Chateldon), på flaske, sterkt mineralisert",
     "da": "Mineralvand med brus (Chateldon), flaske, stærkt mineraliseret",
-    "nl":
-        "Mineraalwater met koolzuur (Chateldon), gebotteld, sterk gemineraliseerd",
-    "es":
-        "Agua mineral con gas (Chateldon), embotellada, fuertemente mineralizada",
-    "it":
-        "Acqua minerale gassata (Chateldon), in bottiglia, fortemente mineralizzata"
+    "nl": "Mineraalwater met koolzuur (Chateldon), gebotteld, sterk gemineraliseerd",
+    "es": "Agua mineral con gas (Chateldon), embotellada, fuertemente mineralizada",
+    "it": "Acqua minerale gassata (Chateldon), in bottiglia, fortemente mineralizzata"
   },
   "deb267dc-1050-5bd3-b67c-cf3a622522d2": {
     "en": "Coco bean, boiled/cooked in water",
@@ -23598,35 +21650,30 @@ const foodNames = <String, Map<String, String>>{
   },
   "df0145e5-9453-5a0a-b60b-cf7fc1fb8494": {
     "en": "Firm cheese, Maasdam-type, reduced fat, from cow's milk",
-    "fr":
-        "Fromage à pâte pressée, type Maasdam, allégé en matières grasses, au lait de vache",
+    "fr": "Fromage à pâte pressée, type Maasdam, allégé en matières grasses, au lait de vache",
     "de": "Schnittkäse, Maasdamer-Art, fettreduziert, aus Kuhmilch",
     "sv": "Fasta ost, Maasdam-typ, reducerad fetthalt, av komjölk",
     "no": "Fast ost, Maasdam-type, redusert fett, av kumelk",
     "da": "Fast ost, Maasdam-type, fedtreduceret, af komælk",
     "nl": "Harde kaas, Maasdam-type, vetarm, van koemelk",
     "es": "Queso firme, tipo Maasdam, bajo en grasa, de leche de vaca",
-    "it":
-        "Formaggio a pasta dura, tipo Maasdam, a ridotto contenuto di grassi, da latte vaccino"
+    "it": "Formaggio a pasta dura, tipo Maasdam, a ridotto contenuto di grassi, da latte vaccino"
   },
   "df0574de-88db-5328-8a4f-727c26a444f1": {
     "en": "Cola, sugar(s) and sweetener(s) content unknown (average)",
     "fr": "Cola, teneur en sucre(s) et édulcorant(s) inconnue (moyenne)",
-    "de":
-        "Cola, Gehalt an Zucker(n) und Süßungsmittel(n) unbekannt (Durchschnitt)",
+    "de": "Cola, Gehalt an Zucker(n) und Süßungsmittel(n) unbekannt (Durchschnitt)",
     "sv": "Cola, socker- och sötningsmedelshalt okänd (medel)",
     "no": "Cola, ukjent innhold av sukker og søtstoffer (gjennomsnitt)",
     "da": "Cola, sukker- og sødestofindhold ukendt (gennemsnit)",
     "nl": "Cola, suiker(s) en zoetstof(fen) gehalte onbekend (gemiddeld)",
-    "es":
-        "Cola, contenido de azúcar(es) y edulcorante(s) desconocido (promedio)",
+    "es": "Cola, contenido de azúcar(es) y edulcorante(s) desconocido (promedio)",
     "it": "Cola, contenuto di zuccheri e dolcificanti sconosciuto (media)"
   },
   "df0585f8-c40b-5c59-a362-9ede39493a16": {
     "en": "Mineral water (Spa-Reine), bottled, averagely mineralized",
     "fr": "Eau minérale (Spa-Reine), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser (Spa-Reine), in Flaschen, durchschnittlich mineralisiert",
+    "de": "Mineralwasser (Spa-Reine), in Flaschen, durchschnittlich mineralisiert",
     "sv": "Mineralvatten (Spa-Reine), på flaska, måttligt mineraliserat",
     "no": "Mineralvann (Spa-Reine), på flaske, middels mineralisert",
     "da": "Mineralvand (Spa-Reine), flaske, gennemsnitligt mineraliseret",
@@ -23659,8 +21706,7 @@ const foodNames = <String, Map<String, String>>{
   "df82e984-bcbe-5fb5-879b-b785cb173ad4": {
     "en": "Toasted ham and cheese sandwich, topped with a fried egg, homemade",
     "fr": "Croque-monsieur, surmonté d'un œuf au plat, fait maison",
-    "de":
-        "Überbackenes Schinken-Käse-Sandwich, mit Spiegelei belegt, hausgemacht",
+    "de": "Überbackenes Schinken-Käse-Sandwich, mit Spiegelei belegt, hausgemacht",
     "sv": "Varma mackor med skinka och ost, toppade med stekt ägg, hemgjorda",
     "no": "Varm skinke- og ostesmørbrød, toppet med et speilegg, hjemmelaget",
     "da": "Croque Madame, hjemmelavet",
@@ -23724,24 +21770,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Macedonia di frutta, cruda"
   },
   "e06cfe3d-89a5-5727-a8e4-e74f28ca6c59": {
-    "en":
-        "Fresh cream cheese mousse, on a fruit layer, 0% fat, with sweetener(s), fortified with calcium and vitamin D",
-    "fr":
-        "Mousse de fromage frais, sur lit de fruits, 0% de matières grasses, avec édulcorant(s), enrichie en calcium et vitamine D",
-    "de":
-        "Frischkäsemousse, auf Fruchtschicht, 0% Fett, mit Süßungsmittel(n), angereichert mit Calcium und Vitamin D",
-    "sv":
-        "Färskostmousse, på ett fruktlager, 0% fett, med sötningsmedel, berikad med kalcium och vitamin D",
-    "no":
-        "Frisk kremostmousse, på et fruktlag, 0% fett, med søtstoffer, beriket med kalsium og vitamin D",
-    "da":
-        "Frisk flødeostmousse, på frugtlag, 0% fedt, med sødestof, beriget med calcium og vitamin D",
-    "nl":
-        "Verse versekaasmousse, op een fruitlaagje, 0% vet, met zoetstof(fen), verrijkt met calcium en vitamine D",
-    "es":
-        "Mousse de queso fresco, sobre una capa de fruta, 0% grasa, con edulcorante(s), enriquecida con calcio y vitamina D",
-    "it":
-        "Mousse di formaggio fresco, su strato di frutta, 0% grassi, con dolcificanti, arricchita con calcio e vitamina D"
+    "en": "Fresh cream cheese mousse, on a fruit layer, 0% fat, with sweetener(s), fortified with calcium and vitamin D",
+    "fr": "Mousse de fromage frais, sur lit de fruits, 0% de matières grasses, avec édulcorant(s), enrichie en calcium et vitamine D",
+    "de": "Frischkäsemousse, auf Fruchtschicht, 0% Fett, mit Süßungsmittel(n), angereichert mit Calcium und Vitamin D",
+    "sv": "Färskostmousse, på ett fruktlager, 0% fett, med sötningsmedel, berikad med kalcium och vitamin D",
+    "no": "Frisk kremostmousse, på et fruktlag, 0% fett, med søtstoffer, beriket med kalsium og vitamin D",
+    "da": "Frisk flødeostmousse, på frugtlag, 0% fedt, med sødestof, beriget med calcium og vitamin D",
+    "nl": "Verse versekaasmousse, op een fruitlaagje, 0% vet, met zoetstof(fen), verrijkt met calcium en vitamine D",
+    "es": "Mousse de queso fresco, sobre una capa de fruta, 0% grasa, con edulcorante(s), enriquecida con calcio y vitamina D",
+    "it": "Mousse di formaggio fresco, su strato di frutta, 0% grassi, con dolcificanti, arricchita con calcio e vitamina D"
   },
   "e071381e-bb07-5eda-a562-9fc1219503e2": {
     "en": "Sandwich, baguette, pâté and pickles",
@@ -23766,21 +21803,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Latte in polvere, scremato"
   },
   "e0d62edc-6fe2-5101-84ff-48302180cc78": {
-    "en":
-        "Uncured soft cheese, spreadable, flavoured with garlic and herbs), from cow's milk",
-    "fr":
-        "Fromage frais non affiné, à tartiner, aromatisé à l'ail et aux fines herbes, au lait de vache",
-    "de":
-        "Frischkäse, ungart, streichfähig, mit Knoblauch und Kräutern aromatisiert, aus Kuhmilch",
+    "en": "Uncured soft cheese, spreadable, flavoured with garlic and herbs), from cow's milk",
+    "fr": "Fromage frais non affiné, à tartiner, aromatisé à l'ail et aux fines herbes, au lait de vache",
+    "de": "Frischkäse, ungart, streichfähig, mit Knoblauch und Kräutern aromatisiert, aus Kuhmilch",
     "sv": "Olagrad mjukost, bredbar, smaksatt med vitlök och örter, av komjölk",
     "no": "Umodnet myk ost, smørbar, smaksatt med hvitløk og urter, av ku-melk",
-    "da":
-        "Umodnet blød ost, smørbar, med smag af hvidløg og krydderurter, lavet af komælk",
-    "nl":
-        "Onbewerkte zachte kaas, smeerbaar, op smaak gebracht met knoflook en kruiden, van koemelk",
+    "da": "Umodnet blød ost, smørbar, med smag af hvidløg og krydderurter, lavet af komælk",
+    "nl": "Onbewerkte zachte kaas, smeerbaar, op smaak gebracht met knoflook en kruiden, van koemelk",
     "es": "Queso fresco para untar, sabor ajo y hierbas, de leche de vaca",
-    "it":
-        "Formaggio fresco spalmabile, aromatizzato ad aglio ed erbe, da latte vaccino"
+    "it": "Formaggio fresco spalmabile, aromatizzato ad aglio ed erbe, da latte vaccino"
   },
   "e0df34fd-54a5-575c-a9aa-7127ab3766b6": {
     "en": "Stuffed vegetables (excluding tomato)",
@@ -23812,10 +21843,8 @@ const foodNames = <String, Map<String, String>>{
     "no": "Melkepudding, smaksatt, dekket med karamellsaus, kjølt",
     "da": "Mælkegele, med smag, dækket af karamelsauce, kølet",
     "nl": "Melkgelei, op smaak gebracht, bedekt met karamelsaus, gekoeld",
-    "es":
-        "Gelatina de leche, aromatizada, cubierta con salsa de caramelo, refrigerada",
-    "it":
-        "Budino di latte, aromatizzato, ricoperto di salsa al caramello, refrigerato"
+    "es": "Gelatina de leche, aromatizada, cubierta con salsa de caramelo, refrigerada",
+    "it": "Budino di latte, aromatizzato, ricoperto di salsa al caramello, refrigerato"
   },
   "e14f3237-897f-589a-bd8d-e45562541f8d": {
     "en": "Mustard sauce, prepacked",
@@ -23940,8 +21969,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "e2246772-0045-5097-ac86-9f235b1d0b38": {
     "en": "Fritter, filled with potatoes (filo pastry), home-made, cooked",
-    "fr":
-        "Beignets, farcis aux pommes de terre (pâte filo), faits maison, cuits",
+    "fr": "Beignets, farcis aux pommes de terre (pâte filo), faits maison, cuits",
     "de": "Teigtasche, gefüllt mit Kartoffeln (Filoteig), hausgemacht, gekocht",
     "sv": "Friterad pirog fylld med potatis (filodeg), hemgjord, tillagad",
     "no": "Fritert kake, fylt med poteter (filodeig), hjemmelaget, tilberedt",
@@ -24028,8 +22056,7 @@ const foodNames = <String, Map<String, String>>{
     "it": "Formaggio fresco morbido sgocciolato, circa 6% grassi"
   },
   "e35f8ae2-2b85-5919-92a7-fbe7856a670b": {
-    "en":
-        "Goblet of ice cream, coffe or chocolate ice cream topped with whipped cream",
+    "en": "Goblet of ice cream, coffe or chocolate ice cream topped with whipped cream",
     "fr": "Coupe de glace, glace au café ou au chocolat nappée de chantilly",
     "de": "Eisbecher, Kaffee- oder Schokoladeneis mit Schlagsahne",
     "sv": "Glassbägare, kaffe- eller chokladglass toppad med vispgrädde",
@@ -24037,62 +22064,40 @@ const foodNames = <String, Map<String, String>>{
     "da": "Isdessert, kaffe- eller chokoladeis toppet med flødeskum",
     "nl": "Coupe ijs, koffie- of chocolade-ijs getopt met slagroom",
     "es": "Copa de helado, helado de café o chocolate con nata montada",
-    "it":
-        "Coppa di gelato, gelato al caffè o cioccolato guarnito con panna montata"
+    "it": "Coppa di gelato, gelato al caffè o cioccolato guarnito con panna montata"
   },
   "e396e444-4f1d-5a6e-9c66-8241379c4d2e": {
-    "en":
-        "Mixed salad with raw vegetables, chicken and cheese, with sauce, prepacked",
-    "fr":
-        "Salade composée aux crudités, poulet et fromage, avec sauce, préemballée",
-    "de":
-        "Gemischter Salat mit rohem Gemüse, Hähnchen und Käse, mit Sauce, vorgepackt",
-    "sv":
-        "Blandad sallad med råa grönsaker, kyckling och ost, med sås, färdigförpackad",
-    "no":
-        "Blandingssalat med rå grønnsaker, kylling og ost, med saus, ferdigpakket",
-    "da":
-        "Blandet salat med rå grøntsager, kylling og ost, med dressing, færdigpakket",
-    "nl":
-        "Gemengde salade met rauwe groenten, kip en kaas, met saus, voorverpakt",
-    "es":
-        "Ensalada mixta con verduras crudas, pollo y queso, con salsa, preenvasada",
-    "it":
-        "Insalata mista con verdure crude, pollo e formaggio, con salsa, preconfezionata"
+    "en": "Mixed salad with raw vegetables, chicken and cheese, with sauce, prepacked",
+    "fr": "Salade composée aux crudités, poulet et fromage, avec sauce, préemballée",
+    "de": "Gemischter Salat mit rohem Gemüse, Hähnchen und Käse, mit Sauce, vorgepackt",
+    "sv": "Blandad sallad med råa grönsaker, kyckling och ost, med sås, färdigförpackad",
+    "no": "Blandingssalat med rå grønnsaker, kylling og ost, med saus, ferdigpakket",
+    "da": "Blandet salat med rå grøntsager, kylling og ost, med dressing, færdigpakket",
+    "nl": "Gemengde salade met rauwe groenten, kip en kaas, met saus, voorverpakt",
+    "es": "Ensalada mixta con verduras crudas, pollo y queso, con salsa, preenvasada",
+    "it": "Insalata mista con verdure crude, pollo e formaggio, con salsa, preconfezionata"
   },
   "e3c5be7c-cfa0-5feb-be68-9c552a6a0be6": {
-    "en":
-        "Spreadable fat > 41% fat and <= 62% fat, half-salted, rich in omega 3",
-    "fr":
-        "Matière grasse à tartiner > 41% et <= 62% de MG, demi-sel, riche en oméga 3",
-    "de":
-        "Streichfett > 41 % Fett und <= 62 % Fett, halbsalzig, reich an Omega-3",
-    "sv":
-        "Bredbart matfett > 41% fett och <= 62% fett, halvsaltat, rikt på omega 3",
+    "en": "Spreadable fat > 41% fat and <= 62% fat, half-salted, rich in omega 3",
+    "fr": "Matière grasse à tartiner > 41% et <= 62% de MG, demi-sel, riche en oméga 3",
+    "de": "Streichfett > 41 % Fett und <= 62 % Fett, halbsalzig, reich an Omega-3",
+    "sv": "Bredbart matfett > 41% fett och <= 62% fett, halvsaltat, rikt på omega 3",
     "no": "Smørbart fett > 41% fett og <= 62% fett, halvsaltet, rik på omega 3",
-    "da":
-        "Smørbart fedtstof > 41% fedt og <= 62% fedt, halvsaltet, rig på omega 3",
-    "nl":
-        "Smeerbaar vet > 41% vet en <= 62% vet, halfgezouten, rijk aan omega 3",
-    "es":
-        "Grasa para untar > 41% de grasa y <= 62% de grasa, semisalada, rica en omega 3",
-    "it":
-        "Grasso spalmabile > 41% grassi e <= 62% grassi, semi-salato, ricco di omega 3"
+    "da": "Smørbart fedtstof > 41% fedt og <= 62% fedt, halvsaltet, rig på omega 3",
+    "nl": "Smeerbaar vet > 41% vet en <= 62% vet, halfgezouten, rijk aan omega 3",
+    "es": "Grasa para untar > 41% de grasa y <= 62% de grasa, semisalada, rica en omega 3",
+    "it": "Grasso spalmabile > 41% grassi e <= 62% grassi, semi-salato, ricco di omega 3"
   },
   "e41fa900-c395-510b-aaa4-9ae1e7fec196": {
     "en": "Soft waffle (Brussels-style), plain or with sugar(s), prepacked",
     "fr": "Gaufre molle (style Bruxelles), nature ou sucrée, préemballée",
     "de": "Weiche Waffel (Brüsseler Art), pur oder mit Zucker, vorgepackt",
-    "sv":
-        "Mjuk våffla (Bryssel-stil), naturell eller med socker, färdigförpackad",
+    "sv": "Mjuk våffla (Bryssel-stil), naturell eller med socker, färdigförpackad",
     "no": "Myk vaffel (Brussel-stil), naturell eller med sukker, ferdigpakket",
-    "da":
-        "Blød vaffel (Bruxelles-stil), naturel eller med sukker, færdigpakket",
-    "nl":
-        "Zachte wafel (Brusselse stijl), naturel of met suiker(s), voorverpakt",
+    "da": "Blød vaffel (Bruxelles-stil), naturel eller med sukker, færdigpakket",
+    "nl": "Zachte wafel (Brusselse stijl), naturel of met suiker(s), voorverpakt",
     "es": "Gofre blando (estilo Bruselas), natural o con azúcares, preenvasado",
-    "it":
-        "Waffle morbido (tipo Bruxelles), semplice o con zuccheri, preconfezionato"
+    "it": "Waffle morbido (tipo Bruxelles), semplice o con zuccheri, preconfezionato"
   },
   "e42bc2b8-1d7b-5461-af2c-8a569a1cb9cb": {
     "en": "Condensed milk, with sugar(s), whole",
@@ -24139,24 +22144,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Germe di grano"
   },
   "e489fbb7-afda-5e39-ae90-09db42ff8353": {
-    "en":
-        "Mix of chicory and coffee, instant, no added sugars, ready-to-drink (reconstituted with standard semi-skimmed milk)",
-    "fr":
-        "Mélange de chicorée et café, instantané, sans sucres ajoutés, prêt à consommer (reconstitué avec du lait demi-écrémé standard)",
-    "de":
-        "Zichorien-Kaffee-Mischung, löslich, ohne zugesetzten Zucker, trinkfertig (mit standardmäßiger fettarmer Milch zubereitet)",
-    "sv":
-        "Blandning av cikoria och kaffe, snabbkaffe, utan tillsatt socker, färdig att dricka (rekonstruerad med standardstandardiserad lättmjölk)",
-    "no":
-        "Blanding av sikori og kaffe, pulver, uten tilsatt sukker, drikkeklar (rekonstituert med standard lettmelk)",
-    "da":
-        "Blanding af cikorie og kaffe, instant, uden tilsat sukker, klar til drik (blandet med standard letmælk)",
-    "nl":
-        "Mix van cichorei en koffie, instant, zonder toegevoegde suikers, kant-en-klaar (aangemaakt met standaard halfvolle melk)",
-    "es":
-        "Mezcla de achicoria y café, instantánea, sin azúcares añadidos, lista para beber (reconstituida con leche semidesnatada estándar)",
-    "it":
-        "Miscela di cicoria e caffè, istantanea, senza zuccheri aggiunti, pronta da bere (ricostituita con latte parzialmente scremato standard)"
+    "en": "Mix of chicory and coffee, instant, no added sugars, ready-to-drink (reconstituted with standard semi-skimmed milk)",
+    "fr": "Mélange de chicorée et café, instantané, sans sucres ajoutés, prêt à consommer (reconstitué avec du lait demi-écrémé standard)",
+    "de": "Zichorien-Kaffee-Mischung, löslich, ohne zugesetzten Zucker, trinkfertig (mit standardmäßiger fettarmer Milch zubereitet)",
+    "sv": "Blandning av cikoria och kaffe, snabbkaffe, utan tillsatt socker, färdig att dricka (rekonstruerad med standardstandardiserad lättmjölk)",
+    "no": "Blanding av sikori og kaffe, pulver, uten tilsatt sukker, drikkeklar (rekonstituert med standard lettmelk)",
+    "da": "Blanding af cikorie og kaffe, instant, uden tilsat sukker, klar til drik (blandet med standard letmælk)",
+    "nl": "Mix van cichorei en koffie, instant, zonder toegevoegde suikers, kant-en-klaar (aangemaakt met standaard halfvolle melk)",
+    "es": "Mezcla de achicoria y café, instantánea, sin azúcares añadidos, lista para beber (reconstituida con leche semidesnatada estándar)",
+    "it": "Miscela di cicoria e caffè, istantanea, senza zuccheri aggiunti, pronta da bere (ricostituita con latte parzialmente scremato standard)"
   },
   "e49ec410-acba-535c-b5db-7e747f57bfca": {
     "en": "Melon, honeydew, flesh without skin, without seeds, raw",
@@ -24170,26 +22166,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Melone, honeydew, polpa senza buccia, senza semi, crudo"
   },
   "e4ae2d50-2a23-526e-b721-d92bd6faf9e4": {
-    "en": "Broccoli, steamed",
-    "fr": "Brocoli, cuit à la vapeur",
-    "de": "Brokkoli, gedämpft",
-    "sv": "Broccoli, ångad",
-    "no": "Brokkoli, dampet",
-    "da": "Broccoli, dampet",
-    "nl": "Broccoli, gestoomd",
-    "es": "Brócoli, al vapor",
-    "it": "Broccoli, al vapore"
+    "en": "Broccoli — steamed",
+    "de": "Brokkoli – gedämpft",
+    "fr": "Brocoli — cuit à la vapeur",
+    "no": "Brokkoli – dampet",
+    "sv": "Broccoli — ångkokt",
+    "da": "Broccoli — dampet",
+    "nl": "Broccoli — gestoomd",
+    "it": "Broccoli — al vapore",
+    "es": "Brócoli — al vapor"
   },
   "e4af87e8-7c43-518c-8eb9-6c3f8a315bff": {
-    "en": "Cheddar cheese, from cow's milk",
-    "fr": "Cheddar, au lait de vache",
-    "de": "Cheddarkäse, aus Kuhmilch",
-    "sv": "Cheddarost, av komjölk",
-    "no": "Cheddarost, av ku-melk",
-    "da": "Cheddarost, lavet af komælk",
-    "nl": "Cheddar kaas, van koemelk",
-    "es": "Queso cheddar, de leche de vaca",
-    "it": "Formaggio Cheddar, da latte vaccino"
+    "en": "Cheddar",
+    "de": "Cheddar",
+    "fr": "Cheddar",
+    "no": "Cheddar",
+    "sv": "Cheddar",
+    "da": "Cheddar",
+    "nl": "Cheddar",
+    "it": "Cheddar",
+    "es": "Cheddar"
   },
   "e4eed7a4-cbb9-5f13-9385-024dd4de343f": {
     "en": "Apple, Canada, flesh without skin, raw",
@@ -24215,15 +22211,12 @@ const foodNames = <String, Map<String, String>>{
   },
   "e54d86a4-8838-56be-891a-5d2a0e9a5624": {
     "en": "Yogurt or fermented milk, flavoured, 0% fat, with sweetener(s)",
-    "fr":
-        "Yaourt ou lait fermenté, aromatisé, 0% de matière grasse, avec édulcorant(s)",
-    "de":
-        "Joghurt oder fermentierte Milch, aromatisiert, 0 % Fett, mit Süßungsmitteln",
+    "fr": "Yaourt ou lait fermenté, aromatisé, 0% de matière grasse, avec édulcorant(s)",
+    "de": "Joghurt oder fermentierte Milch, aromatisiert, 0 % Fett, mit Süßungsmitteln",
     "sv": "Yoghurt eller syrad mjölk, smaksatt, 0% fett, med sötningsmedel",
     "no": "Yoghurt eller syrnet melk, smaksatt, 0% fett, med søtningsmiddel",
     "da": "Yoghurt eller fermenteret mælk, med smag, 0% fedt, med sødestof",
-    "nl":
-        "Yoghurt of gefermenteerde melk, op smaak gebracht, 0% vet, met zoetstof(fen)",
+    "nl": "Yoghurt of gefermenteerde melk, op smaak gebracht, 0% vet, met zoetstof(fen)",
     "es": "Yogur o leche fermentada, aromatizado, 0% grasa, con edulcorantes",
     "it": "Yogurt o latte fermentato, aromatizzato, 0% grassi, con edulcoranti"
   },
@@ -24438,15 +22431,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "e76cb9ad-f7c2-5e47-beda-00e75d9dc443": {
     "en": "Spreadable fat, fat % unknown, half-salted (average)",
-    "fr":
-        "Matière grasse à tartiner, % de matière grasse inconnu, demi-sel (moyenne)",
+    "fr": "Matière grasse à tartiner, % de matière grasse inconnu, demi-sel (moyenne)",
     "de": "Streichfett, Fettgehalt unbekannt, halbgesalzen (Durchschnitt)",
     "sv": "Bredbart fett, fetthalt % okänd, halvsaltat (genomsnitt)",
     "no": "Smørbart fett, fettprosent ukjent, halvsaltet (gjennomsnitt)",
     "da": "Smørbart fedtstof, fedtprocent ukendt, halvsaltet (gennemsnit)",
     "nl": "Smeerbaar vet, vetpercentage onbekend, halfgezouten (gemiddeld)",
-    "es":
-        "Grasa para untar, porcentaje de grasa desconocido, semisalada (promedio)",
+    "es": "Grasa para untar, porcentaje de grasa desconocido, semisalada (promedio)",
     "it": "Grasso spalmabile, percentuale di grassi ignota, demi-sel (media)"
   },
   "e7b688bf-6dc8-5325-a126-439af154a18a": {
@@ -24506,18 +22497,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "e85778d3-131b-5795-b909-2c76e470f7ea": {
     "en": "Couscous with meat or chicken, reduced fat, prepacked",
-    "fr":
-        "Couscous à la viande ou au poulet, allégé en matières grasses, préemballé",
+    "fr": "Couscous à la viande ou au poulet, allégé en matières grasses, préemballé",
     "de": "Couscous mit Fleisch oder Hähnchen, fettreduziert, vorverpackt",
-    "sv":
-        "Couscous med kött eller kyckling, reducerad fetthalt, färdigförpackad",
-    "no":
-        "Couscous med kjøtt eller kylling, redusert fettinnhold, ferdigpakket",
+    "sv": "Couscous med kött eller kyckling, reducerad fetthalt, färdigförpackad",
+    "no": "Couscous med kjøtt eller kylling, redusert fettinnhold, ferdigpakket",
     "da": "Couscous med kød eller kylling, fedtreduceret, færdigpakket",
     "nl": "Couscous met vlees of kip, vetarm, voorverpakt",
     "es": "Cuscús con carne o pollo, bajo en grasa, preenvasado",
-    "it":
-        "Couscous con carne o pollo, a ridotto contenuto di grassi, confezionato"
+    "it": "Couscous con carne o pollo, a ridotto contenuto di grassi, confezionato"
   },
   "e85dccdd-840d-5a6a-801d-a2f408b3a280": {
     "en": "American-style sauce, prepacked",
@@ -24576,32 +22563,25 @@ const foodNames = <String, Map<String, String>>{
   },
   "e8fd3be3-6de0-5bb3-93cb-24c4509afc80": {
     "en": "Still soft drink with tea extract, flavoured, with sugar(s)",
-    "fr":
-        "Boisson rafraîchissante non gazeuse à l'extrait de thé, aromatisée, avec sucre(s)",
-    "de":
-        "Stillstands-Erfrischungsgetränk mit Tee-Extrakt, aromatisiert, mit Zucker",
+    "fr": "Boisson rafraîchissante non gazeuse à l'extrait de thé, aromatisée, avec sucre(s)",
+    "de": "Stillstands-Erfrischungsgetränk mit Tee-Extrakt, aromatisiert, mit Zucker",
     "sv": "Stilla läsk med teextrakt, smaksatt, med socker",
     "no": "Fruktdrikk uten kullsyre med teekstrakt, med smak, med sukker",
-    "da":
-        "Ikke-kulsyreholdig sodavand med te-ekstrakt, smagstilsat, med sukker",
-    "nl":
-        "Niet-koolzuurhoudende frisdrank met thee-extract, gearomatiseerd, met suiker(s)",
-    "es":
-        "Bebida refrescante sin gas con extracto de té, aromatizada, con azúcar",
+    "da": "Ikke-kulsyreholdig sodavand med te-ekstrakt, smagstilsat, med sukker",
+    "nl": "Niet-koolzuurhoudende frisdrank met thee-extract, gearomatiseerd, met suiker(s)",
+    "es": "Bebida refrescante sin gas con extracto de té, aromatizada, con azúcar",
     "it": "Bibita analcolica con estratto di tè, aromatizzata, zuccherata"
   },
   "e93726e4-475b-55ac-b4fd-fabd36b0a074": {
     "en": "Bolognese-type vegetarian sauce, with soya proteins, prepacked",
-    "fr":
-        "Sauce végétarienne type bolognaise, aux protéines de soja, préemballée",
+    "fr": "Sauce végétarienne type bolognaise, aux protéines de soja, préemballée",
     "de": "Vegetarische Sauce Bolognese-Art, mit Sojaproteinen, vorverpackt",
     "sv": "Vegetarisk sås av Bolognese-typ, med sojaproteiner, färdigförpackad",
     "no": "Vegetarisk saus i bolognesestil, med soyaproteiner, ferdigpakket",
     "da": "Vegetarisk bolognese-sovs med sojaprotein, færdigpakket",
     "nl": "Vegetarische bolognesesaus, met soja-eiwitten, voorverpakt",
     "es": "Salsa vegetariana tipo boloñesa, con proteínas de soja, preenvasada",
-    "it":
-        "Salsa vegetariana tipo bolognese con proteine della soia, confezionata"
+    "it": "Salsa vegetariana tipo bolognese con proteine della soia, confezionata"
   },
   "e93b18c2-3b6c-5810-a5a3-983791264dc8": {
     "en": "Beef, ground, cooked (average)",
@@ -24736,24 +22716,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Insalata coleslaw con salsa, confezionata"
   },
   "ea80e0ab-fcf6-5928-b1b1-99fe6281c652": {
-    "en":
-        "Fresh pasta, stuffed with meat (e.g. bolognese-style ravioli), prepacked, cooked",
-    "fr":
-        "Pâtes fraîches farcies à la viande (ex. raviolis bolognaise), préemballées, cuites",
-    "de":
-        "Frische Pasta, mit Fleisch gefüllt (z. B. Ravioli nach Bologneser Art), vorverpackt, gekocht",
-    "sv":
-        "Färsk pasta, fylld med kött (t.ex. ravioli i bolognese-stil), färdigförpackad, tillagad",
-    "no":
-        "Fersk pasta, fylt med kjøtt (f.eks. ravioli i bolognesestil), ferdigpakket, tilberedt",
-    "da":
-        "Frisk pasta, fyldt med kød (f.eks. bolognese-ravioli), færdigpakket, tilberedt",
-    "nl":
-        "Verse pasta, gevuld met vlees (bijv. ravioli bolognese), voorverpakt, gekookt",
-    "es":
-        "Pasta fresca rellena de carne (ej. raviolis boloñesa), preenvasada, cocida",
-    "it":
-        "Pasta fresca ripiena di carne (es. ravioli alla bolognese), confezionata, cotta"
+    "en": "Fresh pasta, stuffed with meat (e.g. bolognese-style ravioli), prepacked, cooked",
+    "fr": "Pâtes fraîches farcies à la viande (ex. raviolis bolognaise), préemballées, cuites",
+    "de": "Frische Pasta, mit Fleisch gefüllt (z. B. Ravioli nach Bologneser Art), vorverpackt, gekocht",
+    "sv": "Färsk pasta, fylld med kött (t.ex. ravioli i bolognese-stil), färdigförpackad, tillagad",
+    "no": "Fersk pasta, fylt med kjøtt (f.eks. ravioli i bolognesestil), ferdigpakket, tilberedt",
+    "da": "Frisk pasta, fyldt med kød (f.eks. bolognese-ravioli), færdigpakket, tilberedt",
+    "nl": "Verse pasta, gevuld met vlees (bijv. ravioli bolognese), voorverpakt, gekookt",
+    "es": "Pasta fresca rellena de carne (ej. raviolis boloñesa), preenvasada, cocida",
+    "it": "Pasta fresca ripiena di carne (es. ravioli alla bolognese), confezionata, cotta"
   },
   "ea8cd51f-2b91-5b87-b0ff-aea347a7969b": {
     "en": "Rusk, no added salt",
@@ -24867,19 +22838,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "ebde7d95-38ce-5d4e-93dd-f11751de1f94": {
     "en": "Pork, shoulder lower half, without rind, fat and bone, raw",
-    "fr":
-        "Porc, demi-épaule inférieure, sans couenne, sans gras et sans os, cru",
-    "de":
-        "Schwein, Schulter untere Hälfte, ohne Schwarte, Fett und Knochen, roh",
+    "fr": "Porc, demi-épaule inférieure, sans couenne, sans gras et sans os, cru",
+    "de": "Schwein, Schulter untere Hälfte, ohne Schwarte, Fett und Knochen, roh",
     "sv": "Fläskkött, lägre bogdel, utan svål, fett och ben, rått",
     "no": "Svin, nedre bog, uten svor, fett og bein, rå",
-    "nl":
-        "Varkensvlees, schouder onderste helft, zonder zwoerd, vet en bot, rauw",
+    "nl": "Varkensvlees, schouder onderste helft, zonder zwoerd, vet en bot, rauw",
     "da": "Svinekød, bov nederste del, uden svær, fedt og ben, rå",
-    "es":
-        "Cerdo, parte inferior de la paletilla, sin corteza, grasa ni hueso, crudo",
-    "it":
-        "Maiale, metà inferiore della spalla, senza cotenna, grasso e osso, crudo"
+    "es": "Cerdo, parte inferior de la paletilla, sin corteza, grasa ni hueso, crudo",
+    "it": "Maiale, metà inferiore della spalla, senza cotenna, grasso e osso, crudo"
   },
   "ebeda133-724d-52ae-978d-c81b4dba438b": {
     "en": "Vegetable terrine or mousse, prepacked",
@@ -24905,19 +22871,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "ec317746-eb3c-5a0a-ab29-7a96c5e4ff43": {
     "en": "Soy drink, flavoured, with sugar(s), not fortified, prepacked",
-    "fr":
-        "Boisson au soja, aromatisée, avec sucre(s), non enrichie, préemballée",
-    "de":
-        "Sojagetränk, aromatisiert, mit Zucker(n), nicht angereichert, vorverpackt",
+    "fr": "Boisson au soja, aromatisée, avec sucre(s), non enrichie, préemballée",
+    "de": "Sojagetränk, aromatisiert, mit Zucker(n), nicht angereichert, vorverpackt",
     "sv": "Sojadryck, smaksatt, med socker, ej berikad, förpackad",
     "no": "Soyadrikk, med smak, med sukker, ikke beriket, ferdigpakket",
-    "nl":
-        "Sojadrink, gearomatiseerd, met suiker(s), niet verrijkt, voorverpakt",
+    "nl": "Sojadrink, gearomatiseerd, met suiker(s), niet verrijkt, voorverpakt",
     "da": "Sojadrik, med smag, med sukker, ikke beriget, færdigpakket",
-    "es":
-        "Bebida de soja, aromatizada, con azúcar(es), no enriquecida, preenvasada",
-    "it":
-        "Bevanda alla soia, aromatizzata, con zuccheri, non fortificata, confezionata"
+    "es": "Bebida de soja, aromatizada, con azúcar(es), no enriquecida, preenvasada",
+    "it": "Bevanda alla soia, aromatizzata, con zuccheri, non fortificata, confezionata"
   },
   "ec33e9a7-678d-5d0e-9d7d-eb0a87b334bb": {
     "en": "Mille-feuille pastry",
@@ -24965,19 +22926,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "ec8f689e-d2a2-5cbd-a5e4-d9c56e2c8291": {
     "en": "Kouign amann, Buttered and caramelized milkbread cake, from bakery",
-    "fr":
-        "Kouign amann, Gâteau de pain au lait beurré et caramélisé, de boulangerie",
-    "de":
-        "Kouign-amann, gebutterter und karamellisierter Milchbrotkuchen, vom Bäcker",
+    "fr": "Kouign amann, Gâteau de pain au lait beurré et caramélisé, de boulangerie",
+    "de": "Kouign-amann, gebutterter und karamellisierter Milchbrotkuchen, vom Bäcker",
     "sv": "Kouign-amann, smörad och karamelliserad mjölkbrödskaka, från bageri",
     "no": "Kouign-amann, smør- og karamellisert melkebrødkake, fra bakeri",
-    "nl":
-        "Kouign amann, boterige en gekarameliseerde melkbroodcake, van de bakker",
+    "nl": "Kouign amann, boterige en gekarameliseerde melkbroodcake, van de bakker",
     "da": "Kouign amann, smørbagt og karamelliseret mælkebolleret, fra bageri",
-    "es":
-        "Kouign amann, pastel de pan de leche mantecoso y caramelizado, de panadería",
-    "it":
-        "Kouign amann, dolce di pasta lievitata imburrato e caramellato, da pasticceria"
+    "es": "Kouign amann, pastel de pan de leche mantecoso y caramelizado, de panadería",
+    "it": "Kouign amann, dolce di pasta lievitata imburrato e caramellato, da pasticceria"
   },
   "ec9ab6fd-c642-5975-9602-31965f77a5c2": {
     "en": "Rillettes, tuna, prepacked",
@@ -25035,40 +22991,26 @@ const foodNames = <String, Map<String, String>>{
     "it": "Anatra confit (conservata nel grasso), in scatola"
   },
   "ed577d51-0ecf-5b1d-be76-fb7f8bd25dd8": {
-    "en":
-        "Sponge cake with chocolate with or without cherry \"black forest cake\"",
-    "fr":
-        "Gâteau de type génoise au chocolat avec ou sans cerise \"forêt-noire\"",
-    "de":
-        "Biskuitkuchen mit Schokolade mit oder ohne Kirschen \"Schwarzwälder Kirschtorte\"",
+    "en": "Sponge cake with chocolate with or without cherry \"black forest cake\"",
+    "fr": "Gâteau de type génoise au chocolat avec ou sans cerise \"forêt-noire\"",
+    "de": "Biskuitkuchen mit Schokolade mit oder ohne Kirschen \"Schwarzwälder Kirschtorte\"",
     "sv": "Tårtbotten med choklad med eller utan körsbär \"schwarzwaldtårta\"",
     "no": "Sjokoladekake med eller uten kirsebær \"Schwarzwaldkake\"",
-    "nl":
-        "Biscuitgebak met chocolade met of zonder kersen \"Schwarzwalder kirschtaart\"",
+    "nl": "Biscuitgebak met chocolade met of zonder kersen \"Schwarzwalder kirschtaart\"",
     "da": "Lagkage med chokolade, med eller uden kirsebær (Schwarzwald-kage)",
     "es": "Bizcocho de chocolate con o sin cerezas, \"selva negra\"",
-    "it":
-        "Torta soffice al cioccolato con o senza ciliegie \"torta foresta nera\""
+    "it": "Torta soffice al cioccolato con o senza ciliegie \"torta foresta nera\""
   },
   "ed7f9ddd-d474-5e86-8c37-d89ca2dfe134": {
-    "en":
-        "Yogurt or fermented milk, flavoured, with sugar(s), fortified with vitamin D",
-    "fr":
-        "Yaourt ou lait fermenté, aromatisé, avec sucre(s), enrichi en vitamine D",
-    "de":
-        "Joghurt oder fermentierte Milch, aromatisiert, mit Zucker(n), mit Vitamin D angereichert",
-    "sv":
-        "Yoghurt eller fermenterad mjölk, smaksatt, med socker, berikad med D-vitamin",
-    "no":
-        "Yoghurt eller fermentert melk, med smak, med sukker, beriket med vitamin D",
-    "nl":
-        "Yoghurt of gefermenteerde melk, gearomatiseerd, met suiker(s), verrijkt met vitamine D",
-    "da":
-        "Yoghurt eller fermenteret mælk, med smag, med sukker, beriget med D-vitamin",
-    "es":
-        "Yogur o leche fermentada, aromatizado, con azúcar(es), enriquecido con vitamina D",
-    "it":
-        "Yogurt o latte fermentato, aromatizzato, con zuccheri, fortificato con vitamina D"
+    "en": "Yogurt or fermented milk, flavoured, with sugar(s), fortified with vitamin D",
+    "fr": "Yaourt ou lait fermenté, aromatisé, avec sucre(s), enrichi en vitamine D",
+    "de": "Joghurt oder fermentierte Milch, aromatisiert, mit Zucker(n), mit Vitamin D angereichert",
+    "sv": "Yoghurt eller fermenterad mjölk, smaksatt, med socker, berikad med D-vitamin",
+    "no": "Yoghurt eller fermentert melk, med smak, med sukker, beriket med vitamin D",
+    "nl": "Yoghurt of gefermenteerde melk, gearomatiseerd, met suiker(s), verrijkt met vitamine D",
+    "da": "Yoghurt eller fermenteret mælk, med smag, med sukker, beriget med D-vitamin",
+    "es": "Yogur o leche fermentada, aromatizado, con azúcar(es), enriquecido con vitamina D",
+    "it": "Yogurt o latte fermentato, aromatizzato, con zuccheri, fortificato con vitamina D"
   },
   "eda9219c-4ae3-5971-af0c-59573d0f318e": {
     "en": "Baker's yeast, fresh",
@@ -25126,24 +23068,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Semi di sesamo, tostati, decorticati"
   },
   "ee021890-bc6d-5fe7-9ba0-b678ca2e05e2": {
-    "en":
-        "Breakfast cereals, rich in fibre, plain, fortified with vitamins and minerals",
-    "fr":
-        "Céréales de petit-déjeuner, riches en fibres, nature, enrichies en vitamines et minéraux",
-    "de":
-        "Frühstücksgetreide, ballaststoffreich, natur, mit Vitaminen und Mineralstoffen angereichert",
-    "sv":
-        "Frukostflingor, fiberrika, naturella, berikade med vitaminer och mineraler",
-    "no":
-        "Frokostblanding, rik på fiber, naturell, beriket med vitaminer og mineraler",
-    "nl":
-        "Ontbijtgranen, rijk aan vezels, naturel, verrijkt met vitaminen en mineralen",
-    "da":
-        "Morgenmadsprodukter, fiberrige, naturel, beriget med vitaminer og mineraler",
-    "es":
-        "Cereales de desayuno, ricos en fibra, naturales, enriquecidos con vitaminas y minerales",
-    "it":
-        "Cereali per la colazione, ricchi di fibre, naturali, fortificati con vitamine e minerali"
+    "en": "Breakfast cereals, rich in fibre, plain, fortified with vitamins and minerals",
+    "fr": "Céréales de petit-déjeuner, riches en fibres, nature, enrichies en vitamines et minéraux",
+    "de": "Frühstücksgetreide, ballaststoffreich, natur, mit Vitaminen und Mineralstoffen angereichert",
+    "sv": "Frukostflingor, fiberrika, naturella, berikade med vitaminer och mineraler",
+    "no": "Frokostblanding, rik på fiber, naturell, beriket med vitaminer og mineraler",
+    "nl": "Ontbijtgranen, rijk aan vezels, naturel, verrijkt met vitaminen en mineralen",
+    "da": "Morgenmadsprodukter, fiberrige, naturel, beriget med vitaminer og mineraler",
+    "es": "Cereales de desayuno, ricos en fibra, naturales, enriquecidos con vitaminas y minerales",
+    "it": "Cereali per la colazione, ricchi di fibre, naturali, fortificati con vitamine e minerali"
   },
   "ee1b5e24-addc-51d9-8493-cea4a33b36e5": {
     "en": "Shiitake mushroom, cooked",
@@ -25186,8 +23119,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Pommes frites, frossen, forstekt, rå, til steking i ovn",
     "nl": "Friet, diepvries, voorgebakken, rauw, te bereiden in de oven",
     "da": "Pommes frites, frosne, forstegte, rå, til ovntilberedning",
-    "es":
-        "Patatas fritas, congeladas, prefritas, crudas, para cocinar al horno",
+    "es": "Patatas fritas, congeladas, prefritas, crudas, para cocinar al horno",
     "it": "Patatine fritte, surgelate, pre-fritte, crude, da cuocere in forno"
   },
   "ee8a8a24-a22a-5252-840e-e1d24b316be1": {
@@ -25279,24 +23211,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Gelato, su stecco, ricoperto di cioccolato"
   },
   "ef455172-8a1b-5aaa-92af-8f1bc1f8b7eb": {
-    "en":
-        "Salad, veggie, bulgur and/or quinoa-based, with vegetables, prepacked",
-    "fr":
-        "Salade, végétarienne, à base de boulgour et/ou de quinoa, avec des légumes, préemballée",
-    "de":
-        "Salat, Gemüse-, auf Bulgur- und/oder Quinoabasis, mit Gemüse, vorverpackt",
-    "sv":
-        "Sallad, vegetarisk, bulgur- och/eller quinoabaserad, med grönsaker, förpackad",
-    "no":
-        "Salat, grønnsak-, bulgur- og/eller quinoabasert, med grønnsaker, ferdigpakket",
-    "nl":
-        "Salade, veggie, op basis van bulgur en/of quinoa, met groenten, voorverpakt",
-    "da":
-        "Salat, vegetarisk, bulgur- og/eller quinoabaseret, med grøntsager, færdigpakket",
-    "es":
-        "Ensalada, vegetal, a base de bulgur y/o quinoa, con verduras, preenvasada",
-    "it":
-        "Insalata, vegetariana, a base di bulgur e/o quinoa, con verdure, confezionata"
+    "en": "Salad, veggie, bulgur and/or quinoa-based, with vegetables, prepacked",
+    "fr": "Salade, végétarienne, à base de boulgour et/ou de quinoa, avec des légumes, préemballée",
+    "de": "Salat, Gemüse-, auf Bulgur- und/oder Quinoabasis, mit Gemüse, vorverpackt",
+    "sv": "Sallad, vegetarisk, bulgur- och/eller quinoabaserad, med grönsaker, förpackad",
+    "no": "Salat, grønnsak-, bulgur- og/eller quinoabasert, med grønnsaker, ferdigpakket",
+    "nl": "Salade, veggie, op basis van bulgur en/of quinoa, met groenten, voorverpakt",
+    "da": "Salat, vegetarisk, bulgur- og/eller quinoabaseret, med grøntsager, færdigpakket",
+    "es": "Ensalada, vegetal, a base de bulgur y/o quinoa, con verduras, preenvasada",
+    "it": "Insalata, vegetariana, a base di bulgur e/o quinoa, con verdure, confezionata"
   },
   "ef5697c4-92ef-5609-8797-42617f4169a2": {
     "en": "Chicken, wing, meat and skin, roasted/baked",
@@ -25454,18 +23377,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "f1b30e07-2fd9-5e2a-81e4-8ad2886e043c": {
     "en": "Brioche, with chocolate chips or filled with chocolate, prepacked",
-    "fr":
-        "Brioche, aux pépites de chocolat ou fourrée au chocolat, préemballée",
-    "de":
-        "Brioche, mit Schokostückchen oder mit Schokolade gefüllt, vorverpackt",
+    "fr": "Brioche, aux pépites de chocolat ou fourrée au chocolat, préemballée",
+    "de": "Brioche, mit Schokostückchen oder mit Schokolade gefüllt, vorverpackt",
     "sv": "Brioche, med chokladbitar eller fylld med choklad, färdigpackad",
     "no": "Brioche, med sjokoladebiter eller fylt med sjokolade, ferdigpakket",
     "nl": "Brioche, met chocoladestukjes of chocoladevulling, voorverpakt",
     "da": "Brioche, med chokoladestykker eller chokoladefyld, færdigpakket",
-    "es":
-        "Brioche, con pepitas de chocolate o relleno de chocolate, preenvasado",
-    "it":
-        "Brioche, con gocce di cioccolato o farcita al cioccolato, preconfezionata"
+    "es": "Brioche, con pepitas de chocolate o relleno de chocolate, preenvasado",
+    "it": "Brioche, con gocce di cioccolato o farcita al cioccolato, preconfezionata"
   },
   "f1cef745-36f4-5138-99c3-fc1f7035ce22": {
     "en": "Couscous grain, semi-wholewheat, cooked, no added salt",
@@ -25490,15 +23409,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Bevanda alla soia, preconfezionata (media)"
   },
   "f26c64c2-b012-5090-a725-093a0a188925": {
-    "en": "Brussels sprout, raw",
-    "fr": "Chou de Bruxelles, cru",
-    "de": "Rosenkohl, roh",
-    "sv": "Brysselkål, rå",
-    "no": "Rosenkål, rå",
-    "nl": "Spruitjes, rauw",
-    "da": "Rosenkål, rå",
-    "es": "Col de Bruselas, cruda",
-    "it": "Cavolini di Bruxelles, crudi"
+    "en": "Brussels sprouts — raw",
+    "de": "Rosenkohl — roh",
+    "fr": "Choux de Bruxelles — crus",
+    "no": "Rosenkål – rå",
+    "sv": "Brysselkål — rå",
+    "da": "Rosenkål — rå",
+    "nl": "Spruitjes — rauw",
+    "it": "Cavolini di Bruxelles — crudi",
+    "es": "Coles de Bruselas — crudas"
   },
   "f27c5b84-8d08-5efb-9a4f-1aa6589bdc5b": {
     "en": "Ostrich, meat, cooked",
@@ -25557,19 +23476,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "f32b5b0e-65ae-5f66-8133-3e6adcc7d762": {
     "en": "Mineral sparkling water (Nessel), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Nessel), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Nessel), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Nessel), på flaska, medelmåttigt mineraliserat",
+    "fr": "Eau minérale gazeuse (Nessel), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Nessel), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Nessel), på flaska, medelmåttigt mineraliserat",
     "no": "Framifus mineralvann (Nessel), på flaske, moderat mineralisert",
-    "nl":
-        "Mineraalwater met koolzuur (Nessel), gebotteld, gemiddeld gemineraliseerd",
+    "nl": "Mineraalwater met koolzuur (Nessel), gebotteld, gemiddeld gemineraliseerd",
     "da": "Mineralvand med brus (Nessel), på flaske, moderat mineraliseret",
     "es": "Agua mineral con gas (Nessel), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (Nessel), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale frizzante (Nessel), in bottiglia, mediamente mineralizzata"
   },
   "f345d6e4-dd44-58be-b8b9-c7e591b4ae54": {
     "en": "Preserved poultry liver",
@@ -25715,21 +23629,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Vino frizzante alla frutta"
   },
   "f5687b43-522a-5998-989e-0bcf2ca0af47": {
-    "en":
-        "Sandwich, club, wholemeal bread, chicken and raw vegetables, prepacked",
+    "en": "Sandwich, club, wholemeal bread, chicken and raw vegetables, prepacked",
     "fr": "Sandwich, club, pain complet, poulet et crudités, préemballé",
-    "de":
-        "Sandwich, Club, Vollkornbrot, Hähnchen und rohes Gemüse, vorverpackt",
-    "sv":
-        "Smörgås, club sandwich, fullkornsbröd, kyckling och råa grönsaker, färdigpackad",
-    "no":
-        "Club sandwich, fullkornsbrød, kylling og rå grønnsaker, ferdigpakket",
+    "de": "Sandwich, Club, Vollkornbrot, Hähnchen und rohes Gemüse, vorverpackt",
+    "sv": "Smörgås, club sandwich, fullkornsbröd, kyckling och råa grönsaker, färdigpackad",
+    "no": "Club sandwich, fullkornsbrød, kylling og rå grønnsaker, ferdigpakket",
     "nl": "Club sandwich, volkorenbrood, kip en rauwkost, voorverpakt",
-    "da":
-        "Sandwich, club, fuldkornsbrød, kylling og rå grøntsager, færdigpakket",
+    "da": "Sandwich, club, fuldkornsbrød, kylling og rå grøntsager, færdigpakket",
     "es": "Sándwich, club, pan integral, pollo y verduras crudas, preenvasado",
-    "it":
-        "Sandwich, club, pane integrale, pollo e verdure crude, preconfezionato"
+    "it": "Sandwich, club, pane integrale, pollo e verdure crude, preconfezionato"
   },
   "f57e14be-7b2b-5712-8033-50e350812f8f": {
     "en": "Mineral still water (Chambon), bottled, lightly mineralized",
@@ -25737,12 +23645,10 @@ const foodNames = <String, Map<String, String>>{
     "de": "Stilles Mineralwasser (Chambon), in Flaschen, leicht mineralisiert",
     "sv": "Stilla mineralvatten (Chambon), på flaska, lättrinerat",
     "no": "Stille mineralvann (Chambon), på flaske, lett mineralisert",
-    "nl":
-        "Mineraalwater zonder koolzuur (Chambon), gebotteld, licht gemineraliseerd",
+    "nl": "Mineraalwater zonder koolzuur (Chambon), gebotteld, licht gemineraliseerd",
     "da": "Mineralvand uden brus (Chambon), på flaske, let mineraliseret",
     "es": "Agua mineral sin gas (Chambon), embotellada, mineralización débil",
-    "it":
-        "Acqua minerale naturale (Chambon), in bottiglia, leggermente mineralizzata"
+    "it": "Acqua minerale naturale (Chambon), in bottiglia, leggermente mineralizzata"
   },
   "f5be20f4-5a95-5b41-8801-10fdc4655e68": {
     "en": "Tart, leek, prepacked",
@@ -25757,19 +23663,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "f5ea233a-981d-5d84-acb1-24571a57635b": {
     "en": "Mineral sparkling water (Orezza), bottled, averagely mineralized",
-    "fr":
-        "Eau minérale gazeuse (Orezza), en bouteille, moyennement minéralisée",
-    "de":
-        "Mineralwasser mit Kohlensäure (Orezza), in Flaschen, durchschnittlich mineralisiert",
-    "sv":
-        "Kolsyrat mineralvatten (Orezza), på flaska, medelmåttigt mineraliserat",
+    "fr": "Eau minérale gazeuse (Orezza), en bouteille, moyennement minéralisée",
+    "de": "Mineralwasser mit Kohlensäure (Orezza), in Flaschen, durchschnittlich mineralisiert",
+    "sv": "Kolsyrat mineralvatten (Orezza), på flaska, medelmåttigt mineraliserat",
     "no": "Framifus mineralvann (Orezza), på flaske, moderat mineralisert",
-    "nl":
-        "Mineraalwater met koolzuur (Orezza), gebotteld, gemiddeld gemineraliseerd",
+    "nl": "Mineraalwater met koolzuur (Orezza), gebotteld, gemiddeld gemineraliseerd",
     "da": "Mineralvand med brus (Orezza), på flaske, moderat mineraliseret",
     "es": "Agua mineral con gas (Orezza), embotellada, mineralización media",
-    "it":
-        "Acqua minerale frizzante (Orezza), in bottiglia, mediamente mineralizzata"
+    "it": "Acqua minerale frizzante (Orezza), in bottiglia, mediamente mineralizzata"
   },
   "f622c844-e490-55a9-a6bf-013896865bc4": {
     "en": "Hard cheese (average)",
@@ -25796,8 +23697,7 @@ const foodNames = <String, Map<String, String>>{
   "f654d874-705c-544e-b410-1b18ce458712": {
     "en": "Granola with chocolate, fortified with vitamins and minerals",
     "fr": "Granola au chocolat, enrichi en vitamines et minéraux",
-    "de":
-        "Knuspermüsli mit Schokolade, angereichert mit Vitaminen und Mineralstoffen",
+    "de": "Knuspermüsli mit Schokolade, angereichert mit Vitaminen und Mineralstoffen",
     "sv": "Granola med choklad, berikad med vitaminer och mineraler",
     "no": "Granola med sjokolade, beriket med vitaminer og mineraler",
     "nl": "Granola met chocolade, verrijkt met vitaminen en mineralen",
@@ -25961,8 +23861,7 @@ const foodNames = <String, Map<String, String>>{
   },
   "f818e3d0-8e63-5ae9-97f0-e1a60f772843": {
     "en": "Plant-based burger or steak from soybean and cheese, prepacked",
-    "de":
-        "Pflanzenbasierter Burger oder Steak aus Sojabohnen und Käse, vorgepackt",
+    "de": "Pflanzenbasierter Burger oder Steak aus Sojabohnen und Käse, vorgepackt",
     "fr": "Burger ou steak végétal à base de soja et de fromage, préemballé",
     "sv": "Växtbaserad burgare eller biff av sojaböna och ost, förpackad",
     "no": "Plantebasert burger eller biff av soyabønner og ost, ferdigpakket",
@@ -25985,8 +23884,7 @@ const foodNames = <String, Map<String, String>>{
   "f83cf042-f2ed-5e53-8062-54d898161a5e": {
     "en": "Spreadable fat > 41% fat and <= 62% fat, unsalted, standard",
     "de": "Streichfett > 41 % Fett und <= 62 % Fett, ungesalzen, Standard",
-    "fr":
-        "Matière grasse à tartiner > 41 % et <= 62 % de matière grasse, non salée, standard",
+    "fr": "Matière grasse à tartiner > 41 % et <= 62 % de matière grasse, non salée, standard",
     "sv": "Bredbart fett > 41% fett och <= 62% fett, osaltat, standard",
     "no": "Smørbart fett > 41% fett og <= 62% fett, usaltet, standard",
     "nl": "Smeerbaar vet > 41% vet en <= 62% vet, ongezouten, standaard",
@@ -26017,23 +23915,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Prosciutto cotto, scelta"
   },
   "f8653526-d8c3-53bd-ab4c-cc2e0cf1dd8b": {
-    "en":
-        "Custard (chocolate, coffee, caramel or vanilla) topped with whipped cream, refrigerated",
-    "de":
-        "Creme (Schokolade, Kaffee, Karamell oder Vanille) mit Schlagsahnehaube, gekühlt",
-    "fr":
-        "Crème dessert (chocolat, café, caramel ou vanille) surmontée de crème chantilly, réfrigérée",
-    "sv":
-        "Kräm (choklad, kaffe, karamell eller vanilj) toppad med vispad grädde, kylskåpsförvarad",
-    "no":
-        "Krempudding (sjokolade, kaffe, karamell eller vanilje) topp med pisket krem, kjølevare",
+    "en": "Custard (chocolate, coffee, caramel or vanilla) topped with whipped cream, refrigerated",
+    "de": "Creme (Schokolade, Kaffee, Karamell oder Vanille) mit Schlagsahnehaube, gekühlt",
+    "fr": "Crème dessert (chocolat, café, caramel ou vanille) surmontée de crème chantilly, réfrigérée",
+    "sv": "Kräm (choklad, kaffe, karamell eller vanilj) toppad med vispad grädde, kylskåpsförvarad",
+    "no": "Krempudding (sjokolade, kaffe, karamell eller vanilje) topp med pisket krem, kjølevare",
     "nl": "Vla (chocolade, koffie, karamel of vanille) met slagroom, gekoeld",
-    "da":
-        "Desserter (chokolade, kaffe, karamel eller vanilje) med flødeskum, kølevare",
-    "es":
-        "Natillas (chocolate, café, caramelo o vainilla) con nata montada, refrigeradas",
-    "it":
-        "Crema pasticcera (cioccolato, caffè, caramello o vaniglia) guarnita con panna montata, refrigerata"
+    "da": "Desserter (chokolade, kaffe, karamel eller vanilje) med flødeskum, kølevare",
+    "es": "Natillas (chocolate, café, caramelo o vainilla) con nata montada, refrigeradas",
+    "it": "Crema pasticcera (cioccolato, caffè, caramello o vaniglia) guarnita con panna montata, refrigerata"
   },
   "f930a537-d0af-5916-a7df-d173dd0d597a": {
     "en": "Pork liver mousse",
@@ -26047,22 +23937,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Mousse di fegato di maiale"
   },
   "f937cb73-d7eb-5151-92e4-3e9f09aec051": {
-    "en":
-        "Noodles with shrimps, prepacked, sautéed/pan-fried, without added fat",
-    "de":
-        "Nudeln mit Garnelen, vorgepackt, sautiert/in der Pfanne gebraten, ohne Fettzusatz",
-    "fr":
-        "Nouilles aux crevettes, préemballées, sautées à la poêle, sans matière grasse ajoutée",
-    "sv":
-        "Nudlar med räkor, förpackade, frästa/stekta i panna, utan tillsatt fett",
-    "no":
-        "Nudler med reker, ferdigpakket, hurtigstekt/panestekt, uten tilsatt fett",
-    "nl":
-        "Noedels met garnalen, voorverpakt, gewokt/gebakken, zonder toegevoegd vet",
+    "en": "Noodles with shrimps, prepacked, sautéed/pan-fried, without added fat",
+    "de": "Nudeln mit Garnelen, vorgepackt, sautiert/in der Pfanne gebraten, ohne Fettzusatz",
+    "fr": "Nouilles aux crevettes, préemballées, sautées à la poêle, sans matière grasse ajoutée",
+    "sv": "Nudlar med räkor, förpackade, frästa/stekta i panna, utan tillsatt fett",
+    "no": "Nudler med reker, ferdigpakket, hurtigstekt/panestekt, uten tilsatt fett",
+    "nl": "Noedels met garnalen, voorverpakt, gewokt/gebakken, zonder toegevoegd vet",
     "da": "Nudler med rejer, færdigpakket, stegt, uden tilsat fedt",
     "es": "Fideos con gambas, envasados, salteados, sin grasa añadida",
-    "it":
-        "Noodles con gamberi, confezionati, saltati in padella, senza grassi aggiunti"
+    "it": "Noodles con gamberi, confezionati, saltati in padella, senza grassi aggiunti"
   },
   "f9ae4fd8-6eec-5711-84fe-b7cd58f4cb34": {
     "en": "Beef, minced steak, 20% fat, raw",
@@ -26263,21 +24146,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Quenelle di pollame con salsa, in scatola"
   },
   "fae4e32a-cf8a-5ca6-82ec-53f3f5ca9684": {
-    "en":
-        "Fermented milk drink, flavoured, with sugar(s), fortified with vitamin D",
-    "de":
-        "Fermentiertes Milchgetränk, aromatisiert, mit Zucker(n), angereichert mit Vitamin D",
-    "fr":
-        "Boisson à base de lait fermenté, aromatisée, avec sucre(s), enrichie en vitamine D",
+    "en": "Fermented milk drink, flavoured, with sugar(s), fortified with vitamin D",
+    "de": "Fermentiertes Milchgetränk, aromatisiert, mit Zucker(n), angereichert mit Vitamin D",
+    "fr": "Boisson à base de lait fermenté, aromatisée, avec sucre(s), enrichie en vitamine D",
     "sv": "Fermenterad mjölkdryck, smaksatt, med socker, berikad med vitamin D",
     "no": "Syrnet melkedrikk, med smak, med sukker, beriket med vitamin D",
-    "nl":
-        "Gefermenteerde melkdrank, gearomatiseerd, met suiker(s), verrijkt met vitamine D",
+    "nl": "Gefermenteerde melkdrank, gearomatiseerd, met suiker(s), verrijkt met vitamine D",
     "da": "Fermenteret mælkedrik, med smag, med sukker, beriget med vitamin D",
-    "es":
-        "Bebida de leche fermentada, aromatizada, con azúcares, enriquecida con vitamina D",
-    "it":
-        "Latte fermentato aromatizzato, con zuccheri, fortificato con vitamina D"
+    "es": "Bebida de leche fermentada, aromatizada, con azúcares, enriquecida con vitamina D",
+    "it": "Latte fermentato aromatizzato, con zuccheri, fortificato con vitamina D"
   },
   "fb3280ca-2b15-5172-a0b0-b62d517f743f": {
     "en": "Black pepper, powder",
@@ -26299,8 +24176,7 @@ const foodNames = <String, Map<String, String>>{
     "nl": "Puur chocolade, zonder toegevoegde suikers, met zoetstof(fen), reep",
     "da": "Mørk chokolade, uden tilsat sukker, med sødestof, bar",
     "es": "Chocolate negro, sin azúcares añadidos, con edulcorantes, tableta",
-    "it":
-        "Cioccolato fondente senza zuccheri aggiunti, con edulcoranti, tavoletta"
+    "it": "Cioccolato fondente senza zuccheri aggiunti, con edulcoranti, tavoletta"
   },
   "fb565670-67fc-5324-8b4a-b176eb63ec1e": {
     "en": "Wafer biscuit without filling",
@@ -26337,18 +24213,14 @@ const foodNames = <String, Map<String, String>>{
   },
   "fba095be-4cd8-5a75-baaa-da6d2ef7e731": {
     "en": "Mineral still water (Montblanc), bottled, lightly mineralized",
-    "de":
-        "Stilles Mineralwasser (Montblanc), in Flaschen, leicht mineralisiert",
-    "fr":
-        "Eau minérale plate (Montblanc), en bouteille, faiblement minéralisée",
+    "de": "Stilles Mineralwasser (Montblanc), in Flaschen, leicht mineralisiert",
+    "fr": "Eau minérale plate (Montblanc), en bouteille, faiblement minéralisée",
     "sv": "Stilla mineralvatten (Montblanc), på flaska, lätt mineraliserat",
     "no": "Stille mineralvann (Montblanc), på flaske, lett mineralisert",
     "nl": "Mineraalwater (Montblanc), gebotteld, licht gemineraliseerd",
     "da": "Mineralvand (Montblanc), flaske, let mineraliseret",
-    "es":
-        "Agua mineral sin gas (Montblanc), embotellada, débilmente mineralizada",
-    "it":
-        "Acqua minerale naturale (Montblanc), in bottiglia, leggermente mineralizzata"
+    "es": "Agua mineral sin gas (Montblanc), embotellada, débilmente mineralizada",
+    "it": "Acqua minerale naturale (Montblanc), in bottiglia, leggermente mineralizzata"
   },
   "fbcdad2c-7e54-590f-bae7-8c95c2b06120": {
     "en": "Caesar's salad (salad, chicken, croûtons, sauce), prepacked",
@@ -26406,24 +24278,15 @@ const foodNames = <String, Map<String, String>>{
     "it": "Verdure gratinate, preconfezionate"
   },
   "fcb6e9c9-ec68-52cb-aba9-43d5ac60d684": {
-    "en":
-        "Plant-based burger or steak from lentil, soybean and vegetables, prepacked",
-    "de":
-        "Pflanzenbasierter Burger oder Steak aus Linsen, Sojabohne und Gemüse, vorgepackt",
-    "fr":
-        "Burger ou steak végétal à base de lentilles, soja et légumes, préemballé",
-    "sv":
-        "Växtbaserad burgare eller biff av lins, sojaböna och grönsaker, förpackad",
-    "no":
-        "Plantebasert burger eller biff av linser, soyabønner og grønnsaker, ferdigpakket",
-    "nl":
-        "Plantaardige burger of steak van linzen, soja en groenten, voorverpakt",
-    "da":
-        "Plantebaseret burger eller bøf af linser, soja og grøntsager, færdigpakket",
-    "es":
-        "Hamburguesa o filete vegetal a base de lentejas, soja y verduras, envasado",
-    "it":
-        "Burger o bistecca vegetale di lenticchie, soia e verdure, preconfezionato"
+    "en": "Plant-based burger or steak from lentil, soybean and vegetables, prepacked",
+    "de": "Pflanzenbasierter Burger oder Steak aus Linsen, Sojabohne und Gemüse, vorgepackt",
+    "fr": "Burger ou steak végétal à base de lentilles, soja et légumes, préemballé",
+    "sv": "Växtbaserad burgare eller biff av lins, sojaböna och grönsaker, förpackad",
+    "no": "Plantebasert burger eller biff av linser, soyabønner og grønnsaker, ferdigpakket",
+    "nl": "Plantaardige burger of steak van linzen, soja en groenten, voorverpakt",
+    "da": "Plantebaseret burger eller bøf af linser, soja og grøntsager, færdigpakket",
+    "es": "Hamburguesa o filete vegetal a base de lentejas, soja y verduras, envasado",
+    "it": "Burger o bistecca vegetale di lenticchie, soia e verdure, preconfezionato"
   },
   "fcce76b3-4490-5629-ba2a-556f0bbeceb0": {
     "en": "Cauliflower au gratin, prepacked",
@@ -26521,8 +24384,7 @@ const foodNames = <String, Map<String, String>>{
     "no": "Smøreost, av kumelk, trekant, ikke beriket",
     "nl": "Smeltkaas, van koemelk, driehoekje, niet verrijkt",
     "da": "Smelteost, af komælk, trekant, ikke tilsat",
-    "es":
-        "Queso fundido, de leche de vaca, en porciones triangulares, no enriquecido",
+    "es": "Queso fundido, de leche de vaca, en porciones triangulares, no enriquecido",
     "it": "Formaggio fuso, latte vaccino, a triangoli, non arricchito"
   },
   "fe0054c0-c686-5291-b69e-76e03c206503": {
@@ -26549,16 +24411,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "fe31569a-5693-50d1-bd1b-72e3eacb5132": {
     "en": "Tonic drink, sugar(s) and sweetener(s) content unknown (average)",
-    "de":
-        "Tonic-Getränk, Zucker- und Süßungsmittelgehalt unbekannt (Durchschnitt)",
-    "fr":
-        "Boisson tonique, teneur en sucre(s) et édulcorant(s) inconnue (moyenne)",
+    "de": "Tonic-Getränk, Zucker- und Süßungsmittelgehalt unbekannt (Durchschnitt)",
+    "fr": "Boisson tonique, teneur en sucre(s) et édulcorant(s) inconnue (moyenne)",
     "sv": "Tonic, okänt innehåll av socker och sötningsmedel (genomsnitt)",
     "no": "Tonicdrikk, ukjent innhold av sukker og søtstoffer (gjennomsnitt)",
     "nl": "Tonic, suiker(s) en zoetstof(fen) gehalte onbekend (gemiddeld)",
     "da": "Tonic, indhold af sukker og sødestoffer ukendt (gennemsnit)",
-    "es":
-        "Bebida tónica, contenido de azúcar(es) y edulcorante(s) desconocido (promedio)",
+    "es": "Bebida tónica, contenido de azúcar(es) y edulcorante(s) desconocido (promedio)",
     "it": "Bevanda tonica, contenuto di zuccheri e dolcificanti ignoto (media)"
   },
   "fe46882d-91f1-533d-95fb-6a5fe5598f18": {
@@ -26585,27 +24444,19 @@ const foodNames = <String, Map<String, String>>{
   },
   "fe60240c-3cda-5990-924d-63d96a74ae2f": {
     "en": "Mackerel, fillet (grilled or not grilled), canned in brine, drained",
-    "de":
-        "Makrele, Filet (gegrillt oder nicht gegrillt), in Salzlake in Dosen, abgetropft",
-    "fr":
-        "Maquereau, filet (grillé ou non grillé), au naturel en boîte, égoutté",
-    "sv":
-        "Makrill, filé (grillad eller ej grillad), konserverad i lag, avrunnen",
-    "no":
-        "Makrell, filet (grillet eller ikke grillet), hermetisert i lake, avrent",
-    "nl":
-        "Makreel, filet (gegrild of niet gegrild), ingeblikt in pekel, uitgelekt",
+    "de": "Makrele, Filet (gegrillt oder nicht gegrillt), in Salzlake in Dosen, abgetropft",
+    "fr": "Maquereau, filet (grillé ou non grillé), au naturel en boîte, égoutté",
+    "sv": "Makrill, filé (grillad eller ej grillad), konserverad i lag, avrunnen",
+    "no": "Makrell, filet (grillet eller ikke grillet), hermetisert i lake, avrent",
+    "nl": "Makreel, filet (gegrild of niet gegrild), ingeblikt in pekel, uitgelekt",
     "da": "Makrel, filet (grillet eller ikke grillet), dåse i lage, afdryppet",
-    "es":
-        "Caballa, filete (a la plancha o no), en conserva en salmuera, escurrido",
-    "it":
-        "Sgombro, filetto (grigliato o non), in scatola in salamoia, sgocciolato"
+    "es": "Caballa, filete (a la plancha o no), en conserva en salmuera, escurrido",
+    "it": "Sgombro, filetto (grigliato o non), in scatola in salamoia, sgocciolato"
   },
   "fe7339f0-5e71-5fe7-958e-5428ecf64f48": {
     "en": "Spreadable fat <= 41% fat, unsalted, standard",
     "de": "Streichfett <= 41% Fett, ungesalzen, Standard",
-    "fr":
-        "Matière grasse à tartiner <= 41% de matière grasse, non salée, standard",
+    "fr": "Matière grasse à tartiner <= 41% de matière grasse, non salée, standard",
     "sv": "Bredbart fett <= 41% fett, osaltat, standard",
     "no": "Smørbart fett <= 41% fett, usaltet, standard",
     "nl": "Smeerbaar vet <= 41% vet, ongezouten, standaard",
@@ -26669,16 +24520,13 @@ const foodNames = <String, Map<String, String>>{
     "it": "Carne, cotta (media)"
   },
   "febf2b55-bf1d-5e03-8a6c-914e554c8351": {
-    "en":
-        "Sandwich, baguette, chicken, raw vegetables and mayonnaise, homemade",
-    "de":
-        "Sandwich, Baguette, Hähnchen, rohes Gemüse und Mayonnaise, hausgemacht",
+    "en": "Sandwich, baguette, chicken, raw vegetables and mayonnaise, homemade",
+    "de": "Sandwich, Baguette, Hähnchen, rohes Gemüse und Mayonnaise, hausgemacht",
     "fr": "Sandwich, baguette, poulet, crudités et mayonnaise, fait maison",
     "sv": "Smörgås, baguette, kyckling, råa grönsaker och majonnäs, hemgjord",
     "no": "Sandwich, baguette, kylling, rå grønnsaker og majones, hjemmelaget",
     "nl": "Stokbroodje, kip, rauwkost en mayonaise, huisgemaakt",
-    "da":
-        "Sandwich, baguette, kylling, rå grøntsager og mayonnaise, hjemmelavet",
+    "da": "Sandwich, baguette, kylling, rå grøntsager og mayonnaise, hjemmelavet",
     "es": "Bocadillo de baguette, pollo, verduras crudas y mayonesa, casero",
     "it": "Panino baguette, pollo, verdure crude e maionese, fatto in casa"
   },
@@ -26717,16 +24565,13 @@ const foodNames = <String, Map<String, String>>{
   },
   "ff301867-0ddf-5a4d-acc4-c247bac8178c": {
     "en": "Granola with fruits, with or without nut and seeds, not fortified",
-    "de":
-        "Granola mit Früchten, mit oder ohne Nüsse und Samen, nicht angereichert",
-    "fr":
-        "Granola aux fruits, avec ou sans fruits à coque et graines, non enrichi",
+    "de": "Granola mit Früchten, mit oder ohne Nüsse und Samen, nicht angereichert",
+    "fr": "Granola aux fruits, avec ou sans fruits à coque et graines, non enrichi",
     "sv": "Granola med frukt, med eller utan nötter och frön, ej berikad",
     "no": "Granola med frukt, med eller uten nøtter og frø, ikke beriket",
     "nl": "Granola met fruit, met of zonder noten en zaden, niet verrijkt",
     "da": "Granola med frugt, med eller uden nødder og frø, ikke tilsat",
-    "es":
-        "Granola con frutas, con o sin frutos secos y semillas, no enriquecida",
+    "es": "Granola con frutas, con o sin frutos secos y semillas, no enriquecida",
     "it": "Granola con frutta, con o senza noci e semi, non arricchita"
   },
   "ff559e41-ad4d-5613-a5a7-c8d727cf5a5c": {
@@ -26783,5 +24628,1842 @@ const foodNames = <String, Map<String, String>>{
     "da": "Pære, frugtkød og skind, rå",
     "es": "Pera, pulpa y piel, cruda",
     "it": "Pera, polpa e buccia, cruda"
+  },
+  "43249be2-2e2a-5bdb-8564-94a8d6a8cd78": {
+    "en": "Boiled egg",
+    "fr": "Œuf dur",
+    "de": "Gekochtes Ei",
+    "sv": "Kokt ägg",
+    "no": "Kokt egg",
+    "nl": "Gekookt ei",
+    "da": "Kogt æg",
+    "it": "Uovo sodo",
+    "es": "Huevo duro"
+  },
+  "edf30127-859f-524c-815f-96e5700be161": {
+    "en": "Poached egg",
+    "fr": "Œuf poché",
+    "de": "Pochiertes Ei",
+    "sv": "Förlorat ägg",
+    "no": "Posjert egg",
+    "nl": "Gepocheerd ei",
+    "da": "Pocheret æg",
+    "it": "Uovo in camicia",
+    "es": "Huevo escalfado"
+  },
+  "03df567b-4ec1-5bab-9620-4bc00eac9088": {
+    "en": "Scrambled egg",
+    "fr": "Œufs brouillés",
+    "de": "Rührei",
+    "sv": "Äggröra",
+    "no": "Eggerøre",
+    "nl": "Roerei",
+    "da": "Røræg",
+    "it": "Uova strapazzate",
+    "es": "Huevo revuelto"
+  },
+  "88fa007c-237a-5eb8-bc8f-89d71f73e063": {
+    "en": "Fried egg",
+    "fr": "Œuf au plat",
+    "de": "Spiegelei",
+    "sv": "Stekt ägg",
+    "no": "Speilegg",
+    "nl": "Gebakken ei",
+    "da": "Spejlæg",
+    "it": "Uovo al tegamino",
+    "es": "Huevo frito"
+  },
+  "0ec7311f-9392-5537-90a3-605ec03cee6b": {
+    "en": "Egg white — raw",
+    "fr": "Blanc d'œuf — cru",
+    "de": "Eiweiß — roh",
+    "sv": "Äggvita — rå",
+    "no": "Eggehvite — rå",
+    "nl": "Eiwit — rauw",
+    "da": "Æggehvide — rå",
+    "it": "Albume d'uovo — crudo",
+    "es": "Clara de huevo — cruda"
+  },
+  "f8450133-9c84-5369-863f-9d09e659a38a": {
+    "en": "Whole milk — 3.25% fat",
+    "fr": "Lait entier — 3,25% mat. gr.",
+    "de": "Vollmilch — 3,25% Fett",
+    "sv": "Standardmjölk — 3,25% fett",
+    "no": "Helmelk — 3,25% fett",
+    "nl": "Volle melk — 3,25% vet",
+    "da": "Sødmælk — 3,25% fedt",
+    "it": "Latte intero — 3,25% di grassi",
+    "es": "Leche entera — 3,25% grasa"
+  },
+  "2917f1e5-8ef5-5e65-a6b5-8432cf152e33": {
+    "en": "Milk — 2% fat",
+    "fr": "Lait — 2% mat. gr.",
+    "de": "Milch — 2% Fett",
+    "sv": "Mjölk — 2% fett",
+    "no": "Melk — 2% fett",
+    "nl": "Melk — 2% vet",
+    "da": "Mælk — 2% fedt",
+    "it": "Latte — 2% di grassi",
+    "es": "Leche — 2% grasa"
+  },
+  "a9f48c89-996f-5b9f-8f1b-36046d144bf8": {
+    "en": "Milk — 1% fat",
+    "fr": "Lait — 1% mat. gr.",
+    "de": "Milch — 1% Fett",
+    "sv": "Mjölk — 1% fett",
+    "no": "Melk — 1% fett",
+    "nl": "Melk — 1% vet",
+    "da": "Mælk — 1% fedt",
+    "it": "Latte — 1% di grassi",
+    "es": "Leche — 1% grasa"
+  },
+  "d9cbeef2-703c-568b-b4c0-fc7536dd6181": {
+    "en": "Skimmed milk",
+    "fr": "Lait écrémé",
+    "de": "Magermilch",
+    "sv": "Skummjölk",
+    "no": "Skummet melk",
+    "nl": "Magere melk",
+    "da": "Skummetmælk",
+    "it": "Latte scremato",
+    "es": "Leche desnatada"
+  },
+  "c32a429d-a1d1-5668-934f-ec9b819e0f6b": {
+    "en": "Plain yogurt",
+    "fr": "Yaourt nature",
+    "de": "Naturjoghurt",
+    "sv": "Naturell yoghurt",
+    "no": "Naturell yoghurt",
+    "nl": "Magere yoghurt",
+    "da": "Neutral yoghurt",
+    "it": "Yogurt bianco",
+    "es": "Yogur natural"
+  },
+  "12d40071-eee6-574d-83b8-93e394c01d25": {
+    "en": "Low-fat plain yogurt",
+    "fr": "Yaourt nature allégé",
+    "de": "Fettarmer Naturjoghurt",
+    "sv": "Lätt naturell yoghurt",
+    "no": "Lett naturell yoghurt",
+    "nl": "Vetarme yoghurt",
+    "da": "Fedtfattig neutral yoghurt",
+    "it": "Yogurt bianco magro",
+    "es": "Yogur natural bajo en grasa"
+  },
+  "3818a1a8-96eb-571e-aa15-2863b2109145": {
+    "en": "Fat-free Greek yogurt",
+    "de": "Fettfreier griechischer Joghurt",
+    "fr": "Yaourt grec sans matières grasses",
+    "sv": "Fettfri grekisk yoghurt",
+    "no": "Fettfri gresk yoghurt",
+    "da": "Fedtfri græsk yoghurt",
+    "nl": "Vetvrije Griekse yoghurt",
+    "es": "Yogur griego sin grasa",
+    "it": "Yogurt greco senza grassi"
+  },
+  "4b7cb579-9865-52e4-b0c4-ae1465f34559": {
+    "en": "Low-fat Greek yogurt",
+    "fr": "Yaourt grec allégé",
+    "de": "Fettarmer griechischer Joghurt",
+    "sv": "Lätt grekisk yoghurt",
+    "no": "Gresk yoghurt lett",
+    "nl": "Vetarme Griekse yoghurt",
+    "da": "Fedtfattig græsk yoghurt",
+    "it": "Yogurt greco magro",
+    "es": "Yogur griego bajo en grasa"
+  },
+  "61324a9b-e91d-57e6-9d1d-211d9586a2a2": {
+    "en": "Whole-milk Greek yogurt",
+    "fr": "Yaourt grec au lait entier",
+    "de": "Vollmilch-griechischer Joghurt",
+    "no": "Gresk yoghurt helmelk",
+    "sv": "Grekisk yoghurt med fetthalt",
+    "nl": "Griekse yoghurt van volle melk",
+    "da": "Græsk yoghurt med sødmælk",
+    "it": "Yogurt greco intero",
+    "es": "Yogur griego de leche entera"
+  },
+  "88d4c08d-5627-5caf-8470-95c971e97aef": {
+    "en": "Cottage cheese",
+    "fr": "Fromage frais",
+    "de": "Hüttenkäse",
+    "sv": "Keso",
+    "no": "Cottage cheese",
+    "nl": "Hüttenkäse",
+    "da": "Hytteost",
+    "it": "Fiocchi di latte",
+    "es": "Queso cottage"
+  },
+  "bee21ba5-9aaa-5a21-85a0-d91b099bd829": {
+    "en": "Mozzarella",
+    "fr": "Mozzarella",
+    "de": "Mozzarella",
+    "sv": "Mozzarella",
+    "no": "Mozzarella",
+    "nl": "Mozzarella",
+    "da": "Mozzarella",
+    "it": "Mozzarella",
+    "es": "Mozzarella"
+  },
+  "65a288bb-d778-5a31-99a2-8e9723a87abd": {
+    "en": "Parmesan",
+    "fr": "Parmesan",
+    "de": "Parmesan",
+    "sv": "Parmesan",
+    "no": "Parmesan",
+    "nl": "Parmezaanse kaas",
+    "da": "Parmesan",
+    "it": "Parmigiano",
+    "es": "Parmesano"
+  },
+  "df410179-05f6-505e-91be-f75c421e63cc": {
+    "en": "Ricotta",
+    "fr": "Ricotta",
+    "de": "Ricotta",
+    "sv": "Ricotta",
+    "no": "Ricotta",
+    "nl": "Ricotta",
+    "da": "Ricotta",
+    "it": "Ricotta",
+    "es": "Ricotta"
+  },
+  "33499cec-8558-555f-b51e-e10bb37e9205": {
+    "en": "Gouda",
+    "fr": "Gouda",
+    "de": "Gouda",
+    "sv": "Gouda",
+    "no": "Gouda",
+    "nl": "Gouda",
+    "da": "Gouda",
+    "it": "Gouda",
+    "es": "Gouda"
+  },
+  "e25ec678-aef4-5c96-9846-e33169a3d754": {
+    "en": "Swiss cheese",
+    "fr": "Emmental",
+    "de": "Emmentaler",
+    "sv": "Schweizerost",
+    "no": "Sveitserost",
+    "nl": "Zwitserse kaas",
+    "da": "Schweizerost",
+    "it": "Emmental",
+    "es": "Queso suizo"
+  },
+  "4b513720-6063-5f6e-809b-f2885dd1b835": {
+    "en": "Salted butter",
+    "fr": "Beurre salé",
+    "de": "Gesalzene Butter",
+    "sv": "Saltat smör",
+    "no": "Saltet smør",
+    "nl": "Gezouten boter",
+    "da": "Saltet smør",
+    "it": "Burro salato",
+    "es": "Mantequilla con sal"
+  },
+  "575dd9d7-d1fd-5ed8-95a2-5c955c48d43d": {
+    "en": "Unsalted butter",
+    "fr": "Beurre doux",
+    "de": "Ungesalzene Butter",
+    "sv": "Osaltat smör",
+    "no": "Usaltet smør",
+    "nl": "Ongezouten boter",
+    "da": "Usaltet smør",
+    "it": "Burro non salato",
+    "es": "Mantequilla sin sal"
+  },
+  "9837d95c-5852-50aa-9c6f-ff0969ee9287": {
+    "en": "Chicken breast — roasted, skinless",
+    "fr": "Blanc de poulet — rôti, sans peau",
+    "de": "Hähnchenbrust — gebraten, ohne Haut",
+    "sv": "Kycklingbröst — ugnsstekt, skinnfritt",
+    "no": "Kyllingbryst — stekt, uten skinn",
+    "nl": "Kipfilet — geroosterd, zonder vel",
+    "da": "Kyllingebryst — stegt, skindfrit",
+    "it": "Petto di pollo — arrosto, senza pelle",
+    "es": "Pechuga de pollo — asada, sin piel"
+  },
+  "763c7c65-62a1-53df-b014-161b48285183": {
+    "en": "Chicken breast — stewed, skinless",
+    "fr": "Blanc de poulet — mijoté, sans peau",
+    "de": "Hähnchenbrust — geschmort, ohne Haut",
+    "sv": "Kycklingbröst — kokt, skinnfritt",
+    "no": "Kyllingbryst — kokt, uten skinn",
+    "nl": "Kipfilet — gestoofd, zonder vel",
+    "da": "Kyllingebryst — stuvet, skindfrit",
+    "it": "Petto di pollo — in umido, senza pelle",
+    "es": "Pechuga de pollo — guisada, sin piel"
+  },
+  "a719fca9-a42b-567d-9c98-70fed47640f5": {
+    "en": "Turkey breast — raw, skinless",
+    "fr": "Blanc de dinde — cru, sans peau",
+    "de": "Putenbrust — roh, ohne Haut",
+    "sv": "Kalkonbröst — rått, skinnfritt",
+    "no": "Kalkunbryst — rå, uten skinn",
+    "nl": "Kalkoenfilet — rauw, zonder vel",
+    "da": "Kalkunbryst — råt, skindfrit",
+    "it": "Petto di tacchino — crudo, senza pelle",
+    "es": "Pechuga de pavo — cruda, sin piel"
+  },
+  "1a82afec-c5bb-58a2-b429-678cc8ed3f36": {
+    "en": "Turkey breast — roasted, skinless",
+    "fr": "Blanc de dinde — rôti, sans peau",
+    "de": "Putenbrust — gebraten, ohne Haut",
+    "sv": "Kalkonbröst — ugnsstekt, skinnfritt",
+    "no": "Kalkunbryst — stekt, uten skinn",
+    "nl": "Kalkoenfilet — geroosterd, zonder vel",
+    "da": "Kalkunbryst — stegt, skindfrit",
+    "it": "Petto di tacchino — arrosto, senza pelle",
+    "es": "Pechuga de pavo — asada, sin piel"
+  },
+  "d6509efa-4cc2-58a0-9b9e-a48f9050dc6d": {
+    "en": "Pork tenderloin — raw, lean",
+    "fr": "Filet de porc — cru, maigre",
+    "de": "Schweinefilet — roh, mager",
+    "sv": "Fläskfilé — rå, mager",
+    "no": "Svinefilet — rå, mager",
+    "nl": "Varkenshaas — rauw, mager",
+    "da": "Svinemørbrad — rå, mager",
+    "it": "Lonza di maiale — cruda, magra",
+    "es": "Solomillo de cerdo — crudo, magro"
+  },
+  "08099deb-feee-52e6-ab44-3176a691f17a": {
+    "en": "Pork tenderloin — roasted, lean",
+    "fr": "Filet de porc — rôti, maigre",
+    "de": "Schweinefilet — gebraten, mager",
+    "sv": "Fläskfilé — ugnsstekt, mager",
+    "no": "Svinefilet — stekt, mager",
+    "nl": "Varkenshaas — geroosterd, mager",
+    "da": "Svinemørbrad — stegt, mager",
+    "it": "Lonza di maiale — arrosto, magra",
+    "es": "Solomillo de cerdo — asado, magro"
+  },
+  "f9b50d47-c919-5c2d-8b5c-0557ef0e6745": {
+    "en": "Beef mince — raw, 5% fat",
+    "fr": "Viande de bœuf hachée — crue, 5% mat. gr.",
+    "de": "Rinderhackfleisch — roh, 5% Fett",
+    "sv": "Nötfärs — rå, 5% fett",
+    "no": "Karbonadedeig — rå, 5% fett",
+    "nl": "Rundergehakt — rauw, 5% vet",
+    "da": "Hakket oksekød — råt, 5% fedt",
+    "it": "Macinato di manzo — crudo, 5% di grassi",
+    "es": "Carne picada de ternera — cruda, 5% grasa"
+  },
+  "b62717ac-ca41-5a50-bef6-24a9a91b8ff8": {
+    "en": "Beef mince — cooked, 5% fat",
+    "fr": "Viande de bœuf hachée — cuite, 5% mat. gr.",
+    "de": "Rinderhackfleisch — gekocht, 5% Fett",
+    "sv": "Nötfärs — tillagad, 5% fett",
+    "no": "Karbonadedeig — stekt, 5% fett",
+    "nl": "Rundergehakt — bereid, 5% vet",
+    "da": "Hakket oksekød — tilberedt, 5% fedt",
+    "it": "Macinato di manzo — cotto, 5% di grassi",
+    "es": "Carne picada de ternera — cocinada, 5% grasa"
+  },
+  "12158722-ffad-5a68-8449-85f8574c4926": {
+    "en": "Beef mince — raw, 10% fat",
+    "fr": "Viande de bœuf hachée — crue, 10% mat. gr.",
+    "de": "Rinderhackfleisch — roh, 10% Fett",
+    "sv": "Nötfärs — rå, 10% fett",
+    "no": "Kjøttdeig — rå, 10% fett",
+    "nl": "Rundergehakt — rauw, 10% vet",
+    "da": "Hakket oksekød — råt, 10% fedt",
+    "it": "Macinato di manzo — crudo, 10% di grassi",
+    "es": "Carne picada de ternera — cruda, 10% grasa"
+  },
+  "5421f987-efde-5ba9-8c7b-eebe871f0b28": {
+    "en": "Beef mince — cooked, 10% fat",
+    "fr": "Viande de bœuf hachée — cuite, 10% mat. gr.",
+    "de": "Rinderhackfleisch — gekocht, 10% Fett",
+    "sv": "Nötfärs — tillagad, 10% fett",
+    "no": "Kjøttdeig — stekt, 10% fett",
+    "nl": "Rundergehakt — bereid, 10% vet",
+    "da": "Hakket oksekød — tilberedt, 10% fedt",
+    "it": "Macinato di manzo — cotto, 10% di grassi",
+    "es": "Carne picada de ternera — cocinada, 10% grasa"
+  },
+  "74000abb-80c1-5a89-8fc5-ec194e99894a": {
+    "en": "Cod — raw",
+    "fr": "Cabillaud — cru",
+    "de": "Kabeljau — roh",
+    "sv": "Torsk — rå",
+    "no": "Torsk — rå",
+    "nl": "Kabeljauw — rauw",
+    "da": "Torsk — rå",
+    "it": "Merluzzo — crudo",
+    "es": "Bacalao — crudo"
+  },
+  "f2eff577-ec26-5b19-a27b-8eaf473ce71d": {
+    "en": "Cod — baked",
+    "fr": "Cabillaud — au four",
+    "de": "Kabeljau — gebacken",
+    "sv": "Torsk — ugnsbakad",
+    "no": "Torsk — bakt",
+    "nl": "Kabeljauw — gebakken",
+    "da": "Torsk — bagt",
+    "it": "Merluzzo — al forno",
+    "es": "Bacalao — al horno"
+  },
+  "4d18d3b1-ea71-5a51-9169-b3bcd2b6a446": {
+    "en": "Haddock — raw",
+    "fr": "Aiglefin — cru",
+    "de": "Schellfisch — roh",
+    "sv": "Kolja — rå",
+    "no": "Hyse — rå",
+    "nl": "Schelvis — rauw",
+    "da": "Kuller — rå",
+    "it": "Eglefino — crudo",
+    "es": "Eglefino — crudo"
+  },
+  "abb2a37c-415a-5565-9215-c96b72047741": {
+    "en": "Haddock — baked",
+    "fr": "Aiglefin — au four",
+    "de": "Schellfisch — gebacken",
+    "sv": "Kolja — ugnsbakad",
+    "no": "Hyse — bakt",
+    "nl": "Schelvis — gebakken",
+    "da": "Kuller — bagt",
+    "it": "Eglefino — al forno",
+    "es": "Eglefino — al horno"
+  },
+  "ed6ccc41-f63d-57a3-b7a1-3b9571ee783c": {
+    "en": "Tuna in water — drained",
+    "fr": "Thon au naturel — égoutté",
+    "de": "Thunfisch in Wasser — abgetropft",
+    "sv": "Tonfisk i vatten — avrunnen",
+    "no": "Tunfisk i vann — avrent",
+    "nl": "Tonijn op water — uitgelekt",
+    "da": "Tun i vand — drænet",
+    "it": "Tonno in acqua — sgocciolato",
+    "es": "Atún en agua — escurrido"
+  },
+  "0effd4f7-83ef-5133-8f27-f0baa6fa07ef": {
+    "en": "Farmed salmon — raw",
+    "fr": "Saumon d'élevage — cru",
+    "de": "Zuchtlachs — roh",
+    "sv": "Odlad lax — rå",
+    "no": "Oppdrettslaks — rå",
+    "nl": "Kweekzalm — rauw",
+    "da": "Opdrættet laks — rå",
+    "it": "Salmone d'allevamento — crudo",
+    "es": "Salmón de acuicultura — crudo"
+  },
+  "a8245c1d-7e8e-55cf-8908-cc56618ed612": {
+    "en": "Farmed salmon — baked",
+    "fr": "Saumon d'élevage — au four",
+    "de": "Zuchtlachs — gebacken",
+    "sv": "Odlad lax — ugnsbakad",
+    "no": "Oppdrettslaks — bakt",
+    "nl": "Kweekzalm — gebakken",
+    "da": "Opdrættet laks — bagt",
+    "it": "Salmone d'allevamento — al forno",
+    "es": "Salmón de acuicultura — al horno"
+  },
+  "170c635f-aa0e-53ed-9cb0-57f063c30330": {
+    "en": "Mackerel — raw",
+    "fr": "Maquereau — cru",
+    "de": "Makrele — roh",
+    "sv": "Makrill — rå",
+    "no": "Makrell — rå",
+    "nl": "Makreel — rauw",
+    "da": "Makrel — rå",
+    "it": "Sgombro — crudo",
+    "es": "Caballa — cruda"
+  },
+  "8124536f-a88c-52b7-add3-801857554a34": {
+    "en": "Sardines in oil — drained",
+    "fr": "Sardines à l'huile — égouttées",
+    "de": "Sardinen in Öl — abgetropft",
+    "sv": "Sardiner i olja — avrunna",
+    "no": "Sardiner i olje — avrent",
+    "nl": "Sardines in olie — uitgelekt",
+    "da": "Sardiner i olie — drænede",
+    "it": "Sardine sott'olio — sgocciolate",
+    "es": "Sardinas en aceite — escurridas"
+  },
+  "67a9a4c6-3a81-5a6d-83bc-7b754ccc58b3": {
+    "en": "Firm tofu",
+    "fr": "Tofu ferme",
+    "de": "Fester Tofu",
+    "sv": "Fast tofu",
+    "no": "Fast tofu",
+    "nl": "Stevige tofu",
+    "da": "Fast tofu",
+    "it": "Tofu compatto",
+    "es": "Tofu firme"
+  },
+  "cc1bdf6e-7a1b-5ebf-b91c-2318903bcbec": {
+    "en": "Soft tofu",
+    "fr": "Tofu soyeux",
+    "de": "Weicher Tofu",
+    "sv": "Mjuk tofu",
+    "no": "Myk tofu",
+    "nl": "Zachte tofu",
+    "da": "Blød tofu",
+    "it": "Tofu morbido",
+    "es": "Tofu blando"
+  },
+  "3194eaa8-4d4a-5a49-8337-5fbe8d09cb75": {
+    "en": "Chickpeas — boiled",
+    "fr": "Pois chiches — bouillis",
+    "de": "Kichererbsen — gekocht",
+    "sv": "Kikärter — kokta",
+    "no": "Kikerter — kokte",
+    "nl": "Kikkererwten — gekookt",
+    "da": "Kikærter — kogte",
+    "it": "Ceci — bolliti",
+    "es": "Garbanzos — hervidos"
+  },
+  "85d105a8-0292-5b77-9a3b-a6935d703610": {
+    "en": "Chickpeas — dried",
+    "fr": "Pois chiches — secs",
+    "de": "Kichererbsen — getrocknet",
+    "sv": "Kikärter — torkade",
+    "no": "Kikerter — tørre",
+    "nl": "Kikkererwten — gedroogd",
+    "da": "Kikærter — tørrede",
+    "it": "Ceci — secchi",
+    "es": "Garbanzos — secos"
+  },
+  "0cb79ed5-f8bc-599f-9be4-3e601305a892": {
+    "en": "Lentils — boiled",
+    "de": "Linsen — gekocht",
+    "fr": "Lentilles — bouillies",
+    "sv": "Linser — kokta",
+    "no": "Linser — kokte",
+    "nl": "Linzen — gekookt",
+    "da": "Linser — kogte",
+    "it": "Lenticchie — bollite",
+    "es": "Lentejas — hervidas"
+  },
+  "9d1d01e9-500a-51bf-a4c0-db025430381e": {
+    "en": "Lentils — dried",
+    "de": "Linsen — getrocknet",
+    "fr": "Lentilles — sèches",
+    "no": "Linser – tørre",
+    "sv": "Linser – torkade",
+    "da": "Linser — tørrede",
+    "nl": "Linzen — gedroogd",
+    "it": "Lenticchie — essiccate",
+    "es": "Lentejas — secas"
+  },
+  "f277a93f-dc0f-5c9b-9b4a-5c8985587fd6": {
+    "en": "Black beans — boiled",
+    "de": "Schwarze Bohnen — gekocht",
+    "fr": "Haricots noirs — bouillis",
+    "no": "Sorte bønner – kokte",
+    "sv": "Svarta bönor – kokta",
+    "da": "Sorte bønner — kogte",
+    "nl": "Zwarte bonen — gekookt",
+    "it": "Fagioli neri — bolliti",
+    "es": "Frijoles negros — hervidos"
+  },
+  "ccd50818-1dc0-5179-9a5c-ca3e2da5f35e": {
+    "en": "Kidney beans — boiled",
+    "de": "Kidneybohnen — gekocht",
+    "fr": "Haricots rouges — bouillis",
+    "no": "Røde bønner – kokte",
+    "sv": "Kidneybönor – kokta",
+    "da": "Kidneybønner — kogte",
+    "nl": "Kidneybonen — gekookt",
+    "it": "Fagioli rossi — bolliti",
+    "es": "Alubias rojas — hervidas"
+  },
+  "bb9434e1-a6f7-59a4-8793-d8c55b94318c": {
+    "en": "White beans — boiled",
+    "de": "Weiße Bohnen — gekocht",
+    "fr": "Haricots blancs — bouillis",
+    "no": "Hvite bønner – kokte",
+    "sv": "Vita bönor – kokta",
+    "da": "Hvide bønner — kogte",
+    "nl": "Witte bonen — gekookt",
+    "it": "Fagioli bianchi — bolliti",
+    "es": "Alubias blancas — hervidas"
+  },
+  "28eaa0eb-f45b-5842-bccf-44168048b402": {
+    "en": "Split peas — boiled",
+    "de": "Gelbe Erbsen — gekocht",
+    "fr": "Pois cassés — bouillis",
+    "no": "Splitterter – kokte",
+    "sv": "Gula ärtor – kokta",
+    "da": "Flækærter — kogte",
+    "nl": "Spliterwten — gekookt",
+    "it": "Piselli spezzati — bolliti",
+    "es": "Guisantes partidos — hervidos"
+  },
+  "848826e1-9e77-5cb3-b5f3-7f9d7fa259c1": {
+    "en": "Hummus — homemade",
+    "de": "Hummus — hausgemacht",
+    "fr": "Houmous — maison",
+    "no": "Hummus – hjemmelaget",
+    "sv": "Hummus – hemlagad",
+    "da": "Hummus — hjemmelavet",
+    "nl": "Hummus — zelfgemaakt",
+    "it": "Hummus — fatto in casa",
+    "es": "Hummus — casero"
+  },
+  "040b85d4-f923-5c4e-8bbe-83b1f4ce7e3f": {
+    "en": "Rolled oats — dry",
+    "de": "Haferflocken — trocken",
+    "fr": "Flocons d'avoine — crus",
+    "no": "Havregryn – tørre",
+    "sv": "Havregryn – torra",
+    "da": "Havregryn — tørre",
+    "nl": "Havermout — droog",
+    "it": "Fiocchi d'avena — secchi",
+    "es": "Avena en hojuelas — seca"
+  },
+  "8af18ae1-e2bf-574f-b36f-e04f2eb51b7f": {
+    "en": "Porridge — made with water",
+    "de": "Haferbrei — mit Wasser zubereitet",
+    "fr": "Porridge — à l'eau",
+    "no": "Havregrøt – laget med vann",
+    "sv": "Havregrynsgröt – gjord på vatten",
+    "da": "Havregrød — lavet med vand",
+    "nl": "Havermoutpap — gemaakt met water",
+    "it": "Porridge — preparato con acqua",
+    "es": "Gachas de avena — hechas con agua"
+  },
+  "f58e85f8-ff50-51d3-be33-f6f3b059aea0": {
+    "en": "White rice — uncooked",
+    "de": "Weißer Reis — ungekocht",
+    "fr": "Riz blanc — cru",
+    "no": "Hvit ris – ukokt",
+    "sv": "Vitt ris – okokt",
+    "da": "Hvide ris — ukogte",
+    "nl": "Witte rijst — ongekookt",
+    "it": "Riso bianco — crudo",
+    "es": "Arroz blanco — crudo"
+  },
+  "5cc9abfe-ba02-5091-adb7-9d22afa2ef7a": {
+    "en": "White rice — cooked",
+    "de": "Weißer Reis — gekocht",
+    "fr": "Riz blanc — cuit",
+    "no": "Hvit ris – kokt",
+    "sv": "Vitt ris – kokt",
+    "da": "Hvide ris — kogte",
+    "nl": "Witte rijst — gekookt",
+    "it": "Riso bianco — cotto",
+    "es": "Arroz blanco — cocido"
+  },
+  "952b0f3a-95ac-5387-baca-0354feeb9889": {
+    "en": "Brown rice — uncooked",
+    "de": "Brauner Reis — ungekocht",
+    "fr": "Riz complet — cru",
+    "no": "Brun ris – ukokt",
+    "sv": "Råris – okokt",
+    "da": "Brune ris — ukogte",
+    "nl": "Zilvervliesrijst — ongekookt",
+    "it": "Riso integrale — crudo",
+    "es": "Arroz integral — crudo"
+  },
+  "2933ebe7-8751-5e65-916f-5c38f105f9cf": {
+    "en": "Brown rice — cooked",
+    "de": "Brauner Reis — gekocht",
+    "fr": "Riz complet — cuit",
+    "no": "Brun ris – kokt",
+    "sv": "Råris – kokt",
+    "da": "Brune ris — kogte",
+    "nl": "Zilvervliesrijst — gekookt",
+    "it": "Riso integrale — cotto",
+    "es": "Arroz integral — cocido"
+  },
+  "059b3135-b662-530c-a283-b18a4a9b2b5c": {
+    "en": "Pasta — dry",
+    "de": "Nudeln — trocken",
+    "fr": "Pâtes — sèches",
+    "no": "Pasta – tørr",
+    "sv": "Pasta – torr",
+    "da": "Pasta — tør",
+    "nl": "Pasta — droog",
+    "it": "Pasta — secca",
+    "es": "Pasta — seca"
+  },
+  "b5afaeda-f016-5844-b655-85941ebad9ba": {
+    "en": "Wholewheat pasta — dry",
+    "de": "Vollkornnudeln — trocken",
+    "fr": "Pâtes complètes — sèches",
+    "no": "Fullkornspasta – tørr",
+    "sv": "Fullkornspasta – torr",
+    "da": "Fuldkornspasta — tør",
+    "nl": "Volkorenpasta — droog",
+    "it": "Pasta integrale — secca",
+    "es": "Pasta integral — seca"
+  },
+  "91a1fcc3-87bd-5b6e-9c4e-a2949992f9fc": {
+    "en": "Wholewheat pasta — cooked",
+    "de": "Vollkornnudeln — gekocht",
+    "fr": "Pâtes complètes — cuites",
+    "no": "Fullkornspasta – kokt",
+    "sv": "Fullkornspasta – kokt",
+    "da": "Fuldkornspasta — kogt",
+    "nl": "Volkorenpasta — gekookt",
+    "it": "Pasta integrale — cotta",
+    "es": "Pasta integral — cocida"
+  },
+  "2dee4494-f5f1-5b6c-ad8d-5f538a935dc6": {
+    "en": "Quinoa — cooked",
+    "de": "Quinoa — gekocht",
+    "fr": "Quinoa — cuit",
+    "no": "Quinoa – kokt",
+    "sv": "Quinoa – kokt",
+    "da": "Quinoa — kogt",
+    "nl": "Quinoa — gekookt",
+    "it": "Quinoa — cotta",
+    "es": "Quinoa — cocida"
+  },
+  "d02d1d16-5d80-577e-ae2f-bc55130d67f6": {
+    "en": "Couscous — cooked",
+    "de": "Couscous — gekocht",
+    "fr": "Couscous — cuit",
+    "no": "Couscous – kokt",
+    "sv": "Couscous – kokt",
+    "da": "Couscous — kogt",
+    "nl": "Couscous — gekookt",
+    "it": "Couscous — cotto",
+    "es": "Cuscús — cocido"
+  },
+  "ac4f6587-2955-52e5-8872-7487966557b9": {
+    "en": "Bulgur — cooked",
+    "de": "Bulgur — gekocht",
+    "fr": "Boulgour — cuit",
+    "no": "Bulgur – kokt",
+    "sv": "Bulgur – kokt",
+    "da": "Bulgur — kogt",
+    "nl": "Bulgur — gekookt",
+    "it": "Bulgur — cotto",
+    "es": "Bulgur — cocido"
+  },
+  "8ad337e3-bba5-5526-a4bb-98db36e043dc": {
+    "en": "Pearl barley — cooked",
+    "de": "Perlgraupen — gekocht",
+    "fr": "Orge perlé — cuit",
+    "no": "Perlebygg – kokt",
+    "sv": "Matvete – kokt",
+    "da": "Perlebyg — kogt",
+    "nl": "Parelgerst — gekookt",
+    "it": "Orzo perlato — cotto",
+    "es": "Cebada perlada — cocida"
+  },
+  "936ff660-1c81-582a-b951-1376f0779bd0": {
+    "en": "Buckwheat — cooked",
+    "de": "Buchweizen — gekocht",
+    "fr": "Sarrasin — cuit",
+    "no": "Bokhvete – kokt",
+    "sv": "Bovete – kokt",
+    "da": "Boghvede — kogt",
+    "nl": "Boekweit — gekookt",
+    "it": "Grano saraceno — cotto",
+    "es": "Trigo sarraceno — cocido"
+  },
+  "d191c99a-6f9f-5345-b7ef-62469d1125cd": {
+    "en": "Wild rice — cooked",
+    "de": "Wildreis — gekocht",
+    "fr": "Riz sauvage — cuit",
+    "no": "Villris – kokt",
+    "sv": "Vildris – kokt",
+    "da": "Vilde ris — kogte",
+    "nl": "Wilde rijst — gekookt",
+    "it": "Riso selvatico — cotto",
+    "es": "Arroz salvaje — cocido"
+  },
+  "ba40a15b-f76a-5797-9a76-cc7cfd9227bf": {
+    "en": "Wholemeal bread",
+    "de": "Vollkornbrot",
+    "fr": "Pain complet",
+    "no": "Fullkornsbrød",
+    "sv": "Fullkornsbröd",
+    "da": "Fuldkornsbrød",
+    "nl": "Volkorenbrood",
+    "it": "Pane integrale",
+    "es": "Pan integral"
+  },
+  "859c0495-c4b2-5f66-aa54-e4985907992d": {
+    "en": "Rye bread",
+    "de": "Roggenbrot",
+    "fr": "Pain de seigle",
+    "no": "Rugbrød",
+    "sv": "Rågbröd",
+    "da": "Rugbrød",
+    "nl": "Roggebrood",
+    "it": "Pane di segale",
+    "es": "Pan de centeno"
+  },
+  "f8ae69b0-c111-5d5e-80c7-2fac78da8405": {
+    "en": "Multigrain bread",
+    "de": "Mehrkornbrot",
+    "fr": "Pain multigrains",
+    "no": "Flerkornsbrød",
+    "sv": "Flerkornsbröd",
+    "da": "Multikernebrød",
+    "nl": "Meergranenbrood",
+    "it": "Pane ai cereali",
+    "es": "Pan multigrano"
+  },
+  "e76c3534-6f65-53f4-b52e-49449b73d6ca": {
+    "en": "Sweet potato — raw",
+    "de": "Süßkartoffel — roh",
+    "fr": "Patate douce — crue",
+    "no": "Søtpotet – rå",
+    "sv": "Sötpotatis – rå",
+    "da": "Sød kartoffel — rå",
+    "nl": "Zoete aardappel — rauw",
+    "it": "Patata dolce — cruda",
+    "es": "Batata — cruda"
+  },
+  "e32892b2-0196-5e72-8b88-e0043040c246": {
+    "en": "Sweet potato — baked",
+    "de": "Süßkartoffel — gebacken",
+    "fr": "Patate douce — cuite au four",
+    "no": "Søtpotet – bakt",
+    "sv": "Sötpotatis – ugnsbakad",
+    "da": "Sød kartoffel — bagt",
+    "nl": "Zoete aardappel — gebakken",
+    "it": "Patata dolce — al forno",
+    "es": "Batata — horneada"
+  },
+  "1cee5f96-15a8-5de7-9a51-b156d8286374": {
+    "en": "Sweet potato — boiled",
+    "de": "Süßkartoffel — gekocht",
+    "fr": "Patate douce — bouillie",
+    "no": "Søtpotet – kokt",
+    "sv": "Sötpotatis – kokt",
+    "da": "Sød kartoffel — kogt",
+    "nl": "Zoete aardappel — gekookt",
+    "it": "Patata dolce — bollita",
+    "es": "Batata — hervida"
+  },
+  "153f3f61-ab37-5b89-bb8b-74b4b6bdf31a": {
+    "en": "Apple",
+    "de": "Apfel",
+    "fr": "Pomme",
+    "no": "Eple",
+    "sv": "Äpple",
+    "da": "Æble",
+    "nl": "Appel",
+    "it": "Mela",
+    "es": "Manzana"
+  },
+  "dcae26f2-f10d-5ac3-b9ed-05e24ee59482": {
+    "en": "Avocado",
+    "de": "Avocado",
+    "fr": "Avocat",
+    "no": "Avokado",
+    "sv": "Avokado",
+    "da": "Avocado",
+    "nl": "Avocado",
+    "it": "Avocado",
+    "es": "Aguacate"
+  },
+  "e0fe0528-1a60-5ed8-b375-ee41d78427f0": {
+    "en": "Blueberries",
+    "de": "Blaubeeren",
+    "fr": "Myrtilles",
+    "no": "Blåbær",
+    "sv": "Blåbär",
+    "da": "Blåbær",
+    "nl": "Blauwe bessen",
+    "it": "Mirtilli",
+    "es": "Arándanos"
+  },
+  "e709a4bd-8106-5507-88c3-6c08328ba323": {
+    "en": "Cherries",
+    "de": "Kirschen",
+    "fr": "Cerises",
+    "no": "Kirsebær",
+    "sv": "Körsbär",
+    "da": "Kirsebær",
+    "nl": "Kersen",
+    "it": "Ciliegie",
+    "es": "Cerezas"
+  },
+  "2a5576f9-d316-5436-9bae-3eab812df0b6": {
+    "en": "Strawberries",
+    "de": "Erdbeeren",
+    "fr": "Fraises",
+    "no": "Jordbær",
+    "sv": "Jordgubbar",
+    "da": "Jordbær",
+    "nl": "Aardbeien",
+    "it": "Fragole",
+    "es": "Fresas"
+  },
+  "41946549-cd36-578b-bc98-ec6611f59394": {
+    "en": "Raspberries",
+    "de": "Himbeeren",
+    "fr": "Framboises",
+    "no": "Bringebær",
+    "sv": "Hallon",
+    "da": "Hindbær",
+    "nl": "Frambozen",
+    "it": "Lamponi",
+    "es": "Frambuesas"
+  },
+  "fd04933b-463b-5b62-8fbd-aa3a4cbe3caa": {
+    "en": "Grapes",
+    "de": "Weintrauben",
+    "fr": "Raisin",
+    "no": "Druer",
+    "sv": "Vindruvor",
+    "da": "Vindruer",
+    "nl": "Druiven",
+    "it": "Uva",
+    "es": "Uvas"
+  },
+  "ca2563ae-331d-57bb-a49e-5d6f0d13beeb": {
+    "en": "Orange",
+    "de": "Orange",
+    "fr": "Orange",
+    "no": "Appelsin",
+    "sv": "Apelsin",
+    "da": "Appelsin",
+    "nl": "Sinaasappel",
+    "it": "Arancia",
+    "es": "Naranja"
+  },
+  "784571fe-5b4c-5186-a90f-9581d8238632": {
+    "en": "Mandarin",
+    "de": "Mandarine",
+    "fr": "Mandarine",
+    "no": "Mandarin",
+    "sv": "Mandarin",
+    "da": "Mandarin",
+    "nl": "Mandarijn",
+    "it": "Mandarino",
+    "es": "Mandarina"
+  },
+  "8ff8157e-6cb3-55c8-9ee2-320635c2ca71": {
+    "en": "Clementine",
+    "de": "Clementine",
+    "fr": "Clémentine",
+    "no": "Klementin",
+    "sv": "Klementin",
+    "da": "Klementin",
+    "nl": "Clementine",
+    "it": "Clementina",
+    "es": "Clementina"
+  },
+  "a6bdcdc2-1f3d-5e4f-b5b4-0406280b4696": {
+    "en": "Pear",
+    "de": "Birne",
+    "fr": "Poire",
+    "no": "Pære",
+    "sv": "Päron",
+    "da": "Pære",
+    "nl": "Peer",
+    "it": "Pera",
+    "es": "Pera"
+  },
+  "646c0de9-976d-5111-8e56-b02857d10ee3": {
+    "en": "Peach",
+    "de": "Pfirsich",
+    "fr": "Pêche",
+    "no": "Fersken",
+    "sv": "Persika",
+    "da": "Fersken",
+    "nl": "Perzik",
+    "it": "Pesca",
+    "es": "Melocotón"
+  },
+  "f9d6ade9-d4ca-57ca-b166-a536104c73cf": {
+    "en": "Apricot",
+    "de": "Aprikose",
+    "fr": "Abricot",
+    "no": "Aprikos",
+    "sv": "Aprikos",
+    "da": "Abrikos",
+    "nl": "Abrikoos",
+    "it": "Albicocca",
+    "es": "Albaricoque"
+  },
+  "05198b32-892a-5581-bdb8-ec193fc37e93": {
+    "en": "Mango",
+    "de": "Mango",
+    "fr": "Mangue",
+    "no": "Mango",
+    "sv": "Mango",
+    "da": "Mango",
+    "nl": "Mango",
+    "it": "Mango",
+    "es": "Mango"
+  },
+  "3b3697a6-e524-5ec2-9944-b6d15d8455ed": {
+    "en": "Pineapple",
+    "de": "Ananas",
+    "fr": "Ananas",
+    "no": "Ananas",
+    "sv": "Ananas",
+    "da": "Ananas",
+    "nl": "Ananas",
+    "it": "Ananas",
+    "es": "Piña"
+  },
+  "a070d30d-1350-5414-b592-67549c8d7cda": {
+    "en": "Watermelon",
+    "de": "Wassermelone",
+    "fr": "Pastèque",
+    "no": "Vannmelon",
+    "sv": "Vattenmelon",
+    "da": "Vandmelon",
+    "nl": "Watermeloen",
+    "it": "Anguria",
+    "es": "Sandía"
+  },
+  "919c4b58-abd3-5f48-9822-ad6483ff8510": {
+    "en": "Cantaloupe melon",
+    "de": "Zuckermelone",
+    "fr": "Cantaloup",
+    "no": "Cantaloupe-melon",
+    "sv": "Cantaloupemelon",
+    "da": "Cantaloupe-melon",
+    "nl": "Cantaloupe meloen",
+    "it": "Melone cantalupo",
+    "es": "Melón cantalupo"
+  },
+  "2068e0f0-6a91-50c1-9ad3-1acad280e1ea": {
+    "en": "Kiwi",
+    "de": "Kiwi",
+    "fr": "Kiwi",
+    "no": "Kiwi",
+    "sv": "Kiwi",
+    "da": "Kiwi",
+    "nl": "Kiwi",
+    "it": "Kiwi",
+    "es": "Kiwi"
+  },
+  "e53ad350-2ec8-55f3-92d4-9589c5adfd32": {
+    "en": "Lemon — peeled",
+    "de": "Zitrone — geschält",
+    "fr": "Citron — pelé",
+    "no": "Sitron – skrellet",
+    "sv": "Citron – skalad",
+    "da": "Citron - skrællede",
+    "nl": "Citroen — geschild",
+    "it": "Limone — pelato",
+    "es": "Limón — pelado"
+  },
+  "5d09853f-acec-55ea-9a44-702cd6509775": {
+    "en": "Lime",
+    "de": "Limette",
+    "fr": "Citron vert",
+    "no": "Lime",
+    "sv": "Lime",
+    "da": "Lime",
+    "nl": "Limoen",
+    "it": "Lime",
+    "es": "Lima"
+  },
+  "251553b6-2568-52fe-b271-357bd96e4c46": {
+    "en": "Medjool dates — pitted",
+    "de": "Medjool-Datteln — entsteint",
+    "fr": "Dattes Medjool — dénoyautées",
+    "no": "Medjool-dadler – uten stein",
+    "sv": "Medjool-dadlar – urkärnade",
+    "da": "Medjool dadler - udstenede",
+    "nl": "Medjool dadels — ontpit",
+    "it": "Datteri Medjool — denocciolati",
+    "es": "Dátiles Medjool — sin hueso"
+  },
+  "ee44221b-e77b-5085-ac15-88af8034b6e3": {
+    "en": "Raisins",
+    "de": "Rosinen",
+    "fr": "Raisins secs",
+    "no": "Rosiner",
+    "sv": "Russin",
+    "da": "Rosiner",
+    "nl": "Rozijnen",
+    "it": "Uvetta",
+    "es": "Pasas"
+  },
+  "bec3595b-bcae-5776-b587-d8cb8d8517d6": {
+    "en": "Prunes — dried",
+    "de": "Trockenpflaumen",
+    "fr": "Pruneaux — séchés",
+    "no": "Svisker – tørket",
+    "sv": "Katrinplommon – torkade",
+    "da": "Svesker - tørrede",
+    "nl": "Pruimen — gedroogd",
+    "it": "Prugne — essiccate",
+    "es": "Ciruelas pasas — desecadas"
+  },
+  "891b2c4a-8142-50e4-a1e0-a620dcedb4d7": {
+    "en": "Cucumber — raw",
+    "de": "Gurke — roh",
+    "fr": "Concombre — cru",
+    "no": "Agurk – rå",
+    "sv": "Gurka – rå",
+    "da": "Agurk - rå",
+    "nl": "Komkommer — rauw",
+    "it": "Cetriolo — crudo",
+    "es": "Pepino — crudo"
+  },
+  "d66bb77b-c3d6-5da0-9754-650273a63a39": {
+    "en": "Tomato — raw",
+    "de": "Tomate — roh",
+    "fr": "Tomate — crue",
+    "no": "Tomat – rå",
+    "sv": "Tomat – rå",
+    "da": "Tomat - rå",
+    "nl": "Tomaat — rauw",
+    "it": "Pomodoro — crudo",
+    "es": "Tomate — crudo"
+  },
+  "e0a97613-116a-587f-8343-d7957b383ccc": {
+    "en": "Carrot — raw",
+    "de": "Karotte — roh",
+    "fr": "Carotte — crue",
+    "no": "Gulrot – rå",
+    "sv": "Morot – rå",
+    "da": "Gulerod - rå",
+    "nl": "Wortel — rauw",
+    "it": "Carota — cruda",
+    "es": "Zanahoria — cruda"
+  },
+  "9286c287-f486-557e-82b8-414af21c6b90": {
+    "en": "Broccoli — raw",
+    "de": "Brokkoli — roh",
+    "fr": "Brocoli — cru",
+    "no": "Brokkoli – rå",
+    "sv": "Broccoli – rå",
+    "da": "Broccoli - rå",
+    "nl": "Broccoli — rauw",
+    "it": "Broccoli — crudi",
+    "es": "Brócoli — crudo"
+  },
+  "b3214e34-fb05-59b7-9406-ed4ca38f9738": {
+    "en": "Broccoli — boiled",
+    "de": "Brokkoli — gekocht",
+    "fr": "Brocoli — bouilli",
+    "no": "Brokkoli – kokt",
+    "sv": "Broccoli – kokt",
+    "da": "Broccoli - kogt",
+    "nl": "Broccoli — gekookt",
+    "it": "Broccoli — bolliti",
+    "es": "Brócoli — hervido"
+  },
+  "5b587d24-0728-54e9-9111-5cf31993d644": {
+    "en": "Cauliflower — raw",
+    "de": "Blumenkohl — roh",
+    "fr": "Chou-fleur — cru",
+    "no": "Blomkål – rå",
+    "sv": "Blomkål – rå",
+    "da": "Blomkål - rå",
+    "nl": "Bloemkool — rauw",
+    "it": "Cavolfiore — crudo",
+    "es": "Coliflor — cruda"
+  },
+  "058c7b2d-17f7-5532-bb2d-05dafbf5bd13": {
+    "en": "Cabbage — raw",
+    "de": "Kohl — roh",
+    "fr": "Chou — cru",
+    "no": "Kål – rå",
+    "sv": "Kål – rå",
+    "da": "Kål - rå",
+    "nl": "Kool — rauw",
+    "it": "Cavolo — crudo",
+    "es": "Repollo — crudo"
+  },
+  "e6d1bb23-6b02-5474-a16d-44c133717ad5": {
+    "en": "Onion — raw",
+    "de": "Zwiebel — roh",
+    "fr": "Oignon — cru",
+    "no": "Løk – rå",
+    "sv": "Lök – rå",
+    "da": "Løg - rå",
+    "nl": "Ui — rauw",
+    "it": "Cipolla — cruda",
+    "es": "Cebolla — cruda"
+  },
+  "a8df4e2f-36d2-54df-8416-fabcf243431b": {
+    "en": "Courgette — raw",
+    "de": "Zucchini — roh",
+    "fr": "Courgette — crue",
+    "no": "Squash – rå",
+    "sv": "Zucchini – rå",
+    "da": "Squash - rå",
+    "nl": "Courgette — rauw",
+    "it": "Zucchina — cruda",
+    "es": "Calabacín — crudo"
+  },
+  "1dc8f9e3-cfe5-5ee1-a1d5-d775e777a8b6": {
+    "en": "Courgette — boiled",
+    "de": "Zucchini — gekocht",
+    "fr": "Courgette — bouillie",
+    "no": "Squash – kokt",
+    "sv": "Zucchini – kokt",
+    "da": "Squash - kogt",
+    "nl": "Courgette — gekookt",
+    "it": "Zucchina — bollita",
+    "es": "Calabacín — hervido"
+  },
+  "1b7e4ed0-48a6-53a3-8b1c-2e023cd054c3": {
+    "en": "Spinach — raw",
+    "de": "Spinat — roh",
+    "fr": "Épinards — crus",
+    "no": "Spinat – rå",
+    "sv": "Spenat – rå",
+    "da": "Spinat - rå",
+    "nl": "Spinazie — rauw",
+    "it": "Spinaci — crudi",
+    "es": "Espinacas — crudas"
+  },
+  "03059a82-f529-50df-9ac6-d678fa9505d6": {
+    "en": "Spinach — boiled",
+    "de": "Spinat — gekocht",
+    "fr": "Épinards — bouillis",
+    "no": "Spinat – kokt",
+    "sv": "Spenat – kokt",
+    "da": "Spinat - kogt",
+    "nl": "Spinazie — gekookt",
+    "it": "Spinaci — bolliti",
+    "es": "Espinacas — hervidas"
+  },
+  "cdd721d2-294b-5355-95c2-a4780456f1d5": {
+    "en": "Kale — raw",
+    "de": "Grünkohl — roh",
+    "fr": "Chou frisé — cru",
+    "no": "Grønnkål – rå",
+    "sv": "Grönkål – rå",
+    "da": "Grønkål - rå",
+    "nl": "Boerenkool — rauw",
+    "it": "Cavolo riccio — crudo",
+    "es": "Col rizada — cruda"
+  },
+  "1fc75fb6-2a5f-5d37-9216-bcf9078e6f53": {
+    "en": "Brown mushrooms — raw",
+    "de": "Braune Champignons — roh",
+    "fr": "Champignons bruns — crus",
+    "no": "Brun sjampinjong – rå",
+    "sv": "Brun champinjon – rå",
+    "da": "Brune champignon - rå",
+    "nl": "Kastanjechampignons — rauw",
+    "it": "Funghi champignon bruni — crudi",
+    "es": "Champiñones marrones — crudos"
+  },
+  "1c44682d-a1ca-56fd-8f50-533a3b9d628b": {
+    "en": "Asparagus — raw",
+    "de": "Spargel — roh",
+    "fr": "Asperges — crues",
+    "no": "Asparges – rå",
+    "sv": "Sparris – rå",
+    "da": "Asparges - rå",
+    "nl": "Asperges — rauw",
+    "it": "Asparagi — crudi",
+    "es": "Espárragos — crudos"
+  },
+  "a55cd551-6fb1-54b5-b7dc-86b2583bbf51": {
+    "en": "Asparagus — boiled",
+    "de": "Spargel — gekocht",
+    "fr": "Asperges — bouillies",
+    "no": "Asparges – kokt",
+    "sv": "Sparris – kokt",
+    "da": "Asparges - kogt",
+    "nl": "Asperges — gekookt",
+    "it": "Asparagi — bolliti",
+    "es": "Espárragos — hervidos"
+  },
+  "9dc7f37a-f8f9-5d9f-9ac6-6c395ae4744d": {
+    "en": "Red-leaf lettuce",
+    "de": "Roter Eichblattsalat",
+    "fr": "Laitue rouge",
+    "no": "Rødbladet salat",
+    "sv": "Plocksallat (röd)",
+    "da": "Rødbladet salat",
+    "nl": "Rode sla",
+    "it": "Lattuga a foglia rossa",
+    "es": "Lechuga de hoja roja"
+  },
+  "a6717ca3-6062-5cba-8801-62cbc7b1577e": {
+    "en": "Butterhead lettuce",
+    "de": "Kopfsalat",
+    "fr": "Laitue beurre",
+    "no": "Hodesalat",
+    "sv": "Huvudsallat",
+    "da": "Hovedsalat",
+    "nl": "Kropsla",
+    "it": "Lattuga cappuccina",
+    "es": "Lechuga tipo mantecosa"
+  },
+  "efdd0a09-2976-52d9-a47b-c00388e4c99e": {
+    "en": "Green beans — boiled",
+    "de": "Grüne Bohnen — gekocht",
+    "fr": "Haricots verts — bouillis",
+    "no": "Grønne bønner – kokt",
+    "sv": "Gröna bönor – kokta",
+    "da": "Grønne bønner - kogte",
+    "nl": "Sperziebonen — gekookt",
+    "it": "Fagiolini — bolliti",
+    "es": "Judías verdes — hervidas"
+  },
+  "c1ae4c5c-4019-5f4f-8808-7d6e7b6b6ead": {
+    "en": "Green peas — raw",
+    "de": "Erbsen — roh",
+    "fr": "Petits pois — crus",
+    "no": "Erter – rå",
+    "sv": "Gröna ärter – råa",
+    "da": "Grønne ærter - rå",
+    "nl": "Tuinerwten — rauw",
+    "it": "Piselli — crudi",
+    "es": "Guisantes — crudos"
+  },
+  "6023e7c0-06f5-52fe-995f-8b212448debb": {
+    "en": "Green peas — boiled",
+    "de": "Erbsen — gekocht",
+    "fr": "Petits pois — bouillis",
+    "no": "Erter – kokt",
+    "sv": "Gröna ärter – kokta",
+    "da": "Grønne ærter - kogte",
+    "nl": "Tuinerwten — gekookt",
+    "it": "Piselli — bolliti",
+    "es": "Guisantes — hervidos"
+  },
+  "08ffdc44-61c7-505f-a876-f3dd57809643": {
+    "en": "Sweetcorn — boiled",
+    "de": "Zuckermais — gekocht",
+    "fr": "Maïs doux — bouilli",
+    "no": "Sukkermais – kokt",
+    "sv": "Majs – kokt",
+    "da": "Majs - kogte",
+    "nl": "Suikermaïs — gekookt",
+    "it": "Mais dolce — bollito",
+    "es": "Maíz dulce — hervido"
+  },
+  "483ef281-c8a8-54b2-8524-fce5b5dee6e9": {
+    "en": "Pumpkin — raw",
+    "de": "Kürbis — roh",
+    "fr": "Citrouille — crue",
+    "no": "Gresskar – rå",
+    "sv": "Pumpa – rå",
+    "da": "Græskar - rå",
+    "nl": "Pompoen — rauw",
+    "it": "Zucca — cruda",
+    "es": "Calabaza — cruda"
+  },
+  "22203f04-34c8-592d-a4d2-3edf1bc43594": {
+    "en": "Pumpkin — boiled",
+    "de": "Kürbis — gekocht",
+    "fr": "Citrouille — bouillie",
+    "no": "Gresskar – kokt",
+    "sv": "Pumpa – kokt",
+    "da": "Græskar - kogt",
+    "nl": "Pompoen — gekookt",
+    "it": "Zucca — bollita",
+    "es": "Calabaza — hervida"
+  },
+  "35a1ae08-3d5c-58f9-9f7c-9d3700ff52af": {
+    "en": "Swede — raw",
+    "de": "Steckrübe — roh",
+    "fr": "Rutabaga — cru",
+    "no": "Kålrot – rå",
+    "sv": "Kålrot – rå",
+    "da": "Kålrabi - rå",
+    "nl": "Koolraap — rauw",
+    "it": "Cavolo navone — crudo",
+    "es": "Nabo sueco — crudo"
+  },
+  "54476315-161a-5699-a08c-4e7ad2d34d99": {
+    "en": "Swede — boiled",
+    "de": "Steckrübe — gekocht",
+    "fr": "Rutabaga — bouilli",
+    "no": "Kålrot – kokt",
+    "sv": "Kålrot – kokt",
+    "da": "Kålrabi - kogt",
+    "nl": "Koolraap — gekookt",
+    "it": "Cavolo navone — bollito",
+    "es": "Nabo sueco — hervido"
+  },
+  "dd1cf70e-4ff3-56f5-9665-c44e96ccf381": {
+    "en": "Sun-dried tomatoes",
+    "de": "Sonnengetrocknete Tomaten",
+    "fr": "Tomates séchées",
+    "no": "Soltørkede tomater",
+    "sv": "Soltorkade tomater",
+    "da": "Soltørrede tomater",
+    "nl": "Zongedroogde tomaten",
+    "it": "Pomodori secchi",
+    "es": "Tomates secos"
+  },
+  "e51a21ae-cf06-513a-8ad6-41f9f912921b": {
+    "en": "Dill pickles",
+    "de": "Gewürzgurken",
+    "fr": "Cornichons",
+    "no": "Sylteagurk",
+    "sv": "Dillgurka",
+    "da": "Dild-syltede agurker",
+    "nl": "Augurken",
+    "it": "Cetriolini sottaceto",
+    "es": "Pepinillos en vinagre"
+  },
+  "b85bea62-31e0-5bb7-a0aa-f358e96cc955": {
+    "en": "Almonds",
+    "de": "Mandeln",
+    "fr": "Amandes",
+    "no": "Mandler",
+    "sv": "Mandlar",
+    "da": "Mandler",
+    "nl": "Amandelen",
+    "it": "Mandorle",
+    "es": "Almendras"
+  },
+  "bb9a2f06-9660-5846-88f9-150633979a76": {
+    "en": "Walnuts",
+    "de": "Walnüsse",
+    "fr": "Noix",
+    "no": "Valnøtter",
+    "sv": "Valnötter",
+    "da": "Valnødder",
+    "nl": "Walnoten",
+    "it": "Noci",
+    "es": "Nueces"
+  },
+  "dff94173-5c5a-529a-aa4c-13b6af59b9df": {
+    "en": "Hazelnuts",
+    "de": "Haselnüsse",
+    "fr": "Noisettes",
+    "no": "Hasselnøtter",
+    "sv": "Hasselnötter",
+    "da": "Hasselnødder",
+    "nl": "Hazelnoten",
+    "it": "Nocciole",
+    "es": "Avellanas"
+  },
+  "64ff0922-8240-5536-99e9-3b449eb96a72": {
+    "en": "Cashews",
+    "de": "Cashewkerne",
+    "fr": "Noix de cajou",
+    "no": "Cashewnøtter",
+    "sv": "Cashewnötter",
+    "da": "Cashewnødder",
+    "nl": "Cashewnoten",
+    "it": "Anacardi",
+    "es": "Anacardos"
+  },
+  "89eee762-8670-5596-a3c3-55b5de900b33": {
+    "en": "Pistachios",
+    "de": "Pistazien",
+    "fr": "Pistaches",
+    "no": "Pistasjnøtter",
+    "sv": "Pistaschnötter",
+    "da": "Pistacienødder",
+    "nl": "Pistachenoten",
+    "it": "Pistacchi",
+    "es": "Pistachos"
+  },
+  "5be12def-7f3f-5949-8194-c2164b9f548f": {
+    "en": "Pecans",
+    "de": "Pekannüsse",
+    "fr": "Noix de pécan",
+    "no": "Pekannøtter",
+    "sv": "Pekannötter",
+    "da": "Pekannødder",
+    "nl": "Pecannoten",
+    "it": "Noci pecan",
+    "es": "Nueces pecán"
+  },
+  "8ac4a57d-613d-5c2a-b335-20431c5d3ebf": {
+    "en": "Brazil nuts",
+    "de": "Paranüsse",
+    "fr": "Noix du Brésil",
+    "no": "Paranøtter",
+    "sv": "Paranötter",
+    "da": "Paranødder",
+    "nl": "Paranoten",
+    "it": "Noci del Brasile",
+    "es": "Nueces de Brasil"
+  },
+  "a4036bc7-cc02-5796-8def-861535d850c2": {
+    "en": "Pine nuts",
+    "de": "Pinienkerne",
+    "fr": "Pignons de pin",
+    "no": "Pinjekjerner",
+    "sv": "Pinjenötter",
+    "da": "Pinjekerner",
+    "nl": "Pijnboompitten",
+    "it": "Pinoli",
+    "es": "Piñones"
+  },
+  "f8848cf7-71b6-5f45-b42c-3662deda426d": {
+    "en": "Macadamia nuts",
+    "de": "Macadamianüsse",
+    "fr": "Noix de macadamia",
+    "no": "Macadamianøtter",
+    "sv": "Macadamianötter",
+    "da": "Macadamianødder",
+    "nl": "Macadamianoten",
+    "it": "Noci di macadamia",
+    "es": "Nueces de macadamia"
+  },
+  "16281ca0-5c90-5ac6-8aa2-9e5c9d2bbe51": {
+    "en": "Peanuts",
+    "de": "Erdnüsse",
+    "fr": "Cacahuètes",
+    "no": "Peanøtter",
+    "sv": "Jordnötter",
+    "da": "Jordnødder",
+    "nl": "Pinda's",
+    "it": "Arachidi",
+    "es": "Cacahuetes"
+  },
+  "3ee78b2d-0c07-5bc2-ba62-d81e2fc4e307": {
+    "en": "Peanut butter — smooth, unsalted",
+    "de": "Erdnussbutter — cremig, ungesalzen",
+    "fr": "Beurre de cacahuète — onctueux, non salé",
+    "no": "Peanøttsmør – glatt, usaltet",
+    "sv": "Jordnötssmör – slätt, osaltat",
+    "da": "Jordnøddesmør - fint, usaltet",
+    "nl": "Pindakaas — glad, ongezouten",
+    "it": "Burro di arachidi — cremoso, non salato",
+    "es": "Crema de cacahuete — suave, sin sal"
+  },
+  "a5d37816-30af-5df0-97ee-dd2e6bf6f46d": {
+    "en": "Almond butter — unsalted",
+    "de": "Mandelmus — ungesalzen",
+    "fr": "Purée d'amandes — non salée",
+    "no": "Mandelsmør – usaltet",
+    "sv": "Mandelmassa – osaltad",
+    "da": "Mandelsmør - usaltet",
+    "nl": "Amandelpasta — ongezouten",
+    "it": "Burro di mandorle — non salato",
+    "es": "Crema de almendras — sin sal"
+  },
+  "5898d31a-78a6-594d-8431-6bc35e4880a7": {
+    "en": "Pumpkin seeds",
+    "de": "Kürbiskerne",
+    "fr": "Graines de courge",
+    "no": "Gresskarfrø",
+    "sv": "Pumpakärnor",
+    "da": "Græskarkerner",
+    "nl": "Pompoenpitten",
+    "it": "Semi di zucca",
+    "es": "Semillas de calabaza"
+  },
+  "bcd24e21-d4a8-5e48-95ed-50b60aca1efa": {
+    "en": "Sunflower seeds",
+    "de": "Sonnenblumenkerne",
+    "fr": "Graines de tournesol",
+    "no": "Solsikkefrø",
+    "sv": "Solroskärnor",
+    "da": "Solsikkekerner",
+    "nl": "Zonnebloempitten",
+    "it": "Semi di girasole",
+    "es": "Semillas de girasol"
+  },
+  "a85c4314-1bf0-51d1-a01d-281845537cf5": {
+    "en": "Flax seeds",
+    "de": "Leinsamen",
+    "fr": "Graines de lin",
+    "no": "Linfrø",
+    "sv": "Linfrön",
+    "da": "Hørfrø",
+    "nl": "Lijnzaad",
+    "it": "Semi di lino",
+    "es": "Semillas de lino"
+  },
+  "ab195eb1-df0e-542f-b082-515b7a24d2f1": {
+    "en": "Sesame seeds",
+    "de": "Sesamsamen",
+    "fr": "Graines de sésame",
+    "no": "Sesamfrø",
+    "sv": "Sesamfrön",
+    "da": "Sesamfrø",
+    "nl": "Sesamzaad",
+    "it": "Semi di sesamo",
+    "es": "Semillas de sésamo"
+  },
+  "1fa9ef65-07ab-5b3a-9319-40637786f365": {
+    "en": "Hemp seeds — hulled",
+    "de": "Hanfsamen — geschält",
+    "fr": "Graines de chanvre — décortiquées",
+    "no": "Hampfrø – avskallede",
+    "sv": "Hampafrön — skalade",
+    "da": "Hampfrø — afskallede",
+    "nl": "Hennepzaad — gepeld",
+    "it": "Semi di canapa decorticati",
+    "es": "Semillas de cáñamo — peladas"
+  },
+  "1a28db70-74e8-5036-907a-ec40d52a5feb": {
+    "en": "Tahini",
+    "de": "Tahini",
+    "fr": "Tahini",
+    "no": "Tahini",
+    "sv": "Tahini",
+    "da": "Tahini",
+    "nl": "Tahini",
+    "it": "Tahina",
+    "es": "Tahini"
+  },
+  "f8266ca5-4ef3-5278-80eb-97e702be7e6f": {
+    "en": "Olive oil",
+    "de": "Olivenöl",
+    "fr": "Huile d'olive",
+    "no": "Olivenolje",
+    "sv": "Olivolja",
+    "da": "Olivenolie",
+    "nl": "Olijfolie",
+    "it": "Olio d'oliva",
+    "es": "Aceite de oliva"
+  },
+  "79c82539-b521-5b53-b65c-0cf69663dc5d": {
+    "en": "Rapeseed oil",
+    "de": "Rapsöl",
+    "fr": "Huile de colza",
+    "no": "Rapsolje",
+    "sv": "Rapsolja",
+    "da": "Rapsolie",
+    "nl": "Koolzaadolie",
+    "it": "Olio di colza",
+    "es": "Aceite de colza"
+  },
+  "3878730d-7fa1-5c3f-b8ee-405ea53dc6bd": {
+    "en": "Sunflower oil",
+    "de": "Sonnenblumenöl",
+    "fr": "Huile de tournesol",
+    "no": "Solsikkeolje",
+    "sv": "Solrosolja",
+    "da": "Solsikkeolie",
+    "nl": "Zonnebloemolie",
+    "it": "Olio di girasole",
+    "es": "Aceite de girasol"
+  },
+  "2a28d40d-a093-5831-aebf-894d42af82cb": {
+    "en": "Coconut oil",
+    "de": "Kokosöl",
+    "fr": "Huile de coco",
+    "no": "Kokosolje",
+    "sv": "Kokosolja",
+    "da": "Kokosolie",
+    "nl": "Kokosolie",
+    "it": "Olio di cocco",
+    "es": "Aceite de coco"
+  },
+  "1bdb9cd2-3ba5-5333-8c83-bf111b9fea36": {
+    "en": "Dark chocolate — 70–85% cocoa",
+    "de": "Dunkle Schokolade — 70–85% Kakao",
+    "fr": "Chocolat noir — 70–85% de cacao",
+    "no": "Mørk sjokolade – 70–85% kakao",
+    "sv": "Mörk choklad — 70–85% kakao",
+    "da": "Mørk chokolade — 70–85% kakao",
+    "nl": "Pure chocolade — 70–85% cacao",
+    "it": "Cioccolato fondente — 70–85% cacao",
+    "es": "Chocolate negro — 70–85% cacao"
+  },
+  "ad2f354f-af89-5fa4-af20-a4ca086a321c": {
+    "en": "Honey",
+    "de": "Honig",
+    "fr": "Miel",
+    "no": "Honning",
+    "sv": "Honung",
+    "da": "Honning",
+    "nl": "Honing",
+    "it": "Miele",
+    "es": "Miel"
+  },
+  "99329d0f-4a8b-5e29-8d02-35158980e849": {
+    "en": "Jam",
+    "de": "Konfitüre",
+    "fr": "Confiture",
+    "no": "Syltetøy",
+    "sv": "Sylt",
+    "da": "Marmelade",
+    "nl": "Jam",
+    "it": "Marmellata",
+    "es": "Mermelada"
+  },
+  "8abf6389-3344-5301-96bb-c30e3a7d6ffe": {
+    "en": "Mayonnaise",
+    "de": "Mayonnaise",
+    "fr": "Mayonnaise",
+    "no": "Majones",
+    "sv": "Majonnäs",
+    "da": "Mayonnaise",
+    "nl": "Mayonaise",
+    "it": "Maionese",
+    "es": "Mayonesa"
+  },
+  "7edac7ed-0083-5c37-afe5-a1d6e8edb8c8": {
+    "en": "Black coffee",
+    "de": "Schwarzer Kaffee",
+    "fr": "Café noir",
+    "no": "Svart kaffe",
+    "sv": "Svart kaffe",
+    "da": "Sort kaffe",
+    "nl": "Zwarte koffie",
+    "it": "Caffè nero",
+    "es": "Café solo"
+  },
+  "3994367e-c0e0-5e3d-8fbb-ef55fbf3b756": {
+    "en": "Decaf coffee",
+    "de": "Koffeinfreier Kaffee",
+    "fr": "Café décaféiné",
+    "no": "Koffeinfri kaffe",
+    "sv": "Koffeinfritt kaffe",
+    "da": "Koffeinfri kaffe",
+    "nl": "Decafé koffie",
+    "it": "Caffè decaffeinato",
+    "es": "Café descafeinado"
+  },
+  "9d2c86fd-e34c-5097-95a4-910bf543bcbc": {
+    "en": "Espresso",
+    "de": "Espresso",
+    "fr": "Espresso",
+    "no": "Espresso",
+    "sv": "Espresso",
+    "da": "Espresso",
+    "nl": "Espresso",
+    "it": "Espresso",
+    "es": "Café expreso"
+  },
+  "b19c1552-5246-5caf-8616-101d174b59fe": {
+    "en": "Banana",
+    "de": "Banane",
+    "fr": "Banane",
+    "no": "Banan",
+    "sv": "Banan",
+    "da": "Banan",
+    "nl": "Banaan",
+    "it": "Banana",
+    "es": "Plátano"
+  },
+  "5742074a-e498-50a1-b68c-a7c0500424df": {
+    "en": "Egg — raw",
+    "de": "Ei — roh",
+    "fr": "Œuf — cru",
+    "no": "Egg – rått",
+    "sv": "Ägg — rått",
+    "da": "Æg — rå",
+    "nl": "Ei — rauw",
+    "it": "Uovo — crudo",
+    "es": "Huevo — crudo"
+  },
+  "88b2cdb3-aa07-5e15-8b26-0624844addf7": {
+    "en": "Soy drink — unsweetened",
+    "de": "Sojadrink — ungesüßt",
+    "fr": "Boisson au soja — sans sucre ajouté",
+    "no": "Soyadrikk – usøtet",
+    "sv": "Sojadryck — osötad",
+    "da": "Sojadrik — usødet",
+    "nl": "Sojadrink — ongezoet",
+    "it": "Bevanda di soia — senza zuccheri",
+    "es": "Bebida de soja — sin azúcar"
+  },
+  "e152e351-9877-57f1-8b5a-3758b095e895": {
+    "en": "Almond drink — unsweetened",
+    "de": "Mandeldrink — ungesüßt",
+    "fr": "Boisson à l'amande — sans sucre ajouté",
+    "no": "Mandeldrikk – usøtet",
+    "sv": "Mandeldryck — osötad",
+    "da": "Mandeldrik — usødet",
+    "nl": "Amandeldrink — ongezoet",
+    "it": "Bevanda di mandorla — senza zuccheri",
+    "es": "Bebida de almendras — sin azúcar"
+  },
+  "9cedbd4e-282b-5275-b030-eac1054c84f6": {
+    "en": "Oat drink — unsweetened",
+    "de": "Haferdrink — ungesüßt",
+    "fr": "Boisson à l'avoine — sans sucre ajouté",
+    "no": "Havredrikk – usøtet",
+    "sv": "Havredryck — osötad",
+    "da": "Havredrik — usødet",
+    "nl": "Haverdrink — ongezoet",
+    "it": "Bevanda d'avena — senza zuccheri",
+    "es": "Bebida de avena — sin azúcar"
+  },
+  "f29006a8-84ba-50b5-9f9a-0fc6043b4a8e": {
+    "en": "Hummus",
+    "de": "Hummus",
+    "fr": "Houmous",
+    "no": "Hummus",
+    "sv": "Hummus",
+    "da": "Hummus",
+    "nl": "Hummus",
+    "it": "Hummus",
+    "es": "Hummus"
+  },
+  "e1d185c3-b9e1-5c7f-84ae-09107a7123c8": {
+    "en": "Milk kefir",
+    "de": "Milchkefir"
+  },
+  "34e345be-e9ad-53e2-bfd4-54501d66f82c": {
+    "en": "Plain quark — 2–3% fat",
+    "de": "Magerquark — 2–3% Fett"
+  },
+  "268f90d8-7690-5bc0-b827-45cb0872f810": {
+    "en": "Plain quark — 7–8% fat",
+    "de": "Quark — 7–8% Fett"
+  },
+  "6d8b58ff-1686-5af6-9620-ffc2a1e63e85": {
+    "en": "Cheddar",
+    "de": "Cheddar"
+  },
+  "53dea144-3deb-5e98-9528-d4d06799a27e": {
+    "en": "Feta-style cheese — cow's milk",
+    "de": "Käse nach Feta-Art — Kuhmilch"
+  },
+  "d21a7692-080a-528f-bfe1-d1c4737fb5fe": {
+    "en": "Brie",
+    "de": "Brie"
+  },
+  "a324fc3f-b1f3-599c-bd48-9c9cb91c4c43": {
+    "en": "Wholegrain rye bread",
+    "de": "Vollkornroggenbrot"
+  },
+  "6ed9bfaa-9489-5295-bc4e-2e856582ceeb": {
+    "en": "Baguette",
+    "de": "Baguette"
+  },
+  "65e1685b-3bda-5a90-944a-9352d4b20412": {
+    "en": "Pitta bread",
+    "de": "Pita-Brot"
+  },
+  "8e555c4d-f3cc-5ae3-864d-26830a37b1eb": {
+    "en": "Bagel",
+    "de": "Bagel"
+  },
+  "83bfc9fe-b64c-5812-8444-0e024edea17d": {
+    "en": "Muesli — fruit and nuts, no added sugar",
+    "de": "Müsli — Früchte und Nüsse, ohne Zuckerzusatz"
+  },
+  "74d6f2eb-456d-5db6-91c3-4455b268b936": {
+    "en": "Granola — nuts and seeds",
+    "de": "Granola — Nüsse und Samen"
+  },
+  "b2e15e16-6bbc-59d4-a5c9-7287654e5037": {
+    "en": "Pasta — cooked",
+    "de": "Nudeln — gekocht"
+  },
+  "ac799ffa-27a0-56e3-832e-ae3c9dfba079": {
+    "en": "Potato — boiled",
+    "de": "Kartoffel — gekocht"
+  },
+  "ed1bfbda-2d0a-5f0d-8fed-ed46e8013812": {
+    "en": "Potato — baked",
+    "de": "Kartoffel — gebacken"
+  },
+  "3ea23823-4aec-5ad4-bbbe-5dcb72854bb1": {
+    "en": "New potato — raw",
+    "de": "Frühkartoffel — roh"
+  },
+  "781e99ec-edf0-5483-8a6c-bb878e8b4f06": {
+    "en": "Tempeh",
+    "de": "Tempeh"
+  },
+  "6e867020-c921-5fac-9948-110c33ec21ac": {
+    "en": "Smoked salmon",
+    "de": "Räucherlachs"
+  },
+  "0917abb9-706d-5600-81d6-3b2ba0e3deb5": {
+    "en": "Farmed trout — raw",
+    "de": "Zuchtforelle — roh"
+  },
+  "f2d84cbc-0180-5634-9316-5c6c9c830c09": {
+    "en": "Prawns — boiled",
+    "de": "Garnelen — gekocht"
+  },
+  "40d537b0-c2ae-5205-b95f-a8523da143a3": {
+    "en": "Brussels sprouts — raw",
+    "de": "Rosenkohl — roh"
+  },
+  "0a008a4f-5dc5-5233-96b9-2924f0e64773": {
+    "en": "Broccoli — steamed",
+    "de": "Brokkoli – gedämpft"
   }
 };

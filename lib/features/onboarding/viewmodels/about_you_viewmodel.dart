@@ -4,13 +4,17 @@ import '../../../core/localization/app_language.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../models/experience_level.dart';
+import 'onboarding_controller.dart';
 
 // MARK: - Onboarding Screen 02 & 03 (About You & Experience) ViewModel
 class AboutYouViewModel extends ChangeNotifier {
   final int currentStep = 3;
   final int totalSteps = 8;
 
-  OnboardingDraft draft = OnboardingDraft();
+  final OnboardingController controller;
+  final bool _ownsController;
+  OnboardingDraft get draft => controller.draft;
+  final measurements = ValueNotifier<int>(0);
   bool _isDisposed = false;
 
   String _name = '';
@@ -38,7 +42,9 @@ class AboutYouViewModel extends ChangeNotifier {
   ExperienceLevel? _selectedExperience = ExperienceLevel.intermediate;
   ExperienceLevel? get selectedExperience => _selectedExperience;
 
-  AboutYouViewModel() {
+  AboutYouViewModel({OnboardingController? controller})
+      : controller = controller ?? OnboardingController(),
+        _ownsController = controller == null {
     LanguageManager.shared.addListener(_onLanguageChanged);
     _loadState();
   }
@@ -50,7 +56,7 @@ class AboutYouViewModel extends ChangeNotifier {
   AppLanguage get selectedLanguage => LanguageManager.shared.currentLanguage;
 
   Future<void> _loadState() async {
-    draft = await OnboardingDraft.load();
+    if (!controller.ready) await controller.initialize();
     if (_isDisposed) return;
 
     if (draft.languageCode.isNotEmpty) {
@@ -59,7 +65,7 @@ class AboutYouViewModel extends ChangeNotifier {
         orElse: () => LanguageManager.shared.currentLanguage,
       );
       if (LanguageManager.shared.currentLanguage != match) {
-        LanguageManager.shared.selectLanguage(match);
+        LanguageManager.shared.selectLanguage(match, persistDraft: false);
       }
     }
 
@@ -99,19 +105,23 @@ class AboutYouViewModel extends ChangeNotifier {
 
   void setName(String val) {
     _name = val;
-    notifyListeners();
+    draft.name = val.trim();
+    controller.checkpoint();
   }
 
   String get countryCode => draft.countryCode;
 
   void setCountry(String value) {
     draft.countryCode = value;
+    controller.checkpoint();
     notifyListeners();
   }
 
   void setGender(String val) {
     if (_gender == val) return;
     _gender = val;
+    draft.gender = val;
+    controller.checkpoint();
     notifyListeners();
   }
 
@@ -123,23 +133,31 @@ class AboutYouViewModel extends ChangeNotifier {
 
   void setAge(double value) {
     _age = value.round().clamp(13, 100);
-    notifyListeners();
+    draft.age = _age;
+    controller.checkpoint();
+    measurements.value++;
   }
 
   void setHeight(double value) {
     _heightCm = (_isImperial ? value * 2.54 : value).clamp(120.0, 230.0);
-    notifyListeners();
+    draft.heightCm = _heightCm;
+    controller.checkpoint();
+    measurements.value++;
   }
 
   void setWeight(double value) {
     _weightKg = (_isImperial ? value / 2.20462 : value).clamp(30.0, 250.0);
-    notifyListeners();
+    draft.weightKg = _weightKg;
+    controller.checkpoint();
+    measurements.value++;
   }
 
   void setTargetWeight(double value) {
     _targetWeightKg =
         (_isImperial ? value / 2.20462 : value).clamp(30.0, 250.0);
-    notifyListeners();
+    draft.targetWeightKg = _targetWeightKg;
+    controller.checkpoint();
+    measurements.value++;
   }
 
   // ── Height Handlers ──────────────────────────────────────────────────────
@@ -234,6 +252,8 @@ class AboutYouViewModel extends ChangeNotifier {
   void selectExperience(ExperienceLevel level) {
     if (_selectedExperience == level) return;
     _selectedExperience = level;
+    draft.experienceLevel = level.backendValue;
+    controller.checkpoint();
     notifyListeners();
   }
 
@@ -261,12 +281,14 @@ class AboutYouViewModel extends ChangeNotifier {
       draft.experienceLevel = _selectedExperience!.backendValue;
     }
     draft.completedStep = currentStep;
-    await draft.save();
+    controller.checkpoint();
   }
 
   @override
   void dispose() {
     _isDisposed = true;
+    measurements.dispose();
+    if (_ownsController) controller.dispose();
     LanguageManager.shared.removeListener(_onLanguageChanged);
     super.dispose();
   }

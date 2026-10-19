@@ -1,3 +1,4 @@
+import '../viewmodels/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/navigation/onboarding_page_route.dart';
@@ -8,19 +9,22 @@ import 'about_you_experience_view.dart';
 
 // MARK: - Screen 01 — Your Goal (Apple Liquid Glass & 3D Metallic UI)
 class GoalSelectionView extends StatefulWidget {
-  const GoalSelectionView({super.key});
+  final OnboardingController? controller;
+  const GoalSelectionView({super.key, this.controller});
 
   @override
   State<GoalSelectionView> createState() => _GoalSelectionViewState();
 }
 
 class _GoalSelectionViewState extends State<GoalSelectionView> {
+  bool _advancing = false;
   late final GoalViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = GoalViewModel()..addListener(_rebuild);
+    _viewModel = GoalViewModel(controller: widget.controller)
+      ..addListener(_rebuild);
   }
 
   void _rebuild() {
@@ -39,11 +43,17 @@ class _GoalSelectionViewState extends State<GoalSelectionView> {
   }
 
   void _onContinue() async {
-    await _viewModel.continueToNextStep();
-    if (!mounted) return;
-    Navigator.of(context).push(
-      OnboardingPageRoute(page: const AboutYouExperienceView()),
-    );
+    if (_advancing) return;
+    setState(() => _advancing = true);
+    try {
+      await _viewModel.continueToNextStep();
+      if (!mounted) return;
+      await OnboardingPageRoute(
+              page: AboutYouExperienceView(controller: _viewModel.controller))
+          .open(context);
+    } finally {
+      if (mounted) setState(() => _advancing = false);
+    }
   }
 
   @override
@@ -57,6 +67,7 @@ class _GoalSelectionViewState extends State<GoalSelectionView> {
       title: language.headlineGoal,
       subtitle: language.subtitleGoal,
       actionTitle: language.continueButtonTitle,
+      loading: _advancing,
       onBack: _onBack,
       onContinue: selectedGoal == null ? null : _onContinue,
       children: [

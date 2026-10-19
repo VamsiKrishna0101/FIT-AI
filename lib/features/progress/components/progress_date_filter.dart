@@ -7,18 +7,22 @@ class ProgressDateFilter extends StatelessWidget {
   final String period;
   final DateTimeRange? custom;
   final String? rangeLabel;
+  final bool compact;
   final void Function(String, DateTimeRange?) onChanged;
   const ProgressDateFilter(
       {super.key,
       required this.period,
       this.custom,
       this.rangeLabel,
+      this.compact = false,
       required this.onChanged});
 
   @override
   Widget build(BuildContext context) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
+            constraints: BoxConstraints(minHeight: compact ? 42 : 48),
+            alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
                 color: const Color(0xFF242527),
@@ -29,6 +33,7 @@ class ProgressDateFilter extends StatelessWidget {
                     isExpanded: true,
                     dropdownColor: const Color(0xFF252525),
                     borderRadius: BorderRadius.circular(14),
+                    isDense: compact,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: progressSilver,
                         fontSize: 13,
@@ -47,15 +52,6 @@ class ProgressDateFilter extends StatelessWidget {
                                           fitnessText(context, entry.value),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis)),
-                                  if (rangeLabel != null &&
-                                      period != 'custom') ...[
-                                    const SizedBox(width: 8),
-                                    Text(rangeLabel!,
-                                        style: const TextStyle(
-                                            fontSize: 10,
-                                            color: progressMuted)),
-                                    const SizedBox(width: 6),
-                                  ],
                                 ]))
                             .toList(),
                     items: const {
@@ -90,11 +86,16 @@ class ProgressDateFilter extends StatelessWidget {
                           saveText: fitnessText(context, 'Apply'));
                       if (picked != null) onChanged('custom', picked);
                     }))),
-        if (period == 'custom' && custom != null)
+        if (!compact && period != 'custom' && rangeLabel != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(rangeLabel!,
+                  style: const TextStyle(color: progressMuted, fontSize: 13))),
+        if (!compact && period == 'custom' && custom != null)
           Padding(
               padding: const EdgeInsets.only(top: 7),
               child: Text(
                   '${progressDate(custom!.start.toIso8601String().substring(0, 10), Localizations.localeOf(context).toLanguageTag())} – ${progressDate(custom!.end.toIso8601String().substring(0, 10), Localizations.localeOf(context).toLanguageTag())}',
-                  style: const TextStyle(color: progressMuted, fontSize: 11))),
+                  style: const TextStyle(color: progressMuted, fontSize: 13))),
       ]);
 }

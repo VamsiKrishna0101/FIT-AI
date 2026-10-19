@@ -3,6 +3,7 @@ import '../../../core/localization/app_language.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../models/working_toward_goal.dart';
+import 'onboarding_controller.dart';
 
 // MARK: - Onboarding Screen 01 (Your Goal) ViewModel
 class GoalViewModel extends ChangeNotifier {
@@ -12,17 +13,21 @@ class GoalViewModel extends ChangeNotifier {
   WorkingTowardGoal? _selectedGoal;
   WorkingTowardGoal? get selectedGoal => _selectedGoal;
 
-  OnboardingDraft draft = OnboardingDraft();
+  final OnboardingController controller;
+  final bool _ownsController;
+  OnboardingDraft get draft => controller.draft;
   bool _isDisposed = false;
 
-  GoalViewModel() {
+  GoalViewModel({OnboardingController? controller})
+      : controller = controller ?? OnboardingController(),
+        _ownsController = controller == null {
     _loadState();
   }
 
   AppLanguage get selectedLanguage => LanguageManager.shared.currentLanguage;
 
   Future<void> _loadState() async {
-    draft = await OnboardingDraft.load();
+    if (!controller.ready) await controller.initialize();
     if (_isDisposed) return;
 
     if (draft.workingToward != null) {
@@ -31,7 +36,7 @@ class GoalViewModel extends ChangeNotifier {
       // Default to first goal (Build Muscle) or null
       _selectedGoal = WorkingTowardGoal.buildMuscle;
       draft.workingToward = _selectedGoal!.backendValue;
-      await draft.save();
+      controller.checkpoint();
     }
     notifyListeners();
   }
@@ -42,7 +47,7 @@ class GoalViewModel extends ChangeNotifier {
     draft.workingToward = goal.backendValue;
     draft.goal = goal.backendValue;
     draft.completedStep = currentStep;
-    await draft.save();
+    controller.checkpoint();
     if (!_isDisposed) notifyListeners();
   }
 
@@ -51,12 +56,13 @@ class GoalViewModel extends ChangeNotifier {
     draft.workingToward = _selectedGoal!.backendValue;
     draft.goal = _selectedGoal!.backendValue;
     draft.completedStep = currentStep;
-    await draft.save();
+    controller.checkpoint();
   }
 
   @override
   void dispose() {
     _isDisposed = true;
+    if (_ownsController) controller.dispose();
     super.dispose();
   }
 }

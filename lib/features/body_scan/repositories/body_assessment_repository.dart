@@ -12,7 +12,8 @@ class BodyAssessmentRepository {
   static final shared = BodyAssessmentRepository();
   Future<Map<String, dynamic>> _read(String path,
           {String bucket = 'body', Map<String, dynamic>? query}) =>
-      UserDataCache.shared.load(bucket, '$path:${query.toString()}', () async {
+      UserDataCache.shared.load(bucket, 'v2:$path:${query.toString()}',
+          () async {
         await _requireSession();
         final response = await ApiClient.shared
             .get<Map<String, dynamic>>(path, queryParameters: query);
@@ -22,7 +23,10 @@ class BodyAssessmentRepository {
               ? const Duration(seconds: 30)
               : const Duration(minutes: 5));
 
-  Future<void> invalidate() => UserDataCache.shared.invalidate('body');
+  Future<void> invalidate() async {
+    await UserDataCache.shared.invalidate('body');
+    await UserDataCache.shared.invalidate('body_real');
+  }
 
   Future<void> _requireSession() async {
     final token = await SecureSessionStore.shared.accessToken;
@@ -43,8 +47,16 @@ class BodyAssessmentRepository {
   }
 
   Future<BodyOverview> load() async {
-    return BodyOverview.fromJson(await _read('/api/body'));
+    return BodyOverview.fromJson(await _read('/api/body', bucket: 'body_real'));
   }
+
+  Future<Map<String, dynamic>> history(
+          {String? from, String? to, int page = 1}) =>
+      _read('/api/body/history', bucket: 'body_real', query: {
+        if (from != null) 'from': from,
+        if (to != null) 'to': to,
+        'page': page,
+      });
 
   Future<BodyComparison> compare(String current, String previous) async {
     return BodyComparison.fromJson(await _read('/api/body/compare',

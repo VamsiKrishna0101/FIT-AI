@@ -9,6 +9,7 @@ import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../train/models/training_session.dart';
+import '../../body_scan/views/body_entry_view.dart';
 import '../../train/repositories/training_repository.dart';
 import '../components/progress_activity.dart';
 import '../components/progress_date_filter.dart';
@@ -155,6 +156,16 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
     if (mounted) setState(() => _pins = pins);
   }
 
+  Future<void> _addWeight() async {
+    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(
+        builder: (_) =>
+            const FitnessTheme(child: BodyEntryView(weightOnly: true))));
+    if (saved == true) {
+      await ProgressRepository.shared.invalidate();
+      if (mounted) await _load(refresh: true);
+    }
+  }
+
   List<Widget> _sections(ProgressOverview data) {
     final pinned = _pins.isEmpty
         ? data.exercises.take(3).toList()
@@ -174,12 +185,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
         progressRows(data.wellness['recovery']), 'recovery');
     final locale = Localizations.localeOf(context).toLanguageTag();
     return [
-      ProgressActivity(
-          summary: data.summary,
-          weeks: data.weeks,
-          activity: data.activity,
-          endDate: (data.json['range'] as Map?)?['end'] as String?,
-          onHistory: () => _open('Workout history', '/sessions', 'sessions')),
+      ProgressTrainingSummary(summary: data.summary, rangeLabel: _rangeLabel),
       ProgressHeading('Exercise progress', onTap: _exercises),
       if (pinned.isEmpty)
         const ProgressSurface(
@@ -198,6 +204,11 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                             '/exercises/${pinned[i]['id']}', 'exercise'))),
               ],
             ])),
+      const ProgressHeading('Consistency'),
+      ProgressActivity(
+          weeks: data.weeks,
+          activity: data.activity,
+          endDate: (data.json['range'] as Map?)?['end'] as String?),
       ProgressHeading('Muscle distribution',
           onTap: () => _open('Muscle distribution', '', 'muscles',
               initial: {'muscles': data.muscles})),
@@ -208,42 +219,96 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
           const ProgressEmpty('Log sets to build your muscle training history.')
         else
           ProgressMuscleBars(
-              muscles: muscles.take(5).toList(),
+              muscles: muscles.take(3).toList(),
               onTap: (row) => _open(
                   row['label'] as String, '/muscles/${row['id']}', 'muscle')),
-        const SizedBox(height: 8),
-        Text(
-            fitnessText(
-                context, 'Direct sets. Assisting exposure is separate.'),
-            style: const TextStyle(color: progressMuted, fontSize: 10)),
+        if (muscles.any((row) => (row['directSets'] as num? ?? 0) > 0)) ...[
+          const SizedBox(height: 8),
+          Text(
+              fitnessText(context,
+                  'Direct sets · Bars compare your most-trained muscles.'),
+              style: const TextStyle(
+                  color: progressMuted, fontSize: 12, height: 1.4)),
+        ],
       ])),
       const ProgressHeading('Body & recovery'),
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-            child: ProgressMetricPreview(
-                title: 'Weight',
-                unit: 'kg',
-                points: weightPoints,
-                onTap: () => _open('Body changes', '/body', 'body',
-                    initial: data.body))),
-        const SizedBox(width: 12),
-        Expanded(
-            child: ProgressMetricPreview(
-                title: 'Recovery',
-                unit: '/100',
-                points: recoveryPoints,
-                color: progressViolet,
-                average: true,
-                caption: 'Recorded-day average',
-                onTap: () => _open('Recovery', '/wellness', 'recovery',
-                    initial: data.wellness))),
-      ]),
+      if (weightPoints.isNotEmpty && recoveryPoints.isNotEmpty)
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: ProgressMetricPreview(
+                  title: 'Weight',
+                  unit: 'kg',
+                  points: weightPoints,
+                  onTap: () => _open('Body changes', '/body', 'body',
+                      initial: data.body))),
+          const SizedBox(width: 12),
+          Expanded(
+              child: ProgressMetricPreview(
+                  title: 'Recovery',
+                  unit: '/100',
+                  points: recoveryPoints,
+                  color: progressViolet,
+                  average: true,
+                  caption: 'Average recovery',
+                  onTap: () => _open('Recovery', '/wellness', 'recovery',
+                      initial: data.wellness))),
+        ])
+      else ...[
+        if (weightPoints.isEmpty)
+          ProgressSetupRow(
+              title: 'Log your weight',
+              message: 'Add a reading to start tracking body changes.',
+              icon: CupertinoIcons.add_circled,
+              onTap: _addWeight)
+        else
+          ProgressMetricPreview(
+              title: 'Weight',
+              unit: 'kg',
+              points: weightPoints,
+              onTap: () =>
+                  _open('Body changes', '/body', 'body', initial: data.body)),
+        const SizedBox(height: 10),
+        if (recoveryPoints.isEmpty)
+          ProgressSetupRow(
+              title: 'Recovery',
+              message:
+                  'No recovery readings in this period. View your metrics.',
+              icon: CupertinoIcons.heart,
+              color: progressViolet,
+              onTap: () => _open('Recovery', '/wellness', 'recovery',
+                  initial: data.wellness))
+        else
+          ProgressMetricPreview(
+              title: 'Recovery',
+              unit: '/100',
+              points: recoveryPoints,
+              average: true,
+              color: progressViolet,
+              caption: 'Average recovery',
+              onTap: () => _open('Recovery', '/wellness', 'recovery',
+                  initial: data.wellness)),
+      ],
       ProgressHeading('Nutrition',
           onTap: () => _open('Nutrition', '/wellness', 'nutrition',
               initial: data.wellness),
           action: 'Explore'),
-      WellnessProgressContent(
-          data: data.wellness, nutrition: true, compact: true),
+      if (progressRows(data.wellness['nutrition']).any((row) => [
+            'calories',
+            'protein',
+            'carbs',
+            'fat',
+            'water'
+          ].any((key) => progressNumber(row[key])?.isFinite == true)))
+        WellnessProgressContent(
+            data: data.wellness, nutrition: true, compact: true)
+      else
+        ProgressSetupRow(
+            title: 'Start your nutrition history',
+            message: 'Log meals in Today to see your nutrition trends here.',
+            icon: Icons.restaurant_outlined,
+            color: progressAmber,
+            onTap: () => _open('Nutrition', '/wellness', 'nutrition',
+                initial: data.wellness)),
       ProgressHeading('Workout history',
           onTap: () => _open('Workout history', '/sessions', 'sessions')),
       ProgressSurface(
@@ -277,46 +342,52 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
           backgroundColor: DSColors.bg,
           body: SafeArea(
               bottom: false,
-              child: Column(children: [
-                Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            Expanded(
-                                child: Text(fitnessText(context, 'Progress'),
-                                    style: const TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: -1))),
-                          ]),
-                          const SizedBox(height: 12),
-                          ProgressDateFilter(
-                              period: _period,
-                              custom: _custom,
-                              rangeLabel: _rangeLabel,
-                              onChanged: (value, dates) {
-                                _period = value;
-                                _custom = dates;
-                                _load(clear: true);
-                              }),
-                        ])),
-                Expanded(
-                    child: RefreshIndicator(
-                        color: progressSilver,
-                        onRefresh: () => _load(refresh: true),
-                        child: MotionEntrance(
-                            child: ListView(
-                                physics: const AlwaysScrollableScrollPhysics(
-                                    parent: BouncingScrollPhysics()),
-                                padding: EdgeInsets.fromLTRB(
-                                    18,
-                                    4,
-                                    18,
-                                    LiquidSilverBottomBar.scrollBottomInset(
-                                        context)),
-                                children: [
+              child: RefreshIndicator(
+                  color: progressSilver,
+                  onRefresh: () => _load(refresh: true),
+                  child: MotionEntrance(
+                      child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(
+                              parent: BouncingScrollPhysics()),
+                          slivers: [
+                        SliverAppBar(
+                            pinned: true,
+                            automaticallyImplyLeading: false,
+                            backgroundColor: DSColors.bg,
+                            surfaceTintColor: Colors.transparent,
+                            titleSpacing: 18,
+                            title: Text(fitnessText(context, 'Progress'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -.8)),
+                            actions: [
+                              SizedBox(
+                                  width: 128,
+                                  child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 7),
+                                      child: ProgressDateFilter(
+                                          period: _period,
+                                          custom: _custom,
+                                          compact: true,
+                                          onChanged: (value, dates) {
+                                            _period = value;
+                                            _custom = dates;
+                                            _load(clear: true);
+                                          }))),
+                              const SizedBox(width: 18),
+                            ]),
+                        SliverPadding(
+                            padding: EdgeInsets.fromLTRB(
+                                18,
+                                12,
+                                18,
+                                LiquidSilverBottomBar.scrollBottomInset(
+                                    context)),
+                            sliver: SliverList.list(children: [
                               if (_failed)
                                 Row(children: [
                                   Expanded(
@@ -340,6 +411,6 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                                                 color: progressSilver,
                                                 strokeWidth: 2)))),
                               if (_data != null) ..._sections(_data!),
-                            ])))),
-              ]))));
+                            ])),
+                      ]))))));
 }

@@ -9,6 +9,9 @@ import '../../../core/media/fit_video_surface.dart';
 import '../components/training_widgets.dart';
 import '../components/workout_item_actions.dart';
 import '../components/workout_set_entry.dart';
+import '../components/workout_rest_timer.dart';
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/theme/fitness_theme.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
@@ -17,23 +20,28 @@ import 'exercise_detail_view.dart';
 class WorkoutSessionView extends StatefulWidget {
   final TrainingDay initial;
   final String? initialItemId;
+  final DateTime Function()? clock;
   const WorkoutSessionView(
-      {super.key, required this.initial, this.initialItemId});
+      {super.key, required this.initial, this.initialItemId, this.clock});
   @override
   State<WorkoutSessionView> createState() => _WorkoutSessionViewState();
 }
 
-class _WorkoutSessionViewState extends State<WorkoutSessionView> {
+class _WorkoutSessionViewState extends State<WorkoutSessionView>
+    with WidgetsBindingObserver {
   late TrainingDay _day;
   int _index = 0;
   bool _busy = false;
+  DateTime get _now => widget.clock?.call() ?? DateTime.now();
   bool _editingFinished = false;
   final _setEntries = <String, GlobalKey<WorkoutSetEntryState>>{};
   final _repo = TrainingRepository.shared;
-  final _clock = ValueNotifier(DateTime.now());
+  late final _clock = ValueNotifier(_now);
   Timer? _timer;
   StreamSubscription<TrainingDay>? _syncSubscription;
-  DateTime? _restEnd;
+  final _restState = ValueNotifier<WorkoutRest?>(null);
+  bool _restOpen = false, _restNotified = false;
+  int _restVersion = 0;
   Future<Map<String, dynamic>>? _previous;
   String copy(String key, {Map<String, Object> values = const {}}) =>
       fitnessText(context, key, values: values);
@@ -41,6 +49,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _day = widget.initial;
     final pending = _day.items.indexWhere((item) => item.isPending);
     final selected =
@@ -60,7 +69,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
       });
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _clock.value = DateTime.now();
+      _tick();
       if (_day.pendingSync && _.tick % 30 == 0 && !_busy) _sync();
     });
   }
@@ -76,9 +85,40 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
     }
   }
 
+  void _tick() {
+    final now = _now;
+    _clock.value = now;
+    final rest = _restState.value;
+    if (rest != null &&
+        !rest.isPaused &&
+        rest.remaining(now) == 0 &&
+        !_restNotified) {
+      _restNotified = true;
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+          (_restOpen || ModalRoute.of(context)?.isCurrent == true)) {
+        unawaited(HapticFeedback.lightImpact());
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _tick();
+  }
+
   Future<void> _restoreRest() async {
-    final end = await _repo.restEnds(_day.date);
-    if (mounted) setState(() => _restEnd = end);
+    if (_day.finished ||
+        !DateUtils.isSameDay(DateTime.tryParse(_day.date), _now)) {
+      return;
+    }
+    final version = _restVersion;
+    try {
+      final data = await _repo.restData(_day.date);
+      if (!mounted || version != _restVersion) return;
+      _restState.value = WorkoutRest.fromJson(data, _now);
+    } catch (_) {
+      // Rest is optional; a cache read must never block logging a workout.
+    }
   }
 
   void _loadPrevious() {
@@ -89,8 +129,10 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _syncSubscription?.cancel();
+    _restState.dispose();
     _clock.dispose();
     super.dispose();
   }
@@ -173,19 +215,124 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
     }
   }
 
-  Future<void> _rest(int seconds) async {
-    await _repo.setRest(_day.date, seconds);
-    if (mounted) {
-      setState(() => _restEnd = DateTime.now().add(Duration(seconds: seconds)));
+  void _updateRest(WorkoutRest? rest) {
+    if (!mounted) return;
+    _restVersion++;
+    _restNotified = false;
+    _restState.value = rest;
+    _clock.value = _now;
+    unawaited(_repo.saveRest(_day.date, rest?.toJson()).catchError((Object _) {
+      // A timer cache failure must not turn a saved set into a failed save.
+    }));
+  }
+
+  void _startRest(TodayPlanItemModel item, int setNumber) {
+    if (!mounted ||
+        _day.finished ||
+        !DateUtils.isSameDay(DateTime.tryParse(_day.date), _now)) {
+      return;
+    }
+    final duration = item.restSeconds.clamp(0, 1800);
+    if (duration == 0) return;
+    _updateRest(WorkoutRest(
+        end: _now.add(Duration(seconds: duration)),
+        duration: duration,
+        exercise: item.exercise.displayName,
+        setNumber: setNumber));
+    unawaited(_showRest());
+  }
+
+  void _addRest() {
+    final rest = _restState.value;
+    if (rest != null) _updateRest(rest.extend(_now));
+  }
+
+  Future<void> _showRest() async {
+    if (_restOpen || _restState.value == null || !mounted) return;
+    _restOpen = true;
+    var closing = false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        backgroundColor: DSColors.bg,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            side: BorderSide(color: DSColors.border)),
+        builder: (sheetContext) => FitnessTheme(
+            child: SafeArea(
+                top: false,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(sheetContext).height * .88),
+                  child: SingleChildScrollView(child: _restPanel(onClose: () {
+                    if (closing || !sheetContext.mounted) return;
+                    closing = true;
+                    Navigator.of(sheetContext).pop();
+                  })),
+                ))),
+      );
+    } finally {
+      if (mounted) _restOpen = false;
     }
   }
+
+  Widget _restPanel({bool compact = false, VoidCallback? onClose}) {
+    var displayed = _restState.value;
+    return ValueListenableBuilder<WorkoutRest?>(
+      valueListenable: _restState,
+      builder: (_, value, __) {
+        if (value != null) displayed = value;
+        // Keep the last frame while the sheet slides out after Skip.
+        final rest = value ?? (compact ? null : displayed);
+        if (rest == null) return const SizedBox.shrink();
+        return ValueListenableBuilder<DateTime>(
+          valueListenable: _clock,
+          builder: (_, now, __) => WorkoutRestTimer(
+            rest: rest,
+            now: now,
+            compact: compact,
+            onAdd: _addRest,
+            onTogglePause: () {
+              final rest = _restState.value;
+              if (rest != null) {
+                _updateRest(rest.togglePause(_now));
+              }
+            },
+            onMinimize: onClose ?? _showRest,
+            onSkip: () {
+              _updateRest(null);
+              onClose?.call();
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _restBar() => ValueListenableBuilder<WorkoutRest?>(
+        valueListenable: _restState,
+        builder: (_, rest, __) => rest == null
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: TrainingSurface(
+                    key: const ValueKey('minimized-rest-timer'),
+                    onTap: _showRest,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 2, 8),
+                    child: _restPanel(compact: true))),
+      );
 
   Future<void> _finish() async {
     setState(() => _busy = true);
     try {
       if (_day.items.isNotEmpty) await _saveEnteredSets(_day.items[_index].id);
       await _mutate('POST', '/finish');
-      await _rest(0);
+      _updateRest(null);
       await HapticFeedback.mediumImpact();
     } catch (error) {
       _error(TrainingRepository.errorMessage(
@@ -325,8 +472,6 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                             label: Text(copy('Form guide'),
                                                 style:
                                                     const TextStyle(fontSize: 12)))),
-                                    _restCard(),
-                                    const SizedBox(height: 13),
                                     TrainingSurface(
                                         padding: const EdgeInsets.all(16),
                                         child: Column(
@@ -401,6 +546,11 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                                     disabled: _busy,
                                                     onSave: (reps, weight,
                                                         effort) async {
+                                                      final wasLogged = _day
+                                                          .logs(item.id)
+                                                          .any((log) =>
+                                                              log['setNumber'] ==
+                                                              number);
                                                       await _mutate('PUT',
                                                           '/items/${item.id}/sets',
                                                           data: {
@@ -409,8 +559,10 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
                                                             'weight': weight,
                                                             'rpe': effort,
                                                           });
-                                                      await _rest(
-                                                          item.restSeconds);
+                                                      if (!wasLogged) {
+                                                        _startRest(
+                                                            item, number);
+                                                      }
                                                       await HapticFeedback
                                                           .selectionClick();
                                                     },
@@ -461,25 +613,31 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
               : SafeArea(
                   child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-                      child: TrainingButton(
-                          label: _day.allResolved
-                              ? 'Finish workout'
-                              : 'Continue workout',
-                          primary: true,
-                          onPressed: _busy
-                              ? null
-                              : _day.allResolved
-                                  ? _finish
-                                  : () {
-                                      final index = _day.items
-                                          .indexWhere((row) => row.isPending);
-                                      if (index >= 0) {
-                                        setState(() {
-                                          _index = index;
-                                          _loadPrevious();
-                                        });
-                                      }
-                                    }))),
+                      child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _restBar(),
+                            TrainingButton(
+                                label: _day.allResolved
+                                    ? 'Finish workout'
+                                    : 'Continue workout',
+                                primary: true,
+                                onPressed: _busy
+                                    ? null
+                                    : _day.allResolved
+                                        ? _finish
+                                        : () {
+                                            final index = _day.items.indexWhere(
+                                                (row) => row.isPending);
+                                            if (index >= 0) {
+                                              setState(() {
+                                                _index = index;
+                                                _loadPrevious();
+                                              });
+                                            }
+                                          }),
+                          ]))),
         ));
   }
 
@@ -511,40 +669,6 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView> {
     return item.targetWeight > 0 ? item.targetWeight : null;
   }
 
-  Widget _restCard() => ValueListenableBuilder<DateTime>(
-      valueListenable: _clock,
-      builder: (_, now, __) {
-        final remaining =
-            (_restEnd?.difference(now).inSeconds ?? 0).clamp(0, 1800);
-        return TrainingSurface(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            child: Row(children: [
-              const Icon(CupertinoIcons.timer, size: 20, color: trainingMuted),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: Text(
-                      remaining > 0
-                          ? copy('Rest')
-                          : copy('Ready for your next set'),
-                      style: const TextStyle(fontSize: 13))),
-              if (remaining > 0)
-                Text(
-                    '${remaining ~/ 60}:${(remaining % 60).toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: [FontFeature.tabularFigures()])),
-              IconButton(
-                  tooltip: copy('Add 30 seconds'),
-                  onPressed: () => _rest((remaining + 30).clamp(0, 1800)),
-                  icon: const Icon(CupertinoIcons.plus, size: 16)),
-              if (remaining > 0)
-                IconButton(
-                    tooltip: copy('Skip rest'),
-                    onPressed: () => _rest(0),
-                    icon: const Icon(CupertinoIcons.forward_end, size: 16)),
-            ]));
-      });
   Widget _summary() => MotionEntrance(
           child: ListView(padding: const EdgeInsets.all(18), children: [
         const SizedBox(height: 30),

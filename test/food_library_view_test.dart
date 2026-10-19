@@ -51,9 +51,13 @@ void main() {
     await tester.tap(find.byTooltip('Next page'));
     await tester.pumpAndSettle();
     expect(find.text('Page 2 of 3'), findsOneWidget);
+    await tester.tap(find.byTooltip('Filters'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Dairy').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Apply filters'));
     await tester.pumpAndSettle();
     expect(find.text('Page 1 of 2'), findsOneWidget);
     expect(find.text('30 foods'), findsOneWidget);
@@ -93,7 +97,7 @@ void main() {
         onMealAdded: () {},
         pageLoader: (_, __, ___, ____, _____, ______) => pending.future)));
     await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(find.text('Custom meal'));
+    await tester.tap(find.text('Create food'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(MealPortionView), findsOneWidget);

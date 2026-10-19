@@ -250,15 +250,15 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                              const FitnessText('Good food.\nYour way.',
+                              const FitnessText('Everyday food.\nMade simple.',
                                   style: TextStyle(
-                                      fontSize: 30,
+                                      fontSize: 26,
                                       fontWeight: FontWeight.w600,
                                       height: 1.1,
                                       letterSpacing: -.9)),
                               const SizedBox(height: 10),
                               const FitnessText(
-                                  'Find a food, choose your portion, log it.',
+                                  'Eggs, milk, oats and the foods you eat every day.',
                                   style: TextStyle(
                                       fontSize: 13, color: FitnessTheme.muted)),
                               const SizedBox(height: 20),
@@ -274,7 +274,11 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                           horizontal: 2),
                                       visualDensity: VisualDensity.compact,
                                       label: FitnessText(mealSlotLabel(s),
-                                          style: const TextStyle(fontSize: 11)),
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: _slot == s
+                                                  ? Colors.white
+                                                  : FitnessTheme.muted)),
                                       selected: _slot == s,
                                       showCheckmark: false,
                                       selectedColor: const Color(0xFF3B3B3B),
@@ -306,64 +310,46 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                                       .xmark_circle_fill,
                                                   size: 18)))),
                               const SizedBox(height: 12),
-                              Row(children: [
-                                Expanded(
-                                    child: _dropdown(
-                                        'Food type',
-                                        _category ?? 'ALL',
-                                        {'ALL': 'All foods', ...foodCategories},
-                                        (v) => _filter(() => _category =
-                                            v == 'ALL' ? null : v))),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                    child: _dropdown(
-                                        'Nutrition focus',
-                                        _focus,
-                                        const {
-                                          'ALL': 'Any nutrition',
-                                          'PROTEIN': 'Higher protein',
-                                          'FIBRE': 'More fibre',
-                                          'LIGHTER': 'Lighter foods'
-                                        },
-                                        (v) => _filter(() => _focus = v))),
-                              ]),
-                              if (_focus != 'ALL')
-                                Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: FitnessText(
-                                        switch (_focus) {
-                                          'PROTEIN' =>
-                                            'At least 15 g protein per 100 g.',
-                                          'FIBRE' =>
-                                            'At least 3 g fibre per 100 g.',
-                                          _ => 'Up to 100 kcal per 100 g.'
-                                        },
-                                        style: const TextStyle(
-                                            fontSize: 11,
-                                            color: FitnessTheme.muted))),
+                              SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(children: [
+                                    for (final entry in const {
+                                      'LIBRARY': 'Everyday',
+                                      'RECENT': 'Recent',
+                                      'MY_FOODS': 'My foods',
+                                      'MY_MEALS': 'My meals',
+                                    }.entries)
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: ChoiceChip(
+                                              selectedColor:
+                                                  const Color(0xFF3B3B3B),
+                                              side: BorderSide(
+                                                  color: _source == entry.key
+                                                      ? Colors.white30
+                                                      : FitnessTheme.line),
+                                              labelPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 2),
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              label: FitnessText(entry.value,
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color:
+                                                          _source == entry.key
+                                                              ? Colors.white
+                                                              : FitnessTheme
+                                                                  .muted)),
+                                              selected: _source == entry.key,
+                                              showCheckmark: false,
+                                              onSelected: (_) => _filter(() {
+                                                    _source = entry.key;
+                                                    _category = null;
+                                                  }))),
+                                  ])),
                               const SizedBox(height: 12),
-                              Row(children: [
-                                Expanded(
-                                    child: _dropdown(
-                                        'Browse',
-                                        _source,
-                                        const {
-                                          'LIBRARY': 'Food library',
-                                          'MY_FOODS': 'My foods'
-                                        },
-                                        (v) => _filter(() => _source = v))),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                    child: _dropdown(
-                                        'Sort by',
-                                        _sort,
-                                        const {
-                                          'NAME': 'Name A–Z',
-                                          'PROTEIN': 'Most protein',
-                                          'CALORIES': 'Fewest calories'
-                                        },
-                                        (v) => _filter(() => _sort = v))),
-                              ]),
                               const SizedBox(height: 18),
                               Row(children: [
                                 Expanded(
@@ -372,11 +358,17 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                         style: const TextStyle(
                                             fontSize: 12,
                                             color: FitnessTheme.muted))),
+                                IconButton(
+                                    tooltip: fitnessText(context, 'Filters'),
+                                    onPressed: _showFilters,
+                                    icon: const Icon(
+                                        CupertinoIcons.slider_horizontal_3,
+                                        size: 19)),
                                 TextButton.icon(
                                     onPressed: () => _portion(),
                                     icon: const Icon(CupertinoIcons.plus,
                                         size: 15),
-                                    label: const FitnessText('Custom meal',
+                                    label: const FitnessText('Create food',
                                         style: TextStyle(fontSize: 12)))
                               ]),
                             ]))),
@@ -412,9 +404,16 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                     style: TextStyle(fontSize: 18)),
                                 const SizedBox(height: 8),
                                 FitnessText(
-                                    _source == 'MY_FOODS'
-                                        ? 'Your custom foods appear here after you log them.'
-                                        : 'Try another search or clear your filters.',
+                                    switch (_source) {
+                                      'MY_FOODS' =>
+                                        'Create a food once, then reuse it here.',
+                                      'MY_MEALS' =>
+                                        'Save a custom entry as a meal to reuse it here.',
+                                      'RECENT' =>
+                                        'Foods you have logged will appear here.',
+                                      _ =>
+                                        'Try another search or clear your filters.',
+                                    },
                                     style: const TextStyle(
                                         fontSize: 12,
                                         color: FitnessTheme.muted)),
@@ -447,7 +446,7 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                                 padding:
                                                     const EdgeInsets.all(12),
                                                 child: Row(children: [
-                                                  FoodArt(food: food),
+                                                  FoodArt(food: food, size: 52),
                                                   const SizedBox(width: 13),
                                                   Expanded(
                                                       child: Column(
@@ -469,7 +468,7 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                                         const SizedBox(
                                                             height: 6),
                                                         Text(
-                                                            '${food.servingSize.toStringAsFixed(0)} ${food.servingUnit} · ${food.caloriesPerServing.round()} kcal',
+                                                            '${foodPortionLabel(context, food)} · ${(food.caloriesPerServing * food.previewFactor).round()} kcal',
                                                             style: const TextStyle(
                                                                 fontSize: 11,
                                                                 color:
@@ -480,8 +479,10 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                                         FitnessText(
                                                             '{amount} g protein',
                                                             values: {
-                                                              'amount': food
-                                                                  .proteinPerServing
+                                                              'amount': (food
+                                                                          .proteinPerServing *
+                                                                      food
+                                                                          .previewFactor)
                                                                   .toStringAsFixed(
                                                                       1)
                                                             },
@@ -499,6 +500,93 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
                                                 ])))));
                               })),
                   ]))));
+  Future<void> _showFilters() async {
+    var category = _category;
+    var focus = _focus;
+    var sort = _sort;
+    final apply = await showModalBottomSheet<bool>(
+        context: context,
+        backgroundColor: FitnessTheme.surface,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) => StatefulBuilder(
+            builder: (context, change) => SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const FitnessText('Find your food',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 24),
+                          _dropdown(
+                              'Food type',
+                              category ?? 'ALL',
+                              {'ALL': 'All foods', ...foodCategories},
+                              (value) => change(() =>
+                                  category = value == 'ALL' ? null : value)),
+                          const SizedBox(height: 16),
+                          _dropdown(
+                              'Nutrition focus',
+                              focus,
+                              const {
+                                'ALL': 'Any nutrition',
+                                'PROTEIN': 'Higher protein',
+                                'FIBRE': 'More fibre',
+                                'LIGHTER': 'Lighter foods'
+                              },
+                              (value) => change(() => focus = value)),
+                          const SizedBox(height: 16),
+                          _dropdown(
+                              'Sort by',
+                              sort,
+                              const {
+                                'NAME': 'Name A–Z',
+                                'PROTEIN': 'Most protein',
+                                'CALORIES': 'Fewest calories'
+                              },
+                              (value) => change(() => sort = value)),
+                          if (focus != 'ALL')
+                            Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: FitnessText(
+                                    switch (focus) {
+                                      'PROTEIN' =>
+                                        'At least 15 g protein per 100 g.',
+                                      'FIBRE' =>
+                                        'At least 3 g fibre per 100 g.',
+                                      _ => 'Up to 100 kcal per 100 g.',
+                                    },
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: FitnessTheme.muted))),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const FitnessText('Apply filters'))),
+                          Center(
+                              child: TextButton(
+                                  onPressed: () => change(() {
+                                        category = null;
+                                        focus = 'ALL';
+                                        sort = 'NAME';
+                                      }),
+                                  child: const FitnessText('Clear filters'))),
+                        ])))));
+    if (apply == true && mounted) {
+      _filter(() {
+        _category = category;
+        _focus = focus;
+        _sort = sort;
+      });
+    }
+  }
+
   Widget _dropdown(String label, String value, Map<String, String> options,
           ValueChanged<String> changed) =>
       DropdownButtonFormField<String>(

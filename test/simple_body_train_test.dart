@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fitai_mobile/core/cache/cache_scope.dart';
+import 'package:fitai_mobile/core/storage/local_cache.dart';
 import 'package:fitai_mobile/core/network/api_client.dart';
 import 'package:fitai_mobile/core/storage/secure_session_store.dart';
 import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
@@ -113,7 +114,8 @@ void main() {
     expect(summary.pairs.single.difference, 1);
   });
 
-  testWidgets('Suggestions need confirmation; previous sets match by number',
+  testWidgets(
+      'Target load stays separate from actual load; previous sets match by number',
       (tester) async {
     final key = GlobalKey<WorkoutSetEntryState>();
     var saves = 0;
@@ -125,6 +127,7 @@ void main() {
       number: 1,
       suggestedReps: 10,
       suggestedWeight: 2.5,
+      targetLabel: '10 reps · 2.5 kg',
       previous: Future.value({
         'sets': [
           {'setNumber': 2, 'reps': 12, 'weight': 9},
@@ -135,14 +138,15 @@ void main() {
       onSave: (reps, weight, effort) async {
         saves++;
         expect(reps, 10);
-        expect(weight, 2.5);
+        expect(weight, isNull);
       },
       onDelete: () async {},
     ))));
     await tester.pumpAndSettle();
     expect(
         tester.widget<TextField>(find.byType(TextField).first).controller!.text,
-        '2.5');
+        isEmpty);
+    expect(find.text('Target · 10 reps · 2.5 kg'), findsOneWidget);
     expect(find.text('Last: 2 kg × 10'), findsOneWidget);
     expect(key.currentState!.pendingSet(), isNull);
     await key.currentState!.savePending();
@@ -153,6 +157,97 @@ void main() {
     expect(key.currentState!.pendingSet(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets('Saved reps without a load reopen without the recommended weight',
+      (tester) async {
+    final key = GlobalKey<WorkoutSetEntryState>();
+    double? savedWeight;
+    await tester.pumpWidget(training.app(Scaffold(
+        body: WorkoutSetEntry(
+      key: key,
+      date: '2026-10-13',
+      itemId: 'saved-null',
+      number: 1,
+      log: const {'setNumber': 1, 'reps': 10, 'weight': null},
+      suggestedWeight: 25,
+      disabled: false,
+      onSave: (reps, weight, effort) async {
+        savedWeight = weight;
+      },
+      onDelete: () async {},
+    ))));
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        isEmpty);
+    expect(find.byTooltip('Saved'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).at(1), '12');
+    await tester.pump();
+    expect(key.currentState!.pendingSet()!['weight'], isNull);
+    await tester.tap(find.byTooltip('Save set'));
+    await tester.pumpAndSettle();
+    expect(savedWeight, isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Only entered loads are saved, including decimal and explicit zero',
+      (tester) async {
+    final weights = <double?>[];
+    await tester.pumpWidget(training.app(Scaffold(
+        body: WorkoutSetEntry(
+      date: '2026-10-13',
+      itemId: 'entered-load',
+      number: 1,
+      suggestedReps: 10,
+      suggestedWeight: 25,
+      disabled: false,
+      onSave: (reps, weight, effort) async {
+        weights.add(weight);
+      },
+      onDelete: () async {},
+    ))));
+    await tester.pumpAndSettle();
+    for (final value in ['2,25', '0', '']) {
+      await tester.enterText(find.byType(TextField).first, value);
+      await tester.tap(find.byTooltip('Save set'));
+      await tester.pumpAndSettle();
+    }
+    expect(weights, [2.25, 0.0, null]);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  for (final version in [1, 2]) {
+    testWidgets('Draft version $version handles a load matching the target',
+        (tester) async {
+      final item = 'draft-$version';
+      final cacheKey =
+          await CacheScope.userKey('set_draft_2026-10-13_${item}_1');
+      await LocalCache.shared.saveJson(cacheKey, {
+        if (version == 2) 'version': 2,
+        'reps': '11',
+        'weight': '25',
+        'rpe': null,
+      });
+      await tester.pumpWidget(training.app(Scaffold(
+          body: WorkoutSetEntry(
+        date: '2026-10-13',
+        itemId: item,
+        number: 1,
+        suggestedReps: 10,
+        suggestedWeight: 25,
+        disabled: false,
+        onSave: (reps, weight, effort) async {},
+        onDelete: () async {},
+      ))));
+      await tester.pumpAndSettle();
+      final fields =
+          tester.widgetList<TextField>(find.byType(TextField)).toList();
+      expect(fields.first.controller!.text, version == 1 ? '' : '25');
+      expect(fields.last.controller!.text, '11');
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 
   test(
       'Offline workout survives cache clearing and account switches, then syncs in order',

@@ -28,6 +28,7 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
     final enabled = widget.onPressed != null && !widget.isLoading;
     return Semantics(
       button: true,
+      liveRegion: widget.isLoading,
       enabled: enabled,
       label: fitnessText(context, widget.title),
       child: MotionPress(
@@ -61,25 +62,26 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
                             child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (widget.isLoading)
-                                    const SizedBox(
+                                  Expanded(
+                                      child: FitnessText(widget.title,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              color: DSColors.bg,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: -.3))),
+                                  if (widget.showArrow || widget.isLoading)
+                                    SizedBox(
                                         width: 20,
                                         height: 20,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2, color: DSColors.bg))
-                                  else ...[
-                                    Expanded(
-                                        child: FitnessText(widget.title,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                color: DSColors.bg,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: -.3))),
-                                    if (widget.showArrow)
-                                      const Icon(Icons.arrow_forward_rounded,
-                                          size: 20, color: DSColors.bg),
-                                  ],
+                                        child: widget.isLoading
+                                            ? const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: DSColors.bg)
+                                            : const Icon(
+                                                Icons.arrow_forward_rounded,
+                                                size: 20,
+                                                color: DSColors.bg)),
                                 ])),
                       )),
                 )),

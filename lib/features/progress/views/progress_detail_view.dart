@@ -9,8 +9,8 @@ import '../../body_scan/views/body_entry_view.dart';
 import '../../body_scan/views/body_record_view.dart';
 import '../components/body_progress_content.dart';
 import '../components/exercise_progress_content.dart';
-import '../components/progress_activity.dart';
-import '../components/progress_chart.dart';
+import '../components/muscle_progress_content.dart';
+import '../components/progress_date_filter.dart';
 import '../components/progress_surface.dart';
 import '../components/wellness_progress_content.dart';
 import '../models/progress_models.dart';
@@ -37,12 +37,29 @@ class ProgressDetailView extends StatefulWidget {
 
 class _ProgressDetailViewState extends State<ProgressDetailView> {
   ProgressJson? _data;
+  late String _period;
+  DateTimeRange? _custom;
+  Map<String, dynamic> get _query => {
+        ...(Map<String, dynamic>.from(widget.query)
+          ..remove('start')
+          ..remove('end')),
+        if (_custom != null)
+          'start': _custom!.start.toIso8601String().substring(0, 10),
+        if (_custom != null)
+          'end': _custom!.end.toIso8601String().substring(0, 10),
+      };
   bool _loading = true, _failed = false, _more = false;
   int _request = 0;
   @override
   void initState() {
     super.initState();
     _data = widget.initial;
+    _period = widget.period;
+    final start = DateTime.tryParse(widget.query['start']?.toString() ?? '');
+    final end = DateTime.tryParse(widget.query['end']?.toString() ?? '');
+    if (start != null && end != null) {
+      _custom = DateTimeRange(start: start, end: end);
+    }
     LanguageManager.shared.addListener(_languageChanged);
     unawaited(_load());
   }
@@ -66,10 +83,9 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
       _failed = false;
     });
     try {
-      final result = await ProgressRepository.shared.load(
-          widget.path, widget.period,
+      final result = await ProgressRepository.shared.load(widget.path, _period,
           refresh: refresh,
-          query: {...widget.query, if (more) 'cursor': _data!['nextCursor']});
+          query: {..._query, if (more) 'cursor': _data!['nextCursor']});
       if (!mounted || request != _request) return;
       if (more) {
         final key = widget.kind == 'exercise' ? 'history' : 'items';
@@ -96,9 +112,9 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
           builder: (_) => ProgressDetailView(
               title: row['name'] as String,
               path: '/exercises/${row['id']}',
-              period: widget.period,
+              period: _period,
               kind: 'exercise',
-              query: widget.query)));
+              query: _query)));
 
   Future<void> _add() async {
     final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(
@@ -127,6 +143,13 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
     }
   }
 
+  String? get _rangeLabel {
+    final range = _data?['range'] as Map?;
+    if (range == null) return null;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return '${progressDate(range['start'] as String?, locale)} – ${progressDate(range['end'] as String?, locale)}';
+  }
+
   Widget _content() {
     final data = _data!;
     switch (widget.kind) {
@@ -137,62 +160,17 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                 ? null
                 : () => _load(more: true));
       case 'muscles':
-        return ProgressSurface(
-            child: ProgressMuscleBars(
-                muscles: progressRows(data['muscles']),
-                onTap: (row) => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ProgressDetailView(
-                        title: row['label'] as String,
-                        path: '/muscles/${row['id']}',
-                        period: widget.period,
-                        kind: 'muscle',
-                        query: widget.query)))));
+        return MuscleDistributionContent(
+            muscles: progressRows(data['muscles']),
+            onMuscle: (row) => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => ProgressDetailView(
+                    title: row['label'] as String,
+                    path: '/muscles/${row['id']}',
+                    period: _period,
+                    kind: 'muscle',
+                    query: _query))));
       case 'muscle':
-        final muscle = data['muscle'] as Map;
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          ProgressSurface(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Text(fitnessText(context, 'Direct sets'),
-                    style: const TextStyle(color: progressMuted, fontSize: 12)),
-                const SizedBox(height: 6),
-                Text('${muscle['directSets']}',
-                    style: const TextStyle(
-                        fontSize: 32, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                Text(
-                    '${fitnessText(context, 'Assisting sets')} · ${muscle['assistingSets']}',
-                    style: const TextStyle(color: progressMuted, fontSize: 12)),
-                const SizedBox(height: 5),
-                Text(
-                    '${fitnessText(context, 'Training days')} · ${muscle['trainingDays']}',
-                    style: const TextStyle(color: progressMuted, fontSize: 12)),
-                const SizedBox(height: 5),
-                Text(
-                    '${fitnessText(context, 'Last trained')} · ${progressDate(muscle['lastTrained'] as String?, Localizations.localeOf(context).toLanguageTag())}',
-                    style: const TextStyle(color: progressMuted, fontSize: 12)),
-                const SizedBox(height: 18),
-                ProgressChart(
-                    points: ProgressPoint.parse(
-                        progressRows(data['weeks']), 'sets'),
-                    bars: true,
-                    height: 125),
-              ])),
-          const SizedBox(height: 12),
-          Text(
-              fitnessText(context,
-                  'Logged exposure describes training, not measured muscle growth.'),
-              style: const TextStyle(
-                  color: progressMuted, fontSize: 11, height: 1.4)),
-          const ProgressHeading('Exercises'),
-          ProgressSurface(
-              child: Column(
-                  children: progressRows(data['exercises'])
-                      .map((row) => ProgressExerciseRow(
-                          exercise: row, onTap: () => _exercise(row)))
-                      .toList())),
-        ]);
+        return MuscleProgressContent(data: data, onExercise: _exercise);
       case 'body':
         return BodyProgressContent(data: data, onAdd: _add, onRecord: _record);
       case 'recovery':
@@ -236,7 +214,7 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w600))),
+                      fontSize: 20, fontWeight: FontWeight.w600))),
           body: RefreshIndicator(
               onRefresh: () => _load(refresh: true),
               color: progressSilver,
@@ -244,6 +222,19 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(18, 10, 18, 40),
                   children: [
+                    ProgressDateFilter(
+                        period: _period,
+                        custom: _custom,
+                        rangeLabel: _rangeLabel,
+                        onChanged: (period, dates) {
+                          setState(() {
+                            _period = period;
+                            _custom = dates;
+                            _data = null;
+                          });
+                          _load(refresh: true);
+                        }),
+                    const SizedBox(height: 18),
                     if (_loading && _data == null)
                       const Padding(
                           padding: EdgeInsets.all(50),
@@ -269,20 +260,6 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                             child: Text(fitnessText(context, 'Preview data'),
                                 style: const TextStyle(
                                     color: progressMuted, fontSize: 12))),
-                      Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: Text(
-                              fitnessText(
-                                  context,
-                                  const {
-                                    '4w': '4 weeks',
-                                    '3m': '3 months',
-                                    '1y': '1 year',
-                                    'all': 'All time',
-                                    'custom': 'Custom range'
-                                  }[widget.period]!),
-                              style: const TextStyle(
-                                  color: progressMuted, fontSize: 12))),
                       _content(),
                     ],
                     if (_more)
@@ -313,7 +290,7 @@ class _SessionTile extends StatelessWidget {
             padding: const EdgeInsets.only(top: 5),
             child: Text(
                 '${progressDate(session['date'] as String?, locale)} · ${session['sets']} ${fitnessText(context, 'sets')}${seconds != null && seconds > 0 ? ' · ${(seconds / 60).round()} ${fitnessText(context, 'min')}' : ''} · ${fitnessText(context, session['status'] == 'COMPLETED' ? 'Completed' : 'In progress')}',
-                style: const TextStyle(color: progressMuted, fontSize: 11))),
+                style: const TextStyle(color: progressMuted, fontSize: 13))),
         children: progressRows(session['exercises'])
             .map((exercise) =>
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -330,7 +307,7 @@ class _SessionTile extends StatelessWidget {
                               width: 32,
                               child: Text('${set['setNumber']}',
                                   style: const TextStyle(
-                                      color: progressMuted, fontSize: 11))),
+                                      color: progressMuted, fontSize: 13))),
                           Expanded(
                               child: Text(
                                   '${set['weight'] != null && (set['weight'] as num) > 0 ? '${progressValue(context, progressNumber(set['weight']), unit: 'kg')} × ' : ''}${set['reps']} ${fitnessText(context, 'reps')}',
@@ -339,7 +316,7 @@ class _SessionTile extends StatelessWidget {
                             Text(
                                 'RPE ${progressValue(context, progressNumber(set['rpe']))}',
                                 style: const TextStyle(
-                                    color: progressMuted, fontSize: 11)),
+                                    color: progressMuted, fontSize: 13)),
                         ])),
                 ]))
             .toList());

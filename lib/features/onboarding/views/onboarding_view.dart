@@ -1,3 +1,4 @@
+import '../viewmodels/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/app_language.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
@@ -6,7 +7,8 @@ import '../viewmodels/onboarding_viewmodel.dart';
 import 'goal_selection_view.dart';
 
 class OnboardingView extends StatefulWidget {
-  const OnboardingView({super.key});
+  final OnboardingController? controller;
+  const OnboardingView({super.key, this.controller});
   @override
   State<OnboardingView> createState() => _OnboardingViewState();
 }
@@ -17,7 +19,8 @@ class _OnboardingViewState extends State<OnboardingView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = OnboardingViewModel()..addListener(_rebuild);
+    _viewModel = OnboardingViewModel(controller: widget.controller)
+      ..addListener(_rebuild);
   }
 
   void _rebuild() {
@@ -32,12 +35,14 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Future<void> _continue() async {
+    if (_saving || !_viewModel.ready) return;
     setState(() => _saving = true);
     try {
       await _viewModel.continueToNextStep();
       if (mounted) {
-        await Navigator.of(context)
-            .push(OnboardingPageRoute(page: const GoalSelectionView()));
+        await OnboardingPageRoute(
+                page: GoalSelectionView(controller: _viewModel.controller))
+            .open(context);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -52,8 +57,8 @@ class _OnboardingViewState extends State<OnboardingView> {
       title: language.headline,
       subtitle: 'Choose the language you feel at home in.',
       actionTitle: language.continueButtonTitle,
-      onContinue: _saving ? null : _continue,
-      loading: _saving,
+      onContinue: _saving || !_viewModel.ready ? null : _continue,
+      loading: _saving || !_viewModel.ready,
       footer: language.settingsNote,
       children: [
         for (final option in AppLanguage.values)

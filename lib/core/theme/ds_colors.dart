@@ -68,19 +68,36 @@ class DSColors {
   static const Color navActiveBg = Color(0x2BFFFFFF);
   static const Color navBarBg = Color(0x99111418);
   static const Color navGlassText = Color(0xFFF3F3F5);
+  static const Color navGlassTint = Color(0x55121416);
+  static const Color navTouchGlow = Color(0x18FFFFFF);
+
+  static const LinearGradient navGlassSheenGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0x09FFFFFF), Color(0x02FFFFFF), Color(0x04FFFFFF)],
+    stops: [0, .55, 1],
+  );
 
   static const LinearGradient navGlassGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xB8181818), Color(0xA6101010), Color(0xB8151515)],
+    colors: [Color(0x6618181A), Color(0x66101012), Color(0x66141416)],
     stops: [0, .52, 1],
   );
 
-  static const LinearGradient navGlassLensGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0x12FFFFFF), Color(0x07FFFFFF), Color(0x0DFFFFFF)],
-    stops: [0, .6, 1],
+  static const RadialGradient navGlassLensGradient = RadialGradient(
+    center: Alignment(0, -.2),
+    radius: .8,
+    colors: [Color(0x20FFFFFF), Color(0x0CFFFFFF), Color(0x00FFFFFF)],
+    stops: [0, .5, 1],
+  );
+
+  // Fade scrolling cards into the black canvas before they reach the dock.
+  static const LinearGradient navScrimGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0x00000000), Color(0x00000000), Color(0x80000000)],
+    stops: [0, .7, 1],
   );
 
   // ── Glass Card Gradient ───────────────────────────────────────────────────

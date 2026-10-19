@@ -1,3 +1,4 @@
+import '../viewmodels/onboarding_controller.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_copy.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
@@ -9,8 +10,9 @@ import '../../../core/network/api_client.dart';
 import '../../../core/cache/user_data_cache.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../../../core/theme/fitness_theme.dart';
-import '../../auth/views/auth_view.dart';
+import 'onboarding_review_view.dart';
 import '../components/onboarding_scaffold.dart';
+import '../components/onboarding_live_previews.dart';
 import 'package:flutter/services.dart';
 
 const trainingMuscles = <String, String>{
@@ -60,9 +62,10 @@ const _splitMuscles = {
 /// Final setup step, also available to existing members from Body and Profile.
 class TrainingPreferencesView extends StatefulWidget {
   final bool editProfile;
+  final OnboardingController? controller;
   final VoidCallback? onContinue;
   const TrainingPreferencesView(
-      {super.key, this.editProfile = false, this.onContinue});
+      {super.key, this.editProfile = false, this.onContinue, this.controller});
   @override
   State<TrainingPreferencesView> createState() =>
       _TrainingPreferencesViewState();
@@ -70,6 +73,8 @@ class TrainingPreferencesView extends StatefulWidget {
 
 class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
   OnboardingDraft _draft = OnboardingDraft();
+  late final OnboardingController? _controller =
+      widget.editProfile ? null : widget.controller ?? OnboardingController();
   final _notes = TextEditingController(),
       _allergies = TextEditingController(),
       _dislikes = TextEditingController(),
@@ -80,6 +85,9 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
   @override
   void initState() {
     super.initState();
+    for (final field in [_notes, _allergies, _dislikes, _budget]) {
+      field.addListener(_formChanged);
+    }
     _load();
   }
 
@@ -101,7 +109,8 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         _draft = OnboardingDraft.fromJson(
             {...j, 'customWeeklyFoodBudget': j['foodBudgetAmount']});
       } else {
-        _draft = await OnboardingDraft.load();
+        if (!_controller!.ready) await _controller!.initialize();
+        _draft = _controller!.draft;
       }
       if (!mounted) return;
       _notes.text = _draft.customLimitations ?? '';
@@ -134,6 +143,29 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         });
       }
     }
+  }
+
+  void _change(VoidCallback update) {
+    setState(update);
+    final count = _draft.trainingDays.length;
+    if (count >= 2) {
+      _draft.daysPerWeek = count >= 6 ? 'DAYS_6_PLUS' : 'DAYS_$count';
+    }
+    _controller?.checkpoint();
+  }
+
+  void _formChanged() {
+    if (_loading || widget.editProfile) return;
+    _draft.customLimitations = _notes.text.trim();
+    _draft.foodAllergies = _list(_allergies.text);
+    _draft.dislikedFoods = _list(_dislikes.text);
+    final budget = double.tryParse(_budget.text.trim());
+    if (_budget.text.trim().isEmpty) {
+      _draft.customWeeklyFoodBudget = null;
+    } else if (budget != null && budget.isFinite && budget > 0) {
+      _draft.customWeeklyFoodBudget = budget;
+    }
+    _controller?.checkpoint();
   }
 
   List<String> _list(String value) => value
@@ -217,13 +249,14 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         if (mounted) Navigator.of(context).pop();
       } else {
         _draft.completedStep = 7;
-        await _draft.save();
+        _controller!.checkpoint();
         if (!mounted) return;
         if (widget.onContinue != null) {
           widget.onContinue!();
         } else {
-          await Navigator.of(context)
-              .push(OnboardingPageRoute<void>(page: const AuthView()));
+          await OnboardingPageRoute<void>(
+                  page: OnboardingReviewView(controller: _controller!))
+              .open(context);
         }
       }
     } catch (_) {
@@ -238,6 +271,9 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
 
   @override
   void dispose() {
+    if (!widget.editProfile && widget.controller == null) {
+      _controller?.dispose();
+    }
     _notes.dispose();
     _allergies.dispose();
     _dislikes.dispose();
@@ -277,6 +313,10 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                       fitnessText(context, '{count} of 3 selected · optional',
                           values: {'count': _draft.focusMuscles.length})),
                   const SizedBox(height: 12),
+                  OnboardingMusclePreview(
+                      selected: _draft.focusMuscles.toSet(),
+                      female: _draft.gender == 'FEMALE'),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 7,
                     runSpacing: 3,
@@ -287,7 +327,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                             _draft.focusMuscles.contains(entry.key),
                             _draft.focusMuscles.contains(entry.key) ||
                                     _draft.focusMuscles.length < 3
-                                ? (selected) => setState(() {
+                                ? (selected) => _change(() {
                                       final values = [..._draft.focusMuscles];
                                       if (selected) {
                                         values.add(entry.key);
@@ -321,7 +361,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                             'Sun'
                           ][i],
                           _draft.trainingDays.contains(_days[i]),
-                          (selected) => setState(() {
+                          (selected) => _change(() {
                                 final values = [..._draft.trainingDays];
                                 if (selected) {
                                   values.add(_days[i]);
@@ -355,7 +395,8 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                         DropdownMenuItem(
                             value: 'EVENING', child: FitnessText('Evening'))
                       ],
-                      onChanged: (value) => _draft.preferredTime = value),
+                      onChanged: (value) =>
+                          _change(() => _draft.preferredTime = value)),
                 ])),
             const SizedBox(height: 14),
             FitnessCard(
@@ -384,7 +425,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                           child: FitnessText(entry.value),
                         ),
                     ],
-                    onChanged: (value) => setState(() {
+                    onChanged: (value) => _change(() {
                       _draft.trainingSplit = value ?? 'AUTO';
                     }),
                   ),
@@ -410,7 +451,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                                 _draft.customTrainingSplit[day]
                                         ?.contains(muscle.key) ==
                                     true,
-                                (selected) => setState(() {
+                                (selected) => _change(() {
                                       final muscles = [
                                         ...?_draft.customTrainingSplit[day]
                                       ];
@@ -524,7 +565,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                                   value: currency, child: FitnessText(currency))
                           ],
                           onChanged: (value) =>
-                              _draft.foodBudgetCurrency = value),
+                              _change(() => _draft.foodBudgetCurrency = value)),
                     ])),
           ],
         ],
@@ -563,13 +604,22 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                 child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
-                    child: FitnessText(label,
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      if (selected) ...[
+                        const Icon(Icons.check_rounded,
+                            size: 14, color: FitnessTheme.canvas),
+                        const SizedBox(width: 5),
+                      ],
+                      FitnessText(
+                        label,
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: selected
                                 ? FitnessTheme.canvas
-                                : FitnessTheme.silver))),
+                                : FitnessTheme.silver),
+                      ),
+                    ])),
               ),
             ),
           ),

@@ -15,12 +15,12 @@ import 'widgets/private_body_photo.dart';
 class BodyRecordView extends StatefulWidget {
   final BodyAssessment entry;
   final bool canCompare;
-  final VoidCallback onCompare;
+  final VoidCallback? onCompare;
   const BodyRecordView(
       {super.key,
       required this.entry,
       this.canCompare = false,
-      required this.onCompare});
+      this.onCompare});
   @override
   State<BodyRecordView> createState() => _BodyRecordViewState();
 }
@@ -47,7 +47,7 @@ class _BodyRecordViewState extends State<BodyRecordView> {
   Future<void> _delete() async {
     final approved = await showDialog<bool>(
         animationStyle: DSMotion.dialogStyle(context),
-context: context,
+        context: context,
         builder: (context) => AlertDialog(
                 backgroundColor: FitnessTheme.surface,
                 title: const FitnessText('Delete this entry?'),

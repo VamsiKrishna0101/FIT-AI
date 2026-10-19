@@ -1,3 +1,4 @@
+import '../viewmodels/onboarding_controller.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 
@@ -6,24 +7,29 @@ import '../components/duration_grid_chips.dart';
 import '../components/location_apple_card.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/schedule_frequency_pills.dart';
+import '../components/onboarding_live_previews.dart';
 import '../viewmodels/schedule_location_viewmodel.dart';
 import 'equipment_selection_view.dart';
 
 // MARK: - Combined Screen 04 & 05: Your Schedule & Space (Apple iOS Premium)
 class ScheduleLocationView extends StatefulWidget {
-  const ScheduleLocationView({super.key});
+  final OnboardingController? controller;
+  final VoidCallback? onContinue;
+  const ScheduleLocationView({super.key, this.controller, this.onContinue});
 
   @override
   State<ScheduleLocationView> createState() => _ScheduleLocationViewState();
 }
 
 class _ScheduleLocationViewState extends State<ScheduleLocationView> {
+  bool _advancing = false;
   late final ScheduleLocationViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = ScheduleLocationViewModel()..addListener(_rebuild);
+    _viewModel = ScheduleLocationViewModel(controller: widget.controller)
+      ..addListener(_rebuild);
   }
 
   void _rebuild() {
@@ -43,11 +49,21 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
   }
 
   void _onContinue() async {
-    await _viewModel.continueToNextStep();
-    if (!mounted) return;
-    Navigator.of(context).push(
-      OnboardingPageRoute(page: const EquipmentSelectionView()),
-    );
+    if (_advancing) return;
+    setState(() => _advancing = true);
+    try {
+      await _viewModel.continueToNextStep();
+      if (!mounted) return;
+      if (widget.onContinue != null) {
+        widget.onContinue!();
+        return;
+      }
+      await OnboardingPageRoute(
+              page: EquipmentSelectionView(controller: _viewModel.controller))
+          .open(context);
+    } finally {
+      if (mounted) setState(() => _advancing = false);
+    }
   }
 
   @override
@@ -63,6 +79,7 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
       title: language.headlineScheduleAndLocation,
       subtitle: 'Choose a rhythm that fits your life.',
       actionTitle: language.continueButtonTitle,
+      loading: _advancing,
       onBack: _onBack,
       onContinue: _viewModel.isValid ? _onContinue : null,
       children: [
@@ -87,6 +104,9 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
           selectedOption: selectedDays,
           onSelected: _viewModel.selectDays,
         ),
+
+        const SizedBox(height: 12),
+        OnboardingFrequencyPreview(frequency: selectedDays?.daysCount),
 
         const SizedBox(height: 24),
 

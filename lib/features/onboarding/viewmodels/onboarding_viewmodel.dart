@@ -2,23 +2,28 @@ import 'package:flutter/material.dart';
 import '../../../core/localization/app_language.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/storage/onboarding_draft.dart';
+import 'onboarding_controller.dart';
 
 // MARK: - Onboarding Screen 1 ViewModel
 class OnboardingViewModel extends ChangeNotifier {
   int currentStep = 1;
   final int totalSteps = 8;
   bool hasDropped = false;
-  OnboardingDraft draft = OnboardingDraft();
+  final OnboardingController controller;
+  final bool _ownsController;
+  OnboardingDraft get draft => controller.draft;
+  bool get ready => controller.ready;
   bool _isDisposed = false;
 
-  OnboardingViewModel() {
+  OnboardingViewModel({OnboardingController? controller})
+      : controller = controller ?? OnboardingController(),
+        _ownsController = controller == null {
     _loadState();
   }
 
   Future<void> _loadState() async {
-    final loadedDraft = await OnboardingDraft.load();
+    await controller.initialize();
     if (_isDisposed) return;
-    draft = loadedDraft;
     // This view is the language-selection page (step one). Persisted progress
     // cannot advance its indicator while the user is still on this page.
     currentStep = 1;
@@ -28,15 +33,17 @@ class OnboardingViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    if (_ownsController) controller.dispose();
     super.dispose();
   }
 
   AppLanguage get selectedLanguage => LanguageManager.shared.currentLanguage;
 
   Future<void> selectLanguage(AppLanguage language) async {
-    await LanguageManager.shared.selectLanguage(language);
+    if (!ready) return;
     draft.languageCode = language.code;
-    await draft.save();
+    controller.checkpoint();
+    await LanguageManager.shared.selectLanguage(language, persistDraft: false);
     if (!_isDisposed) notifyListeners();
   }
 
@@ -50,6 +57,6 @@ class OnboardingViewModel extends ChangeNotifier {
   Future<void> continueToNextStep() async {
     // Save this page before the route advances to goal selection.
     draft.completedStep = currentStep;
-    await draft.save();
+    controller.checkpoint();
   }
 }

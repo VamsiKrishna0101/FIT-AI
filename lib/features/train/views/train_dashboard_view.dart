@@ -23,11 +23,13 @@ import '../../planner/views/weekly_plan_card.dart';
 
 class TrainView extends StatefulWidget {
   final bool standalone;
+  final bool editOnly;
   final bool isActive;
   final String? initialDate;
   const TrainView(
       {super.key,
       this.standalone = false,
+      this.editOnly = false,
       this.isActive = true,
       this.initialDate});
   @override
@@ -137,12 +139,29 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Future<void> _add({TodayPlanItemModel? replace}) async {
-    final exercise = await pickTrainingExercise(context);
+    final exercise = await pickTrainingExercise(context,
+        workoutDate:
+            DateFormat.yMMMMEEEEd(Localizations.localeOf(context).toString())
+                .format(DateTime.parse(_date)));
     if (exercise == null || !mounted) return;
+    final input = await editTrainingTargets(
+        context,
+        TodayPlanItemModel(
+          id: '',
+          dayOfWeek: '',
+          orderIndex: 0,
+          targetSets: replace?.targetSets ?? 3,
+          targetReps: replace?.targetReps ?? '10',
+          targetWeight: 0,
+          restSeconds: replace?.restSeconds ?? 90,
+          status: 'NOT_STARTED',
+          exercise: exercise,
+        ));
+    if (input == null || !mounted) return;
     await _action(() => _repo.mutate(_date, replace == null ? 'POST' : 'PUT',
             replace == null ? '/items' : '/items/${replace.id}',
             data: {
-              if (replace != null) ...TrainingDay.targets(replace),
+              ...input,
               'workoutId': exercise.id,
             }));
   }
@@ -242,10 +261,12 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                           onRetry: () => _load(refresh: true)),
                       const SizedBox(height: 14),
                     ],
-                    _exploreButton(),
-                    const SizedBox(height: 16),
-                    _week(locale),
-                    const SizedBox(height: 16),
+                    if (!widget.editOnly) ...[
+                      _exploreButton(),
+                      const SizedBox(height: 16),
+                      _week(locale),
+                      const SizedBox(height: 16),
+                    ],
                     if (_error != null)
                       Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -257,10 +278,13 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                           height: 150,
                           child: Center(child: CupertinoActivityIndicator()))
                     else if (day != null) ...[
-                      _sessionCard(day),
+                      if (!widget.editOnly) _sessionCard(day),
+                      if (widget.editOnly) _editorSummary(day),
                       const SizedBox(height: 18),
                       _section('Exercises',
-                          icon: day.finished ? null : CupertinoIcons.plus,
+                          icon: day.finished || widget.editOnly
+                              ? null
+                              : CupertinoIcons.plus,
                           tooltip: 'Add exercise',
                           action: _busy ? null : _add),
                       const SizedBox(height: 8),
@@ -291,51 +315,53 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                                           color: Color(0x18FFFFFF))),
                               ],
                             ])),
-                      const SizedBox(height: 18),
-                      _section('Saved routines',
-                          icon: day.items.isEmpty
-                              ? null
-                              : CupertinoIcons.bookmark,
-                          tooltip: 'Save routine',
-                          action: _busy ? null : _saveRoutine),
-                      const SizedBox(height: 8),
-                      TrainingSurface(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 5),
-                          child: day.routines.isEmpty
-                              ? Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: Row(children: [
-                                    const Icon(CupertinoIcons.bookmark,
-                                        size: 19, color: trainingMuted),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                        child: Text(
-                                            copy(
-                                                'Save a workout to use it again.'),
-                                            style: const TextStyle(
-                                                color: trainingMuted,
-                                                fontSize: 13,
-                                                height: 1.4))),
-                                  ]))
-                              : Column(children: [
-                                  for (final routine in day.routines.take(3))
-                                    _routine(routine, day),
-                                  if (day.routines.length > 3)
-                                    TextButton(
-                                        onPressed: () async {
-                                          await Navigator.of(context).push(
-                                              AppPageRoute<void>(
-                                                  page: SavedRoutinesView(
-                                                      initial: day)));
-                                          await _load(refresh: true);
-                                        },
-                                        child: Text(copy('View all'))),
-                                ])),
-                      const SizedBox(height: 20),
-                      WeeklyPlanCard(
-                          isActive: widget.isActive, onReturn: _load),
+                      if (!widget.editOnly) ...[
+                        const SizedBox(height: 18),
+                        _section('Saved routines',
+                            icon: day.items.isEmpty
+                                ? null
+                                : CupertinoIcons.bookmark,
+                            tooltip: 'Save routine',
+                            action: _busy ? null : _saveRoutine),
+                        const SizedBox(height: 8),
+                        TrainingSurface(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 5),
+                            child: day.routines.isEmpty
+                                ? Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: Row(children: [
+                                      const Icon(CupertinoIcons.bookmark,
+                                          size: 19, color: trainingMuted),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                          child: Text(
+                                              copy(
+                                                  'Save a workout to use it again.'),
+                                              style: const TextStyle(
+                                                  color: trainingMuted,
+                                                  fontSize: 13,
+                                                  height: 1.4))),
+                                    ]))
+                                : Column(children: [
+                                    for (final routine in day.routines.take(3))
+                                      _routine(routine, day),
+                                    if (day.routines.length > 3)
+                                      TextButton(
+                                          onPressed: () async {
+                                            await Navigator.of(context).push(
+                                                AppPageRoute<void>(
+                                                    page: SavedRoutinesView(
+                                                        initial: day)));
+                                            await _load(refresh: true);
+                                          },
+                                          child: Text(copy('View all'))),
+                                  ])),
+                        const SizedBox(height: 20),
+                        WeeklyPlanCard(
+                            isActive: widget.isActive, onReturn: _load),
+                      ],
                     ],
                   ],
                 )),
@@ -344,6 +370,32 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
       ),
     );
   }
+
+  Widget _editorSummary(TrainingDay day) => TrainingSurface(
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(day.name,
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -.5)),
+          const SizedBox(height: 8),
+          Text(
+              copy(day.finished
+                  ? 'This workout is already finished.'
+                  : 'Changes are saved to this day in your training schedule.'),
+              style: const TextStyle(
+                  fontSize: 12, height: 1.5, color: trainingMuted)),
+          if (!day.finished) ...[
+            const SizedBox(height: 16),
+            TrainingButton(
+                label: 'Add exercise',
+                icon: CupertinoIcons.plus,
+                primary: true,
+                onPressed: _busy ? null : _add),
+          ],
+        ]),
+      );
 
   Widget _header(String locale) => Padding(
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
@@ -356,7 +408,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Text(copy('Train'),
+                Text(copy(widget.editOnly ? 'Edit workout' : 'Train'),
                     style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
@@ -376,11 +428,18 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
         await Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => ExerciseLibraryView(
                 onExerciseAdded: _load,
+                workoutDate: DateFormat.yMMMEd().format(DateTime.parse(_date)),
                 addToWorkout: (exercise) async {
                   try {
                     if (_day?.finished == true) return false;
                     await _repo.mutate(_date, 'POST', '/items',
-                        data: {'workoutId': exercise.id});
+                        data: {
+                          'workoutId': exercise.id,
+                          'targetSets': 3,
+                          'targetReps': '10',
+                          'targetWeight': 0,
+                          'restSeconds': 90,
+                        });
                     return true;
                   } catch (_) {
                     return false;
@@ -654,7 +713,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Future<void> _openExercise(TodayPlanItemModel item, TrainingDay day) async {
-    if (day.started && !day.finished) {
+    if (!widget.editOnly && day.started && !day.finished) {
       await Navigator.of(context).push(MaterialPageRoute<void>(
           builder: (_) =>
               WorkoutSessionView(initial: day, initialItemId: item.id)));
@@ -724,7 +783,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                                   value: value, child: Text(copy(value))))
                               .toList()),
               ]),
-              if (day.started && !day.finished)
+              if (!widget.editOnly && day.started && !day.finished)
                 Padding(
                     padding: const EdgeInsets.only(left: 60, top: 8),
                     child: WorkoutItemActions(

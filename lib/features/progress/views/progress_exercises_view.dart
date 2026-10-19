@@ -116,6 +116,8 @@ class _ProgressExercisesViewState extends State<ProgressExercisesView> {
                   TextField(
                       controller: _search,
                       decoration: InputDecoration(
+                          filled: true,
+                          fillColor: DSColors.bgCard,
                           hintText:
                               fitnessText(context, 'Search your exercises'),
                           prefixIcon:
@@ -127,6 +129,7 @@ class _ProgressExercisesViewState extends State<ProgressExercisesView> {
                       }),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _muscle ?? 'all',
                       decoration: const InputDecoration(
                           contentPadding: EdgeInsets.symmetric(
@@ -186,6 +189,7 @@ class _ProgressExercisesViewState extends State<ProgressExercisesView> {
                       return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: ProgressSurface(
+                              accent: progressCyan,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 4),
                               child: ProgressExerciseRow(

@@ -1,3 +1,4 @@
+import '../viewmodels/onboarding_controller.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 
@@ -11,7 +12,10 @@ import 'training_preferences_view.dart';
 
 // MARK: - Apple iOS Lifestyle & Recovery Preferences
 class LifestyleNutritionLimitationsView extends StatefulWidget {
-  const LifestyleNutritionLimitationsView({super.key});
+  final OnboardingController? controller;
+  final VoidCallback? onContinue;
+  const LifestyleNutritionLimitationsView(
+      {super.key, this.controller, this.onContinue});
 
   @override
   State<LifestyleNutritionLimitationsView> createState() =>
@@ -20,13 +24,15 @@ class LifestyleNutritionLimitationsView extends StatefulWidget {
 
 class _LifestyleNutritionLimitationsViewState
     extends State<LifestyleNutritionLimitationsView> {
+  bool _advancing = false;
   late final LifestyleNutritionViewModel _viewModel;
   late final TextEditingController _customDietController;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = LifestyleNutritionViewModel()..addListener(_rebuild);
+    _viewModel = LifestyleNutritionViewModel(controller: widget.controller)
+      ..addListener(_rebuild);
     _customDietController =
         TextEditingController(text: _viewModel.customEatingStyle);
   }
@@ -57,11 +63,21 @@ class _LifestyleNutritionLimitationsViewState
   }
 
   void _onContinue() async {
-    await _viewModel.continueToNextStep();
-    if (!mounted) return;
-    Navigator.of(context).push(
-      OnboardingPageRoute(page: const TrainingPreferencesView()),
-    );
+    if (_advancing) return;
+    setState(() => _advancing = true);
+    try {
+      await _viewModel.continueToNextStep();
+      if (!mounted) return;
+      if (widget.onContinue != null) {
+        widget.onContinue!();
+        return;
+      }
+      await OnboardingPageRoute(
+              page: TrainingPreferencesView(controller: _viewModel.controller))
+          .open(context);
+    } finally {
+      if (mounted) setState(() => _advancing = false);
+    }
   }
 
   @override
@@ -78,6 +94,7 @@ class _LifestyleNutritionLimitationsViewState
       title: language.headlineLifestyleAndNutrition,
       subtitle: language.subtitleLifestyleAndNutrition,
       actionTitle: language.continueButtonTitle,
+      loading: _advancing,
       onBack: _onBack,
       onContinue: _viewModel.isValid ? _onContinue : null,
       children: [

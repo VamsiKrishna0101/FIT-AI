@@ -8,8 +8,7 @@ import 'progress_trend_summary.dart';
 
 class WellnessProgressContent extends StatefulWidget {
   final ProgressJson data;
-  final bool nutrition;
-  final bool compact;
+  final bool nutrition, compact;
   const WellnessProgressContent(
       {super.key,
       required this.data,
@@ -21,110 +20,89 @@ class WellnessProgressContent extends StatefulWidget {
 }
 
 class _WellnessProgressContentState extends State<WellnessProgressContent> {
-  String? _metric;
+  String _metric = 'recovery';
+  static const choices = {
+    'recovery': 'Recovery',
+    'sleep': 'Sleep',
+    'hrv': 'HRV',
+    'rhr': 'Resting heart rate',
+    'steps': 'Steps',
+    'activeCalories': 'Active calories'
+  };
+  static const units = {
+    'recovery': '/100',
+    'sleep': 'h',
+    'hrv': 'ms',
+    'rhr': 'bpm',
+    'steps': 'steps',
+    'activeCalories': 'kcal'
+  };
   @override
   Widget build(BuildContext context) {
     if (widget.nutrition) {
       return NutritionProgressContent(
           data: widget.data, compact: widget.compact);
     }
-    _metric ??= widget.nutrition ? 'protein' : 'recovery';
-    final choices = widget.nutrition
-        ? const {
-            'protein': 'Protein',
-            'calories': 'Calories',
-            'carbs': 'Carbs',
-            'fat': 'Fat',
-            'water': 'Water'
-          }
-        : const {
-            'recovery': 'Recovery',
-            'sleep': 'Sleep',
-            'hrv': 'HRV',
-            'rhr': 'Resting heart rate',
-            'steps': 'Steps',
-            'activeCalories': 'Active calories'
-          };
-    const units = {
-      'protein': 'g',
-      'carbs': 'g',
-      'fat': 'g',
-      'calories': 'kcal',
-      'water': 'ml',
-      'recovery': '/100',
-      'sleep': 'h',
-      'hrv': 'ms',
-      'rhr': 'bpm',
-      'steps': 'steps',
-      'activeCalories': 'kcal'
-    };
-    var rows =
-        progressRows(widget.data[widget.nutrition ? 'nutrition' : 'recovery']);
-    String? hrvMethod;
+    var rows = progressRows(widget.data['recovery']);
+    String? method;
     if (_metric == 'hrv') {
-      // SDNN and RMSSD are different measurements; never join them into one trend.
-      hrvMethod = rows
-          .where((r) => r['hrv'] != null && r['hrvMethod'] != null)
+      method = rows
+          .where((row) => row['hrv'] != null && row['hrvMethod'] != null)
           .lastOrNull?['hrvMethod'] as String?;
-      rows = rows.where((r) => r['hrvMethod'] == hrvMethod).toList();
+      rows = rows.where((row) => row['hrvMethod'] == method).toList();
     }
-    final points = ProgressPoint.parse(rows, _metric!);
-    final color = widget.nutrition
-        ? progressAmber
-        : _metric == 'hrv' || _metric == 'rhr'
-            ? progressCyan
-            : progressViolet;
-    final target = widget.nutrition && _metric != 'water'
-        ? progressNumber((widget.data['currentTargets'] as Map?)?[{
-            'protein': 'targetProtein',
-            'calories': 'targetCalories',
-            'carbs': 'targetCarbs',
-            'fat': 'targetFat'
-          }[_metric]])
-        : null;
-    return ProgressSurface(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      ProgressChoices(
+    final points = ProgressPoint.parse(rows, _metric);
+    final color =
+        _metric == 'hrv' || _metric == 'rhr' ? progressCyan : progressViolet;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ProgressMetricPicker(
           choices: choices,
+          selected: _metric,
           color: color,
-          selected: _metric!,
           onChanged: (value) => setState(() => _metric = value)),
-      const SizedBox(height: 18),
-      if (_metric == 'hrv' && hrvMethod != null)
-        Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text('HRV · $hrvMethod',
-                style: const TextStyle(color: progressMuted, fontSize: 12))),
-      ProgressChart(
-          points: points,
-          unit: units[_metric!]!,
-          bars: widget.nutrition ||
-              _metric == 'recovery' ||
-              _metric == 'sleep' ||
-              _metric == 'steps' ||
-              _metric == 'activeCalories',
-          average: true,
-          showReference: true,
-          reference: target,
-          referenceLabel:
-              target != null ? 'Current target' : 'Recorded-day average',
-          daily: true,
-          maximum: _metric == 'recovery' ? 100 : null,
-          color: color,
-          height: widget.compact ? 120 : 190),
-      ProgressTrendSummary(
-          points: points, unit: units[_metric!]!, color: color, extrema: true),
-      if (!widget.compact) ...[
+      const SizedBox(height: 16),
+      ProgressSurface(
+          accent: color,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(
+                  _metric == 'sleep'
+                      ? Icons.bedtime_outlined
+                      : Icons.monitor_heart_outlined,
+                  color: color,
+                  size: 21),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text(fitnessText(context, choices[_metric]!),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600))),
+              if (method != null)
+                Text(method,
+                    style: const TextStyle(fontSize: 12, color: progressMuted)),
+            ]),
+            const SizedBox(height: 20),
+            ProgressChart(
+                key: ValueKey('wellness-$_metric-$method'),
+                points: points,
+                unit: units[_metric]!,
+                bars: ['recovery', 'steps', 'activeCalories'].contains(_metric),
+                average: true,
+                showReference: true,
+                daily: true,
+                maximum: _metric == 'recovery' ? 100 : null,
+                color: color,
+                height: widget.compact ? 120 : 160,
+                showReadings: !widget.compact),
+          ])),
+      if (points.isNotEmpty) ...[
         const SizedBox(height: 14),
-        Text(
-            fitnessText(
-                context,
-                widget.nutrition
-                    ? 'Logs show what you recorded. Unlogged days are not zero intake.'
-                    : 'Missing readings stay empty. Recovery is a recorded score, not a diagnosis.'),
-            style: const TextStyle(
-                color: progressMuted, fontSize: 11, height: 1.45)),
+        ProgressTrendSummary(
+            points: points, unit: units[_metric]!, color: color, extrema: true),
       ],
-    ]));
+      if (!widget.compact)
+        const ProgressNote(
+            'Missing readings stay empty. Recovery is a recorded score, not a diagnosis.'),
+    ]);
   }
 }

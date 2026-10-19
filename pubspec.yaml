@@ -38,6 +38,8 @@ dependencies:
   in_app_purchase: ^3.3.1
   url_launcher: ^6.3.3
   in_app_purchase_android: ^0.5.4
+  liquid_glass_renderer:
+    path: packages/liquid_glass_renderer
 
 dev_dependencies:
   flutter_test:

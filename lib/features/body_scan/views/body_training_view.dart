@@ -1,3 +1,4 @@
+import '../../../core/theme/fitness_accents.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/network/api_client.dart';
@@ -26,6 +27,7 @@ import '../../train/models/workout_exercise_models.dart';
 import '../../train/views/exercise_detail_view.dart';
 import '../models/training_map_models.dart';
 import 'widgets/anatomical_training_map.dart';
+import 'widgets/weekly_muscle_coverage.dart';
 
 String _dayLabel(BuildContext context, String day) {
   const days = [
@@ -47,12 +49,14 @@ class BodyTrainingView extends StatefulWidget {
   final VoidCallback onTrain;
   final bool isActive;
   final bool showHeader;
-  final Future<TrainingMapData> Function()? loadMap;
+  final Widget? planCard;
+  final Future<TrainingMapData> Function(DateTime date, bool daily)? loadMap;
   const BodyTrainingView(
       {super.key,
       required this.onTrain,
       this.isActive = true,
       this.showHeader = true,
+      this.planCard,
       this.loadMap});
   @override
   State<BodyTrainingView> createState() => _BodyTrainingViewState();
@@ -65,6 +69,9 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
   String? _dataUser;
   bool _loading = true, _failed = false;
   int _request = 0;
+  DateTime? _selectedDate;
+  bool _daily = false;
+  DateTime get _date => _selectedDate ?? DateUtils.dateOnly(DateTime.now());
   StreamSubscription<TodayPlanModel?>? _subscription;
   StreamSubscription<TrainingDay>? _setSubscription;
   @override
@@ -73,10 +80,10 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
     WidgetsBinding.instance.addObserver(this);
     LanguageManager.shared.addListener(_languageChanged);
     _subscription = WorkoutRepository.shared.planStream.listen((_) {
-      if (widget.isActive) unawaited(_load());
+      if (widget.isActive) unawaited(_load(refresh: true));
     });
     _setSubscription = TrainingRepository.shared.changes.stream.listen((_) {
-      if (widget.isActive) unawaited(_load());
+      if (widget.isActive) unawaited(_load(refresh: true));
     });
     unawaited(_load());
   }
@@ -91,23 +98,23 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
       _loading = widget.isActive;
       _failed = false;
     });
-    if (widget.isActive) unawaited(_load());
+    if (widget.isActive) unawaited(_load(refresh: true));
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && widget.isActive) {
-      unawaited(_load());
+      unawaited(_load(refresh: true));
     }
   }
 
   @override
   void didUpdateWidget(BodyTrainingView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive) unawaited(_load());
+    if (widget.isActive && !oldWidget.isActive) unawaited(_load(refresh: true));
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool refresh = false}) async {
     if (!widget.isActive) return;
     final request = ++_request, user = await CacheScope.userId();
     if (!mounted || request != _request) return;
@@ -119,8 +126,9 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
       });
       return;
     }
-    final now = DateTime.now();
-    if (user != _dataUser || _data?.date != CacheScope.todayKey(now)) {
+    final date = _date;
+    final daily = _daily;
+    if (user != _dataUser || _data?.date != CacheScope.todayKey(date)) {
       setState(() {
         _data = null;
         _dataUser = user;
@@ -129,11 +137,14 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
       });
     }
     try {
+      if (refresh) await UserDataCache.shared.invalidate('training_map');
+      if (!mounted || request != _request) return;
       TrainingMapData data;
       if (widget.loadMap != null) {
-        data = await widget.loadMap!();
+        data = await widget.loadMap!(date, daily);
       } else {
-        data = await BodyAssessmentRepository.shared.trainingMap(date: now);
+        data = await BodyAssessmentRepository.shared
+            .trainingMap(date: date, daily: daily);
       }
       final currentUser = await CacheScope.userId();
       if (mounted && request == _request && currentUser == user) {
@@ -156,6 +167,7 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
 
   Future<void> _checkIn(String muscle, int soreness) async {
     final now = DateTime.now();
+    if (!DateUtils.isSameDay(_date, now)) return;
     await ApiClient.shared
         .put<Map<String, dynamic>>('/api/heatmap/check-in', data: {
       'muscleId': muscle,
@@ -165,6 +177,30 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
     });
     await UserDataCache.shared.invalidate('training_map');
     await _load();
+  }
+
+  void _selectDate(DateTime date, {bool? daily}) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    if (date.isAfter(today)) return;
+    setState(() {
+      _selectedDate =
+          DateUtils.isSameDay(date, today) ? null : DateUtils.dateOnly(date);
+      _daily = daily ?? _daily;
+      _data = null;
+      _loading = true;
+      _failed = false;
+    });
+    unawaited(_load());
+  }
+
+  Future<void> _chooseDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateUtils.dateOnly(DateTime.now()),
+    );
+    if (mounted && date != null) _selectDate(date);
   }
 
   Future<void> _preferences() async {
@@ -190,53 +226,139 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
           backgroundColor: FitnessTheme.canvas,
           body: SafeArea(
               bottom: false,
-              child: Stack(
-                key: ValueKey(_dataUser),
-                fit: StackFit.expand,
-                children: [
-                  IgnorePointer(
-                    ignoring: _loading && _data == null,
-                    child: AnimatedOpacity(
-                      opacity: _loading && _data == null ? 0 : 1,
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : ContentTransition.duration,
-                      curve: Curves.easeOutCubic,
-                      child: TrainingMapDashboard(
-                          showHeader: widget.showHeader,
-                          data: _data,
-                          loading: _loading,
-                          failed: _failed,
-                          onRefresh: _load,
-                          onTrain: widget.onTrain,
-                          onPreferences: _preferences,
-                          onCheckIn: _checkIn,
-                          onProfile: () => Navigator.of(context).push(
-                              AppPageRoute<void>(page: const ProfileView()))),
+              child: Column(children: [
+                _TrainingDateFilter(
+                  date: _date,
+                  daily: _daily,
+                  onDate: _selectDate,
+                  onChooseDate: _chooseDate,
+                  onPeriod: (daily) => _selectDate(_date, daily: daily),
+                ),
+                Expanded(
+                    child: Stack(
+                  key: ValueKey(_dataUser),
+                  fit: StackFit.expand,
+                  children: [
+                    IgnorePointer(
+                      ignoring: _loading && _data == null,
+                      child: AnimatedOpacity(
+                        opacity: _loading && _data == null ? 0 : 1,
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : ContentTransition.duration,
+                        curve: Curves.easeOutCubic,
+                        child: TrainingMapDashboard(
+                            planCard: widget.planCard,
+                            showHeader: widget.showHeader,
+                            data: _data,
+                            loading: _loading,
+                            failed: _failed,
+                            onRefresh: () => _load(refresh: true),
+                            daily: _daily,
+                            onTrain: widget.onTrain,
+                            onPreferences: _preferences,
+                            onCheckIn: _checkIn,
+                            onProfile: () => Navigator.of(context).push(
+                                AppPageRoute<void>(page: const ProfileView()))),
+                      ),
                     ),
-                  ),
-                  if (_loading && _data == null)
-                    const SingleChildScrollView(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: LoadingPlaceholder(),
-                    ),
-                ],
-              ))));
+                    if (_loading && _data == null)
+                      const SingleChildScrollView(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: LoadingPlaceholder(),
+                      ),
+                  ],
+                ))
+              ]))));
+}
+
+class _TrainingDateFilter extends StatelessWidget {
+  final DateTime date;
+  final bool daily;
+  final ValueChanged<DateTime> onDate;
+  final ValueChanged<bool> onPeriod;
+  final VoidCallback onChooseDate;
+
+  const _TrainingDateFilter(
+      {required this.date,
+      required this.daily,
+      required this.onDate,
+      required this.onPeriod,
+      required this.onChooseDate});
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final yesterday = DateTime(today.year, today.month, today.day - 1);
+    final isToday = DateUtils.isSameDay(date, today);
+    final isYesterday = DateUtils.isSameDay(date, yesterday);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final start = date.subtract(Duration(days: date.weekday - 1));
+    final label = daily
+        ? DateFormat.yMMMd(locale).format(date)
+        : '${DateFormat.MMMd(locale).format(start)} – ${DateFormat.yMMMd(locale).format(date)}';
+
+    Widget choice(String title, bool selected, VoidCallback onTap) =>
+        ChoiceChip(
+          label: FitnessText(title,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: selected ? FitnessTheme.canvas : FitnessTheme.silver)),
+          selected: selected,
+          showCheckmark: false,
+          onSelected: (_) => onTap(),
+          selectedColor: FitnessTheme.silver,
+          backgroundColor: FitnessTheme.surface,
+          side: BorderSide.none,
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Wrap(spacing: 8, runSpacing: 2, children: [
+          choice('Today', isToday, () => onDate(today)),
+          choice('Yesterday', isYesterday, () => onDate(yesterday)),
+          choice('Choose date', !isToday && !isYesterday, onChooseDate),
+        ]),
+        const SizedBox(height: 6),
+        Row(children: [
+          Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 11, color: FitnessTheme.muted))),
+          const SizedBox(width: 12),
+          SizedBox(
+              width: 126,
+              child: _Segment(
+                  labels: const ['Day', 'Week'],
+                  selected: daily ? 0 : 1,
+                  onChanged: (index) => onPeriod(index == 0))),
+        ]),
+      ]),
+    );
+  }
 }
 
 class TrainingMapDashboard extends StatefulWidget {
+  final Widget? planCard;
   final TrainingMapData? data;
-  final bool loading, failed;
+  final bool loading, failed, daily;
   final bool showHeader;
   final Future<void> Function() onRefresh;
   final Future<void> Function(String, int) onCheckIn;
   final VoidCallback onTrain, onPreferences, onProfile;
   const TrainingMapDashboard(
       {super.key,
+      this.planCard,
       this.data,
       this.loading = false,
       this.failed = false,
+      this.daily = false,
       this.showHeader = true,
       required this.onRefresh,
       required this.onCheckIn,
@@ -248,13 +370,9 @@ class TrainingMapDashboard extends StatefulWidget {
 }
 
 class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
-  bool _back = false, _all = false;
+  bool _back = false;
   String? _selected;
-  Color _color(MuscleRegion r) {
-    if (r.completedSets == 0) return const Color(0xFF606060);
-    return Color.lerp(const Color(0xFF486687), FitnessTheme.blue,
-        (r.completedSets / 12).clamp(0, 1))!;
-  }
+  Color _color(MuscleRegion region) => FitnessAccents.rank(region.strengthTier);
 
   void _select(String id) {
     final region = widget.data?.regions.where((r) => r.id == id).firstOrNull;
@@ -266,13 +384,15 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: FitnessTheme.surface,
+        backgroundColor: FitnessTheme.canvas,
         showDragHandle: true,
         builder: (_) => FitnessTheme(
             child: _MuscleDetail(
                 region: region,
                 onCheckIn: widget.onCheckIn,
-                onTrain: widget.onTrain)));
+                onTrain: widget.onTrain,
+                date: DateTime.parse(widget.data!.date),
+                daily: widget.daily)));
   }
 
   @override
@@ -322,6 +442,10 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                   padding: EdgeInsets.fromLTRB(16, 4, 16,
                       LiquidSilverBottomBar.scrollBottomInset(context)),
                   children: [
+                    if (widget.planCard != null) ...[
+                      widget.planCard!,
+                      const SizedBox(height: 16),
+                    ],
                     if (widget.failed) ...[
                       FitnessCard(
                           child: Row(children: [
@@ -384,12 +508,13 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                FitnessText('Muscles trained',
+                                FitnessText('Strength map',
                                     style: TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w600)),
                                 SizedBox(height: 4),
-                                FitnessText('Direct sets logged this week',
+                                FitnessText(
+                                    'Based on recent exercise performance',
                                     style: TextStyle(
                                         fontSize: 12,
                                         color: FitnessTheme.muted))
@@ -421,134 +546,56 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                                     selected: _selected,
                                     onSelected: _select))),
                         const SizedBox(height: 6),
-                        const Wrap(
+                        Wrap(
                             spacing: 14,
                             runSpacing: 8,
                             alignment: WrapAlignment.center,
                             children: [
-                              _Legend(Color(0xFF606060), 'No direct sets'),
-                              _Legend(Color(0xFF486687), 'Fewer sets'),
-                              _Legend(FitnessTheme.blue, 'More sets')
+                              for (var tier = 0; tier <= 5; tier++)
+                                _Legend(
+                                    FitnessAccents.rank(tier),
+                                    fitnessText(
+                                        context,
+                                        const [
+                                          'Not ranked yet',
+                                          'Beginner',
+                                          'Novice',
+                                          'Intermediate',
+                                          'Advanced',
+                                          'Elite'
+                                        ][tier])),
                             ]),
                         const SizedBox(height: 12),
+                        FitnessText('As of {date}',
+                            values: {
+                              'date': DateFormat.yMMMd(
+                                      Localizations.localeOf(context)
+                                          .toLanguageTag())
+                                  .format(date),
+                            },
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 11, color: FitnessTheme.muted)),
+                        const SizedBox(height: 4),
                         const FitnessText(
-                            'Blue intensity compares set counts · tap to explore',
+                            'Exercise-based estimate · last 90 days',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontSize: 11, color: FitnessTheme.muted))
+                                fontSize: 11, color: FitnessTheme.muted)),
                       ])),
                       const SizedBox(height: 22),
-                      _NextFocus(
+                      if (DateUtils.isSameDay(date, DateTime.now()))
+                        _NextFocus(
+                            regions: regions,
+                            onSelect: _select,
+                            onTrain: widget.onTrain),
+                      const SizedBox(height: 20),
+                      WeeklyMuscleCoverage(
                           regions: regions,
+                          daily: widget.daily,
+                          female: data.gender == 'FEMALE',
                           onSelect: _select,
                           onTrain: widget.onTrain),
-                      const SizedBox(height: 20),
-                      Row(children: [
-                        const Expanded(
-                            child: FitnessText('Weekly balance',
-                                style: TextStyle(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -.3))),
-                        TextButton(
-                            onPressed: () => setState(() => _all = !_all),
-                            child: FitnessText(
-                                _all ? 'Show less' : 'All muscles',
-                                style: const TextStyle(
-                                    color: FitnessTheme.muted, fontSize: 12)))
-                      ]),
-                      FitnessCard(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          child: Column(children: [
-                            for (final r in (_all ? regions : regions.take(5)))
-                              InkWell(
-                                  onTap: () => _select(r.id),
-                                  child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 11),
-                                      child: Row(children: [
-                                        Expanded(
-                                            flex: 3,
-                                            child: Row(children: [
-                                              if (r.isFocus)
-                                                const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        right: 5),
-                                                    child: Icon(
-                                                        CupertinoIcons
-                                                            .star_fill,
-                                                        size: 10,
-                                                        color: FitnessTheme
-                                                            .silver)),
-                                              Flexible(
-                                                  child: FitnessText(r.label,
-                                                      style: const TextStyle(
-                                                          fontSize: 13)))
-                                            ])),
-                                        Expanded(
-                                            flex: 3,
-                                            child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(3),
-                                                child: MotionValue(
-                                                    value: (r.targetSets > 0
-                                                            ? (r.completedSets /
-                                                                    r
-                                                                        .targetSets)
-                                                                .clamp(0, 1)
-                                                            : 0)
-                                                        .toDouble(),
-                                                    builder: (context,
-                                                            animatedValue) =>
-                                                        LinearProgressIndicator(
-                                                            value:
-                                                                animatedValue,
-                                                            minHeight: 4,
-                                                            color: _color(r),
-                                                            backgroundColor:
-                                                                FitnessTheme
-                                                                    .line)))),
-                                        const SizedBox(width: 12),
-                                        SizedBox(
-                                            width: 55,
-                                            child: FitnessText(
-                                                r.targetSets > 0
-                                                    ? '${r.completedSets}/${r.targetSets}'
-                                                    : fitnessText(
-                                                        context, '{count} sets',
-                                                        values: {
-                                                            'count':
-                                                                r.completedSets
-                                                          }),
-                                                textAlign: TextAlign.right,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: FitnessTheme.muted)))
-                                      ])))
-                          ])),
-                      const SizedBox(height: 16),
-                      if (data.summary['loggedSets'] == 0)
-                        FitnessCard(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                              const FitnessText(
-                                  'Your next set starts the story',
-                                  style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 7),
-                              const FitnessText(
-                                  'Log sets in Train to see your coverage and progress here.',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: FitnessTheme.muted,
-                                      height: 1.4)),
-                              TextButton(
-                                  onPressed: widget.onTrain,
-                                  child: const FitnessText('Open Train →'))
-                            ])),
                       if (data.unmapped.isNotEmpty)
                         Padding(
                             padding: const EdgeInsets.only(top: 12),
@@ -721,10 +768,16 @@ class _Segment extends StatelessWidget {
 
 class _MuscleDetail extends StatefulWidget {
   final MuscleRegion region;
+  final DateTime date;
+  final bool daily;
   final Future<void> Function(String, int) onCheckIn;
   final VoidCallback onTrain;
   const _MuscleDetail(
-      {required this.region, required this.onCheckIn, required this.onTrain});
+      {required this.region,
+      required this.onCheckIn,
+      required this.onTrain,
+      required this.date,
+      required this.daily});
   @override
   State<_MuscleDetail> createState() => _MuscleDetailState();
 }
@@ -740,6 +793,7 @@ class _MuscleDetailState extends State<_MuscleDetail> {
   }
 
   Future<void> _save(int value) async {
+    if (_saving) return;
     setState(() {
       _saving = true;
       _error = null;
@@ -773,232 +827,400 @@ class _MuscleDetailState extends State<_MuscleDetail> {
   @override
   Widget build(BuildContext context) {
     final r = widget.region;
+    final today = DateUtils.isSameDay(widget.date, DateTime.now());
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final rankColor = FitnessAccents.rank(r.strengthTier);
+
     return SizedBox(
-        height: MediaQuery.sizeOf(context).height * .82,
-        child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-            children: [
-              Row(children: [
-                Expanded(
-                    child: FitnessText(r.label,
-                        style: const TextStyle(
-                            fontSize: 27,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -.6))),
-                IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    tooltip: 'Close',
-                    icon: const Icon(CupertinoIcons.xmark, size: 18))
-              ]),
-              FitnessText(
-                  r.lastTrained == null
-                      ? 'No direct sets logged yet'
-                      : 'Last trained ${DateFormat('MMM d', Localizations.localeOf(context).toLanguageTag()).format(DateTime.parse(r.lastTrained!))}',
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-              if (r.lastExposure != null &&
-                  r.lastExposure != r.lastTrained) ...[
+      key: const ValueKey('muscle-detail-sheet'),
+      height: MediaQuery.sizeOf(context).height * .82,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 12, 16),
+          child: Row(children: [
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FitnessText(r.label,
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -.4)),
                 const SizedBox(height: 5),
                 FitnessText(
-                    'Last assisting exposure ${DateFormat('MMM d', Localizations.localeOf(context).toLanguageTag()).format(DateTime.parse(r.lastExposure!))}',
+                    fitnessText(context,
+                        widget.daily ? 'Day · {date}' : 'Week of {date}',
+                        values: {
+                          'date': DateFormat.MMMd(locale).format(widget.daily
+                              ? widget.date
+                              : widget.date.subtract(
+                                  Duration(days: widget.date.weekday - 1)))
+                        }),
+                    style: const TextStyle(
+                        fontSize: 13, color: FitnessTheme.muted)),
+              ],
+            )),
+            IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: fitnessText(context, 'Close'),
+                icon: const Icon(CupertinoIcons.xmark_circle_fill,
+                    color: FitnessTheme.muted, size: 25)),
+          ]),
+        ),
+        Expanded(
+            child: ListView(
+          key: const ValueKey('muscle-detail-scroll'),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          children: [
+            FitnessCard(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  _Stat('${r.completedSets}', 'Direct sets'),
+                  _Stat('${r.assistingSets}', 'Assisting sets'),
+                ]),
+                const SizedBox(height: 18),
+                FitnessText(
+                    r.targetSets > 0
+                        ? fitnessText(
+                            context,
+                            widget.daily
+                                ? '{count} of {total} direct sets · daily plan'
+                                : '{count} of {total} direct sets · weekly plan',
+                            values: {
+                                'count': r.completedSets,
+                                'total': r.targetSets
+                              })
+                        : widget.daily
+                            ? 'No target set for this day'
+                            : 'No weekly target set',
+                    style: const TextStyle(fontSize: 13, height: 1.4)),
+                if (r.targetSets > 0) ...[
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: MotionValue(
+                          value: (r.completedSets / r.targetSets)
+                              .clamp(0, 1)
+                              .toDouble(),
+                          builder: (context, value) => LinearProgressIndicator(
+                              value: value,
+                              minHeight: 5,
+                              color: FitnessTheme.silver,
+                              backgroundColor: FitnessTheme.line))),
+                ],
+                const SizedBox(height: 14),
+                FitnessText(
+                    r.lastTrained == null
+                        ? 'No direct sets logged yet'
+                        : fitnessText(context, 'Last trained {date}', values: {
+                            'date': DateFormat.MMMd(locale)
+                                .format(DateTime.parse(r.lastTrained!))
+                          }),
                     style: const TextStyle(
                         fontSize: 12, color: FitnessTheme.muted)),
               ],
-              const SizedBox(height: 20),
-              Row(children: [
-                _Stat('${r.completedSets}', 'Direct sets'),
-                _Stat('${r.assistingSets}', 'Assisting sets'),
-                _Stat('${r.previousWeekSets}', 'Last week total')
-              ]),
-              const SizedBox(height: 20),
-              FitnessText(r.insight,
-                  style: const TextStyle(
-                      fontSize: 14, height: 1.5, color: FitnessTheme.silver)),
+            )),
+            if (today) ...[
               const SizedBox(height: 12),
-              FitnessText(
-                  r.targetSets > 0
-                      ? fitnessText(context,
-                          '{count} of {total} direct sets · weekly plan',
-                          values: {
-                              'count': r.completedSets,
-                              'total': r.targetSets
-                            })
-                      : 'No weekly target set',
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-              if (r.targetSets > 0) ...[
-                const SizedBox(height: 9),
-                ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: MotionValue(
-                        value: ((r.completedSets / r.targetSets).clamp(0, 1))
-                            .toDouble(),
-                        builder: (context, animatedValue) =>
-                            LinearProgressIndicator(
-                                value: animatedValue,
-                                minHeight: 5,
-                                color: FitnessTheme.blue,
-                                backgroundColor: FitnessTheme.line)))
-              ],
-              const SizedBox(height: 26),
-              const FitnessText('How does it feel today?',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 10),
-              Wrap(spacing: 7, runSpacing: 7, children: [
-                for (var i = 0; i < 4; i++)
-                  ChoiceChip(
-                      label: FitnessText(
-                          const [
-                            'Comfortable',
-                            'Light soreness',
-                            'Sore',
-                            'Very sore'
-                          ][i],
-                          style: const TextStyle(fontSize: 12)),
-                      selected: _soreness == i,
-                      onSelected: _saving ? null : (_) => _save(i),
-                      selectedColor: const Color(0xFF484848),
-                      backgroundColor: const Color(0xFF2A2A2A),
-                      side: BorderSide.none)
-              ]),
-              if (_saving)
-                const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: LinearProgressIndicator(
-                        minHeight: 2, color: FitnessTheme.silver)),
-              if (_error != null)
-                Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: FitnessText(_error!,
-                        style: const TextStyle(
-                            color: FitnessTheme.coral, fontSize: 12))),
-              const SizedBox(height: 10),
-              const FitnessText(
-                  'Your check-in records how this area feels today.',
-                  style: TextStyle(
-                      fontSize: 11, color: FitnessTheme.muted, height: 1.4)),
-              const SizedBox(height: 26),
-              const FitnessText('Load trend',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 7),
-              FitnessText(
-                  r.trendExercise ?? 'Log weighted sets to build your trend.',
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-              if (r.trend.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                SizedBox(
-                    height: 80,
-                    child: MotionChartReveal(
-                        dataKey: r.trend
-                            .map((p) => '${p['date']}:${p['weightKg']}')
-                            .join('|'),
-                        child: CustomPaint(
-                            size: Size.infinite,
-                            painter: _LoadChart(r.trend)))),
-                const SizedBox(height: 10),
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      for (final point in r.trend.length > 1
-                          ? [r.trend.first, r.trend.last]
-                          : [r.trend.first])
-                        FitnessText(
-                            DateFormat(
-                                    'MMM d',
-                                    Localizations.localeOf(context)
-                                        .toLanguageTag())
-                                .format(
-                                    DateTime.parse(point['date'] as String)),
+              FitnessCard(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FitnessText('How does it feel today?',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    for (var i = 0; i < 4; i++)
+                      ChoiceChip(
+                          label: FitnessText(
+                              const [
+                                'Comfortable',
+                                'Light soreness',
+                                'Sore',
+                                'Very sore'
+                              ][i],
+                              style: const TextStyle(fontSize: 13)),
+                          selected: _soreness == i,
+                          onSelected: _saving ? null : (_) => _save(i),
+                          selectedColor: const Color(0xFF414141),
+                          backgroundColor: FitnessTheme.canvas,
+                          side: BorderSide(
+                              color: _soreness == i
+                                  ? FitnessTheme.silver
+                                  : FitnessTheme.line)),
+                  ]),
+                  if (_saving)
+                    const Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: LinearProgressIndicator(
+                            minHeight: 2, color: FitnessTheme.silver)),
+                  if (_error != null)
+                    Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: FitnessText(_error!,
                             style: const TextStyle(
-                                fontSize: 10, color: FitnessTheme.muted))
-                    ]),
-                const SizedBox(height: 10),
-                FitnessText(
-                    fitnessText(
-                        context, 'Latest best load: {weight} kg × {reps} reps',
-                        values: {
-                          'weight': r.trend.last['weightKg'] as num,
-                          'reps': r.trend.last['reps'] as num
-                        }),
-                    style: const TextStyle(fontSize: 12)),
-                const SizedBox(height: 5),
-                const FitnessText(
-                    'Highest logged load each day for this exercise. Reps may vary.',
-                    style: TextStyle(fontSize: 11, color: FitnessTheme.muted))
-              ],
-              const SizedBox(height: 26),
-              const FitnessText('Direct training history',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              if (r.sessions.isEmpty)
-                const Padding(
-                    padding: EdgeInsets.only(top: 9),
-                    child: FitnessText('Your logged sessions will appear here.',
+                                color: FitnessTheme.coral, fontSize: 13))),
+                ],
+              )),
+            ] else if (r.soreness != null) ...[
+              const SizedBox(height: 12),
+              FitnessCard(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FitnessText('Check-in',
+                      style:
+                          TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+                  const SizedBox(height: 6),
+                  FitnessText(
+                      const [
+                        'Comfortable',
+                        'Light soreness',
+                        'Sore',
+                        'Very sore'
+                      ][r.soreness!.clamp(0, 3)],
+                      style: const TextStyle(fontSize: 15)),
+                ],
+              )),
+            ],
+            const SizedBox(height: 12),
+            FitnessCard(
+                padding: EdgeInsets.zero,
+                child: ExpansionTile(
+                  key: ValueKey('muscle-strength-${r.id}'),
+                  tilePadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  title: const FitnessText('Strength level',
+                      style: TextStyle(fontSize: 13)),
+                  subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Row(children: [
+                        Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                                color: rankColor, shape: BoxShape.circle)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: FitnessText(r.strengthTitle,
+                                style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w600,
+                                    color: r.strengthTier == 0
+                                        ? FitnessTheme.muted
+                                        : rankColor))),
+                      ])),
+                  children: [
+                    FitnessText(
+                        r.strength['reason'] as String? ??
+                            'A level appears when enough supported lifts are logged.',
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: FitnessTheme.muted)),
+                    for (final exercise in r.rankedExercises)
+                      ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          onTap: () =>
+                              _openExercise(exercise['exerciseId'] as String),
+                          title: Text(exercise['exerciseName'] as String? ?? '',
+                              style: const TextStyle(fontSize: 14)),
+                          subtitle: FitnessText(
+                              exercise['title'] as String? ?? 'Not ranked yet',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: FitnessAccents.rank(
+                                      (exercise['tier'] as num? ?? 0)
+                                          .toInt()))),
+                          trailing: const Icon(CupertinoIcons.chevron_right,
+                              size: 13, color: FitnessTheme.muted)),
+                  ],
+                )),
+            const SizedBox(height: 12),
+            FitnessCard(
+                padding: EdgeInsets.zero,
+                child: ExpansionTile(
+                  key: ValueKey('muscle-history-${r.id}'),
+                  tilePadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  title: const FitnessText('Workout history',
+                      style: TextStyle(fontSize: 15)),
+                  children: [
+                    const FitnessText(
+                        'Direct sets target this muscle. Assisting sets use it as a secondary muscle.',
                         style: TextStyle(
-                            fontSize: 12, color: FitnessTheme.muted))),
-              for (final session in r.sessions)
-                Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                              width: 55,
-                              child: FitnessText(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: FitnessTheme.muted)),
+                    const SizedBox(height: 16),
+                    FitnessText('Last week: {count} direct sets',
+                        values: {'count': r.previousWeekSets},
+                        style: const TextStyle(
+                            fontSize: 13, color: FitnessTheme.muted)),
+                    const SizedBox(height: 18),
+                    const FitnessText('Load trend',
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 7),
+                    FitnessText(
+                        r.trendExercise ??
+                            'Log weighted sets to build your trend.',
+                        style: const TextStyle(
+                            fontSize: 12, color: FitnessTheme.muted)),
+                    if (r.trend.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      SizedBox(
+                          height: 80,
+                          child: MotionChartReveal(
+                              dataKey: r.trend
+                                  .map((p) => '${p['date']}:${p['weightKg']}')
+                                  .join('|'),
+                              child: CustomPaint(
+                                  size: Size.infinite,
+                                  painter: _LoadChart(r.trend)))),
+                      const SizedBox(height: 10),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            for (final point in r.trend.length > 1
+                                ? [r.trend.first, r.trend.last]
+                                : [r.trend.first])
+                              FitnessText(
                                   DateFormat(
                                           'MMM d',
                                           Localizations.localeOf(context)
                                               .toLanguageTag())
                                       .format(DateTime.parse(
-                                          session['date'] as String)),
+                                          point['date'] as String)),
                                   style: const TextStyle(
-                                      fontSize: 12,
-                                      color: FitnessTheme.muted))),
-                          Expanded(
-                              child: FitnessText(
-                                  (session['exercises'] as List).join(' · '),
-                                  style: const TextStyle(
-                                      fontSize: 12, height: 1.4))),
-                          const SizedBox(width: 10),
-                          FitnessText('{count} sets',
-                              values: {'count': session['sets'] as num},
-                              style: const TextStyle(
-                                  fontSize: 12, color: FitnessTheme.muted))
-                        ])),
-              if (r.nextExercises.isNotEmpty) ...[
-                const SizedBox(height: 17),
-                const FitnessText('In your plan',
-                    style:
-                        TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                for (final exercise in r.nextExercises)
-                  ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: FitnessText(exercise['name'] as String,
-                          style: const TextStyle(fontSize: 13)),
-                      subtitle: FitnessText(
-                          fitnessText(context, '{day} · {count} sets', values: {
-                            'day': _dayLabel(
-                                context, exercise['dayOfWeek'] as String),
-                            'count': exercise['sets'] as num
-                          }),
-                          style: const TextStyle(
-                              fontSize: 11, color: FitnessTheme.muted)),
-                      trailing: const Icon(CupertinoIcons.chevron_right,
-                          size: 14, color: FitnessTheme.muted),
-                      onTap: () => _openExercise(exercise['id'] as String))
-              ],
-              const SizedBox(height: 14),
-              FilledButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    widget.onTrain();
-                  },
-                  style: FilledButton.styleFrom(
-                      backgroundColor: FitnessTheme.silver,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size(0, 48)),
-                  child: const FitnessText('Open Train')),
-            ]));
+                                      fontSize: 12, color: FitnessTheme.muted))
+                          ]),
+                      const SizedBox(height: 10),
+                      FitnessText(
+                          fitnessText(context,
+                              'Latest best load: {weight} kg × {reps} reps',
+                              values: {
+                                'weight': r.trend.last['weightKg'] as num,
+                                'reps': r.trend.last['reps'] as num
+                              }),
+                          style: const TextStyle(fontSize: 12)),
+                      const SizedBox(height: 5),
+                      const FitnessText(
+                          'Highest logged load each day for this exercise. Reps may vary.',
+                          style: TextStyle(
+                              fontSize: 12, color: FitnessTheme.muted))
+                    ],
+                    const SizedBox(height: 26),
+                    const FitnessText('Direct training history',
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w600)),
+                    if (r.sessions.isEmpty)
+                      const Padding(
+                          padding: EdgeInsets.only(top: 9),
+                          child: FitnessText(
+                              'Your logged sessions will appear here.',
+                              style: TextStyle(
+                                  fontSize: 12, color: FitnessTheme.muted))),
+                    for (final session in r.sessions)
+                      Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                    width: 55,
+                                    child: FitnessText(
+                                        DateFormat(
+                                                'MMM d',
+                                                Localizations.localeOf(context)
+                                                    .toLanguageTag())
+                                            .format(DateTime.parse(
+                                                session['date'] as String)),
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: FitnessTheme.muted))),
+                                Expanded(
+                                    child: FitnessText(
+                                        (session['exercises'] as List)
+                                            .join(' · '),
+                                        style: const TextStyle(
+                                            fontSize: 13, height: 1.5))),
+                                const SizedBox(width: 10),
+                                FitnessText('{count} sets',
+                                    values: {'count': session['sets'] as num},
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: FitnessTheme.muted))
+                              ])),
+                  ],
+                )),
+            if (r.nextExercises.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              FitnessCard(
+                  padding: EdgeInsets.zero,
+                  child: ExpansionTile(
+                    tilePadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                    childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    shape: const Border(),
+                    collapsedShape: const Border(),
+                    title: const FitnessText('In your plan',
+                        style: TextStyle(fontSize: 15)),
+                    children: [
+                      for (final exercise in r.nextExercises)
+                        ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: FitnessText(exercise['name'] as String,
+                                style: const TextStyle(fontSize: 13)),
+                            subtitle: FitnessText(
+                                fitnessText(
+                                    context, '{day} · {count} sets', values: {
+                                  'day': _dayLabel(
+                                      context, exercise['dayOfWeek'] as String),
+                                  'count': exercise['sets'] as num
+                                }),
+                                style: const TextStyle(
+                                    fontSize: 12, color: FitnessTheme.muted)),
+                            trailing: const Icon(CupertinoIcons.chevron_right,
+                                size: 14, color: FitnessTheme.muted),
+                            onTap: () =>
+                                _openExercise(exercise['id'] as String))
+                    ],
+                  )),
+            ],
+          ],
+        )),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+              20, 12, 20, 16 + MediaQuery.paddingOf(context).bottom),
+          child: FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                widget.onTrain();
+              },
+              style: FilledButton.styleFrom(
+                  backgroundColor: FitnessTheme.silver,
+                  foregroundColor: FitnessTheme.canvas,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  minimumSize: const Size(0, 48)),
+              child: const FitnessText('Open Train',
+                  style: TextStyle(fontSize: 15))),
+        ),
+      ]),
+    );
   }
 }
 

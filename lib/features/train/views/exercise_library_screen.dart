@@ -1,3 +1,4 @@
+import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,12 +19,14 @@ class ExerciseLibraryView extends StatefulWidget {
   final List<WorkoutExerciseModel>? initialExercises;
   final Future<bool> Function(WorkoutExerciseModel)? addToWorkout;
   final ValueChanged<WorkoutExerciseModel>? onSelect;
+  final String? workoutDate;
   const ExerciseLibraryView(
       {super.key,
       required this.onExerciseAdded,
       this.initialExercises,
       this.addToWorkout,
-      this.onSelect});
+      this.onSelect,
+      this.workoutDate});
   @override
   State<ExerciseLibraryView> createState() => _ExerciseLibraryViewState();
 }
@@ -170,14 +173,19 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
       return false;
     }
     setState(() => _adding.add(exercise.id));
-    final success = widget.addToWorkout != null
-        ? await widget.addToWorkout!(exercise)
-        : await WorkoutRepository.shared.addWorkoutItem(
-            workoutId: exercise.id,
-            targetSets: 3,
-            targetReps: '10',
-            targetWeight: 0,
-            restSeconds: 60);
+    var success = false;
+    try {
+      success = widget.addToWorkout != null
+          ? await widget.addToWorkout!(exercise)
+          : await WorkoutRepository.shared.addWorkoutItem(
+              workoutId: exercise.id,
+              targetSets: 3,
+              targetReps: '10',
+              targetWeight: 0,
+              restSeconds: 90);
+    } catch (_) {
+      // Keep this row available for retry when saving fails.
+    }
     if (!mounted) return success;
     setState(() {
       _adding.remove(exercise.id);
@@ -193,15 +201,34 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     return success;
   }
 
-  void _open(WorkoutExerciseModel exercise) =>
-      Navigator.of(context).push(CupertinoPageRoute<void>(
-          builder: (_) => ExerciseDetailView(
-              exercise: exercise,
-              onAddToPlan:
-                  _added.contains(exercise.id) ? null : () => _add(exercise))));
+  Future<void> _open(WorkoutExerciseModel exercise) async {
+    var selected = false;
+    final route = AppPageRoute<void>(
+        page: ExerciseDetailView(
+      exercise: exercise,
+      addLabel: widget.onSelect != null
+          ? 'Select'
+          : widget.addToWorkout != null
+              ? 'Add exercise'
+              : 'Add to today',
+      onAddToPlan: _added.contains(exercise.id)
+          ? null
+          : () async {
+              if (widget.onSelect != null) {
+                selected = true;
+                return true;
+              }
+              return _add(exercise);
+            },
+    ));
+    await Navigator.of(context).push(route);
+    await route.completed;
+    if (mounted && selected) widget.onSelect?.call(exercise);
+  }
+
   void _custom() => showModalBottomSheet<void>(
       sheetAnimationStyle: DSMotion.sheetStyle(context),
-context: context,
+      context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddExerciseSheet(
@@ -214,247 +241,248 @@ context: context,
     unawaited(_load());
   }
 
-  Widget _filter(String label, String? value,
-          List<ExerciseFilterOption> options, ValueChanged<String?> changed) =>
-      InputDecorator(
-        decoration: InputDecoration(
-          labelText: fitnessText(context, label),
-          filled: true,
-          fillColor: FitnessTheme.surface,
-          contentPadding: const EdgeInsets.fromLTRB(14, 8, 12, 8),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: FitnessTheme.line)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  const BorderSide(color: FitnessTheme.muted, width: .8)),
-        ),
-        child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-          key: ValueKey('filter-$label'),
-          value: value ?? '',
-          isExpanded: true,
-          itemHeight: null,
-          menuMaxHeight: 360,
-          dropdownColor: FitnessTheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          icon: const Icon(CupertinoIcons.chevron_down,
-              size: 14, color: FitnessTheme.silver),
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(fontSize: 13, color: FitnessTheme.silver),
-          items: [
-            const ExerciseFilterOption('', 'All'),
-            ...options,
-            if (value != null &&
-                !options.any((option) => option.value == value))
-              ExerciseFilterOption(value, value)
-          ]
-              .map((option) => DropdownMenuItem(
-                  value: option.value,
-                  child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(fitnessText(context, option.label),
-                          maxLines: 2, overflow: TextOverflow.ellipsis))))
-              .toList(),
-          onChanged: (selected) {
-            _debounce?.cancel();
-            setState(() {
-              changed(selected == '' ? null : selected);
-              _page = 1;
-            });
-            unawaited(_load());
-          },
-        )),
-      );
+  Future<void> _filters() async {
+    FocusScope.of(context).unfocus();
+    var bodyPart = _bodyPart;
+    var equipment = _equipment;
+    final apply = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: FitnessTheme.surface,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (sheetContext) => StatefulBuilder(builder: (context, update) {
+        String copy(String text) => fitnessText(context, text);
+        Widget filter(String label, String? value,
+            List<ExerciseFilterOption> options, ValueChanged<String?> changed) {
+          return DropdownButtonFormField<String>(
+            key: ValueKey('filter-$label-$value'),
+            initialValue: value ?? '',
+            isExpanded: true,
+            dropdownColor: FitnessTheme.surface,
+            style: const TextStyle(fontSize: 14, color: FitnessTheme.silver),
+            decoration: InputDecoration(labelText: copy(label)),
+            items: [const ExerciseFilterOption('', 'All'), ...options]
+                .map((option) => DropdownMenuItem(
+                    value: option.value,
+                    child: Text(copy(option.label),
+                        overflow: TextOverflow.ellipsis)))
+                .toList(),
+            onChanged: (value) =>
+                update(() => changed(value == '' ? null : value)),
+          );
+        }
+
+        return SafeArea(
+            child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 22),
+          child: SingleChildScrollView(
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                  child: Container(
+                      width: 32,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: FitnessTheme.muted,
+                          borderRadius: BorderRadius.circular(4)))),
+              const SizedBox(height: 22),
+              Text(copy('Filters'),
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 24),
+              filter('Body part', bodyPart, _bodyParts,
+                  (value) => bodyPart = value),
+              const SizedBox(height: 18),
+              filter('Equipment', equipment, _equipmentOptions,
+                  (value) => equipment = value),
+              const SizedBox(height: 24),
+              FilledButton(
+                  style: FilledButton.styleFrom(
+                      backgroundColor: FitnessTheme.silver,
+                      foregroundColor: FitnessTheme.canvas,
+                      minimumSize: const Size(0, 48)),
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  child: Text(copy('Apply filters'))),
+              TextButton(
+                  onPressed: () => update(() {
+                        bodyPart = null;
+                        equipment = null;
+                      }),
+                  child: Text(copy('Reset filters'),
+                      style: const TextStyle(color: FitnessTheme.muted))),
+            ],
+          )),
+        ));
+      }),
+    );
+    if (apply != true || !mounted) return;
+    _debounce?.cancel();
+    setState(() {
+      _bodyPart = bodyPart;
+      _equipment = equipment;
+      _page = 1;
+    });
+    unawaited(_load());
+  }
+
+  void _reset() {
+    _debounce?.cancel();
+    _search.removeListener(_filterChanged);
+    _search.clear();
+    _search.addListener(_filterChanged);
+    setState(() {
+      _bodyPart = null;
+      _equipment = null;
+      _page = 1;
+    });
+    unawaited(_load());
+  }
 
   Widget _intro() {
     String copy(String text) => fitnessText(context, text);
-    final compact = MediaQuery.sizeOf(context).width < 360 ||
-        MediaQuery.textScalerOf(context).scale(12) > 16;
+    final filters = [_bodyPart, _equipment].whereType<String>().length;
     return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(copy('Explore exercises'),
-              style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -.8,
-                  height: 1.12)),
-          const SizedBox(height: 9),
-          Text(copy('Find your next movement. Make it part of your plan.'),
-              style: const TextStyle(
-                  fontSize: 13, color: FitnessTheme.muted, height: 1.5)),
-          if (compact &&
-              widget.addToWorkout == null &&
-              widget.onSelect == null) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                    onPressed: _custom,
-                    style: TextButton.styleFrom(
-                        backgroundColor: FitnessTheme.surface,
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(
+            copy(widget.onSelect == null
+                ? 'Find your next movement.'
+                : 'Make it your workout.'),
+            style: const TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -.6,
+                height: 1.2)),
+        const SizedBox(height: 8),
+        Text(widget.workoutDate ?? copy('Explore exercises'),
+            style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+        const SizedBox(height: 20),
+        TextField(
+          key: const ValueKey('exercise-search'),
+          controller: _search,
+          style: const TextStyle(fontSize: 14),
+          textInputAction: TextInputAction.search,
+          onSubmitted: (_) {
+            _debounce?.cancel();
+            unawaited(_load());
+          },
+          decoration: InputDecoration(
+            hintText: copy('Search exercises, muscles or equipment'),
+            hintStyle: const TextStyle(fontSize: 12, color: FitnessTheme.muted),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+            prefixIcon: const Icon(CupertinoIcons.search,
+                size: 18, color: FitnessTheme.silver),
+            suffixIcon: _search.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: copy('Clear search'),
+                    onPressed: _search.clear,
+                    icon:
+                        const Icon(CupertinoIcons.xmark_circle_fill, size: 17)),
+            filled: true,
+            fillColor: FitnessTheme.surface,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: FitnessTheme.line)),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+            width: double.infinity,
+            child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 10,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                          _loading
+                              ? copy('Finding exercises…')
+                              : fitnessText(context, '{count} exercises',
+                                  values: {'count': _total}),
+                          style: const TextStyle(
+                              fontSize: 12, color: FitnessTheme.muted))),
+                  if (filters > 0 || _search.text.isNotEmpty)
+                    TextButton(
+                        onPressed: _reset,
+                        child: Text(copy('Reset filters'),
+                            style: const TextStyle(
+                                fontSize: 11, color: FitnessTheme.muted))),
+                  OutlinedButton.icon(
+                    key: const ValueKey('exercise-filters'),
+                    onPressed: _filters,
+                    style: OutlinedButton.styleFrom(
                         foregroundColor: FitnessTheme.silver,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16))),
-                    child: Row(children: [
-                      const Icon(CupertinoIcons.plus, size: 16),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: Text(copy('Custom exercise'),
-                              style: const TextStyle(fontSize: 12))),
-                    ]))),
-          ],
-          const SizedBox(height: 22),
-          TextField(
-              key: const ValueKey('exercise-search'),
-              controller: _search,
-              style: const TextStyle(fontSize: 14),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) {
-                _debounce?.cancel();
-                unawaited(_load());
-              },
-              decoration: InputDecoration(
-                  hintText: copy('Search exercises, muscles or equipment'),
-                  hintStyle:
-                      const TextStyle(fontSize: 13, color: FitnessTheme.muted),
-                  prefixIcon: const Icon(CupertinoIcons.search,
-                      size: 19, color: FitnessTheme.silver),
-                  suffixIcon: _search.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: copy('Clear search'),
-                          icon: const Icon(CupertinoIcons.xmark_circle_fill,
-                              size: 18),
-                          onPressed: _search.clear),
-                  filled: true,
-                  fillColor: FitnessTheme.surface,
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: FitnessTheme.line)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                          color: FitnessTheme.muted, width: .8)))),
-          const SizedBox(height: 18),
-          LayoutBuilder(builder: (context, constraints) {
-            final body = _filter('Body part', _bodyPart, _bodyParts,
-                (value) => _bodyPart = value);
-            final equipment = _filter('Equipment', _equipment,
-                _equipmentOptions, (value) => _equipment = value);
-            if (constraints.maxWidth < 340 ||
-                MediaQuery.textScalerOf(context).scale(13) > 18) {
-              return Column(
-                  children: [body, const SizedBox(height: 14), equipment]);
-            }
-            return Row(children: [
-              Expanded(child: body),
-              const SizedBox(width: 12),
-              Expanded(child: equipment)
-            ]);
-          }),
-          const SizedBox(height: 16),
-          Row(children: [
-            Expanded(
-                child: Text(
-                    _loading
-                        ? copy('Finding exercises…')
-                        : fitnessText(context, '{count} exercises',
-                            values: {'count': _total}),
-                    style: const TextStyle(
-                        fontSize: 12, color: FitnessTheme.muted))),
-            if (_bodyPart != null ||
-                _equipment != null ||
-                _search.text.isNotEmpty)
-              TextButton(
-                  onPressed: () {
-                    _debounce?.cancel();
-                    _search.removeListener(_filterChanged);
-                    _search.clear();
-                    _search.addListener(_filterChanged);
-                    setState(() {
-                      _bodyPart = null;
-                      _equipment = null;
-                      _page = 1;
-                    });
-                    unawaited(_load());
-                  },
-                  child: Text(copy('Reset filters'),
-                      style: const TextStyle(fontSize: 12))),
-          ]),
-        ]));
+                        side: const BorderSide(color: FitnessTheme.line),
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 12)),
+                    icon: const Icon(CupertinoIcons.slider_horizontal_3,
+                        size: 15),
+                    label: Text(
+                        '${copy('Filters')}${filters == 0 ? '' : ' · $filters'}',
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+                ])),
+      ]),
+    );
   }
 
   Widget _card(WorkoutExerciseModel exercise) {
-    String copy(String text) => fitnessText(context, text);
     final added = _added.contains(exercise.id);
+    final adding = _adding.contains(exercise.id);
+    final label = added
+        ? 'Added'
+        : widget.onSelect != null
+            ? 'Select'
+            : widget.addToWorkout != null
+                ? 'Add exercise'
+                : 'Add to today';
     return PremiumSurface(
-        key: ValueKey('exercise-${exercise.id}'),
-        color: FitnessTheme.surface,
-        radius: 20,
-        padding: const EdgeInsets.all(14),
-        onTap: () => widget.onSelect != null
-            ? widget.onSelect!(exercise)
-            : _open(exercise),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          ExercisePoster(exercise: exercise, size: 82),
-          const SizedBox(width: 14),
-          Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Text(exercise.displayName,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 1.35,
-                        letterSpacing: -.2)),
-                const SizedBox(height: 6),
-                Text(exercise.targetLabel ?? copy(exercise.target),
-                    style: const TextStyle(
-                        fontSize: 12, color: FitnessTheme.muted, height: 1.4)),
-                const SizedBox(height: 8),
-                Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(exercise.equipmentLabel ?? copy(exercise.equipment),
-                          style: const TextStyle(
-                              fontSize: 11, color: FitnessTheme.muted)),
-                      TextButton.icon(
-                          style: TextButton.styleFrom(
-                              foregroundColor: FitnessTheme.silver,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              minimumSize: const Size(0, 44)),
-                          onPressed: added || _adding.contains(exercise.id)
-                              ? null
-                              : () => _add(exercise),
-                          icon: _adding.contains(exercise.id)
-                              ? const CupertinoActivityIndicator(radius: 8)
-                              : Icon(
-                                  added
-                                      ? CupertinoIcons.checkmark
-                                      : CupertinoIcons.plus,
-                                  size: 15),
-                          label: Text(
-                              copy(added
-                                  ? 'Added'
-                                  : widget.onSelect != null
-                                      ? 'Select'
-                                      : 'Add to today'),
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w500))),
-                    ]),
-              ])),
-        ]));
+      key: ValueKey('exercise-${exercise.id}'),
+      color: FitnessTheme.surface,
+      radius: 18,
+      padding: const EdgeInsets.fromLTRB(10, 12, 8, 12),
+      onTap: adding ? null : () => _open(exercise),
+      child: Row(children: [
+        ExercisePoster(exercise: exercise, size: 62),
+        const SizedBox(width: 12),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(exercise.displayName,
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w500, height: 1.3)),
+          const SizedBox(height: 5),
+          Text(exercise.targetLabel ?? fitnessText(context, exercise.target),
+              style: const TextStyle(fontSize: 11, color: FitnessTheme.silver)),
+          const SizedBox(height: 3),
+          Text(
+              exercise.equipmentLabel ??
+                  fitnessText(context, exercise.equipment),
+              style: const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
+        ])),
+        const SizedBox(width: 6),
+        IconButton(
+          key: ValueKey('add-exercise-${exercise.id}'),
+          tooltip: fitnessText(context, label),
+          onPressed: added || adding ? null : () => _add(exercise),
+          style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: .045),
+              foregroundColor: FitnessTheme.silver),
+          icon: adding
+              ? const CupertinoActivityIndicator(radius: 8)
+              : Icon(added ? CupertinoIcons.checkmark : CupertinoIcons.plus,
+                  size: 18),
+        ),
+      ]),
+    );
   }
 
   @override
@@ -483,6 +511,11 @@ context: context,
                   icon: const Icon(CupertinoIcons.plus, size: 16),
                   label: Text(copy('Custom exercise'),
                       style: const TextStyle(fontSize: 12)))
+            else if (widget.addToWorkout == null && widget.onSelect == null)
+              IconButton(
+                  tooltip: copy('Custom exercise'),
+                  onPressed: _custom,
+                  icon: const Icon(CupertinoIcons.plus, size: 19))
           ]),
       body: SafeArea(
           top: false,
@@ -544,7 +577,7 @@ context: context,
                                 sliver: SliverList.separated(
                                     itemCount: _exercises.length,
                                     separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 8),
                                     itemBuilder: (_, index) =>
                                         _card(_exercises[index]))),
                         ]))),

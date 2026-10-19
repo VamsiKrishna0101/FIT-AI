@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import '../theme/ds_motion.dart';
 import '../theme/fitness_theme.dart';
@@ -53,6 +54,35 @@ class AppPageRoute<T> extends CupertinoPageRoute<T> {
 }
 
 class OnboardingPageRoute<T> extends AppPageRoute<T> {
+  /// Release the Continue button once the next screen has entered.
+  /// Navigator.push itself completes only when the user comes back.
+  Future<void> open(BuildContext context) async {
+    final entered = Completer<void>();
+    final result = Navigator.of(context).push<T>(this);
+    final motion = controller;
+
+    void finish() {
+      if (!entered.isCompleted) entered.complete();
+    }
+
+    void statusChanged(AnimationStatus status) {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        finish();
+      }
+    }
+
+    motion?.addStatusListener(statusChanged);
+    if (motion == null || motion.isCompleted) finish();
+    unawaited(result.then((_) => finish()));
+
+    try {
+      await entered.future;
+    } finally {
+      motion?.removeStatusListener(statusChanged);
+    }
+  }
+
   OnboardingPageRoute(
       {required super.page,
       super.duration = DSMotion.pageTransition,

@@ -6,20 +6,71 @@ import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 import 'progress_chart.dart';
 import 'progress_surface.dart';
+import 'progress_weekly_bars.dart';
+
+class ProgressTrainingSummary extends StatelessWidget {
+  final ProgressJson summary;
+  final String? rangeLabel;
+  const ProgressTrainingSummary(
+      {super.key, required this.summary, this.rangeLabel});
+
+  @override
+  Widget build(BuildContext context) => ProgressSurface(
+      accent: progressBlue,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(fitnessText(context, 'Your training'),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        if (rangeLabel != null) ...[
+          const SizedBox(height: 5),
+          Text(rangeLabel!,
+              style: const TextStyle(fontSize: 12, color: progressMuted)),
+        ],
+        const SizedBox(height: 16),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          for (final item in [
+            ('workouts', 'Workouts', progressSilver),
+            ('sets', 'Logged sets', progressSilver),
+            ('records', 'New records', progressAmber),
+          ])
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(
+                      progressValue(
+                          context, progressNumber(summary[item.$1]) ?? 0,
+                          digits: 0),
+                      style: TextStyle(
+                          fontSize: 34,
+                          letterSpacing: -1,
+                          fontWeight: FontWeight.w600,
+                          color: item.$1 == 'records' && summary['records'] == 0
+                              ? progressSilver
+                              : item.$3)),
+                  const SizedBox(height: 4),
+                  Text(fitnessText(context, item.$2),
+                      style:
+                          const TextStyle(fontSize: 12, color: progressMuted)),
+                ])),
+        ]),
+        if (summary['setsChange'] is num) ...[
+          const SizedBox(height: 14),
+          Text(
+              '${fitnessText(context, 'Logged sets')} · '
+              '${(summary['setsChange'] as num) > 0 ? '+' : ''}'
+              '${progressValue(context, summary['setsChange'] as num)}% · '
+              '${fitnessText(context, 'Previous period')}',
+              style: const TextStyle(fontSize: 12, color: progressMuted)),
+        ],
+      ]));
+}
 
 class ProgressActivity extends StatefulWidget {
   final List<ProgressJson> weeks;
   final List<ProgressJson> activity;
   final String? endDate;
-  final ProgressJson? summary;
-  final VoidCallback? onHistory;
   const ProgressActivity(
-      {super.key,
-      required this.weeks,
-      required this.activity,
-      this.endDate,
-      this.summary,
-      this.onHistory});
+      {super.key, required this.weeks, required this.activity, this.endDate});
   @override
   State<ProgressActivity> createState() => _ProgressActivityState();
 }
@@ -35,71 +86,24 @@ class _ProgressActivityState extends State<ProgressActivity> {
     final activity = {
       for (final row in widget.activity) row['date'] as String: row
     };
+    final activeWeeks =
+        widget.weeks.where((row) => (row[_metric] as num? ?? 0) > 0).length;
     return ProgressSurface(
         accent: progressBlue,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (widget.summary != null) ...[
-            Row(children: [
-              Expanded(
-                  child: Text(fitnessText(context, 'Consistency'),
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600))),
-              if (widget.onHistory != null)
-                TextButton(
-                    onPressed: widget.onHistory,
-                    style: TextButton.styleFrom(
-                        foregroundColor: progressMuted,
-                        padding: EdgeInsets.zero),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text(fitnessText(context, 'View all'),
-                          style: const TextStyle(fontSize: 11)),
-                      const Icon(Icons.chevron_right, size: 16),
-                    ])),
-            ]),
-            const SizedBox(height: 8),
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              for (final item in [
-                ('workouts', 'Workouts'),
-                ('sets', 'Logged sets'),
-                ('records', 'New records')
-              ])
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text('${widget.summary![item.$1] ?? 0}',
-                          style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -1,
-                              color: item.$1 == 'records'
-                                  ? progressAmber
-                                  : progressSilver)),
-                      const SizedBox(height: 4),
-                      Text(fitnessText(context, item.$2),
-                          style: const TextStyle(
-                              fontSize: 10, color: progressMuted)),
-                    ])),
-            ]),
-            if (widget.summary!['setsChange'] != null)
-              Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                      '${fitnessText(context, 'Logged sets')} · ${(widget.summary!['setsChange'] as num) > 0 ? '+' : ''}${progressValue(context, progressNumber(widget.summary!['setsChange']))}% · ${fitnessText(context, 'Previous period')}',
-                      style:
-                          const TextStyle(fontSize: 10, color: progressMuted))),
-            const SizedBox(height: 20),
-            const Divider(color: Color(0x1AFFFFFF), height: 1),
-          ],
           ProgressChoices(
               choices: const {'workouts': 'Workouts', 'sets': 'Logged sets'},
               color: progressBlue,
               selected: _metric,
               onChanged: (value) => setState(() => _metric = value)),
           const SizedBox(height: 8),
-          if (widget.weeks.every((row) => (row[_metric] as num? ?? 0) == 0))
+          if (activeWeeks == 0)
             const ProgressEmpty(
                 'Your training history starts with your first logged workout.')
+          else if (widget.weeks.length <= 6)
+            ProgressWeeklyBars(
+                points: ProgressPoint.parse(widget.weeks, _metric),
+                metric: _metric == 'sets' ? 'Logged sets' : 'Workouts')
           else
             ProgressChart(
                 points: ProgressPoint.parse(widget.weeks, _metric),
@@ -107,16 +111,17 @@ class _ProgressActivityState extends State<ProgressActivity> {
                 summaryLabel: 'Weekly total',
                 compactHeader: true,
                 color: progressBlue,
-                height: 120),
-          const SizedBox(height: 12),
-          if (widget.weeks.any((row) => row['partial'] == true))
+                height: 88),
+          if (activeWeeks > 0 &&
+              widget.weeks.any((row) => row['partial'] == true))
             Text(
                 fitnessText(
                     context, 'Edge weeks include only the selected dates.'),
-                style: const TextStyle(color: progressMuted, fontSize: 10)),
+                style: const TextStyle(color: progressMuted, fontSize: 12)),
           const SizedBox(height: 8),
           const Divider(color: Color(0x1AFFFFFF), height: 1),
           ExpansionTile(
+              key: const PageStorageKey('progress-recent-activity'),
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(bottom: 6),
               shape: const Border(),
@@ -124,7 +129,7 @@ class _ProgressActivityState extends State<ProgressActivity> {
               dense: true,
               title: Text(fitnessText(context, 'Recent activity'),
                   style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w500)),
+                      fontSize: 14, fontWeight: FontWeight.w500)),
               children: [
                 Row(
                     children: List.generate(
@@ -136,7 +141,7 @@ class _ProgressActivityState extends State<ProgressActivity> {
                                         .format(start.add(Duration(days: i))),
                                     style: const TextStyle(
                                         color: progressMuted,
-                                        fontSize: 10)))))),
+                                        fontSize: 12)))))),
                 const SizedBox(height: 8),
                 for (var week = 0; week < 5; week++)
                   Padding(
@@ -210,7 +215,7 @@ class ProgressMuscleBars extends StatelessWidget {
                           Expanded(
                               flex: 4,
                               child: Text(progressMuscleLabel(context, row),
-                                  style: const TextStyle(fontSize: 12),
+                                  style: const TextStyle(fontSize: 13),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis)),
                           const SizedBox(width: 12),
@@ -239,7 +244,7 @@ class ProgressMuscleBars extends StatelessWidget {
                           Text('${row['directSets'] ?? 0}',
                               style: const TextStyle(
                                   color: progressSilver,
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500)),
                         ])))))
             .toList());

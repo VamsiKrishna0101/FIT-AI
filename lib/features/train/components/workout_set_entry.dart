@@ -51,7 +51,8 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     _reps.text = widget.log?['reps']?.toString() ??
         widget.suggestedReps?.toString() ??
         '';
-    final weight = widget.log?['weight'] ?? widget.suggestedWeight;
+    // A target is guidance, never a recorded load.
+    final weight = widget.log?['weight'];
     _weight.text = weight == null ? '' : '$weight';
     _effort = (widget.log?['rpe'] as num?)?.toDouble();
     _restore();
@@ -66,7 +67,13 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     if (draft != null && !_touched && !_confirmed) {
       _touched = true;
       _reps.text = draft['reps'] as String? ?? '';
-      _weight.text = draft['weight'] as String? ?? '';
+      final draftWeight = draft['weight'] as String? ?? '';
+      // Older drafts could contain a target that the user never entered.
+      final legacyTarget = draft['version'] != 2 &&
+          widget.log?['weight'] == null &&
+          double.tryParse(draftWeight.replaceAll(',', '.')) ==
+              widget.suggestedWeight;
+      _weight.text = legacyTarget ? '' : draftWeight;
       _effort = (draft['rpe'] as num?)?.toDouble() ?? _effort;
     }
     setState(() {});
@@ -83,8 +90,12 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   void _persist() {
     final key = _draftKey;
     if (key != null) {
-      unawaited(LocalCache.shared.saveJson(
-          key, {'reps': _reps.text, 'weight': _weight.text, 'rpe': _effort}));
+      unawaited(LocalCache.shared.saveJson(key, {
+        'version': 2,
+        'reps': _reps.text,
+        'weight': _weight.text,
+        'rpe': _effort
+      }));
     }
   }
 

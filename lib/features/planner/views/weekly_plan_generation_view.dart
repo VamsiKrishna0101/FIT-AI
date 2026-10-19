@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import '../../../core/theme/ds_colors.dart';
 import 'package:intl/intl.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/localization/fitness_text.dart';
@@ -163,11 +165,24 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
     super.dispose();
   }
 
+  String get _failure => switch (_run['errorCode']) {
+        'STALE_PLAN' =>
+          'Your history or preferences changed. Generate an updated plan.',
+        'MODEL_RATE_LIMIT' => 'Planning is busy right now. Retry shortly.',
+        'WORKFLOW_UPDATED' => 'The planner was updated. Generate a new plan.',
+        'CATALOG_CHANGED' =>
+          'The exercise or food library changed. Generate a new plan.',
+        'PLAN_COOLDOWN' =>
+          'Your weekly plan is already saved. Return to your planner.',
+        _ => 'We couldn’t finish this plan. Try again.',
+      };
+
   @override
   Widget build(BuildContext context) {
     final week = DateTime.tryParse(_run['weekStart'] as String? ?? '') ??
         widget.weekStart;
     final lastDay = week.add(const Duration(days: 6));
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final headline = _complete
         ? 'Your week is ready'
         : _failed
@@ -176,145 +191,170 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
 
     return FitnessTheme(
         child: Scaffold(
-      backgroundColor: const Color(0xFF0B1110),
+      backgroundColor: DSColors.bg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: DSColors.bg,
         surfaceTintColor: Colors.transparent,
-        title: const FitnessText('Weekly plan', style: TextStyle(fontSize: 15)),
+        title: const FitnessText('Weekly plan',
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: DSColors.muted)),
         centerTitle: true,
       ),
       body: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const FitnessText('MADE FOR YOU',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: planGlow,
-                          fontSize: 10,
-                          letterSpacing: 2.5,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 12),
-                  FitnessText(headline,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 28,
-                          letterSpacing: -.8,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 9),
-                  Text(
-                      '${DateFormat.MMMd().format(week)} – ${DateFormat.MMMd().format(lastDay)}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: FitnessTheme.muted, fontSize: 13)),
-                  const SizedBox(height: 16),
-                  Center(
-                      child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 340),
-                    child: PlanParticleOrb(
-                        percent: _percent,
-                        animating: _foreground &&
-                            !_failed &&
-                            !_complete &&
-                            !_unavailable),
-                  )),
-                  const SizedBox(height: 8),
-                  Semantics(
-                      liveRegion: true,
-                      child: FitnessText(
-                        _complete
-                            ? 'Workouts and food, ready to review'
-                            : _failed
-                                ? 'We couldn’t finish this plan. Try again.'
-                                : _status,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 14, height: 1.5),
-                      )),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .035),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: .075)),
-                    ),
-                    child: Column(children: [
-                      _step('Review history', 'history'),
-                      _step('Build workouts', 'workouts'),
-                      _step('Plan food', 'nutrition'),
-                      _step('Check and save', 'saved'),
-                    ]),
-                  ),
-                  if (_connectionError != null) ...[
-                    const SizedBox(height: 16),
-                    Text(_connectionError!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            color: FitnessTheme.muted,
-                            fontSize: 12,
-                            height: 1.5)),
-                  ],
-                  const SizedBox(height: 24),
-                  if (_complete)
-                    FilledButton(
+        top: false,
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(
+                '${DateFormat.MMMd(locale).format(week)} – ${DateFormat.MMMd(locale).format(lastDay)}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: DSColors.muted, fontSize: 12)),
+            const SizedBox(height: 12),
+            FitnessText(headline,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 24,
+                    letterSpacing: -.7,
+                    fontWeight: FontWeight.w500)),
+            const SizedBox(height: 8),
+            Center(
+                child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: PlanParticleOrb(
+                  percent: _percent,
+                  animating:
+                      _foreground && !_failed && !_complete && !_unavailable),
+            )),
+            const SizedBox(height: 4),
+            Semantics(
+              liveRegion: true,
+              child: FitnessText(
+                _unavailable
+                    ? 'This plan is unavailable. Return to your planner.'
+                    : _complete
+                        ? 'Workouts and food, ready to review'
+                        : _failed
+                            ? _failure
+                            : _status,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 13, height: 1.5, color: DSColors.silver),
+              ),
+            ),
+            const SizedBox(height: 22),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                  color: DSColors.bgCard,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: DSColors.border, width: .7)),
+              child: Column(children: [
+                _step('Review history', 'history', 1),
+                const Divider(height: 1, color: DSColors.border),
+                _step('Build workouts', 'workouts', 2),
+                const Divider(height: 1, color: DSColors.border),
+                _step('Plan food', 'nutrition', 3),
+                const Divider(height: 1, color: DSColors.border),
+                _step('Check and save', 'saved', 4),
+              ]),
+            ),
+            if (_connectionError != null && !_unavailable) ...[
+              const SizedBox(height: 16),
+              FitnessText(_connectionError!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: DSColors.muted, fontSize: 12, height: 1.5)),
+            ],
+          ]),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 10, 22, 12),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_complete)
+                  FilledButton(
                       onPressed: () => Navigator.of(context).pop(_run),
                       style: _buttonStyle,
-                      child: const FitnessText('View weekly plan'),
-                    )
-                  else if (_failed && _run['canRetry'] != false)
-                    FilledButton(
+                      child: const FitnessText('View weekly plan'))
+                else if (_failed && _run['canRetry'] != false)
+                  FilledButton(
                       onPressed: _retrying ? null : _retry,
                       style: _buttonStyle,
-                      child: FitnessText(
-                          _retrying ? 'Retrying…' : 'Retry planning'),
-                    ),
-                  if (!_complete)
-                    TextButton(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_retrying) ...[
+                              const CupertinoActivityIndicator(radius: 8),
+                              const SizedBox(width: 10),
+                            ],
+                            FitnessText(
+                                _retrying ? 'Retrying…' : 'Retry planning'),
+                          ])),
+                if (!_complete)
+                  TextButton(
                       onPressed: () => Navigator.of(context).pop(_run),
                       child: FitnessText(
                           _failed || _unavailable
                               ? 'Back to planner'
                               : 'Continue in background',
-                          style: const TextStyle(color: FitnessTheme.silver)),
-                    ),
-                  if (!_complete && !_failed && !_unavailable)
-                    const FitnessText(
-                        'You can leave. Your plan will be saved when it’s ready.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: FitnessTheme.muted,
-                            fontSize: 11,
-                            height: 1.5)),
-                ]),
-          )),
+                          style: const TextStyle(
+                              color: DSColors.silver, fontSize: 13))),
+                if (!_complete && !_failed && !_unavailable)
+                  const FitnessText(
+                      'You can leave. Your plan will be saved when it’s ready.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: DSColors.muted, fontSize: 11, height: 1.5)),
+              ]),
+        ),
+      ),
     ));
   }
 
   ButtonStyle get _buttonStyle => FilledButton.styleFrom(
-        backgroundColor: FitnessTheme.silver,
-        foregroundColor: FitnessTheme.canvas,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: DSColors.silver,
+        foregroundColor: DSColors.bg,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       );
 
-  Widget _step(String title, String key) {
+  Widget _step(String title, String key, int number) {
+    const keys = ['history', 'workouts', 'nutrition', 'saved'];
     final done = _complete || _steps.contains(key);
+    final active = !done && keys.take(number - 1).every(_steps.contains);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       child: Row(children: [
-        Icon(done ? Icons.check_circle_rounded : Icons.circle_outlined,
-            color: done ? planGlow : FitnessTheme.muted, size: 18),
+        SizedBox(
+          width: 22,
+          height: 22,
+          child: done
+              ? const Icon(CupertinoIcons.checkmark_circle_fill,
+                  color: DSColors.silver, size: 18)
+              : active && !_failed && !_unavailable && _foreground
+                  ? CupertinoActivityIndicator(
+                      radius: 8,
+                      animating: !MediaQuery.disableAnimationsOf(context))
+                  : Center(
+                      child: Text('$number',
+                          style: const TextStyle(
+                              color: DSColors.muted, fontSize: 11))),
+        ),
         const SizedBox(width: 12),
         Expanded(
             child: FitnessText(title,
                 style: TextStyle(
                     fontSize: 13,
-                    color: done ? FitnessTheme.silver : FitnessTheme.muted))),
+                    color: done || active ? DSColors.silver : DSColors.muted))),
       ]),
     );
   }

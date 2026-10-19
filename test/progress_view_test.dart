@@ -10,6 +10,9 @@ import 'package:fitai_mobile/core/theme/fitness_theme.dart';
 import 'package:fitai_mobile/features/progress/components/body_progress_content.dart';
 import 'package:fitai_mobile/features/progress/components/exercise_progress_content.dart';
 import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
+import 'package:fitai_mobile/features/progress/components/progress_activity.dart';
+import 'package:fitai_mobile/features/progress/components/progress_surface.dart';
+import 'package:fitai_mobile/features/progress/components/progress_weekly_bars.dart';
 import 'package:fitai_mobile/features/progress/components/progress_date_filter.dart';
 import 'package:fitai_mobile/features/progress/components/wellness_progress_content.dart';
 import 'package:fitai_mobile/features/progress/models/progress_models.dart';
@@ -54,6 +57,81 @@ void main() {
     }.entries) {
       await (FontLoader(font.key)..addFont(rootBundle.load(font.value))).load();
     }
+  });
+
+  testWidgets(
+      'Sparse training keeps exercises visible and offers compact setup',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const data = ProgressOverview({
+      'range': {'start': '2026-09-21', 'end': '2026-10-18'},
+      'summary': {'workouts': 2, 'sets': 45, 'records': 0},
+      'weeks': [
+        {'date': '2026-10-05', 'workouts': 0, 'sets': 0},
+        {'date': '2026-10-12', 'workouts': 2, 'sets': 45},
+      ],
+      'exercises': [
+        {
+          'id': 'bench',
+          'name': 'Bench press',
+          'latest': {'weight': 40, 'reps': 8},
+          'sparkline': [
+            {'date': '2026-10-14', 'value': 40}
+          ]
+        },
+      ],
+    });
+    await tester.pumpWidget(page(const ProgressOverviewView(initial: data)));
+    await tester.pumpAndSettle();
+    expect(tester.getBottomLeft(find.text('Bench press')).dy, lessThan(852));
+    expect(find.text('More workouts will reveal your trend.'), findsOneWidget);
+    expect(find.byType(ProgressChart), findsNothing);
+    expect(find.byType(ProgressWeeklyBars), findsOneWidget);
+    final activity = find.descendant(
+        of: find.byType(ProgressActivity),
+        matching: find.byType(ExpansionTile));
+    expect(tester.widget<ExpansionTile>(activity).initiallyExpanded, isFalse);
+    await capture(tester, 'progress-sparse-redesign');
+    await tester.scrollUntilVisible(find.text('Log your weight'), 200,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.byType(ProgressSetupRow), findsWidgets);
+    expect(find.text('—'), findsNothing);
+    await capture(tester, 'progress-setup-redesign');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Weekly bars keep zeroes and dates visible when changing metrics',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(page(
+        const Scaffold(
+            body: SingleChildScrollView(
+                child: Padding(
+                    padding: EdgeInsets.all(18),
+                    child: ProgressActivity(weeks: [
+                      {'date': '2026-09-21', 'workouts': 0, 'sets': 0},
+                      {'date': '2026-09-28', 'workouts': 0, 'sets': 0},
+                      {'date': '2026-10-05', 'workouts': 1, 'sets': 20},
+                      {'date': '2026-10-12', 'workouts': 2, 'sets': 45},
+                    ], activity: [], endDate: '2026-10-18')))),
+        scale: 1.3));
+    await tester.pumpAndSettle();
+    expect(find.text('0'), findsNWidgets(2));
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('10/12'), findsOneWidget);
+    await tester.tap(find.text('Logged sets'));
+    await tester.pumpAndSettle();
+    expect(find.text('45'), findsOneWidget);
+    expect(find.text('20'), findsOneWidget);
+    expect(find.text('0'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+    await capture(tester, 'progress-weekly-bars-redesign');
   });
 
   test('Chart data keeps valid zeroes and ignores missing values and dates',
@@ -185,7 +263,8 @@ void main() {
     await tester.pumpWidget(page(ProgressOverviewView(initial: data)));
     await capture(tester, 'progress-real-preview');
     final before = tester.getTopLeft(find.text('Progress'));
-    await tester.drag(find.byType(ListView).first, const Offset(0, -550));
+    await tester.drag(
+        find.byType(CustomScrollView).first, const Offset(0, -550));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.text('Progress')), before);
     expect(find.text('Sample data'), findsNothing);
@@ -234,7 +313,8 @@ void main() {
         scale: 1.3));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -1400));
+    await tester.drag(
+        find.byType(CustomScrollView).first, const Offset(0, -1400));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(page(
@@ -268,8 +348,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-      'Populated overview has no real or preview data selector',
+  testWidgets('Populated overview has no real or preview data selector',
       (tester) async {
     final file = File('build/progress-seeded-preview.json');
     if (!file.existsSync()) return;
@@ -287,7 +366,8 @@ void main() {
     expect(find.text('Real data'), findsNothing);
     expect(find.text('${json['summary']['sets']}'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -720));
+    await tester.drag(
+        find.byType(CustomScrollView).first, const Offset(0, -720));
     await tester.pumpAndSettle();
     await capture(tester, 'progress-dashboard-details-preview');
     expect(tester.takeException(), isNull);

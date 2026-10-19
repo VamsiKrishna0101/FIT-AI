@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
@@ -33,6 +34,8 @@ class TodayDashboard extends StatelessWidget {
   final HomeData? data;
   final List<RecoveryPoint> recovery;
   final TrainingMapData? trainingMap;
+  final ValueListenable<List<RecoveryPoint>>? recoveryUpdates;
+  final ValueListenable<TrainingMapData?>? trainingUpdates;
   final ScrollController? scrollController;
   final bool loading;
   final bool loadFailed;
@@ -54,6 +57,8 @@ class TodayDashboard extends StatelessWidget {
     required this.data,
     this.recovery = const [],
     this.trainingMap,
+    this.recoveryUpdates,
+    this.trainingUpdates,
     this.scrollController,
     this.loading = false,
     this.loadFailed = false,
@@ -128,35 +133,48 @@ class TodayDashboard extends StatelessWidget {
           noWearable: noWearable);
     }
 
-    final history = recovery
-        .where((p) =>
-            !DateUtils.dateOnly(p.date).isAfter(DateUtils.dateOnly(date)) &&
-            (p.recoveryScore != null ||
-                p.hrv != null ||
-                p.sleepHours != null ||
-                p.restingHr != null))
-        .toList();
-    // The latest dated reading can still be charted while history is loading.
-    final readingDate = r?.date == null ? null : DateTime.tryParse(r!.date!);
-    if (r != null &&
-        readingDate != null &&
-        !history.any((p) => DateUtils.isSameDay(p.date, readingDate))) {
-      history.add(RecoveryPoint(
-          date: readingDate,
-          recoveryScore:
-              ['check_in_estimate', 'mixed_estimate'].contains(r.source)
-                  ? null
-                  : _readinessScore(r),
-          hrv: r.hrvMs > 0 ? r.hrvMs.toDouble() : null,
-          hrvMethod: health?.hrvMethod ??
-              (r.source == 'health_connect'
-                  ? 'RMSSD'
-                  : r.source == 'healthkit'
-                      ? 'SDNN'
-                      : null),
-          restingHr: r.restingHrBpm > 0 ? r.restingHrBpm : null,
-          sleepHours: r.sleepMinutes > 0 ? r.sleepMinutes / 60 : null));
+    Widget buildRecovery(List<RecoveryPoint> points) {
+      final history = points
+          .where((p) =>
+              !DateUtils.dateOnly(p.date).isAfter(DateUtils.dateOnly(date)) &&
+              (p.recoveryScore != null ||
+                  p.hrv != null ||
+                  p.sleepHours != null ||
+                  p.restingHr != null))
+          .toList();
+      // The latest dated reading can still be charted while history is loading.
+      final readingDate = r?.date == null ? null : DateTime.tryParse(r!.date!);
+      if (r != null &&
+          readingDate != null &&
+          !history.any((p) => DateUtils.isSameDay(p.date, readingDate))) {
+        history.add(RecoveryPoint(
+            date: readingDate,
+            recoveryScore:
+                ['check_in_estimate', 'mixed_estimate'].contains(r.source)
+                    ? null
+                    : _readinessScore(r),
+            hrv: r.hrvMs > 0 ? r.hrvMs.toDouble() : null,
+            hrvMethod: health?.hrvMethod ??
+                (r.source == 'health_connect'
+                    ? 'RMSSD'
+                    : r.source == 'healthkit'
+                        ? 'SDNN'
+                        : null),
+            restingHr: r.restingHrBpm > 0 ? r.restingHrBpm : null,
+            sleepHours: r.sleepMinutes > 0 ? r.sleepMinutes / 60 : null));
+      }
+      if (history.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: _RecoveryChart(
+            key: ValueKey('recovery-${DateFormat('yyyy-MM-dd').format(date)}'),
+            history: history,
+            today: date,
+            locale: locale,
+            copy: copy),
+      );
     }
+
     return Column(children: [
       Padding(
         key: const ValueKey('today-fixed-header'),
@@ -230,7 +248,7 @@ class TodayDashboard extends StatelessWidget {
                       locale: locale,
                       copy: copy,
                       onDateSelected: onDateSelected),
-                  SizedBox(height: history.isNotEmpty ? 12 : 24),
+                  const SizedBox(height: 24),
                 ],
                 if (loading)
                   _TodaySurface(
@@ -247,16 +265,10 @@ class TodayDashboard extends StatelessWidget {
                             minHeight: 2),
                       ]))
                 else if (!loadFailed) ...[
-                  if (history.isNotEmpty) ...[
-                    _RecoveryChart(
-                        key: ValueKey(
-                            'recovery-${DateFormat('yyyy-MM-dd').format(date)}'),
-                        history: history,
-                        today: date,
-                        locale: locale,
-                        copy: copy),
-                    const SizedBox(height: 24),
-                  ],
+                  ValueListenableBuilder<List<RecoveryPoint>>(
+                      valueListenable:
+                          recoveryUpdates ?? AlwaysStoppedAnimation(recovery),
+                      builder: (context, points, _) => buildRecovery(points)),
                   _Section(title: copy.text('readiness'), onTap: openReadiness),
                   const SizedBox(height: 12),
                   _ReadinessCard(
@@ -354,47 +366,58 @@ class TodayDashboard extends StatelessWidget {
                       copy: copy,
                       onTap: onNutrition),
                   const SizedBox(height: 24),
-                  _Section(
-                      title: copy.text(trainingMap == null
-                          ? 'bodyScan'
-                          : 'todayMusclesHeading'),
-                      trailing: dateLabel,
-                      onTap: onBody),
-                  const SizedBox(height: 12),
-                  _TodaySurface(
-                      onTap: onBody,
-                      child: Row(children: [
-                        TodayTrainingPreview(data: trainingMap),
-                        const SizedBox(width: 14),
-                        Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                              Text(
-                                  copy.text(trainingMap == null
-                                      ? 'todayBodyTitle'
-                                      : 'todayTrainingMapTitle'),
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500)),
-                              const SizedBox(height: 4),
-                              Text(
-                                  copy.text(trainingMap == null
-                                      ? 'todayBodySubtitle'
-                                      : trainingMap!.regions
-                                              .any((r) => r.completedSets > 0)
-                                          ? 'todayLoggedMuscles'
-                                          : 'todayNoLoggedMuscles'),
-                                  style: const TextStyle(
-                                      color: _muted,
-                                      fontSize: 12,
-                                      height: 1.4)),
-                            ])),
-                        const SizedBox(width: 8),
-                        const Icon(CupertinoIcons.chevron_right,
-                            color: _muted, size: 13),
-                      ])),
+                  ValueListenableBuilder<TrainingMapData?>(
+                      valueListenable: trainingUpdates ??
+                          AlwaysStoppedAnimation(trainingMap),
+                      builder: (context, trainingMap, _) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _Section(
+                                  title: copy.text(trainingMap == null
+                                      ? 'bodyScan'
+                                      : 'todayMusclesHeading'),
+                                  trailing: dateLabel,
+                                  onTap: onBody),
+                              const SizedBox(height: 12),
+                              _TodaySurface(
+                                  onTap: onBody,
+                                  child: Row(children: [
+                                    TodayTrainingPreview(data: trainingMap),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                          Text(
+                                              copy.text(trainingMap == null
+                                                  ? 'todayBodyTitle'
+                                                  : 'todayTrainingMapTitle'),
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w500)),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                              copy.text(trainingMap == null
+                                                  ? 'todayBodySubtitle'
+                                                  : trainingMap.regions.any(
+                                                          (r) =>
+                                                              r.completedSets >
+                                                              0)
+                                                      ? 'todayLoggedMuscles'
+                                                      : 'todayNoLoggedMuscles'),
+                                              style: const TextStyle(
+                                                  color: _muted,
+                                                  fontSize: 12,
+                                                  height: 1.4)),
+                                        ])),
+                                    const SizedBox(width: 8),
+                                    const Icon(CupertinoIcons.chevron_right,
+                                        color: _muted, size: 13),
+                                  ])),
+                            ],
+                          )),
                 ],
               ]),
             )

@@ -351,17 +351,41 @@ class TrainingRepository {
         return Map<String, dynamic>.from(response.data['data'] as Map);
       });
 
-  Future<void> setRest(String date, int seconds) async {
+  final _restWrites = <String, Future<void>>{};
+
+  Future<void> saveRest(String date, Map<String, dynamic>? data) async {
+    // Capture the account key before queuing writes from rapid timer actions.
     final key = await CacheScope.userKey('training_rest_$date');
-    await LocalCache.shared.saveJson(key, {
-      'end':
-          DateTime.now().add(Duration(seconds: seconds)).millisecondsSinceEpoch
-    });
+    final snapshot = data == null ? null : Map<String, dynamic>.from(data);
+    final pending = _restWrites[key] ?? Future<void>.value();
+    final write = pending.then((_) => snapshot == null
+        ? LocalCache.shared.remove(key)
+        : LocalCache.shared.saveJson(key, snapshot));
+    final settled = write.catchError((Object _) {});
+    _restWrites[key] = settled;
+    try {
+      await write;
+    } finally {
+      if (identical(_restWrites[key], settled)) _restWrites.remove(key);
+    }
   }
 
+  Future<Map<String, dynamic>?> restData(String date) async => LocalCache.shared
+      .getJson(await CacheScope.userKey('training_rest_$date'));
+
+  Future<void> setRest(String date, int seconds) => saveRest(
+      date,
+      seconds <= 0
+          ? null
+          : {
+              'end': DateTime.now()
+                  .add(Duration(seconds: seconds))
+                  .millisecondsSinceEpoch,
+              'duration': seconds,
+            });
+
   Future<DateTime?> restEnds(String date) async {
-    final value = await LocalCache.shared
-        .getJson(await CacheScope.userKey('training_rest_$date'));
+    final value = await restData(date);
     return value?['end'] is num
         ? DateTime.fromMillisecondsSinceEpoch((value!['end'] as num).toInt())
         : null;

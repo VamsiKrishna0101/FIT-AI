@@ -96,6 +96,7 @@ class BodyAssessment {
   final String id, recordedDate, status, method, updatedAt, createdAt;
   final String? photoRetention;
   final bool visualCoachingConsent;
+  final bool synthetic;
   final String? summary, modelVersion;
   final String? focusStatus, focusBasis, gender;
   final Map<String, BodyMetric> metrics;
@@ -111,6 +112,13 @@ class BodyAssessment {
         method = j['method'] as String,
         updatedAt = j['updatedAt'] as String,
         createdAt = (j['createdAt'] ?? j['updatedAt']) as String,
+        synthetic = (j['quality'] as Map?)?['synthetic'] == true ||
+            RegExp(r'preview|two-month-history|sample-fixture',
+                    caseSensitive: false)
+                .hasMatch(j['analysisVersion'] as String? ?? '') ||
+            (j['metrics'] as Map).values.any((value) =>
+                RegExp(r'preview|sample|demo', caseSensitive: false)
+                    .hasMatch((value as Map)['source'] as String? ?? '')),
         photoRetention = (j['quality'] as Map?)?['photoRetention'] as String?,
         visualCoachingConsent =
             (j['quality'] as Map?)?['visualCoachingConsent'] == true,
@@ -149,6 +157,11 @@ class BodyAssessment {
       recordedDate.compareTo(other.recordedDate) < 0 ||
       (recordedDate == other.recordedDate &&
           DateTime.parse(createdAt).isBefore(DateTime.parse(other.createdAt)));
+
+  bool get hasPhotoAssessment =>
+      method == 'photo_review' ||
+      photos.isNotEmpty ||
+      (physiqueReport?['photosUsed'] as num? ?? 0) > 0;
 }
 
 class BodyOverview {
@@ -162,10 +175,13 @@ class BodyOverview {
         syncedMeasurements = (j['syncedMeasurements'] as List? ?? [])
             .map((e) => SyncedBodyMeasurement.fromJson(
                 Map<String, dynamic>.from(e as Map)))
+            .where((entry) => ['GOOGLE_HEALTH_CONNECT', 'APPLE_HEALTHKIT']
+                .contains(entry.source))
             .toList(),
         records = (j['records'] as List)
             .map((e) =>
                 BodyAssessment.fromJson(Map<String, dynamic>.from(e as Map)))
+            .where((entry) => !entry.synthetic)
             .toList();
   BodyAssessment? get latest => records.firstOrNull;
   List<String> get focus =>

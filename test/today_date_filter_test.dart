@@ -12,17 +12,23 @@ import 'package:fitai_mobile/core/storage/secure_session_store.dart';
 import 'package:fitai_mobile/core/storage/local_cache.dart';
 import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
 import 'package:fitai_mobile/features/today/views/today_home_view.dart';
+import 'package:fitai_mobile/features/today/repositories/today_repository.dart';
 
 class DateAdapter implements HttpClientAdapter {
   final requests = <RequestOptions>[];
   String? heldDate;
   bool recordedReadiness = false;
+  bool holdOptional = false;
+  final optionalReady = Completer<void>();
   String? failedDate;
   final release = Completer<void>();
   @override
   Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? body,
       Future<void>? cancel) async {
     requests.add(options);
+    if (holdOptional && options.path != '/api/home') {
+      await optionalReady.future;
+    }
     final date = options.uri.queryParameters['date'] ?? CacheScope.todayKey();
     if (options.path == '/api/home' && date == failedDate) {
       return ResponseBody.fromString('{"error":"Unavailable"}', 503, headers: {
@@ -143,7 +149,7 @@ void main() {
     expect(dashboard.data!.sleepLog!['sleepMinutes'], second.day * 10);
     expect(dashboard.data!.readiness!.date, CacheScope.todayKey(second));
     expect(dashboard.data!.readiness!.score, second.day / 10);
-    expect(dashboard.trainingMap!.date, CacheScope.todayKey(second));
+    expect(dashboard.trainingUpdates!.value!.date, CacheScope.todayKey(second));
     expect(
         adapter.requests
             .where((r) => r.path == '/api/heatmap/training')
@@ -206,6 +212,87 @@ void main() {
     expect(dashboard.data!.calendarDate, date);
     expect(dashboard.data!.readiness!.date, date);
     expect(dashboard.loadFailed, isFalse);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets(
+      'Today starts sections together and reuses fresh data on tab return',
+      (tester) async {
+    adapter.heldDate = CacheScope.todayKey();
+    final active = ValueNotifier(true);
+    addTearDown(active.dispose);
+    await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(),
+        home: ValueListenableBuilder<bool>(
+            valueListenable: active,
+            builder: (_, value, __) => TodayHomeView(
+                isActive: value, onSelectTab: (_) {}, onOpenProfile: () {}))));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(adapter.requests.any((r) => r.path == '/api/home'), isTrue);
+    expect(
+        adapter.requests.any((r) => r.path == '/api/history/recovery'), isTrue);
+    expect(
+        adapter.requests.any((r) => r.path == '/api/heatmap/training'), isTrue);
+    adapter.release.complete();
+    await tester.pumpAndSettle();
+    final before = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
+    expect(before.data, isNotNull);
+    expect(adapter.requests.where((r) => r.path == '/api/home').length, 1);
+    final requestCount = adapter.requests.length;
+    active.value = false;
+    await tester.pump();
+    active.value = true;
+    await tester.pumpAndSettle();
+    final after = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
+    expect(identical(after.data, before.data), isTrue);
+    expect(after.loading, isFalse);
+    expect(adapter.requests.length, requestCount);
+
+    // A save invalidates Home, so returning must fetch even inside the TTL.
+    TodayRepository.shared.invalidate();
+    active.value = false;
+    await tester.pump();
+    active.value = true;
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+    expect(adapter.requests.where((r) => r.path == '/api/home').length, 2);
+
+    // Explicit refresh still bypasses the cache and issues exactly one Home request.
+    await tester.runAsync(after.onRefresh);
+    await tester.pumpAndSettle();
+    expect(adapter.requests.where((r) => r.path == '/api/home').length, 3);
+    expect(
+        adapter.requests
+            .lastWhere((r) => r.path == '/api/home')
+            .uri
+            .queryParameters['refresh'],
+        'true');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Slow history and preview never block or rebuild the main cards',
+      (tester) async {
+    adapter.holdOptional = true;
+    await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(),
+        home: TodayHomeView(onSelectTab: (_) {}, onOpenProfile: () {})));
+    await tester.pumpAndSettle();
+    final before = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
+    expect(before.loading, isFalse);
+    expect(before.data!.calendarDate, CacheScope.todayKey());
+    expect(before.trainingUpdates!.value, isNull);
+    // Dio's transport futures run outside the widget test's frame clock.
+    await tester.runAsync(() async {
+      adapter.optionalReady.complete();
+      await Future<void>.delayed(Duration.zero);
+    });
+    await tester.pumpAndSettle();
+    final after = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
+    expect(identical(before, after), isTrue);
+    expect(after.trainingUpdates!.value!.date, CacheScope.todayKey());
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

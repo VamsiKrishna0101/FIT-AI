@@ -98,6 +98,17 @@ class SubscriptionService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<Map<String, dynamic>> loadPricing() async {
+    final owner = await SecureSessionStore.shared.userId;
+    if (owner == null) throw StateError('Sign in to see pricing.');
+    final response =
+        await api.get<Map<String, dynamic>>('/api/subscription/pricing');
+    if (owner != await SecureSessionStore.shared.userId) {
+      throw StateError('Your session changed. Please try again.');
+    }
+    return Map<String, dynamic>.from(response.data!['data']);
+  }
+
   Future<void> startTrial() => _run(() async {
         final owner = await SecureSessionStore.shared.userId;
         final response = await api

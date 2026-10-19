@@ -1,3 +1,5 @@
+import 'package:fitai_mobile/features/planner/views/weekly_plan_card.dart';
+import 'package:fitai_mobile/core/theme/fitness_accents.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:io';
 import 'dart:async';
@@ -19,6 +21,7 @@ import 'package:fitai_mobile/features/body_scan/views/body_photo_review_view.dar
 import 'package:fitai_mobile/features/body_scan/views/body_estimate_view.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/body_focus_panel.dart';
 import 'package:fitai_mobile/features/body_scan/views/body_comparison_view.dart';
+import 'package:fitai_mobile/features/body_scan/views/body_history_view.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_dashboard.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
@@ -94,6 +97,10 @@ final _comparison = BodyComparison.fromJson({
 class _Repository extends BodyAssessmentRepository {
   int loads = 0;
   int comparisons = 0;
+  @override
+  Future<Map<String, dynamic>> history(
+          {String? from, String? to, int page = 1}) async =>
+      {'records': [], 'total': 0, 'page': page, 'pageSize': 12};
   @override
   Future<TrainingMapData> trainingMap(
           {DateTime? date, bool daily = false}) async =>
@@ -193,6 +200,9 @@ void main() {
         .pumpWidget(_app(BodyView(onTrain: () {}, repository: repository)));
     await tester.pumpAndSettle();
     expect(find.text('Training'), findsOneWidget);
+    expect(find.byType(WeeklyPlanCard), findsNothing,
+        reason: 'Body Training keeps the muscle map without a planner card');
+    await _snapshot(tester, 'body-training-calendar-preview');
     await tester.tap(find.text('Physique'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 120));
@@ -209,20 +219,18 @@ void main() {
     expect(repository.loads, 1);
     expect(repository.comparisons, 0,
         reason: 'Opening Body never compares records automatically');
-    await tester.scrollUntilVisible(find.text('Compare'), 160);
-    await tester.ensureVisible(find.text('Compare'));
+    await tester.scrollUntilVisible(find.text('Explore'), 160,
+        scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('Explore'));
     await tester.pumpAndSettle();
+    expect(repository.comparisons, 0);
+    expect(find.byType(BodyHistoryView), findsOneWidget);
     expect(
         tester
             .widget<OutlinedButton>(
                 find.widgetWithText(OutlinedButton, 'Compare'))
             .onPressed,
-        isNotNull);
-    await tester.ensureVisible(find.widgetWithText(OutlinedButton, 'Compare'));
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Compare'));
-    await tester.pumpAndSettle();
-    expect(repository.comparisons, 1);
-    expect(find.text('Compare entries'), findsOneWidget);
+        isNull);
     await tester.pageBack();
     await tester.pumpAndSettle();
     final header =
@@ -365,7 +373,7 @@ void main() {
     expect(find.text('Weight from onboarding'), findsOneWidget);
   });
   testWidgets(
-      'initial physique fits small screens and Compare remains disabled',
+      'initial physique fits small screens without reports or comparisons',
       (tester) async {
     await _size(tester, width: 320, height: 640);
     await tester.pumpWidget(_app(
@@ -377,19 +385,14 @@ void main() {
             onPhotos: () {},
             onManual: () {},
             onMeasurements: () {},
-            onHistory: () {},
-            onCompare: (_) {},
-            onRecord: (_) {}),
+            onHistory: () {}),
         scale: 1.3));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Compare'), 120,
+    await tester.scrollUntilVisible(find.text('Explore'), 120,
         scrollable: find.byType(Scrollable).first);
-    expect(
-        tester
-            .widget<OutlinedButton>(
-                find.widgetWithText(OutlinedButton, 'Compare'))
-            .onPressed,
-        isNull);
+    expect(find.text('Compare'), findsNothing);
+    expect(find.text('Your progress'), findsNothing);
+    expect(find.text('Report saved · Photos not kept'), findsNothing);
     expect(tester.takeException(), isNull);
     await _snapshot(tester, 'body-initial-small-preview');
   });
@@ -438,7 +441,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(BodyFocusPanel), findsOneWidget);
     expect(find.byType(ActionChip), findsNothing);
-    expect(find.text('Extra emphasis'), findsNothing);
+    expect(find.text('Extra emphasis'), findsOneWidget);
     expect(find.text('Body fat'), findsNothing);
     expect(find.text('Generate this week’s plan · Coming soon'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -550,9 +553,14 @@ void main() {
     await tester.pumpAndSettle();
     var map = tester
         .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
-    expect(map.colors['biceps'], FitnessTheme.silver);
-    expect(map.colors['forearms'], const Color(0xFF858A92));
-    expect(map.colors.values.where((v) => v == FitnessTheme.silver).length, 12);
+    expect(map.colors['chest'], FitnessAccents.gold);
+    expect(map.colors['biceps'], FitnessAccents.blue);
+    expect(map.colors['forearms'], FitnessAccents.blue);
+    expect(
+        map.colors.entries
+            .where((entry) => entry.value == FitnessAccents.blue)
+            .length,
+        12);
     expect(find.byType(ActionChip), findsNothing);
     expect(find.text('Your photo report'), findsOneWidget);
     expect(find.text('Training focus'), findsNothing);
@@ -570,7 +578,8 @@ void main() {
         findsNWidgets(2));
     expect(find.textContaining('Pose can change apparent proportions.'),
         findsOneWidget);
-    expect(find.text('Train biceps in your routine.'), findsNothing);
+    expect(find.text('Train biceps in your routine.'), findsOneWidget);
+    expect(find.text('Balanced routine'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
     await _snapshot(tester, 'body-photo-insights-small-preview');
   });
@@ -665,8 +674,7 @@ void main() {
     expect(updates, 1);
     expect(tester.takeException(), isNull);
   });
-  testWidgets(
-      'focus unavailable keeps the map neutral without inventing results',
+  testWidgets('missing guidance stays neutral without inventing scan results',
       (tester) async {
     await _size(tester, width: 320, height: 640);
     await tester.pumpWidget(_app(
@@ -682,10 +690,67 @@ void main() {
     await tester.pumpAndSettle();
     final map = tester
         .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
-    expect(map.colors.values.every((v) => v == const Color(0xFF858A92)), true);
+    expect(
+        map.colors.entries
+            .every((entry) => entry.value == FitnessAccents.untrained),
+        true);
+    expect(find.text('Training guidance, not a strength or symmetry score.'),
+        findsOneWidget);
+    expect(find.text('Not enough context'), findsOneWidget);
     expect(find.text('Body fat'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+      'context-only guidance is shown on Physique without claiming photo evidence',
+      (tester) async {
+    await _size(tester);
+    final overview = BodyOverview.fromJson({
+      'profile': {
+        'gender': 'FEMALE',
+        'focusMuscles': ['chest']
+      },
+      'records': [
+        {
+          ..._current,
+          'quality': {
+            'bodyRegions': [
+              {
+                'region': 'chest',
+                'status': 'focus',
+                'reason': 'Chest matches your chosen goal.',
+                'basis': 'profile_goal'
+              },
+              {
+                'region': 'biceps',
+                'status': 'balanced',
+                'reason': 'Keep curls in your routine.',
+                'basis': 'training_history'
+              },
+            ]
+          }
+        }
+      ],
+    });
+    await tester.pumpWidget(_app(BodyPhysiqueHome(
+        overview: overview,
+        onRefresh: () async {},
+        onManual: () {},
+        onPhotos: () {},
+        onMeasurements: () {},
+        onHistory: () {})));
+    await tester.pumpAndSettle();
+    final map = tester
+        .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
+    expect(map.colors['chest'], FitnessAccents.gold);
+    expect(map.colors['biceps'], FitnessAccents.blue);
+    expect(map.colors['quads'], FitnessAccents.untrained);
+    expect(map.highlighted, contains('chest'));
+    expect(map.female, isTrue);
+    await tester.tapAt(tester.getCenter(find.byType(AnatomicalTrainingMap)));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
       'manual sizes request coaching while weight-only logging does not',
       (tester) async {

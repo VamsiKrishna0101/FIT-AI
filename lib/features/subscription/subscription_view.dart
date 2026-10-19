@@ -11,6 +11,8 @@ import '../../core/theme/fitness_theme.dart';
 import '../profile/views/privacy_settings_view.dart';
 import '../../core/navigation/onboarding_page_route.dart';
 import 'subscription_service.dart';
+import 'subscription_pricing_view.dart';
+import 'trial_access_hero.dart';
 
 class SubscriptionView extends StatefulWidget {
   final SubscriptionService? service;
@@ -25,7 +27,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   late final service = widget.service ?? SubscriptionService.shared;
   String _interval = 'annual';
   String? _loadError;
-  bool _showPlans = false;
   bool _refreshing = false;
 
   @override
@@ -64,40 +65,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future<void> _viewPlans() async {
-    await _refresh();
-    if (!mounted || _loadError != null) return;
-    if (service.plansAvailable) {
-      setState(() => _showPlans = true);
-      return;
-    }
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: DSColors.bgCard,
-      showDragHandle: true,
-      isScrollControlled: true,
-      sheetAnimationStyle: DSMotion.sheetStyle(context),
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            _plansMessage(),
-            const SizedBox(height: 24),
-            LiquidChromeButton(
-              title: service.access?.hasAccess == true
-                  ? 'Continue your trial'
-                  : 'View saved records',
-              onPressed: () {
-                Navigator.pop(sheetContext);
-                _continue();
-              },
-            ),
-          ]),
-        ),
-      ),
-    );
+    await Navigator.push(
+        context,
+        AppPageRoute<void>(
+          page:
+              SubscriptionPricingView(service: service, onContinue: _continue),
+        ));
   }
 
   void _continue() {
@@ -127,18 +100,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
           final trial = access?.state == 'trial' && access!.hasAccess;
           final active = access?.state == 'active' && access!.hasAccess;
           final plansRequested =
-              access != null && !active && (!available && !trial || _showPlans);
+              access != null && !active && (!available && !trial);
           final plans = plansRequested && service.plansAvailable;
           final unavailablePlans = plansRequested && !plans;
           final reduced = MediaQuery.disableAnimationsOf(context);
           final duration = reduced ? Duration.zero : DSMotion.regular;
           final title = active
               ? 'Your membership'
-              : available
-                  ? 'Your next chapter starts here'
-                  : trial
-                      ? 'Make these days yours'
-                      : 'Keep your progress moving';
+              : trial
+                  ? 'Make these days yours'
+                  : 'Keep your progress moving';
 
           return Scaffold(
             backgroundColor: DSColors.bg,
@@ -162,48 +133,60 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                           child:
                               CircularProgressIndicator(color: Colors.white54)),
                     if (access != null) ...[
-                      const SizedBox(height: 12),
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0, end: 1),
-                        duration: reduced ? Duration.zero : DSMotion.chart,
-                        curve: Curves.easeOutCubic,
-                        builder: (context, value, child) => Opacity(
-                            opacity: value,
-                            child: Transform.translate(
-                                offset: Offset(0, (1 - value) * 10),
-                                child: child)),
-                        child: Column(children: [
-                          _TrialRing(
-                              active: active,
-                              showDays: available || trial,
-                              days: available ? 14 : access.daysRemaining,
-                              reduced: reduced),
-                          const SizedBox(height: 24),
-                          FitnessText(title,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 29,
-                                  height: 1.15,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: -.8)),
-                          const SizedBox(height: 12),
-                          FitnessText(
-                              active
-                                  ? 'Your training, together in one place.'
-                                  : available
-                                      ? '14 days of full access. No card required. No automatic charge.'
-                                      : trial
-                                          ? 'Full access to your plans, photo scans and progress.'
-                                          : 'Your trial has ended. Your saved progress stays with you.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: DSColors.textSecondary,
-                                  fontSize: 14,
-                                  height: 1.5)),
-                        ]),
-                      ),
-                      const SizedBox(height: 28),
-                      if (available || trial)
+                      if (available)
+                        _trialIntroduction()
+                      else ...[
+                        const SizedBox(height: 12),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: 1),
+                          duration: reduced ? Duration.zero : DSMotion.chart,
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) => Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                  offset: Offset(0, (1 - value) * 10),
+                                  child: child)),
+                          child: Column(children: [
+                            if (trial) ...[
+                              TrialAccessHero(days: access.daysRemaining),
+                              const SizedBox(height: 14),
+                              Text(
+                                  fitnessText(
+                                      context, '{days} days left in your trial',
+                                      values: {'days': access.daysRemaining}),
+                                  style: const TextStyle(
+                                      fontSize: 13, color: DSColors.silver)),
+                            ] else
+                              _TrialRing(
+                                  active: active,
+                                  showDays: false,
+                                  days: access.daysRemaining,
+                                  reduced: reduced),
+                            const SizedBox(height: 24),
+                            FitnessText(title,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontSize: 29,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: -.8)),
+                            const SizedBox(height: 12),
+                            FitnessText(
+                                active
+                                    ? 'Your training, together in one place.'
+                                    : trial
+                                        ? 'Full access to your plans, photo scans and progress.'
+                                        : 'Your trial has ended. Your saved progress stays with you.',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: DSColors.textSecondary,
+                                    fontSize: 14,
+                                    height: 1.5)),
+                          ]),
+                        ),
+                        const SizedBox(height: 28),
+                      ],
+                      if (trial)
                         _surface(Column(children: [
                           _timeline(CupertinoIcons.sparkles, 'Today',
                               'Start exploring every feature.'),
@@ -277,7 +260,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                               onPressed: _refreshing ? null : _refresh,
                               child: const FitnessText('Check again')),
                       ],
-                      if (!active) ...[
+                      if (!active && !available) ...[
                         const SizedBox(height: 24),
                         const FitnessText('Everything for your next step',
                             style: TextStyle(
@@ -360,7 +343,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                           : plans
                               ? 'Subscribe now'
                               : available
-                                  ? 'Start my 14 days'
+                                  ? 'Start my 14-day trial'
                                   : active
                                       ? 'Continue'
                                       : trial
@@ -382,23 +365,100 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                                       ? _start
                                       : _continue,
                     ),
+                    if (available)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: FitnessText(
+                            'No payment details. No automatic charge.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: DSColors.textSecondary,
+                                height: 1.4)),
+                      ),
                     if (trial && !plans)
                       TextButton(
                           onPressed: _refreshing ? null : _viewPlans,
                           child: const FitnessText('View subscription plans',
                               style: TextStyle(fontSize: 12))),
                     if (available || plans)
-                      TextButton(
-                          onPressed: _continue,
-                          child: const FitnessText('View saved records',
-                              style: TextStyle(
-                                  color: DSColors.textSecondary,
-                                  fontSize: 12))),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (available)
+                              Flexible(
+                                  child: TextButton(
+                                      onPressed: service.busy || _refreshing
+                                          ? null
+                                          : _viewPlans,
+                                      child: const FitnessText('See pricing',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: DSColors.silver)))),
+                            Flexible(
+                                child: TextButton(
+                                    onPressed: _continue,
+                                    child: FitnessText(
+                                        available
+                                            ? 'Not now'
+                                            : 'View saved records',
+                                        style: const TextStyle(
+                                            color: DSColors.textSecondary,
+                                            fontSize: 12)))),
+                          ]),
                   ],
                 )),
           );
         },
       ));
+
+  Widget _trialIntroduction() => Column(
+        key: const ValueKey('trial-introduction'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const TrialAccessHero(),
+          const SizedBox(height: 22),
+          const FitnessText('Your next chapter starts here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 28,
+                  height: 1.16,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -.8)),
+          const SizedBox(height: 10),
+          const FitnessText(
+              'Explore your training, nutrition and progress together.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 14, height: 1.5, color: DSColors.textSecondary)),
+          const SizedBox(height: 24),
+          _trialBenefit(CupertinoIcons.flame, 'Personalized weekly plans'),
+          _trialBenefit(CupertinoIcons.camera, 'Photo scans & measurements'),
+          _trialBenefit(CupertinoIcons.heart, 'Nutrition & recovery'),
+          const SizedBox(height: 18),
+        ],
+      );
+
+  Widget _trialBenefit(IconData icon, String title) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+                color: DSColors.bgCard, borderRadius: BorderRadius.circular(9)),
+            child: Icon(icon, size: 16, color: DSColors.silver),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+              child: FitnessText(title,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w400))),
+          const SizedBox(width: 8),
+          const Icon(CupertinoIcons.checkmark,
+              size: 12, color: DSColors.textSecondary),
+        ]),
+      );
 
   Widget _plansMessage() {
     final trial = service.access?.state == 'trial' && service.access!.hasAccess;

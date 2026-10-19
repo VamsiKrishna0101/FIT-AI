@@ -24,8 +24,14 @@ class MuscleRegion {
   final int? daysSinceTrained, soreness;
   final bool isFocus, hasLimitation;
   final List<Map<String, dynamic>> sessions, trend, nextExercises;
+  final Map<String, dynamic> strength;
+  int get strengthTier => (strength["tier"] as num? ?? 0).toInt().clamp(0, 5);
+  String get strengthTitle => strength["title"] as String? ?? "Not ranked yet";
+  List<Map<String, dynamic>> get rankedExercises =>
+      _maps(strength["exercises"]);
   MuscleRegion.fromJson(Map<String, dynamic> j)
-      : id = j['id'] as String,
+      : strength = Map<String, dynamic>.from(j['strength'] as Map? ?? const {}),
+        id = j['id'] as String,
         label = j['label'] as String,
         status = j['status'] as String,
         insight = j['insight'] as String,

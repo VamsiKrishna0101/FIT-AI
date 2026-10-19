@@ -192,7 +192,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
   Future<bool> _scanBeforePlanning(BodyOverview body) async {
     final action = await showModalBottomSheet<String>(
       sheetAnimationStyle: DSMotion.sheetStyle(context),
-context: context,
+      context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => SafeArea(
@@ -223,15 +223,15 @@ context: context,
                     icon: const Icon(CupertinoIcons.xmark, size: 18)),
               ]),
               const SizedBox(height: 20),
-              const FitnessText('A clearer picture of your progress',
+              const FitnessText('Add photos for a more personal plan',
                   style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 22,
                       fontWeight: FontWeight.w500,
                       letterSpacing: -.6,
                       height: 1.15)),
               const SizedBox(height: 12),
               const FitnessText(
-                  'Add a body scan this week for more personal body context. Your workout history still guides weights and reps.',
+                  'A photo scan adds visual context. Your workout history and preferences guide exercises, weights and reps.',
                   style: TextStyle(color: FitnessTheme.muted, height: 1.5)),
               const SizedBox(height: 12),
               const FitnessText(
@@ -343,6 +343,11 @@ context: context,
   }
 
   String _failureMessage(String? code) => switch (code) {
+        'STALE_PLAN' =>
+          'Your history or preferences changed. Generate an updated plan.',
+        'WORKFLOW_UPDATED' => 'The planner was updated. Generate a new plan.',
+        'CATALOG_CHANGED' =>
+          'The exercise or food library changed. Generate a new plan.',
         'PLAN_COOLDOWN' =>
           'Your weekly plan is already saved. Check the next available date below.',
         'CATALOG_GAP' =>
@@ -499,6 +504,7 @@ context: context,
                                 const SizedBox(height: 20),
                                 WeeklyPlanSchedule(
                                     key: ValueKey(_selected!['id']),
+                                    active: _selected?['status'] == 'ACTIVE',
                                     payload: payload),
                                 const SizedBox(height: 20),
                                 if (_selected?['status'] == 'DRAFT' &&

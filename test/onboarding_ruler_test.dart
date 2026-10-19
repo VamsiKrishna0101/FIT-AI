@@ -139,6 +139,7 @@ void main() {
     model.setWeight(178);
     model.setTargetWeight(165);
     await model.continueToNextStep();
+    await model.controller.flush();
     final saved = await OnboardingDraft.load();
     expect(saved.heightCm, 177.8);
     expect(saved.weightKg, closeTo(178 / 2.20462, .051));

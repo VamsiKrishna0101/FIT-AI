@@ -1,7 +1,17 @@
+import '../../../core/localization/fitness_copy.dart';
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import '../../../core/network/api_client.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/nutrition_diet_models.dart';
+
+String foodPortionLabel(BuildContext context, NutritionFoodItemModel food) {
+  final portion = food.preferredPortion;
+  if (portion == null || portion.unit == 'ml') return food.previewQuantity;
+  return '1 ${fitnessText(context, portion.label)}';
+}
 
 const foodCategories = <String, String>{
   'PROTEIN_SOURCE': 'Protein foods',
@@ -58,11 +68,59 @@ class FoodArt extends StatelessWidget {
                 height: size,
                 child: url == null || url.isEmpty
                     ? fallback
-                    : CachedNetworkImage(
-                        imageUrl: url,
-                        fit: BoxFit.cover,
-                        memCacheWidth: (size * 3).round(),
-                        placeholder: (_, __) => fallback,
-                        errorWidget: (_, __, ___) => fallback))));
+                    : url.startsWith('/api/nutrition/me/custom-foods/')
+                        ? _PrivateFoodPhoto(
+                            url: url, fallback: fallback, size: size)
+                        : CachedNetworkImage(
+                            imageUrl: url,
+                            fit: BoxFit.cover,
+                            memCacheWidth: (size * 3).round(),
+                            placeholder: (_, __) => fallback,
+                            errorWidget: (_, __, ___) => fallback))));
   }
+}
+
+class _PrivateFoodPhoto extends StatefulWidget {
+  final String url;
+  final Widget fallback;
+  final double size;
+  const _PrivateFoodPhoto(
+      {required this.url, required this.fallback, required this.size});
+  @override
+  State<_PrivateFoodPhoto> createState() => _PrivateFoodPhotoState();
+}
+
+class _PrivateFoodPhotoState extends State<_PrivateFoodPhoto> {
+  late Future<Uint8List?> _photo;
+  @override
+  void initState() {
+    super.initState();
+    _photo = _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PrivateFoodPhoto oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.url != oldWidget.url) _photo = _load();
+  }
+
+  Future<Uint8List?> _load() async {
+    try {
+      final response = await ApiClient.shared.client.get<List<int>>(widget.url,
+          options: Options(responseType: ResponseType.bytes));
+      return response.data == null ? null : Uint8List.fromList(response.data!);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
+      future: _photo,
+      builder: (_, snapshot) => snapshot.data == null
+          ? widget.fallback
+          : Image.memory(snapshot.data!,
+              fit: BoxFit.cover,
+              cacheWidth: (widget.size * 3).round(),
+              errorBuilder: (_, __, ___) => widget.fallback));
 }

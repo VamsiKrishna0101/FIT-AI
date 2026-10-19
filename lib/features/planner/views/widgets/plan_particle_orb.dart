@@ -1,9 +1,10 @@
 import '../../../../core/theme/ds_motion.dart';
+import '../../../../core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-const planGlow = Color(0xFF00DDA8);
+const planGlow = DSColors.silver;
 
 /// Decorative motion is independent of the confirmed planning percentage.
 class PlanParticleOrb extends StatefulWidget {
@@ -109,15 +110,15 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
                   Text('${widget.percent}%',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 52,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w500,
                         letterSpacing: -2,
                         height: 1.1,
                       )),
                   const SizedBox(height: 9),
                   const FitnessText('YOUR WEEK',
                       style: TextStyle(
-                        color: Color(0xFFB9C5C2),
+                        color: DSColors.muted,
                         fontSize: 10,
                         letterSpacing: 2.5,
                         fontWeight: FontWeight.w600,
@@ -159,11 +160,11 @@ class _OrbPainter extends CustomPainter {
 
     paint.shader = const RadialGradient(
       colors: [
-        Color(0x0000DDA8),
-        Color(0x0000DDA8),
-        Color(0x1800DDA8),
-        Color(0x5000DDA8),
-        Color(0x0000DDA8)
+        Color(0x00E2E2E2),
+        Color(0x00E2E2E2),
+        Color(0x18E2E2E2),
+        Color(0x50E2E2E2),
+        Color(0x00E2E2E2)
       ],
       stops: [0, .5, .78, .91, 1],
     ).createShader(Rect.fromCircle(center: center, radius: radius * 1.12));
@@ -198,7 +199,7 @@ class _OrbPainter extends CustomPainter {
 
     // Fade the inner particles so the percentage stays crisp and readable.
     paint.shader = const RadialGradient(
-      colors: [Color(0xFF0B1110), Color(0xFF0B1110), Color(0x000B1110)],
+      colors: [Color(0xFF000000), Color(0xFF000000), Color(0x00000000)],
       stops: [0, .65, 1],
     ).createShader(Rect.fromCircle(center: center, radius: radius * .64));
     canvas.drawCircle(center, radius * .64, paint);

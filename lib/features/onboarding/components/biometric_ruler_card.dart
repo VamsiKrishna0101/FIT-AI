@@ -90,8 +90,7 @@ class _BiometricRulerCardState extends State<BiometricRulerCard> {
         _scroll.jumpTo(target);
       } else {
         await _scroll.animateTo(target,
-            duration: DSMotion.press,
-            curve: Curves.easeOutCubic);
+            duration: DSMotion.press, curve: Curves.easeOutCubic);
       }
     }
     if (!mounted) return;

@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:fitai_mobile/core/network/api_client.dart';
+import 'package:fitai_mobile/features/nutrition/repositories/nutrition_repository.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -15,6 +19,54 @@ String token(String owner) =>
           'userId': owner
         })))}.test';
 
+class _NutritionAdapter implements HttpClientAdapter {
+  int catalogReads = 0;
+  bool logged = false;
+
+  @override
+  Future<ResponseBody> fetch(RequestOptions options,
+      Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+    // Home refresh is a separate dependency. Keep it offline in this repository
+    // test so it cannot initialize the platform SQLite cache.
+    if (options.path.startsWith('/api/home')) {
+      return ResponseBody.fromString('{"error":"offline fixture"}', 503,
+          headers: {
+            Headers.contentTypeHeader: ['application/json']
+          });
+    }
+    if (options.path.endsWith('/me/log')) logged = true;
+    final catalog = options.path == '/api/nutrition/catalog';
+    if (catalog) catalogReads++;
+    return ResponseBody.fromString(
+        jsonEncode({
+          'data': catalog
+              ? {
+                  'foods': logged
+                      ? [
+                          {
+                            'id': 'cache-food',
+                            'name': 'Boiled egg',
+                            'category': 'PROTEIN_SOURCE'
+                          }
+                        ]
+                      : [],
+                  'page': 1,
+                  'total': logged ? 1 : 0,
+                  'totalPages': 1,
+                  'hasNextPage': false,
+                }
+              : {}
+        }),
+        options.method == 'POST' ? 201 : 200,
+        headers: {
+          Headers.contentTypeHeader: ['application/json']
+        });
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   var account = 0;
@@ -27,6 +79,26 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({});
     await signIn('cache-test-${account++}');
     await LanguageManager.shared.restoreAccountLanguage('en');
+  });
+
+  test('logging an everyday food immediately refreshes the Recent cache',
+      () async {
+    final adapter = _NutritionAdapter();
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final repository = NutritionRepository.shared;
+    expect((await repository.getFoodPage(source: 'RECENT')).foods, isEmpty);
+    await repository.getFoodPage(source: 'RECENT');
+    expect(adapter.catalogReads, 1);
+    expect(
+        await repository.logMeal(
+            nutritionId: 'cache-food', mealType: 'BREAKFAST'),
+        isTrue);
+    expect((await repository.getFoodPage(source: 'RECENT')).foods.single.name,
+        'Boiled egg');
+    expect(adapter.catalogReads, 2);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
   });
 
   test('changing language preserves the selected country', () async {

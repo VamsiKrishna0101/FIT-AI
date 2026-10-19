@@ -74,6 +74,7 @@ class AnatomicalTrainingMap extends StatelessWidget {
   final bool back, female;
   final Map<String, Color> colors;
   final String? selected;
+  final Set<String> highlighted;
   final ValueChanged<String> onSelected;
   const AnatomicalTrainingMap(
       {super.key,
@@ -81,6 +82,7 @@ class AnatomicalTrainingMap extends StatelessWidget {
       this.female = false,
       this.colors = const {},
       this.selected,
+      this.highlighted = const {},
       required this.onSelected});
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -108,8 +110,25 @@ class AnatomicalTrainingMap extends StatelessWidget {
                         child: CustomPaint(
                             isComplex: true,
                             painter: _AnatomyPainter(_geometry(back, female),
-                                colors, selected, back)))),
+                                colors, selected, back, highlighted)))),
               )));
+}
+
+/// A decorative preview that shares the anatomical geometry without hit targets.
+class AnatomicalMuscleIllustration extends StatelessWidget {
+  final bool back, female;
+  final Map<String, Color> colors;
+  const AnatomicalMuscleIllustration(
+      {super.key,
+      this.back = false,
+      this.female = false,
+      this.colors = const {}});
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+      child: RepaintBoundary(
+          child: CustomPaint(
+              painter: _AnatomyPainter(
+                  _geometry(back, female), colors, null, back, const {}))));
 }
 
 class _AnatomyPainter extends CustomPainter {
@@ -117,7 +136,9 @@ class _AnatomyPainter extends CustomPainter {
   final Map<String, Color> colors;
   final String? selected;
   final bool back;
-  _AnatomyPainter(this.geometry, this.colors, this.selected, this.back);
+  final Set<String> highlighted;
+  _AnatomyPainter(
+      this.geometry, this.colors, this.selected, this.back, this.highlighted);
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
@@ -134,12 +155,33 @@ class _AnatomyPainter extends CustomPainter {
         final center = path.getBounds().center.dx;
         final left = back ? center < 110 : center > 110;
         final sideColor = colors['${id}_${left ? 'left' : 'right'}'];
-        canvas.drawPath(path, fill..color = sideColor ?? color);
+        final areaColor = sideColor ?? color;
+        final active =
+            id != null && (selected == id || highlighted.contains(id));
+        if (selected == id && id != null) {
+          canvas.drawPath(
+              path,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 4
+                ..color = areaColor.withValues(alpha: .22)
+                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+        }
+        fill.shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(areaColor, Colors.white, .13)!,
+            areaColor,
+            Color.lerp(areaColor, Colors.black, .2)!
+          ],
+        ).createShader(path.getBounds());
+        canvas.drawPath(path, fill);
         canvas.drawPath(
             path,
             outline
-              ..strokeWidth = selected == id && id != null ? 1.8 : .5
-              ..color = selected == id && id != null
+              ..strokeWidth = active ? 1.4 : .6
+              ..color = active
                   ? const Color(0xFFF2F2F2)
                   : const Color(0xFFB2B2B2).withValues(alpha: .4));
       }
@@ -151,5 +193,6 @@ class _AnatomyPainter extends CustomPainter {
   bool shouldRepaint(_AnatomyPainter old) =>
       old.geometry != geometry ||
       !mapEquals(old.colors, colors) ||
-      old.selected != selected;
+      old.selected != selected ||
+      !setEquals(old.highlighted, highlighted);
 }

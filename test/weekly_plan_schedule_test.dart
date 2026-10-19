@@ -77,12 +77,13 @@ final _payload = <String, dynamic>{
   },
 };
 
-Widget _app({double scale = 1, Key? capture}) => MaterialApp(
+Widget _app({double scale = 1, bool reduced = false, Key? capture}) =>
+    MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(scale)),
+          data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(scale), disableAnimations: reduced),
           child: child!),
       home: FitnessTheme(
           child: Scaffold(
@@ -105,6 +106,43 @@ Widget _app({double scale = 1, Key? capture}) => MaterialApp(
     );
 
 void main() {
+  testWidgets('Workout cards reveal once without replaying on refresh',
+      (tester) async {
+    await tester.pumpWidget(_app());
+    final card = find.byKey(const ValueKey('plan-card-reveal-0'));
+    expect(
+        tester.widget<SlideTransition>(card).position.value.dy, greaterThan(0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<SlideTransition>(card).position.value, Offset.zero);
+    await tester.pumpWidget(_app());
+    expect(tester.widget<SlideTransition>(card).position.value, Offset.zero);
+  });
+  testWidgets('Reduced motion shows workout cards in their final position',
+      (tester) async {
+    await tester.pumpWidget(_app(reduced: true));
+    expect(
+        tester
+            .widget<SlideTransition>(
+                find.byKey(const ValueKey('plan-card-reveal-0')))
+            .position
+            .value,
+        Offset.zero);
+    expect(tester.hasRunningAnimations, isFalse);
+  });
+  testWidgets('Localized exercise names display without changing set targets',
+      (tester) async {
+    final day = (_payload['workouts'] as List).first as Map;
+    final exercise = (day['exercises'] as List).first as Map;
+    exercise['displayName'] = 'Brystpres med håndvægte';
+    addTearDown(() => exercise.remove('displayName'));
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    expect(find.text('Brystpres med håndvægte'), findsOneWidget);
+    expect(find.text('Dumbbell floor press'), findsNothing);
+    expect(find.text('10 reps · 12 kg per hand'), findsOneWidget);
+    expect(exercise['name'], 'Dumbbell floor press');
+  });
+
   setUpAll(() async {
     await (FontLoader('Inter')
           ..addFont(rootBundle.load('assets/fonts/Inter.ttf')))

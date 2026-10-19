@@ -1,5 +1,20 @@
 import '../../../core/localization/fitness_copy.dart';
 
+class FoodPortion {
+  final String unit, label;
+  final double gramsPerUnit;
+  const FoodPortion(
+      {required this.unit, required this.label, required this.gramsPerUnit});
+
+  factory FoodPortion.fromJson(Map<String, dynamic> json) => FoodPortion(
+      unit: json['unit'] as String,
+      label: json['label'] as String,
+      gramsPerUnit: (json['gramsPerUnit'] as num).toDouble());
+
+  Map<String, dynamic> toJson() =>
+      {'unit': unit, 'label': label, 'gramsPerUnit': gramsPerUnit};
+}
+
 // MARK: - Nutrition & Diet Models for Today Full Meal Plan
 
 class NutritionFoodItemModel {
@@ -10,6 +25,8 @@ class NutritionFoodItemModel {
   final String category;
   final String? imageUrl;
   final String? sourceName, sourceVersion;
+  final List<FoodPortion> portions;
+  final String defaultPortionUnit;
   final double servingSize;
   final String servingUnit;
   final double caloriesPerServing;
@@ -26,6 +43,8 @@ class NutritionFoodItemModel {
     this.imageUrl,
     this.sourceName,
     this.sourceVersion,
+    this.portions = const [],
+    this.defaultPortionUnit = 'g',
     this.servingSize = 100.0,
     this.servingUnit = 'g',
     required this.caloriesPerServing,
@@ -34,6 +53,25 @@ class NutritionFoodItemModel {
     required this.fatPerServing,
     this.fiberPerServing = 0.0,
   }) : canonicalName = name;
+
+  FoodPortion? get preferredPortion {
+    for (final portion in portions) {
+      if (portion.unit == defaultPortionUnit) return portion;
+    }
+    return null;
+  }
+
+  double get previewFactor => preferredPortion == null
+      ? 1
+      : (defaultPortionUnit == 'ml' ? 250 : 1) *
+          preferredPortion!.gramsPerUnit /
+          servingSize;
+
+  String get previewQuantity => preferredPortion == null
+      ? '${servingSize.toStringAsFixed(servingSize % 1 == 0 ? 0 : 1)} $servingUnit'
+      : defaultPortionUnit == 'ml'
+          ? '250 ml'
+          : '1 ${preferredPortion!.label}';
 
   factory NutritionFoodItemModel.fromJson(Map<String, dynamic> json) {
     return NutritionFoodItemModel(
@@ -44,6 +82,12 @@ class NutritionFoodItemModel {
       imageUrl: json['imageUrl']?.toString(),
       sourceName: json['sourceName']?.toString(),
       sourceVersion: json['sourceVersion']?.toString(),
+      portions: (json['portions'] as List? ?? [])
+          .whereType<Map>()
+          .map((p) => FoodPortion.fromJson(Map<String, dynamic>.from(p)))
+          .toList(),
+      defaultPortionUnit:
+          (json['defaultPortionUnit'] ?? json['servingUnit'] ?? 'g').toString(),
       servingSize: (json['servingSize'] is num)
           ? (json['servingSize'] as num).toDouble()
           : 100.0,
@@ -75,6 +119,8 @@ class NutritionFoodItemModel {
       'imageUrl': imageUrl,
       'sourceName': sourceName,
       'sourceVersion': sourceVersion,
+      'portions': portions.map((p) => p.toJson()).toList(),
+      'defaultPortionUnit': defaultPortionUnit,
       'servingSize': servingSize,
       'servingUnit': servingUnit,
       'caloriesPerServing': caloriesPerServing,
