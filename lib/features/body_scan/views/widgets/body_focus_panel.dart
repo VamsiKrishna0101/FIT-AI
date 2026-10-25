@@ -396,7 +396,7 @@ class _BodyFocusPanelState extends State<BodyFocusPanel> {
         ] else ...[
           const SizedBox(height: 12),
           const FitnessText(
-              'No photo assessment yet. Add four views to get your body report.',
+              'No photo assessment yet. Start with a front photo for your physique review.',
               style: TextStyle(
                   fontSize: 13, height: 1.4, color: FitnessTheme.muted)),
         ],
@@ -419,7 +419,7 @@ class _BodyFocusPanelState extends State<BodyFocusPanel> {
               label: const FitnessText('Update body report',
                   style: TextStyle(fontSize: 12))),
           FitnessText(
-              assessment.visualCoachingConsent && assessment.photos.length == 4
+              assessment.visualCoachingConsent && assessment.photos.isNotEmpty
                   ? 'Uses saved photos with Google Gemini.'
                   : 'Uses saved measurements with Google Gemini.',
               style: const TextStyle(fontSize: 11, color: FitnessTheme.muted)),

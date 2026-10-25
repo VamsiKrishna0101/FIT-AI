@@ -35,19 +35,11 @@ class ProgressTrendSummary extends StatelessWidget {
                   context, points.map((point) => point.value).reduce(math.max),
                   unit: unit)
             ),
-            (
-              'Latest reading',
-              progressValue(context, points.last.value, unit: unit)
-            ),
           ]
         : [
             (
               'First reading',
               progressValue(context, points.first.value, unit: unit)
-            ),
-            (
-              'Latest reading',
-              progressValue(context, points.last.value, unit: unit)
             ),
             (
               'Change',

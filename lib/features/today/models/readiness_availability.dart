@@ -35,7 +35,7 @@ class ReadinessAvailability {
               ? 'Health data synced'
               : 'No readiness for this day';
   String get description => noWearable
-      ? !enteredSleep
+      ? !sleep
           ? 'Log sleep and how you feel to add your daily check-in.'
           : missingAnswers.isNotEmpty
               ? 'Sleep saved. Complete your check-in: ${missingAnswers.join(', ')}.'

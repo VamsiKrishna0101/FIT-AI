@@ -15,6 +15,7 @@ import '../../onboarding/views/training_preferences_view.dart';
 import '../../today/repositories/today_repository.dart';
 import '../../wellness/views/sleep_preferences_view.dart';
 import '../repositories/settings_repository.dart';
+import '../repositories/mcp_repository.dart';
 import 'mcp_connections_view.dart';
 import 'privacy_settings_view.dart';
 import 'profile_details_view.dart';
@@ -25,7 +26,8 @@ import '../../subscription/subscription_view.dart';
 
 class ProfileView extends StatefulWidget {
   final SettingsRepository? repository;
-  const ProfileView({super.key, this.repository});
+  final McpRepository? mcpRepository;
+  const ProfileView({super.key, this.repository, this.mcpRepository});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -117,7 +119,7 @@ class _ProfileViewState extends State<ProfileView> {
     if (_signingOut) return;
     final confirmed = await confirmSettingsAction(context,
         title: 'Sign out?',
-        message: 'Your saved FitAI data stays with your account.',
+        message: 'Your saved Setcraft data stays with your account.',
         action: 'Sign out');
     if (!confirmed || !mounted) return;
     setState(() => _signingOut = true);
@@ -222,12 +224,13 @@ class _ProfileViewState extends State<ProfileView> {
             SettingsRow(
                 icon: CupertinoIcons.link,
                 title: 'MCP & integrations',
-                onTap: () => _open(const McpConnectionsView())),
+                onTap: () => _open(
+                    McpConnectionsView(repository: widget.mcpRepository))),
           ]),
           SettingsGroup(title: 'Preferences', children: [
             SettingsRow(
                 icon: CupertinoIcons.sparkles,
-                title: 'FitAI Premium',
+                title: 'Setcraft Premium',
                 subtitle: 'Trial, subscription and billing',
                 onTap: () => _open(const SubscriptionView())),
             SettingsRow(
@@ -256,7 +259,7 @@ class _ProfileViewState extends State<ProfileView> {
                 onTap: _signingOut ? null : _signOut),
           ]),
           const Center(
-              child: FitnessText('FitAI · Your progress, your pace',
+              child: FitnessText('Setcraft · Your progress, your pace',
                   style: TextStyle(color: FitnessTheme.muted, fontSize: 11))),
         ],
       ),

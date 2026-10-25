@@ -26,8 +26,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await (FontLoader('Inter')..addFont(rootBundle.load('assets/fonts/Inter.ttf'))).load();
-    await (FontLoader('MaterialIcons')..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+    await (FontLoader('Inter')
+          ..addFont(rootBundle.load('assets/fonts/Inter.ttf')))
+        .load();
+    await (FontLoader('MaterialIcons')
+          ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf')))
+        .load();
   });
 
   setUp(() {
@@ -134,13 +138,20 @@ void main() {
     await tester.pumpWidget(
         app(TrainingPreferencesView(onContinue: () => continued = true)));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Your training style'), 300,
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+    }
+    await tester.scrollUntilVisible(find.text('Choose each day'), 300,
         scrollable: find.byType(Scrollable).first);
-    expect(find.text('My own combinations'), findsOneWidget);
+    expect(find.text('Choose each day'), findsOneWidget);
+    // Custom days appear once, in their editable muscle list.
     expect(find.text('Monday'), findsOneWidget);
     expect(find.text('Wednesday'), findsOneWidget);
-    await tester.ensureVisible(find.text('Continue'));
     await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Build my plan'));
+    await tester.tap(find.text('Build my plan'));
     await tester.pumpAndSettle();
     expect(continued, true);
     expect((await OnboardingDraft.load()).customTrainingSplit['MONDAY'],

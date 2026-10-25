@@ -315,7 +315,7 @@ class _BiometricsDetailViewState extends State<BiometricsDetailView> {
     HapticFeedback.lightImpact();
     showModalBottomSheet<void>(
       sheetAnimationStyle: DSMotion.sheetStyle(context),
-context: context,
+      context: context,
       backgroundColor: DSColors.bg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -348,7 +348,7 @@ context: context,
             ),
             const SizedBox(height: 8),
             FitnessText(
-              'Your FitAI Recovery score aggregates Resting Heart Rate (RHR), Heart Rate Variability (HRV), and Sleep Quality to compute your autonomic nervous system readiness. A higher score signifies optimal readiness for high-strain training.',
+              'Your Setcraft Recovery score aggregates Resting Heart Rate (RHR), Heart Rate Variability (HRV), and Sleep Quality to compute your autonomic nervous system readiness. A higher score signifies optimal readiness for high-strain training.',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.5,

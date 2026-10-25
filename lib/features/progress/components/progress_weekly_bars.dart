@@ -10,8 +10,12 @@ import 'progress_surface.dart';
 class ProgressWeeklyBars extends StatelessWidget {
   final List<ProgressPoint> points;
   final String metric;
+  final Color color;
   const ProgressWeeklyBars(
-      {super.key, required this.points, required this.metric});
+      {super.key,
+      required this.points,
+      required this.metric,
+      this.color = progressBlue});
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +44,8 @@ class ProgressWeeklyBars extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: point.value == 0
-                                    ? progressMuted
-                                    : progressBlue)),
+                                color:
+                                    point.value == 0 ? progressMuted : color)),
                         const SizedBox(height: 8),
                         SizedBox(
                             height: 70,
@@ -69,8 +72,8 @@ class ProgressWeeklyBars extends StatelessWidget {
                                                                 alpha: .25)
                                                       ]
                                                     : [
-                                                        progressBlue,
-                                                        progressBlue.withValues(
+                                                        color,
+                                                        color.withValues(
                                                             alpha: .5)
                                                       ])))))),
                         const SizedBox(height: 10),

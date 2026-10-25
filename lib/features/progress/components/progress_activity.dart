@@ -17,6 +17,7 @@ class ProgressTrainingSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ProgressSurface(
       accent: progressBlue,
+      padding: const EdgeInsets.all(18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(fitnessText(context, 'Your training'),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
@@ -25,12 +26,12 @@ class ProgressTrainingSummary extends StatelessWidget {
           Text(rangeLabel!,
               style: const TextStyle(fontSize: 12, color: progressMuted)),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           for (final item in [
-            ('workouts', 'Workouts', progressSilver),
-            ('sets', 'Logged sets', progressSilver),
-            ('records', 'New records', progressAmber),
+            ('workouts', 'Workouts', progressBlue),
+            ('sets', 'Logged sets', progressCyan),
+            ('records', 'New records', progressAmber)
           ])
             Expanded(
                 child: Column(
@@ -40,27 +41,27 @@ class ProgressTrainingSummary extends StatelessWidget {
                       progressValue(
                           context, progressNumber(summary[item.$1]) ?? 0,
                           digits: 0),
-                      style: TextStyle(
-                          fontSize: 34,
-                          letterSpacing: -1,
+                      style: const TextStyle(
+                          fontSize: 32,
+                          height: 1.05,
+                          letterSpacing: -1.2,
                           fontWeight: FontWeight.w600,
-                          color: item.$1 == 'records' && summary['records'] == 0
-                              ? progressSilver
-                              : item.$3)),
-                  const SizedBox(height: 4),
+                          color: progressSilver)),
+                  const SizedBox(height: 6),
                   Text(fitnessText(context, item.$2),
                       style:
-                          const TextStyle(fontSize: 12, color: progressMuted)),
+                          const TextStyle(fontSize: 11, color: progressMuted)),
                 ])),
         ]),
-        if (summary['setsChange'] is num) ...[
-          const SizedBox(height: 14),
-          Text(
-              '${fitnessText(context, 'Logged sets')} · '
-              '${(summary['setsChange'] as num) > 0 ? '+' : ''}'
-              '${progressValue(context, summary['setsChange'] as num)}% · '
-              '${fitnessText(context, 'Previous period')}',
-              style: const TextStyle(fontSize: 12, color: progressMuted)),
+        if (summary['workoutChange'] is num) ...[
+          const SizedBox(height: 17),
+          Container(
+              padding: const EdgeInsets.only(top: 12),
+              decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: Color(0x14FFFFFF)))),
+              child: Text(
+                  '${(summary['workoutChange'] as num) > 0 ? '+' : ''}${progressValue(context, summary['workoutChange'] as num, digits: 0)} ${fitnessText(context, 'Workouts')} · ${fitnessText(context, 'Previous period')}',
+                  style: const TextStyle(fontSize: 11, color: progressMuted))),
         ],
       ]));
 }

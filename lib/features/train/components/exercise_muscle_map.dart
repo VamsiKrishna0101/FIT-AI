@@ -1,9 +1,8 @@
-import '../../../core/theme/fitness_accents.dart';
-import 'dart:math' as math;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/theme/ds_colors.dart';
-import '../../body_scan/views/widgets/anatomical_training_map.dart';
+import 'graphite_anatomy.dart';
 import '../models/workout_exercise_models.dart';
 
 /// Canonical catalogue tags, never translated display names.
@@ -44,8 +43,12 @@ Set<String> exerciseMuscleIds(Iterable<String> tags) {
 class ExerciseMuscleMap extends StatefulWidget {
   final WorkoutExerciseModel exercise;
   final bool female;
+  final bool anatomyReady;
   const ExerciseMuscleMap(
-      {super.key, required this.exercise, this.female = false});
+      {super.key,
+      required this.exercise,
+      this.female = false,
+      this.anatomyReady = true});
 
   @override
   State<ExerciseMuscleMap> createState() => _ExerciseMuscleMapState();
@@ -71,8 +74,8 @@ class _ExerciseMuscleMapState extends State<ExerciseMuscleMap> {
     final secondary = exerciseMuscleIds(exercise.secondaryMuscles)
       ..removeAll(primary);
     final targets = {...primary, ...secondary};
-    final frontPaths = musclePaths(back: false, female: widget.female);
-    final backPaths = musclePaths(back: true, female: widget.female);
+    final frontPaths = graphiteMusclePaths(back: false, female: widget.female);
+    final backPaths = graphiteMusclePaths(back: true, female: widget.female);
     final hasFront = targets.any(frontPaths.containsKey);
     final hasBack = targets.any(backPaths.containsKey);
     final preferBack = primary.any({
@@ -81,7 +84,8 @@ class _ExerciseMuscleMapState extends State<ExerciseMuscleMap> {
       'lats',
       'lower_back',
       'glutes',
-      'hamstrings'
+      'hamstrings',
+      'calves'
     }.contains);
     final back = _back ?? (hasBack && (preferBack || !hasFront));
     final paths = back ? backPaths : frontPaths;
@@ -89,82 +93,114 @@ class _ExerciseMuscleMapState extends State<ExerciseMuscleMap> {
     final visibleTargets = targets.where(paths.containsKey).toSet();
     final focus = visiblePrimary.isNotEmpty ? visiblePrimary : visibleTargets;
 
+    String muscleLabel(String id) => fitnessText(
+        context,
+        switch (id) {
+          'chest' => 'Chest',
+          'shoulders' => 'Shoulders',
+          'biceps' => 'Biceps',
+          'triceps' => 'Triceps',
+          'forearms' => 'Forearms',
+          'lats' => 'Lats',
+          'upper_back' => 'Upper back',
+          'lower_back' => 'Lower back',
+          'core' => 'Core',
+          'glutes' => 'Glutes',
+          'quads' => 'Quads',
+          'hamstrings' => 'Hamstrings',
+          'calves' => 'Calves',
+          _ => id,
+        });
+    final primaryText = primary.isNotEmpty
+        ? primary.map(muscleLabel).join(' · ')
+        : exercise.targetLabel ?? fitnessText(context, exercise.target);
+    final secondaryText = secondary.isNotEmpty
+        ? secondary.map(muscleLabel).join(' · ')
+        : (exercise.secondaryMuscleLabels ??
+                exercise.secondaryMuscles
+                    .map((value) => fitnessText(context, value))
+                    .toList())
+            .join(' · ');
+    final knownTargets = hasFront || hasBack;
+    final diagram = knownTargets
+        ? Semantics(
+            image: true,
+            label:
+                '${fitnessText(context, back ? 'Back muscle map' : 'Front muscle map')}: ${exercise.targetLabel ?? exercise.target}',
+            child: Container(
+              key: const ValueKey('exercise-anatomy-map'),
+              width: double.infinity,
+              height: 320,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                  color: Colors.black, borderRadius: BorderRadius.circular(20)),
+              child: widget.anatomyReady
+                  ? GraphiteMuscleFigure(
+                      female: widget.female,
+                      back: back,
+                      primary: primary,
+                      secondary: secondary)
+                  : const Center(child: CupertinoActivityIndicator()),
+            ),
+          )
+        : Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(fitnessText(context, 'Muscle map unavailable'),
+                style: const TextStyle(color: DSColors.muted, fontSize: 12)),
+          );
+    final labels = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _MuscleLabel(primaryText, anatomyPrimary,
+            label: fitnessText(context, 'Primary muscle')),
+        if (secondaryText.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(height: 1, color: DSColors.border),
+          ),
+          _MuscleLabel(secondaryText, anatomySecondary,
+              label: fitnessText(context, 'Secondary muscles')),
+        ],
+      ],
+    );
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        Expanded(
-            child: Text(fitnessText(context, 'Target muscles'),
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w600))),
-        if (hasFront && hasBack)
-          SegmentedButton<bool>(
-            style: SegmentedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              textStyle: Theme.of(context)
-                  .textTheme
-                  .labelMedium
-                  ?.copyWith(fontSize: 11),
-              side: BorderSide.none,
-              selectedBackgroundColor: DSColors.bgRaised,
-              selectedForegroundColor: DSColors.silver,
-            ),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                  value: false, label: Text(fitnessText(context, 'Front'))),
-              ButtonSegment(
-                  value: true, label: Text(fitnessText(context, 'Back'))),
-            ],
-            selected: {back},
-            onSelectionChanged: (selection) =>
-                setState(() => _back = selection.first),
-          ),
-      ]),
-      const SizedBox(height: 12),
-      if (focus.isNotEmpty)
-        Semantics(
-          image: true,
-          label:
-              '${fitnessText(context, back ? 'Back muscle map' : 'Front muscle map')}: ${exercise.targetLabel ?? exercise.target}',
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: ColoredBox(
-              color: DSColors.bg,
-              child: SizedBox(
-                key: const ValueKey('exercise-cropped-map'),
-                width: double.infinity,
-                height: 218,
-                child: RepaintBoundary(
-                    child: CustomPaint(
-                  painter:
-                      ExerciseMusclePainter(paths, primary, secondary, focus),
-                )),
+      Text(fitnessText(context, 'Target muscles'),
+          style: const TextStyle(
+              fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -.3)),
+      if (knownTargets) ...[
+        const SizedBox(height: 14),
+        CupertinoSlidingSegmentedControl<bool>(
+          groupValue: back,
+          backgroundColor: DSColors.bg,
+          thumbColor: DSColors.bgRaised,
+          padding: const EdgeInsets.all(3),
+          children: {
+            for (final view in [false, true])
+              view: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                child: Text(fitnessText(context, view ? 'Back' : 'Front'),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            back == view ? DSColors.silver : DSColors.muted)),
               ),
-            ),
-          ),
-        )
-      else
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(fitnessText(context, 'Muscle map unavailable'),
-              style: const TextStyle(color: DSColors.muted, fontSize: 12)),
+          },
+          onValueChanged: (value) {
+            if (value != null) setState(() => _back = value);
+          },
         ),
-      const SizedBox(height: 14),
-      _MuscleLabel(
-          exercise.targetLabel ?? fitnessText(context, exercise.target),
-          primary.isEmpty
-              ? FitnessAccents.coral
-              : FitnessAccents.muscle(primary.first)),
-      if (exercise.secondaryMuscles.isNotEmpty) ...[
-        const SizedBox(height: 9),
-        _MuscleLabel(
-          (exercise.secondaryMuscleLabels ??
-                  exercise.secondaryMuscles
-                      .map((value) => fitnessText(context, value))
-                      .toList())
-              .join(' · '),
-          FitnessAccents.blue,
-          label: fitnessText(context, 'Secondary muscles'),
-        ),
+      ],
+      const SizedBox(height: 16),
+      diagram,
+      const SizedBox(height: 20),
+      labels,
+      if (knownTargets && focus.isEmpty) ...[
+        const SizedBox(height: 12),
+        Text(fitnessText(context, 'Targets are visible on the other side.'),
+            style: const TextStyle(color: DSColors.muted, fontSize: 12)),
       ],
     ]);
   }
@@ -178,69 +214,27 @@ class _MuscleLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            )),
-        const SizedBox(width: 9),
-        Expanded(
-            child: Text(label == null ? text : '$label · $text',
-                style: TextStyle(
-                    color: label == null ? DSColors.silver : DSColors.muted,
-                    fontSize: 12,
-                    height: 1.45))),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 7),
+          Expanded(
+              child: Text(label ?? '',
+                  style: const TextStyle(
+                      color: DSColors.muted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4))),
+        ]),
+        const SizedBox(height: 7),
+        Text(text,
+            style: const TextStyle(
+                color: DSColors.silver,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.45)),
       ]);
-}
-
-/// Uses the Body tab's existing anatomical paths and crops around the target.
-class ExerciseMusclePainter extends CustomPainter {
-  final Map<String, List<Path>> paths;
-  final Set<String> primary, secondary, focus;
-  ExerciseMusclePainter(this.paths, this.primary, this.secondary, this.focus);
-
-  Rect get viewport {
-    final bounds = focus
-        .expand((id) => paths[id] ?? <Path>[])
-        .map((path) => path.getBounds());
-    final box = bounds.reduce((a, b) => a.expandToInclude(b));
-    return Rect.fromCenter(
-        center: box.center,
-        width: math.max(110, box.width + 32),
-        height: math.max(100, box.height + 30));
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final box = viewport;
-    final scale = math.min(size.width / box.width, size.height / box.height);
-    canvas.save();
-    canvas.clipRect(Offset.zero & size);
-    canvas.translate(size.width / 2, size.height / 2);
-    canvas.scale(scale);
-    canvas.translate(-box.center.dx, -box.center.dy);
-    final fill = Paint();
-    final outline = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .45;
-    for (final entry in paths.entries) {
-      final color = primary.contains(entry.key)
-          ? FitnessAccents.muscle(entry.key)
-          : secondary.contains(entry.key)
-              ? FitnessAccents.blue.withValues(alpha: .65)
-              : const Color(0xFF25282C);
-      for (final path in entry.value) {
-        canvas.drawPath(path, fill..color = color);
-        canvas.drawPath(path,
-            outline..color = const Color(0xFF747A80).withValues(alpha: .35));
-      }
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(ExerciseMusclePainter old) => true;
 }

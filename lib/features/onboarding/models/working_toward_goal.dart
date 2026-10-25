@@ -4,7 +4,8 @@ enum WorkingTowardGoal {
   loseBodyFat('LOSE_BODY_FAT', '🔥'),
   loseWeight('LOSE_WEIGHT', '⚖️'),
   getFitter('GET_FITTER', '🏃'),
-  buildConsistency('BUILD_CONSISTENCY', '🎯');
+  buildConsistency('BUILD_CONSISTENCY', '🎯'),
+  getStronger('GET_STRONGER', '');
 
   final String backendValue;
   final String emoji;
@@ -12,6 +13,7 @@ enum WorkingTowardGoal {
   const WorkingTowardGoal(this.backendValue, this.emoji);
 
   static WorkingTowardGoal fromBackend(String? value) {
+    if (value == 'LOSE_WEIGHT') return WorkingTowardGoal.loseBodyFat;
     if (value == null) return WorkingTowardGoal.buildMuscle;
     return WorkingTowardGoal.values.firstWhere(
       (g) => g.backendValue == value,

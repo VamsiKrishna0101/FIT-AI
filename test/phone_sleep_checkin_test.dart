@@ -110,13 +110,13 @@ void main() {
 
   for (final usage in ['UNKNOWN', 'WEARABLE']) {
     testWidgets(
-        '$usage does not enable fallback just because readings are missing',
+        '$usage allows manual ratings without enabling phone sleep tracking',
         (tester) async {
       final repo = _Repo(usage), phone = _Phone();
       await open(tester, repo, phone);
       expect(find.text('Estimate my sleep'), findsNothing);
-      expect(find.text('How rested do you feel?'), findsNothing);
-      expect(find.text('How sore are you?'), findsNothing);
+      expect(find.text('How rested do you feel?'), findsOneWidget);
+      expect(find.text('How sore are you?'), findsOneWidget);
       expect(phone.starts, 0);
     });
   }
@@ -138,7 +138,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.usage, 'WEARABLE');
     expect(find.text('Estimate my sleep'), findsNothing);
-    expect(find.text('How sore are you?'), findsNothing);
+    expect(find.text('How sore are you?'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets(
@@ -254,8 +254,10 @@ void main() {
     await tap(tester, find.byKey(const ValueKey('today-readiness-card')));
     expect(opened, 1);
     expect(find.text('Resting heart rate or HRV'), findsNothing);
-    expect(find.text('Complete check-in'), findsWidgets);
     expect(find.text('Your readiness check-in'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Complete check-in'), 200,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('Complete check-in'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

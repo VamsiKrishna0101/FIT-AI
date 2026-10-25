@@ -17,7 +17,7 @@ String readinessMeaning(int score) => score >= 67
         : 'Your recorded inputs suggest a lighter day.';
 
 String readinessBasis(HomeReadiness readiness) {
-  if (readiness.source == 'check_in_estimate') return 'Based on your check-in';
+  if (readiness.source == 'check_in_estimate') return 'Daily check-in estimate';
   if (readiness.source == 'mixed_estimate') {
     return 'Entered sleep + synced heart';
   }

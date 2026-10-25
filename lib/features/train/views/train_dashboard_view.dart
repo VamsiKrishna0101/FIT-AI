@@ -20,6 +20,8 @@ import 'workout_session_view.dart';
 import 'saved_routines_view.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../planner/views/weekly_plan_card.dart';
+import '../components/reschedule_workout_sheet.dart';
+import '../../../core/theme/fitness_theme.dart';
 
 class TrainView extends StatefulWidget {
   final bool standalone;
@@ -179,6 +181,17 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
       return null;
     });
     await _load();
+  }
+
+  Future<void> _restToday() async {
+    final changed = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: FitnessTheme.surface,
+        builder: (_) => FractionallySizedBox(
+            heightFactor: .9,
+            child: FitnessTheme(child: RescheduleWorkoutSheet(date: _date))));
+    if (changed == true && mounted) await _load(refresh: true);
   }
 
   Future<void> _saveRoutine() async {
@@ -432,14 +445,13 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                 addToWorkout: (exercise) async {
                   try {
                     if (_day?.finished == true) return false;
-                    await _repo.mutate(_date, 'POST', '/items',
-                        data: {
-                          'workoutId': exercise.id,
-                          'targetSets': 3,
-                          'targetReps': '10',
-                          'targetWeight': 0,
-                          'restSeconds': 90,
-                        });
+                    await _repo.mutate(_date, 'POST', '/items', data: {
+                      'workoutId': exercise.id,
+                      'targetSets': 3,
+                      'targetReps': '10',
+                      'targetWeight': 0,
+                      'restSeconds': 90,
+                    });
                     return true;
                   } catch (_) {
                     return false;
@@ -676,13 +688,22 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                   color: const Color(0xFF252525),
                   itemBuilder: (_) => [
                         'Rename workout',
-                        if (!day.started && !day.restDay) 'Set as rest day'
+                        if (_date == CacheScope.todayKey() &&
+                            day.json['canReschedule'] == true)
+                          'Rest today',
+                        if (!day.started &&
+                            !day.restDay &&
+                            !(_date == CacheScope.todayKey() &&
+                                day.json['canReschedule'] == true))
+                          'Set as rest day'
                       ]
                           .map((value) => PopupMenuItem(
                               value: value, child: Text(copy(value))))
                           .toList(),
                   onSelected: (value) async {
-                    if (value == 'Set as rest day') {
+                    if (value == 'Rest today') {
+                      await _restToday();
+                    } else if (value == 'Set as rest day') {
                       await _action(() => _repo.mutate(_date, 'PATCH', '/day',
                           data: {'restDay': true}));
                     } else {
@@ -709,6 +730,14 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                               ? CupertinoIcons.bolt
                               : CupertinoIcons.play_fill,
                   onPressed: action)),
+          if (_date == CacheScope.todayKey() &&
+              day.json['canReschedule'] == true)
+            Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                    onPressed: _busy ? null : _restToday,
+                    child: Text(copy('Rest today'),
+                        style: const TextStyle(color: trainingMuted)))),
         ]));
   }
 

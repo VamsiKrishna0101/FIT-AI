@@ -15,7 +15,6 @@ class ProgressExercisePreview extends StatelessWidget {
     final latest = exercise['latest'] as Map?;
     final load = progressNumber(latest?['weight']);
     final reps = progressNumber(latest?['reps']);
-    final change = progressNumber(exercise['change']);
     final name = exercise['name'] as String? ?? '';
     final points =
         ProgressPoint.parse(progressRows(exercise['sparkline']), 'value');
@@ -35,7 +34,7 @@ class ProgressExercisePreview extends StatelessWidget {
                             Expanded(
                                 child: SizedBox(
                                     height: MediaQuery.textScalerOf(context)
-                                        .scale(38),
+                                        .scale(34),
                                     child: Text(
                                         name.isEmpty
                                             ? name
@@ -50,7 +49,7 @@ class ProgressExercisePreview extends StatelessWidget {
                             const Icon(Icons.chevron_right,
                                 color: progressMuted, size: 16),
                           ]),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       Text.rich(
                           TextSpan(children: [
                             TextSpan(
@@ -66,7 +65,7 @@ class ProgressExercisePreview extends StatelessWidget {
                                     letterSpacing: 0)),
                           ]),
                           style: const TextStyle(
-                              fontSize: 27,
+                              fontSize: 25,
                               fontWeight: FontWeight.w600,
                               letterSpacing: -.8)),
                       const SizedBox(height: 4),
@@ -79,20 +78,15 @@ class ProgressExercisePreview extends StatelessWidget {
                                         context,
                                         latest == null
                                             ? 'No sets in this period'
-                                            : 'No external load'),
+                                            : load == null
+                                                ? 'Weight not recorded'
+                                                : 'No external load'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                     fontSize: 12, color: progressMuted))),
-                        if (change != null)
-                          Text(
-                              '${change > 0 ? '+' : ''}${progressValue(context, change)}%',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: progressCyan,
-                                  fontWeight: FontWeight.w500)),
                       ]),
-                      const SizedBox(height: 17),
+                      const SizedBox(height: 12),
                       SizedBox(
                           width: double.infinity,
                           height: MediaQuery.textScalerOf(context).scale(38),
@@ -134,64 +128,51 @@ class ProgressMetricPreview extends StatelessWidget {
             ? points.fold<double>(0, (sum, point) => sum + point.value) /
                 points.length
             : points.last.value;
-    return ProgressSurface(
-        padding: EdgeInsets.zero,
-        child: InkWell(
-            onTap: onTap,
-            child: Padding(
-                padding: const EdgeInsets.all(15),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        Expanded(
-                            child: Text(fitnessText(context, title),
+    return LayoutBuilder(
+        builder: (context, box) => ProgressSurface(
+            accent: color,
+            padding: EdgeInsets.zero,
+            child: InkWell(
+                onTap: onTap,
+                child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(children: [
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(fitnessText(context, title),
                                 style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500))),
-                        const Icon(Icons.chevron_right,
-                            color: progressMuted, size: 16),
-                      ]),
-                      const SizedBox(height: 15),
-                      Text.rich(
-                          TextSpan(children: [
-                            TextSpan(text: progressValue(context, value)),
-                            if (value != null)
-                              TextSpan(
-                                  text: ' ${fitnessText(context, unit)}',
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: progressMuted,
-                                      letterSpacing: 0)),
-                          ]),
-                          style: const TextStyle(
-                              fontSize: 27,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -.8)),
-                      const SizedBox(height: 5),
-                      SizedBox(
-                          height: MediaQuery.textScalerOf(context).scale(34),
-                          child: Text(fitnessText(context, caption),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 12, color: progressMuted))),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                          width: double.infinity,
-                          height: 42,
-                          child: points.length < 2
-                              ? Text(
-                                  fitnessText(context,
-                                      'More readings will reveal your trend.'),
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: progressMuted,
-                                      height: 1.4))
-                              : ProgressSparkline(
-                                  points: points,
-                                  color: color,
-                                  daily: average)),
-                    ]))));
+                                    fontSize: 12, color: progressMuted)),
+                            const SizedBox(height: 7),
+                            ProgressValueText(
+                                progressValue(context, value, unit: unit),
+                                color: progressSilver,
+                                size: 27),
+                            const SizedBox(height: 5),
+                            Text(fitnessText(context, caption),
+                                style: const TextStyle(
+                                    fontSize: 10, color: progressMuted)),
+                            if (points.length > 1 && box.maxWidth < 260) ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                  height: 32,
+                                  width: double.infinity,
+                                  child: ProgressSparkline(
+                                      points: points,
+                                      color: color,
+                                      daily: average)),
+                            ],
+                          ])),
+                      if (points.length > 1 && box.maxWidth >= 260)
+                        SizedBox(
+                            width: 88,
+                            height: 42,
+                            child: ProgressSparkline(
+                                points: points, color: color, daily: average)),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.chevron_right,
+                          color: progressMuted, size: 16),
+                    ])))));
   }
 }

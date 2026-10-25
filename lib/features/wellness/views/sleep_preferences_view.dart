@@ -106,7 +106,7 @@ class _SleepPreferencesViewState extends State<SleepPreferencesView> {
                 const SizedBox(height: 16),
                 FitnessText(
                     _usage == 'WEARABLE'
-                        ? 'FitAI reads shared watch records through Health Connect or Apple Health. This choice does not pair a watch.'
+                        ? 'Setcraft reads shared watch records through Health Connect or Apple Health. This choice does not pair a watch.'
                         : _usage == 'NONE'
                             ? 'Enter sleep manually and complete a daily check-in. On Android, phone estimation is an optional choice in Log sleep.'
                             : 'Choose your sleep setup. You can log sleep even when your watch has not shared a reading.',

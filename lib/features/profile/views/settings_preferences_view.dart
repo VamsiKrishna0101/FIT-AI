@@ -93,9 +93,9 @@ class SettingsAboutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const SettingsPage(
         title: 'Help & about',
-        subtitle: 'A little more about your FitAI experience.',
+        subtitle: 'A little more about your Setcraft experience.',
         children: [
-          SettingsGroup(title: 'FitAI', children: [
+          SettingsGroup(title: 'Setcraft', children: [
             SettingsRow(
                 icon: CupertinoIcons.info_circle,
                 title: 'Version',

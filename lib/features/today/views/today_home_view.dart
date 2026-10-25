@@ -15,7 +15,9 @@ import '../components/today_dashboard.dart';
 import '../repositories/today_repository.dart';
 import '../../body_scan/models/training_map_models.dart';
 import '../../body_scan/repositories/body_assessment_repository.dart';
-import '../../wellness/views/sleep_entry_view.dart';
+import '../../wellness/views/daily_check_in_sheet.dart';
+import '../models/daily_check_in_prompt.dart';
+import '../../../core/cache/app_data_mode.dart';
 import '../../../core/health/health_sync_service.dart';
 import '../../../core/health/health_models.dart';
 
@@ -35,7 +37,8 @@ class TodayHomeView extends StatefulWidget {
   State<TodayHomeView> createState() => _TodayHomeViewState();
 }
 
-class _TodayHomeViewState extends State<TodayHomeView> {
+class _TodayHomeViewState extends State<TodayHomeView>
+    with WidgetsBindingObserver {
   HomeData? _homeData;
   final _recovery = ValueNotifier<List<RecoveryPoint>>(const []);
   StreamSubscription<HomeData>? _subscription;
@@ -49,10 +52,12 @@ class _TodayHomeViewState extends State<TodayHomeView> {
   List<WeekDay> _weekDays = const [];
   int _request = 0, _mapRequest = 0;
   String _locale = '';
+  bool _checkingPrompt = false, _checkInOpen = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _locale = LanguageManager.shared.currentLanguage.code;
     LanguageManager.shared.addListener(_languageChanged);
     _homeData = TodayRepository.shared.current;
@@ -69,6 +74,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
               TodayRepository.shared.refreshFailedFor(_selectedDate);
           _loading = false;
         });
+        _schedulePrompt();
       }
     });
     _trainingUpdates = TrainingRepository.shared.changes.stream.listen((day) {
@@ -87,6 +93,90 @@ class _TodayHomeViewState extends State<TodayHomeView> {
         unawaited(_loadHome());
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && widget.isActive) {
+      unawaited(_loadHome());
+    }
+  }
+
+  bool get _canPrompt {
+    final date = CacheScope.todayKey(_selectedDate);
+    final data = _homeData;
+    return mounted &&
+        widget.isActive &&
+        !_loading &&
+        !_loadFailed &&
+        !_refreshFailed &&
+        !_checkInOpen &&
+        !AppDataMode.shared.preview &&
+        DateUtils.isSameDay(_selectedDate, DateTime.now()) &&
+        data?.calendarDate == date &&
+        ModalRoute.of(context)?.isCurrent == true &&
+        data?.sleepLog?['sleepMinutes'] is! num &&
+        !(data?.healthMetrics?.date == date &&
+            (data?.healthMetrics?.sleepMinutes ?? 0) > 0) &&
+        !(data?.readiness?.date == date &&
+            (data?.readiness?.sleepMinutes ?? 0) > 0);
+  }
+
+  void _schedulePrompt() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_maybePrompt());
+    });
+  }
+
+  Future<void> _maybePrompt() async {
+    if (_checkingPrompt || !_canPrompt) return;
+    _checkingPrompt = true;
+    try {
+      final date = _selectedDate;
+      final owner = await CacheScope.userId();
+      if (!_canPrompt || owner == 'anonymous') return;
+      if (!await DailyCheckInPrompt.claim(owner, date)) return;
+      if (_canPrompt &&
+          owner == await CacheScope.userId() &&
+          DateUtils.isSameDay(date, _selectedDate)) {
+        await _openCheckIn();
+      }
+    } catch (_) {
+      // A preference failure must not interrupt Today or repeatedly prompt.
+    } finally {
+      _checkingPrompt = false;
+    }
+  }
+
+  Future<void> _openCheckIn() async {
+    if (_checkInOpen || AppDataMode.shared.preview) return;
+    final date = _selectedDate;
+    _checkInOpen = true;
+    try {
+      final entry = await showDailyCheckInSheet(context,
+          date: date,
+          entry: _homeData?.sleepLog,
+          syncedSleepMinutes:
+              _homeData?.healthMetrics?.date == CacheScope.todayKey(date)
+                  ? _homeData?.healthMetrics?.sleepMinutes?.round()
+                  : null);
+      if (!mounted) return;
+      if (entry != null &&
+          entry['date'] == CacheScope.todayKey(_selectedDate) &&
+          _homeData != null) {
+        setState(() => _homeData = HomeData.fromJson({
+              ..._homeData!.toJson(),
+              'sleepLog': entry,
+              if (entry.containsKey('readiness'))
+                'readiness': entry['readiness'],
+              if (entry.containsKey('wearableUsage'))
+                'wearableUsage': entry['wearableUsage']
+            }));
+        await _loadHome(refresh: true);
+      }
+    } finally {
+      _checkInOpen = false;
+    }
   }
 
   void _languageChanged() {
@@ -178,6 +268,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
         _refreshFailed = refreshFailed;
       });
     }
+    _schedulePrompt();
     await Future.wait([recovery, preview]);
   }
 
@@ -212,6 +303,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     LanguageManager.shared.removeListener(_languageChanged);
     _subscription?.cancel();
     _trainingUpdates?.cancel();
@@ -254,27 +346,7 @@ class _TodayHomeViewState extends State<TodayHomeView> {
             onBody: () => widget.onSelectTab(2),
             onSleep: _selectedDate.isAfter(DateUtils.dateOnly(DateTime.now()))
                 ? null
-                : () async {
-                    final entry = await Navigator.of(context)
-                        .push<Map<String, dynamic>>(MaterialPageRoute(
-                            builder: (_) =>
-                                SleepEntryView(initialDate: _selectedDate)));
-                    if (mounted) {
-                      if (entry != null &&
-                          entry['date'] == CacheScope.todayKey(_selectedDate) &&
-                          _homeData != null) {
-                        setState(() => _homeData = HomeData.fromJson({
-                              ..._homeData!.toJson(),
-                              'sleepLog': entry,
-                              if (entry.containsKey('readiness'))
-                                'readiness': entry['readiness'],
-                              if (entry.containsKey('wearableUsage'))
-                                'wearableUsage': entry['wearableUsage'],
-                            }));
-                      }
-                      await _loadHome(refresh: true);
-                    }
-                  },
+                : _openCheckIn,
           ),
         ),
       );

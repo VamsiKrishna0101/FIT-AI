@@ -113,16 +113,21 @@ void main() {
 
   test('Exercise pins remain scoped to their account and limited to three',
       () async {
-    for (final id in ['one', 'two', 'three', 'four']) {
+    for (final id in ['one', 'two', 'three']) {
       await repository.pin(id);
     }
-    expect(await repository.pins(), ['two', 'three', 'four']);
+    await expectLater(repository.pin('four'), throwsFormatException);
+    expect(await repository.pins(), ['one', 'two', 'three']);
+    await repository.setPinned('two', false);
+    await repository.setPinned('four', true);
+    expect(await repository.pins(), ['one', 'three', 'four']);
     await SecureSessionStore.shared
         .saveTokens(accessToken: token('progress-bob'), refreshToken: 'test');
     expect(await repository.pins(), isEmpty);
   });
 
-  test('A previous language response cannot refill the selected language cache', () async {
+  test('A previous language response cannot refill the selected language cache',
+      () async {
     await LanguageManager.shared.selectLanguage(AppLanguage.uk);
     final old = repository.load('', '4w');
     final failure = expectLater(old, throwsStateError);

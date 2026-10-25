@@ -1,541 +1,493 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fitai_mobile/core/network/api_client.dart';
+import 'package:fitai_mobile/core/localization/membership_copy.dart';
+import 'package:fitai_mobile/features/subscription/subscription_gate.dart';
 import 'package:fitai_mobile/features/subscription/subscription_service.dart';
 import 'package:fitai_mobile/features/subscription/subscription_view.dart';
-import 'package:fitai_mobile/features/subscription/trial_access_hero.dart';
-import 'package:fitai_mobile/features/subscription/subscription_pricing_view.dart';
 
 Map<String, dynamic> accessData(String state) => {
       'state': state,
-      'hasAccess': state == 'trial' || state == 'active',
       'billingReady': true,
-      'serverTime': '2026-10-14T12:00:00Z',
-      'trialEndsAt': state == 'available' ? null : '2026-10-28T12:00:00Z',
-      'paidUntil': state == 'active' ? '2026-11-14T12:00:00Z' : null,
-      'accountId': 'account',
+      'trialSource': 'store',
+      'serverTime': '2026-10-24T12:00:00Z',
+      'trialEndsAt': state == 'trial' ? '2026-11-07T12:00:00Z' : null,
+      'paidUntil': state == 'active' ? '2026-11-24T12:00:00Z' : null,
+      'accountId': 'billing-account',
+      'appleAccountId': 'member',
+      'products': {'annual': 'annual-product', 'monthly': 'monthly-product'},
+      'basePlans': {'annual': 'annual', 'monthly': 'monthly'},
     };
-
-Map<String, dynamic> pricingData(String code) {
-  final config = jsonDecode(
-          File('../backend/data/subscription_prices.json').readAsStringSync())
-      as Map;
-  return {
-    'source': 'planned',
-    'trialDays': 14,
-    'countryCode': code,
-    'countries': [
-      for (final entry in (config['countries'] as Map).entries)
-        {'code': entry.key, ...Map<String, dynamic>.from(entry.value as Map)}
-    ]
-  };
+MembershipOffer exampleOffer(String interval, {bool trial = true}) {
+  final annual = interval == 'annual';
+  final product = ProductDetails(
+      id: '$interval-product',
+      title: interval,
+      description: 'Test store fixture',
+      price: annual ? '€99.99' : '€12.99',
+      rawPrice: annual ? 99.99 : 12.99,
+      currencyCode: 'EUR');
+  return MembershipOffer(
+      product: product,
+      price: product.price,
+      amount: product.rawPrice,
+      trialDays: trial ? 14 : 0);
 }
 
-class TestSubscription extends SubscriptionService {
-  TestSubscription({super.store});
-  int trials = 0;
-  String? refreshError;
-  bool storeFails = false;
+class PreviewMembership extends SubscriptionService {
   String? selected;
-  String countryCode = 'GB';
-  bool pricingFails = false;
-  @override
-  Future<Map<String, dynamic>> loadPricing() async {
-    if (pricingFails) throw StateError('Pricing failed');
-    return pricingData(countryCode);
+  bool fail = false;
+  PreviewMembership(
+      {String state = 'available', bool trial = true, bool prices = true}) {
+    access = SubscriptionAccess(accessData(state));
+    storeReady = prices;
+    if (prices) {
+      for (final interval in ['annual', 'monthly']) {
+        offers[interval] = exampleOffer(interval, trial: trial);
+      }
+    }
   }
-
   @override
   bool get android => true;
   @override
+  Future<void> initialize() async {
+    if (fail) throw StateError('Connection failed. Please retry.');
+  }
+
+  @override
   Future<void> refresh() async {
-    if (refreshError != null) throw StateError(refreshError!);
-  }
-
-  @override
-  Future<void> loadProducts() async {
-    storeReady = products.isNotEmpty && !storeFails;
-    if (storeFails) {
-      products.clear();
-      throw StateError('Could not load Google Play prices. Please retry.');
-    }
-  }
-
-  @override
-  Future<void> startTrial() async {
-    trials++;
-    access = SubscriptionAccess(accessData('trial'));
-    notifyListeners();
+    if (fail) throw StateError('Connection failed. Please retry.');
   }
 
   @override
   Future<void> purchase(String interval) async {
     selected = interval;
   }
+
+  void verified(String state) {
+    access = SubscriptionAccess(accessData(state));
+    notifyListeners();
+  }
 }
 
-class QuietPlayStore extends Fake implements InAppPurchase {
+class StoreFixture extends Fake implements InAppPurchase {
+  final stream = StreamController<List<PurchaseDetails>>.broadcast();
+  PurchaseParam? requested;
+  int completions = 0;
   @override
-  Stream<List<PurchaseDetails>> get purchaseStream => const Stream.empty();
+  Stream<List<PurchaseDetails>> get purchaseStream => stream.stream;
+  @override
+  Future<bool> buyNonConsumable({required PurchaseParam purchaseParam}) async {
+    requested = purchaseParam;
+    return true;
+  }
+
+  @override
+  Future<void> completePurchase(PurchaseDetails purchase) async {
+    completions++;
+  }
 }
 
-class UnconfiguredAndroidSubscription extends SubscriptionService {
+class VerificationFixture implements HttpClientAdapter {
+  final paths = <String>[];
+  bool reject = false;
+  String state = 'available';
+  @override
+  Future<ResponseBody> fetch(RequestOptions options,
+      Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+    paths.add(options.path);
+    final verify = options.path.endsWith('/verify');
+    if (verify && !reject) state = 'trial';
+    return ResponseBody.fromString(
+        jsonEncode(verify && reject
+            ? {'error': 'Verification unavailable'}
+            : {'data': accessData(state), 'purchaseActive': verify && !reject}),
+        verify && reject ? 503 : 200,
+        headers: {
+          Headers.contentTypeHeader: ['application/json']
+        });
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class CheckoutService extends SubscriptionService {
+  CheckoutService(StoreFixture store) : super(store: store);
+  bool offerChanged = false;
   @override
   bool get android => true;
+  @override
+  Future<void> loadProducts() async {
+    storeReady = true;
+    for (final interval in ['annual', 'monthly']) {
+      offers[interval] = exampleOffer(interval, trial: !offerChanged);
+    }
+  }
 }
+
+PurchaseDetails purchaseEvent(PurchaseStatus status) => PurchaseDetails(
+    purchaseID: 'transaction',
+    productID: 'annual-product',
+    transactionDate: '2026-10-24',
+    verificationData: PurchaseVerificationData(
+        localVerificationData: '',
+        serverVerificationData: 'opaque-store-token',
+        source: 'google_play'),
+    status: status)
+  ..pendingCompletePurchase = status == PurchaseStatus.purchased;
 
 void main() {
   setUpAll(() async {
-    final font = FontLoader('Inter')
-      ..addFont(rootBundle.load('assets/fonts/Inter.ttf'));
-    await font.load();
-    final materialIcons = FontLoader('MaterialIcons')
-      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
-    await materialIcons.load();
-    final icons = FontLoader('packages/cupertino_icons/CupertinoIcons')
-      ..addFont(rootBundle
-          .load('packages/cupertino_icons/assets/CupertinoIcons.ttf'));
-    await icons.load();
+    for (final font in {
+      'Inter': 'assets/fonts/Inter.ttf',
+      'MaterialIcons': 'fonts/MaterialIcons-Regular.otf'
+    }.entries) {
+      await (FontLoader(font.key)..addFont(rootBundle.load(font.value))).load();
+    }
   });
-  TestSubscription service(String state) =>
-      TestSubscription()..access = SubscriptionAccess(accessData(state));
-
-  Widget screen(TestSubscription service,
-          {VoidCallback? onContinue, double scale = 1}) =>
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues(
+        {'fitai_access_token': 'test-session', 'fitai_user_id': 'member'});
+  });
+  Widget app(Widget child,
+          {double scale = 1, Locale locale = const Locale('en', 'GB')}) =>
       MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: MediaQuery(
-            data: MediaQueryData(
-                textScaler: TextScaler.linear(scale), disableAnimations: true),
-            child: SubscriptionView(service: service, onContinue: onContinue)),
-      );
-
-  test(
-      'server time determines access; expired/canceled local state cannot grant it',
-      () {
-    final trial = SubscriptionAccess(accessData('trial'));
-    expect(trial.hasAccess, true);
-    expect(trial.daysRemaining, 14);
-    expect(SubscriptionAccess(accessData('expired')).hasAccess, false);
+          locale: locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('de'),
+            Locale('fr'),
+            Locale('sv'),
+            Locale('no'),
+            Locale('da'),
+            Locale('nl'),
+            Locale('es'),
+            Locale('it')
+          ],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.dark(),
+          builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                  disableAnimations: true,
+                  textScaler: TextScaler.linear(scale)),
+              child: child!),
+          home: child);
+  test('malformed and expired access cannot unlock the app', () {
+    expect(SubscriptionAccess(accessData('trial')).hasAccess, true);
     expect(
         SubscriptionAccess(
-                {...accessData('trial'), 'serverTime': '2026-10-29T12:00:00Z'})
+                {...accessData('trial'), 'serverTime': '2026-11-08T12:00:00Z'})
+            .hasAccess,
+        false);
+    expect(SubscriptionAccess({'state': 'active', 'hasAccess': true}).hasAccess,
+        false);
+    expect(
+        SubscriptionAccess({...accessData('trial'), 'trialEndsAt': 'bad'})
             .hasAccess,
         false);
   });
-
-  testWidgets(
-      'card-free trial starts only after a tap and continues after server confirmation',
-      (tester) async {
-    final model = service('available');
-    var continued = false;
-    await tester.pumpWidget(screen(model, onContinue: () => continued = true));
-    await tester.pumpAndSettle();
-    expect(model.trials, 0);
+  test('free phase uses actual paid renewal price and exact 14-day eligibility',
+      () {
+    GooglePlayProductDetails product({String period = 'P2W'}) =>
+        GooglePlayProductDetails.fromProductDetails(ProductDetailsWrapper(
+            description: 'Fixture',
+            name: 'Annual',
+            title: 'Annual',
+            productId: 'annual-product',
+            productType: ProductType.subs,
+            subscriptionOfferDetails: [
+              SubscriptionOfferDetailsWrapper(
+                  basePlanId: 'annual',
+                  offerId: 'new-member',
+                  offerTags: const [],
+                  offerIdToken: 'trial-offer',
+                  pricingPhases: [
+                    PricingPhaseWrapper(
+                        billingCycleCount: 1,
+                        billingPeriod: period,
+                        formattedPrice: 'Free',
+                        priceAmountMicros: 0,
+                        priceCurrencyCode: 'EUR',
+                        recurrenceMode: RecurrenceMode.finiteRecurring),
+                    const PricingPhaseWrapper(
+                        billingCycleCount: 0,
+                        billingPeriod: 'P1Y',
+                        formattedPrice: '€99.99',
+                        priceAmountMicros: 99990000,
+                        priceCurrencyCode: 'EUR',
+                        recurrenceMode: RecurrenceMode.infiniteRecurring)
+                  ])
+            ])).single;
+    final offer =
+        SubscriptionService.googleOffer(product(), 'annual', allowTrial: true)!;
+    expect(offer.price, '€99.99');
+    expect(offer.amount, 99.99);
+    expect(offer.trialDays, 14);
     expect(
-        find.text('No payment details. No automatic charge.'), findsOneWidget);
-    await tester.tap(find.text('Start my 14-day trial'));
-    await tester.pumpAndSettle();
-    expect(model.trials, 1);
-    expect(continued, true);
-    expect(tester.takeException(), isNull);
+        SubscriptionService.googleOffer(product(), 'wrong', allowTrial: true),
+        isNull);
+    expect(
+        SubscriptionService.googleOffer(product(), 'annual', allowTrial: false),
+        isNull);
+    expect(
+        SubscriptionService.googleOffer(product(period: 'P1W'), 'annual',
+            allowTrial: true),
+        isNull);
+    expect(
+        SubscriptionService.googleOffer(product(), 'annual',
+            allowTrial: true, expectedPeriod: 'P1M'),
+        isNull);
   });
-
-  testWidgets('expired account cannot subscribe with missing live store prices',
+  testWidgets('price is visible, annual and monthly update the same checkout',
       (tester) async {
-    final model = service('expired');
-    await tester.pumpWidget(screen(model));
+    final service = PreviewMembership();
+    await tester.pumpWidget(app(SubscriptionView(service: service)));
     await tester.pumpAndSettle();
-    expect(find.text('Subscribe now'), findsNothing);
-    expect(find.text('Unavailable'), findsNothing);
-    expect(find.text('View saved records'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('We couldn’t load plans'), 250);
-    expect(model.selected, isNull);
-    expect(find.text('Start my 14-day trial'), findsNothing);
-    expect(tester.takeException(), isNull);
+    expect(find.text('14 days free, then €99.99/year'), findsOneWidget);
+    expect(find.text('Not now'), findsNothing);
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(12));
+    expect(find.byIcon(Icons.close_rounded), findsNWidgets(12));
+    await Scrollable.ensureVisible(
+        tester.element(find.byKey(const ValueKey('membership-monthly'))),
+        alignment: .3);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('membership-monthly')));
+    await tester.pumpAndSettle();
+    expect(find.text('14 days free, then €12.99/month'), findsOneWidget);
+    await tester.tap(find.text('Start my 14-day free trial'));
+    await tester.pumpAndSettle();
+    expect(service.selected, 'monthly');
+    expect(service.access!.hasAccess, false);
+    expect(find.text('No payment details. No automatic charge.'), findsNothing);
   });
-
-  testWidgets(
-      'plan selection uses live localized prices and real annual savings',
+  testWidgets('ineligible store offer never promises a free trial',
       (tester) async {
-    final model = service('expired');
-    for (final interval in ['monthly', 'annual']) {
-      model.products[interval] = ProductDetails(
-          id: interval,
-          title: interval,
-          description: '',
-          price: interval == 'monthly' ? '€12.99' : '€99.99',
-          rawPrice: interval == 'monthly' ? 12.99 : 99.99,
-          currencyCode: 'EUR');
-    }
-    expect(model.annualSavings, 36);
-    await tester.pumpWidget(screen(model));
+    await tester.pumpWidget(app(SubscriptionView(
+        service: PreviewMembership(state: 'expired', trial: false))));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Monthly'), 350);
-    await tester.ensureVisible(find.text('Monthly'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Monthly'));
-    await tester.pumpAndSettle();
-    expect(find.text('€12.99'), findsOneWidget);
-    await tester.tap(find.text('Subscribe now'));
-    expect(model.selected, 'monthly');
-    expect(tester.takeException(), isNull);
+    expect(find.text('Start my 14-day free trial'), findsNothing);
+    expect(find.text('Subscribe & continue'), findsOneWidget);
+    expect(find.text('€99.99/year · auto-renewing'), findsOneWidget);
   });
-
-  testWidgets(
-      'trial layout supports narrow screens and larger text with reduced motion',
+  testWidgets('missing prices and network failure keep access locked',
       (tester) async {
-    tester.view.physicalSize = const Size(320, 700);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(screen(service('available'), scale: 1.8));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    await tester.scrollUntilVisible(find.text('Restore purchases'), 300);
-    expect(tester.takeException(), isNull);
-  });
-
-  test('unconfigured Play billing does not prevent trial access', () async {
-    final model = UnconfiguredAndroidSubscription()
-      ..access = SubscriptionAccess(
-          {...accessData('available'), 'billingReady': false});
-    await model.loadProducts();
-    expect(model.products, isEmpty);
-    expect(model.storeReady, false);
-    expect(model.access!.trialAvailable, true);
-    model.dispose();
-  });
-
-  testWidgets(
-      'missing subscription status offers retry without claiming an active trial',
-      (tester) async {
-    final model = TestSubscription()
-      ..refreshError = 'Membership is temporarily unavailable.';
-    await tester.pumpWidget(screen(model));
-    await tester.pumpAndSettle();
-    expect(find.text('Membership is temporarily unavailable.'), findsOneWidget);
-    expect(find.text('Continue your trial'), findsNothing);
-    expect(model.trials, 0);
-    model.refreshError = null;
-    model.access = SubscriptionAccess(accessData('available'));
-    await tester.tap(find.text('Retry').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Start my 14-day trial'), findsOneWidget);
-    expect(model.trials, 0);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('planned country prices keep trial continuation available',
-      (tester) async {
-    final model = service('trial')
-      ..access =
-          SubscriptionAccess({...accessData('trial'), 'billingReady': false});
     var continued = false;
-    await tester.pumpWidget(screen(model, onContinue: () => continued = true));
+    final service = PreviewMembership(prices: false)..fail = true;
+    await tester.pumpWidget(app(SubscriptionView(
+        service: service, onContinue: () => continued = true)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('View subscription plans'));
-    await tester.pumpAndSettle();
-    expect(find.text('Planned prices'), findsOneWidget);
-    expect(find.byType(SubscriptionPricingView), findsOneWidget);
-    expect(find.text('£84.99'), findsOneWidget);
-    expect(find.text('Annual'), findsOneWidget);
-    expect(find.text('Monthly'), findsOneWidget);
-    expect(find.text('Unavailable'), findsNothing);
-    expect(find.text('Subscribe now'), findsNothing);
-    await tester.tap(find.text('Continue your trial').last);
-    await tester.pumpAndSettle();
-    expect(continued, true);
-    expect(model.trials, 0);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('a Play price error does not become a trial status error',
-      (tester) async {
-    final model = service('trial')..storeFails = true;
-    await tester.pumpWidget(screen(model));
-    await tester.pumpAndSettle();
-    expect(find.text('Could not refresh your subscription. Please retry.'),
-        findsNothing);
-    await tester.tap(find.text('View subscription plans'));
-    await tester.pumpAndSettle();
-    expect(find.text('Planned prices'), findsOneWidget);
-    expect(find.text('Continue your trial'), findsWidgets);
-    expect(find.text('Subscribe now'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets(
-      'only returned Play plans are offered and monthly-only checkout remains usable',
-      (tester) async {
-    final model = service('expired');
-    model.products['monthly'] = ProductDetails(
-        id: 'monthly',
-        title: 'Monthly',
-        description: '',
-        price: '£10.99',
-        rawPrice: 10.99,
-        currencyCode: 'GBP');
-    await tester.pumpWidget(screen(model));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Monthly'), 250);
-    expect(find.text('Annual'), findsNothing);
-    expect(find.text('Unavailable'), findsNothing);
-    await tester.tap(find.text('Subscribe now'));
-    expect(model.selected, 'monthly');
-    expect(tester.takeException(), isNull);
-  });
-
-  test('a store outage during startup preserves confirmed trial access',
-      () async {
-    final model = TestSubscription(store: QuietPlayStore())
-      ..access = SubscriptionAccess(accessData('trial'))
-      ..storeFails = true;
-    await model.initialize();
-    expect(model.access!.hasAccess, true);
-    expect(model.plansAvailable, false);
-    model.dispose();
-  });
-
-  testWidgets('trial preview', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final key = GlobalKey();
-    await tester.pumpWidget(
-        RepaintBoundary(key: key, child: screen(service('available'))));
-    await tester.pumpAndSettle();
-    if (Platform.environment['FITAI_SUBSCRIPTION_PREVIEW'] == '1') {
-      final boundary =
-          key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-      await tester.runAsync(() async {
-        final image = await boundary.toImage();
-        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-        await File('build/subscription-trial-preview.png')
-            .writeAsBytes(bytes!.buffer.asUint8List());
-        image.dispose();
-      });
-    }
-    expect(tester.takeException(), isNull);
+    expect(find.text('Retry loading plans'), findsOneWidget);
+    expect(find.text('Start my 14-day free trial'), findsNothing);
+    expect(find.text('Connection failed. Please retry.'), findsOneWidget);
+    expect(continued, false);
   });
   testWidgets(
-      'trial hero shows full access without starting a trial on refresh',
+      'root gate has no dashboard bypass and responds to verified expiry',
       (tester) async {
-    final model = service('available');
-    await tester.pumpWidget(screen(model));
+    final service = PreviewMembership();
+    await tester.pumpWidget(app(SubscriptionGate(
+        service: service, child: const Text('PRIVATE DASHBOARD'))));
     await tester.pumpAndSettle();
-    expect(find.byType(TrialAccessHero), findsOneWidget);
-    expect(find.byKey(const ValueKey('trial-card-animation')), findsNothing);
-    expect(model.trials, 0);
-    model.notifyListeners();
+    expect(find.text('PRIVATE DASHBOARD'), findsNothing);
+    expect(find.text('Not now'), findsNothing);
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(model.trials, 0);
-    expect(tester.takeException(), isNull);
+    expect(find.text('PRIVATE DASHBOARD'), findsNothing);
+    service.verified('trial');
+    await tester.pumpAndSettle();
+    expect(find.text('PRIVATE DASHBOARD'), findsOneWidget);
+    service.verified('expired');
+    await tester.pumpAndSettle();
+    expect(find.text('PRIVATE DASHBOARD'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    service.dispose();
   });
-  testWidgets('Not now starts no trial', (tester) async {
-    final model = service('available');
-    var continued = 0;
-    await tester.pumpWidget(screen(model, onContinue: () => continued++));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Not now'));
-    await tester.tap(find.text('Not now'));
-    expect(continued, 1);
-    expect(model.trials, 0);
-  });
-  testWidgets('active trial keeps its confirmed end date after refresh',
-      (tester) async {
-    final model = service('trial');
-    final access = model.access;
-    await tester.pumpWidget(screen(model));
-    await tester.pumpAndSettle();
-    expect(find.byType(TrialAccessHero), findsOneWidget);
-    model.notifyListeners();
-    await tester.pumpAndSettle();
-    expect(model.access, same(access));
-    expect(model.trials, 0);
-    expect(find.text('14 days left in your trial'), findsOneWidget);
-  });
-  testWidgets('paid and expired accounts do not show the trial introduction',
-      (tester) async {
-    for (final state in ['active', 'expired']) {
-      await tester.pumpWidget(screen(service(state)));
-      await tester.pumpAndSettle();
-      expect(find.byType(TrialAccessHero), findsNothing);
-    }
-    expect(tester.takeException(), isNull);
-  });
-  testWidgets('See pricing opens a separate page without starting the trial',
-      (tester) async {
-    final model = service('available');
-    await tester.pumpWidget(screen(model));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('See pricing'));
-    await tester.pumpAndSettle();
-    expect(find.byType(SubscriptionPricingView), findsOneWidget);
-    expect(model.trials, 0);
-    expect(find.text('£84.99'), findsOneWidget);
-    expect(find.text('£10.99'), findsOneWidget);
-    expect(find.text('Save 36%'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const ValueKey('pricing-monthly')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('pricing-monthly')));
-    await tester.pumpAndSettle();
-    expect(model.selected, isNull);
-    expect(model.trials, 0);
-    await tester.drag(find.byType(ListView).first, const Offset(0, 1100));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('United Kingdom'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('United Kingdom'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('pricing-country-DK')));
-    await tester.pumpAndSettle();
-    expect(find.text('Denmark'), findsOneWidget);
-    expect(find.textContaining('749'), findsWidgets);
-    expect(find.text('Save 37%'), findsOneWidget);
-    expect(find.text('Subscribe now'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets(
-      'pricing uses live store amounts and never mixes preview prices with checkout',
+      'canceled pending and unverified purchases stay locked; verified receipt unlocks',
       (tester) async {
-    final model = service('expired');
-    for (final interval in ['monthly', 'annual']) {
-      model.products[interval] = ProductDetails(
-          id: interval,
-          title: interval,
-          description: '',
-          price: interval == 'monthly' ? '€14.99' : '€79.99',
-          rawPrice: interval == 'monthly' ? 14.99 : 79.99,
-          currencyCode: 'EUR');
-    }
-    model.storeReady = true;
+    final adapter = VerificationFixture();
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final store = StoreFixture();
+    final checkout = CheckoutService(store);
+    await tester.runAsync(checkout.initialize);
+    await tester.runAsync(() => checkout.purchase('annual'));
+    expect(store.requested?.applicationUserName, 'billing-account');
+    expect(checkout.access!.hasAccess, false);
+    store.stream.add([purchaseEvent(PurchaseStatus.pending)]);
     await tester
-        .pumpWidget(MaterialApp(home: SubscriptionPricingView(service: model)));
-    await tester.pumpAndSettle();
-    expect(find.text('Google Play pricing'), findsOneWidget);
-    expect(find.text('€79.99'), findsOneWidget);
-    expect(find.text('£84.99'), findsNothing);
-    expect(find.text('Save 56%'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('pricing-monthly')));
-    await tester.tap(find.text('Subscribe now'));
-    expect(model.selected, 'monthly');
-    model.selected = null;
-    await tester.ensureVisible(find.text('Compare countries'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Compare countries'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('pricing-country-DK')));
-    await tester.pumpAndSettle();
-    expect(find.text('Planned prices'), findsOneWidget);
-    expect(find.text('Subscribe now'), findsNothing);
-    expect(model.selected, isNull);
-    expect(tester.takeException(), isNull);
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    expect(checkout.access!.hasAccess, false);
+    store.stream.add([purchaseEvent(PurchaseStatus.canceled)]);
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    expect(checkout.awaitingConfirmation, false);
+    expect(adapter.paths.where((path) => path.endsWith('/verify')), isEmpty);
+    adapter.reject = true;
+    store.stream.add([purchaseEvent(PurchaseStatus.purchased)]);
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+    expect(checkout.access!.hasAccess, false);
+    expect(store.completions, 0);
+    adapter.reject = false;
+    store.stream.add([purchaseEvent(PurchaseStatus.purchased)]);
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+    expect(checkout.access!.hasAccess, true);
+    expect(store.completions, 1);
+    expect(adapter.paths.contains('/api/subscription/start-trial'), false);
+    checkout.dispose();
+    await store.stream.close();
   });
-
-  testWidgets(
-      'pricing fits small screens, preserves unknown countries and supports retry',
+  testWidgets('an offer change requires review before any checkout opens',
       (tester) async {
-    tester.view.physicalSize = const Size(320, 700);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    final model = service('available')
-      ..countryCode = 'ZZ'
-      ..pricingFails = true;
+    final adapter = VerificationFixture();
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final store = StoreFixture();
+    final service = CheckoutService(store);
+    await tester.runAsync(service.initialize);
+    service.offerChanged = true;
+    await tester.runAsync(() => service.purchase('annual'));
+    expect(store.requested, isNull);
+    expect(service.error, contains('Review the updated price'));
+    expect(service.access!.hasAccess, false);
+    service.dispose();
+    await store.stream.close();
+  });
+  testWidgets('expiry also locks a detail route until access is restored',
+      (tester) async {
+    final navigation = GlobalKey<NavigatorState>();
+    final service = PreviewMembership(state: 'trial');
     await tester.pumpWidget(MaterialApp(
-        home: MediaQuery(
-            data: const MediaQueryData(
-                textScaler: TextScaler.linear(1.8), disableAnimations: true),
-            child: SubscriptionPricingView(service: model))));
+        navigatorKey: navigation,
+        home: SubscriptionGate(
+            service: service,
+            child: const Scaffold(body: Text('ACCOUNT HOME')))));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-        find.text('Could not load pricing. Please try again.'), 250);
-    expect(
-        find.text('Could not load pricing. Please try again.'), findsOneWidget);
-    model.pricingFails = false;
-    await tester.tap(find.text('Retry'));
+    unawaited(navigation.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('OPEN DETAIL')))));
     await tester.pumpAndSettle();
-    expect(find.text('Choose a country'), findsOneWidget);
-    expect(find.text('£84.99'), findsNothing);
-    await tester.ensureVisible(find.text('Choose a country'));
+    service.verified('expired');
+    ApiClient.subscriptionRequired.value++;
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Choose a country'));
+    expect(find.text('OPEN DETAIL'), findsNothing);
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('pricing-country-SE')), 250,
-        scrollable: find.byType(Scrollable).last);
-    await tester.tap(find.byKey(const ValueKey('pricing-country-SE')));
+    expect(find.text('OPEN DETAIL'), findsNothing);
+    service.verified('trial');
     await tester.pumpAndSettle();
-    expect(find.text('Sweden'), findsOneWidget);
-    expect(find.text('Save 33%'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Continue to my plan'));
+    await tester.pumpAndSettle();
+    expect(find.text('OPEN DETAIL'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    service.dispose();
   });
-
-  testWidgets(
-      'country prices use European number formats and support enlarged translated text',
-      (tester) async {
-    tester.view.physicalSize = const Size(320, 760);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    for (final country in ['DE', 'DK', 'CH']) {
-      final locale =
-          country == 'DK' ? const Locale('da', 'DK') : Locale('de', country);
-      final model = service('available')..countryCode = country;
-      await tester.pumpWidget(MaterialApp(
-          locale: locale,
-          supportedLocales: const [
-            Locale('de', 'DE'),
-            Locale('de', 'CH'),
-            Locale('da', 'DK')
-          ],
-          localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          home: MediaQuery(
-              data: const MediaQueryData(
-                  textScaler: TextScaler.linear(1.6), disableAnimations: true),
-              child: SubscriptionPricingView(
-                  key: ValueKey(country), service: model))));
+  for (final scale in [1.0, 1.8]) {
+    testWidgets('membership fits 320px phone at $scale text scale',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+          app(SubscriptionView(service: PreviewMembership()), scale: scale));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-          find.byKey(const ValueKey('pricing-annual')), 250);
-      expect(
-          find.textContaining(country == 'DK'
-              ? '749'
-              : country == 'CH'
-                  ? '99.90'
-                  : '99,99'),
-          findsWidgets);
       expect(tester.takeException(), isNull);
-    }
-  });
-
-  testWidgets('pricing preview', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
+      expect(find.text('Start my 14-day free trial').hitTestable(),
+          findsOneWidget);
+      await tester.drag(find.byType(ListView), const Offset(0, -1800));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+  for (final language in ['de', 'nl', 'it']) {
+    testWidgets('localized membership fits narrow large-text $language',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(
+          SubscriptionView(service: PreviewMembership()),
+          scale: 1.6,
+          locale: Locale(language)));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(
+          find
+              .text(membershipTranslation(
+                  language, 'Start my 14-day free trial')!)
+              .hitTestable(),
+          findsOneWidget);
+      await tester.drag(find.byType(ListView), const Offset(0, -1800));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+  testWidgets('capture membership with example store prices', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final key = GlobalKey();
-    await tester.pumpWidget(MaterialApp(
-        home: RepaintBoundary(
-            key: key,
-            child: SubscriptionPricingView(service: service('available')))));
+    const key = ValueKey('membership-preview');
+    await tester.pumpWidget(app(RepaintBoundary(
+        key: key, child: SubscriptionView(service: PreviewMembership()))));
     await tester.pumpAndSettle();
-    await tester.runAsync(() async {
-      final boundary =
-          key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 2);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory('build/previews').create(recursive: true);
-      await File('build/previews/subscription-pricing.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
+    await tester.runAsync(() => precacheImage(
+        const AssetImage('assets/branding/setcraft-training-hero-v1.png'),
+        tester.element(find.byKey(key))));
+    await tester.pumpAndSettle();
+    Future<void> capture(String name) => tester.runAsync(() async {
+          final image = await tester
+              .renderObject<RenderRepaintBoundary>(find.byKey(key))
+              .toImage(pixelRatio: 2);
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          Directory('build/previews').createSync(recursive: true);
+          File('build/previews/$name.png')
+              .writeAsBytesSync(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+    await capture('membership-example-offer');
+    await tester.drag(find.byType(ListView), const Offset(0, -620));
+    await tester.pumpAndSettle();
+    await capture('membership-trial-timeline');
+    await Scrollable.ensureVisible(
+        tester.element(find.text('See what’s included.')),
+        alignment: 0);
+    await tester.pumpAndSettle();
+    await capture('membership-feature-comparison');
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(12));
+    expect(find.byIcon(Icons.close_rounded), findsNWidgets(12));
+    expect(find.text('Sets, reps & weight guidance'), findsOneWidget);
+    await Scrollable.ensureVisible(
+        tester.element(find.text('Personal records & exercise progress')),
+        alignment: 0);
+    await tester.pumpAndSettle();
+    await capture('membership-feature-comparison-more');
+    await Scrollable.ensureVisible(
+        tester.element(find.text('Progress photos & comparisons')),
+        alignment: .6);
+    await tester.pumpAndSettle();
+    expect(
+        find.text('Start my 14-day free trial').hitTestable(), findsOneWidget);
+    await capture('membership-feature-comparison-body');
     expect(tester.takeException(), isNull);
   });
 }

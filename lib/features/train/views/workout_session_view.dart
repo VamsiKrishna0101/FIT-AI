@@ -1,3 +1,4 @@
+import '../components/workout_warmup.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
@@ -432,10 +433,15 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                                   padding:
                                       const EdgeInsets.fromLTRB(18, 8, 18, 24),
                                   children: [
+                                    if (_index == 0)
+                                      WorkoutWarmup(
+                                          warmup: (_day.json['warmup'] as Map?)
+                                              ?.cast<String, dynamic>()),
                                     ClipRRect(
                                         borderRadius: BorderRadius.circular(22),
                                         child: AspectRatio(
-                                            aspectRatio: 1,
+                                            aspectRatio:
+                                                item.exercise.demoAspectRatio,
                                             child: RepaintBoundary(
                                                 child: FitVideoSurface(
                                                     key: ValueKey(item.id),

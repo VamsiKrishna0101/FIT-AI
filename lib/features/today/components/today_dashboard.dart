@@ -107,6 +107,8 @@ class TodayDashboard extends StatelessWidget {
         : null;
     final reading = data?.readiness;
     final r = reading != null &&
+            reading.score.isFinite &&
+            reading.source == 'check_in_estimate' &&
             !RegExp('sample|preview|demo', caseSensitive: false)
                 .hasMatch(reading.source) &&
             (selectedDate == null ||
@@ -114,14 +116,14 @@ class TodayDashboard extends StatelessWidget {
         ? reading
         : null;
     final days = weekDays ?? data?.weeklyStreak ?? const <WeekDay>[];
-    final noWearable = data?.wearableUsage == 'NONE';
+    const noWearable = true;
     final needsCheckIn = noWearable &&
         data?.sleepLog != null &&
         (data?.sleepLog?['rested'] == null ||
             data?.sleepLog?['energy'] == null ||
             data?.sleepLog?['soreness'] == null);
     void openReadiness() {
-      if (noWearable && r == null && onSleep != null) {
+      if (r == null && onSleep != null) {
         onSleep!();
         return;
       }
@@ -137,10 +139,7 @@ class TodayDashboard extends StatelessWidget {
       final history = points
           .where((p) =>
               !DateUtils.dateOnly(p.date).isAfter(DateUtils.dateOnly(date)) &&
-              (p.recoveryScore != null ||
-                  p.hrv != null ||
-                  p.sleepHours != null ||
-                  p.restingHr != null))
+              p.sleepHours != null)
           .toList();
       // The latest dated reading can still be charted while history is loading.
       final readingDate = r?.date == null ? null : DateTime.tryParse(r!.date!);
@@ -279,14 +278,6 @@ class TodayDashboard extends StatelessWidget {
                       copy: copy,
                       today: date,
                       onTap: openReadiness),
-                  if (health != null &&
-                      (health.steps != null ||
-                          health.activeCalories != null ||
-                          health.sleepMinutes != null)) ...[
-                    const SizedBox(height: 12),
-                    _DailyMetrics(
-                        metrics: health, copy: copy, onTap: openReadiness),
-                  ],
                   if (onSleep != null) ...[
                     const SizedBox(height: 12),
                     _TodaySurface(
@@ -305,7 +296,7 @@ class TodayDashboard extends StatelessWidget {
                                         : data?.sleepLog != null ||
                                                 (health?.sleepMinutes ?? 0) > 0
                                             ? 'Sleep logged'
-                                            : 'Log sleep',
+                                            : 'Log sleep & check-in',
                                     style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
@@ -366,6 +357,13 @@ class TodayDashboard extends StatelessWidget {
                       copy: copy,
                       onTap: onNutrition),
                   const SizedBox(height: 24),
+                  if (health != null &&
+                      (health.steps != null ||
+                          health.activeCalories != null)) ...[
+                    const SizedBox(height: 12),
+                    _DailyMetrics(
+                        metrics: health, copy: copy, onTap: openReadiness),
+                  ],
                   ValueListenableBuilder<TrainingMapData?>(
                       valueListenable: trainingUpdates ??
                           AlwaysStoppedAnimation(trainingMap),
@@ -592,13 +590,10 @@ class _ReadinessCard extends StatelessWidget {
     final score = reading == null ? null : _readinessScore(reading);
     final availability = ReadinessAvailability.fromMetrics(health,
         sleepLog: sleepLog, noWearable: noWearable);
-    final checkIn =
-        reading == null ? noWearable : reading.source == 'check_in_estimate';
+    const checkIn = true;
 
     final heading = score == null
-        ? checkIn
-            ? 'How are you feeling?'
-            : 'Add your readings'
+        ? 'How are you feeling?'
         : score >= 67
             ? 'Ready today'
             : readinessHeadline(score);
@@ -669,7 +664,10 @@ class _ReadinessCard extends StatelessWidget {
         const SizedBox(height: 14),
         ReadinessSignals(
             readiness: reading,
-            sleepLog: sleepLog,
+            sleepLog: sleepLog ??
+                (health?.sleepMinutes == null
+                    ? null
+                    : {'sleepMinutes': health!.sleepMinutes}),
             checkIn: checkIn,
             compact: true),
       ]),
@@ -712,28 +710,8 @@ class _DailyMetrics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = metrics;
-    final sleep = r.sleepMinutes?.round();
     final movement = r.steps != null || r.activeCalories != null;
     return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (sleep != null)
-        Expanded(
-            child: _TodaySurface(
-                onTap: onTap,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(CupertinoIcons.moon, color: _silver, size: 19),
-                      const SizedBox(height: 8),
-                      _Metric(
-                          label: copy.text('todaySleep'),
-                          value: '${sleep ~/ 60}',
-                          unit: 'h ${sleep % 60} m'),
-                      const SizedBox(height: 8),
-                      Text(copy.text('todayLastNight'),
-                          style: const TextStyle(color: _muted, fontSize: 10)),
-                    ]))),
-      if (sleep != null && movement) const SizedBox(width: 12),
       if (movement)
         Expanded(
             child: _TodaySurface(
@@ -1086,13 +1064,14 @@ class _WeekCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final monday =
-        DateUtils.dateOnly(today).subtract(Duration(days: today.weekday - 1));
+        DateTime(today.year, today.month, today.day - today.weekday + 1);
     return _TodaySurface(
         key: const ValueKey('today-weekly-rhythm'),
         child: Row(
             children: days.take(7).toList().asMap().entries.map((entry) {
           final day = entry.value;
-          final date = monday.add(Duration(days: entry.key));
+          final date =
+              DateTime(monday.year, monday.month, monday.day + entry.key);
           final complete = day.status == 'COMPLETED';
           final rest = day.status == 'REST_DAY';
           final selected = DateUtils.isSameDay(date, today);
@@ -1169,13 +1148,7 @@ class _RecoveryChart extends StatefulWidget {
 }
 
 class _RecoveryChartState extends State<_RecoveryChart> {
-  int _selected = 0, _sample = 6;
-
-  void _selectMetric(int index) {
-    if (_selected == index) return;
-    HapticFeedback.selectionClick();
-    setState(() => _selected = index);
-  }
+  int _sample = 6;
 
   void _selectDay(int index) {
     if (_sample == index) return;
@@ -1183,32 +1156,18 @@ class _RecoveryChartState extends State<_RecoveryChart> {
     setState(() => _sample = index);
   }
 
-  String? get _hrvMethod => widget.history
-      .where((p) => p.hrv != null && p.hrvMethod != null)
-      .lastOrNull
-      ?.hrvMethod;
-  double? _value(RecoveryPoint p) => switch (_selected) {
-        0 => p.recoveryScore?.toDouble(),
-        1 => p.hrvMethod == _hrvMethod ? p.hrv : null,
-        2 => p.sleepHours,
-        _ => p.restingHr?.toDouble(),
-      };
-  String _display(double value) => switch (_selected) {
-        0 => '${value.round()} / 100',
-        1 => '${value.round()} ms',
-        2 => '${(value * 60).round() ~/ 60} h ${(value * 60).round() % 60} m',
-        _ => '${value.round()} bpm',
-      };
+  double? _value(RecoveryPoint p) => p.sleepHours;
+  String _display(double value) =>
+      '${(value * 60).round() ~/ 60} h ${(value * 60).round() % 60} m';
   String? _comparison(List<double?> values) {
     final today = values[6];
     final previous = values.take(6).whereType<double>().toList();
     if (_sample != 6 || today == null || previous.length < 3) return null;
     final difference =
         today - previous.reduce((a, b) => a + b) / previous.length;
-    final rounded = (difference.abs() * (_selected == 2 ? 60 : 1)).round();
+    final rounded = (difference.abs() * 60).round();
     if (rounded == 0) return widget.copy.text('todayAtAverage');
-    final unit =
-        switch (_selected) { 0 => 'pts', 1 => 'ms', 2 => 'min', _ => 'bpm' };
+    const unit = 'min';
     return widget.copy
         .text(difference > 0 ? 'todayAboveAverage' : 'todayBelowAverage')
         .replaceAll('{value}', '$rounded $unit');
@@ -1229,7 +1188,7 @@ class _RecoveryChartState extends State<_RecoveryChart> {
     final comparison = _comparison(values);
     final hasValues = values.any((value) => value != null);
     final duration = DSMotion.duration(context, DSMotion.selection);
-    final labels = ['recovery', 'hrv', 'todaySleep', 'todayRhr'];
+
     return _TodaySurface(
         key: const ValueKey('today-chart-card'),
         padding: const EdgeInsets.all(14),
@@ -1251,29 +1210,8 @@ class _RecoveryChartState extends State<_RecoveryChart> {
                         fontWeight: FontWeight.w500))),
           ]),
           const SizedBox(height: 5),
-          SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                  children: List.generate(
-                      4,
-                      (index) => Semantics(
-                          button: true,
-                          selected: _selected == index,
-                          child: TextButton(
-                              onPressed: () => _selectMetric(index),
-                              style: TextButton.styleFrom(
-                                  foregroundColor: _selected == index
-                                      ? Colors.white
-                                      : _muted,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  minimumSize: const Size(44, 32),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap),
-                              child: Text(widget.copy.text(labels[index]),
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500))))))),
+          const FitnessText('Recorded sleep',
+              style: TextStyle(color: _muted, fontSize: 11)),
           const SizedBox(height: 6),
           AnimatedSize(
               duration: duration,
@@ -1299,24 +1237,15 @@ class _RecoveryChartState extends State<_RecoveryChart> {
                             child: RepaintBoundary(
                                 child: MotionProgress(
                                     dataKey:
-                                        '$_selected:${dates.first.toIso8601String()}:${values.join('|')}',
+                                        'sleep:${dates.first.toIso8601String()}:${values.join('|')}',
                                     builder: (context, progress) => CustomPaint(
                                         painter: _TrendPainter(
                                             progress: progress,
                                             values: values,
                                             selectedIndex: _sample,
-                                            color: _selected == 1
-                                                ? const Color(0xFFB3A1DF)
-                                                : _selected == 2
-                                                    ? const Color(0xFFE1C47E)
-                                                    : const Color(0xFF8BAAFF),
-                                            bars: _selected == 0 ||
-                                                _selected == 2,
-                                            fixedMax: _selected == 0
-                                                ? 100
-                                                : _selected == 2
-                                                    ? 12
-                                                    : null))))),
+                                            color: const Color(0xFF8BAAFF),
+                                            bars: true,
+                                            fixedMax: 12))))),
                         Row(
                             children: List.generate(
                                 7,

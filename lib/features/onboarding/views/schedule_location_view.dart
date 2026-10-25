@@ -1,14 +1,12 @@
 import '../viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
+import '../../../core/localization/fitness_copy.dart';
 
 import '../../../core/navigation/onboarding_page_route.dart';
-import '../components/duration_grid_chips.dart';
-import '../components/location_apple_card.dart';
 import '../components/onboarding_scaffold.dart';
-import '../components/schedule_frequency_pills.dart';
-import '../components/onboarding_live_previews.dart';
+import '../components/training_hero.dart';
 import '../viewmodels/schedule_location_viewmodel.dart';
+import '../models/training_schedule_models.dart';
 import 'equipment_selection_view.dart';
 
 // MARK: - Combined Screen 04 & 05: Your Schedule & Space (Apple iOS Premium)
@@ -23,6 +21,7 @@ class ScheduleLocationView extends StatefulWidget {
 
 class _ScheduleLocationViewState extends State<ScheduleLocationView> {
   bool _advancing = false;
+  int _part = 0;
   late final ScheduleLocationViewModel _viewModel;
 
   @override
@@ -45,11 +44,19 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
   }
 
   void _onBack() {
-    Navigator.of(context).pop();
+    if (_part > 0) {
+      setState(() => _part--);
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   void _onContinue() async {
     if (_advancing) return;
+    if (_part < 2) {
+      setState(() => _part++);
+      return;
+    }
     setState(() => _advancing = true);
     try {
       await _viewModel.continueToNextStep();
@@ -69,96 +76,67 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
   @override
   Widget build(BuildContext context) {
     final language = _viewModel.selectedLanguage;
-    final selectedDays = _viewModel.selectedDays;
-    final selectedDuration = _viewModel.selectedDuration;
-    final selectedLocation = _viewModel.selectedLocation;
-
+    final valid = switch (_part) {
+      0 => _viewModel.selectedDays != null,
+      1 => _viewModel.selectedDuration != null,
+      _ => _viewModel.selectedLocation != null,
+    };
     return OnboardingScaffold(
       step: _viewModel.currentStep,
       totalSteps: _viewModel.totalSteps,
-      title: language.headlineScheduleAndLocation,
-      subtitle: 'Choose a rhythm that fits your life.',
+      sectionLabel: 'Your training',
+      part: _part,
+      parts: 3,
+      canPop: _part == 0,
+      title: switch (_part) {
+        0 => language.weeklyCommitmentQuestion,
+        1 => language.sessionDurationQuestion,
+        _ => language.trainingLocationQuestion,
+      },
+      subtitle: switch (_part) {
+        0 =>
+          'Choose a week you can keep coming back to. You can change it later.',
+        1 => 'We’ll use your available time to shape each session.',
+        _ => 'Your plan will use the space and equipment you actually have.',
+      },
       actionTitle: language.continueButtonTitle,
       loading: _advancing,
       onBack: _onBack,
-      onContinue: _viewModel.isValid ? _onContinue : null,
+      onContinue: _viewModel.controller.ready && valid ? _onContinue : null,
       children: [
-        // ── 1. Weekly Commitment ─────────────────────────────
-        FitnessText(
-          language.weeklyCommitmentQuestion
-              .replaceAll('?', '')
-              .trim()
-              .toUpperCase(),
-          style: const TextStyle(
-            fontFamily: null,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: Color(0xFF8E8E93),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        ScheduleFrequencyPills(
-          selectedOption: selectedDays,
-          onSelected: _viewModel.selectDays,
-        ),
-
-        const SizedBox(height: 12),
-        OnboardingFrequencyPreview(frequency: selectedDays?.daysCount),
-
-        const SizedBox(height: 24),
-
-        // ── 2. Session Duration ──────────────────────────────
-        FitnessText(
-          language.sessionDurationQuestion
-              .replaceAll('?', '')
-              .trim()
-              .toUpperCase(),
-          style: const TextStyle(
-            fontFamily: null,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: Color(0xFF8E8E93),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        DurationGridChips(
-          selectedDuration: selectedDuration,
-          onSelected: _viewModel.selectDuration,
-          titleBuilder: language.durationOptionTitle,
-        ),
-
-        const SizedBox(height: 24),
-
-        // ── 3. Training Location / Space ─────────────────────
-        FitnessText(
-          language.trainingLocationQuestion
-              .replaceAll('?', '')
-              .trim()
-              .toUpperCase(),
-          style: const TextStyle(
-            fontFamily: null,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: Color(0xFF8E8E93),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        LocationGridCards(
-          selectedLocation: selectedLocation,
-          onSelected: _viewModel.selectLocation,
-          titleBuilder: language.locationOptionTitle,
-        ),
-
-        const SizedBox(height: 20),
+        if (_part == 0)
+          for (final option in DaysPerWeekOption.values)
+            Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OnboardingChoice(
+                    title: fitnessText(context, '{count} days a week', values: {
+                      'count': option.daysCount == 6 ? '6+' : option.daysCount
+                    }),
+                    selected: _viewModel.selectedDays == option,
+                    onTap: () => _viewModel.selectDays(option))),
+        if (_part == 0 && _viewModel.selectedDays != null) ...[
+          const SizedBox(height: 10),
+          const OnboardingContextNote(
+              title: 'Consistency starts with a realistic week.',
+              detail:
+                  'Next, choose your session length and equipment. Together, these shape your plan.'),
+        ],
+        if (_part == 1)
+          for (final option in WorkoutDurationOption.values)
+            Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OnboardingChoice(
+                    title: language.durationOptionTitle(option),
+                    selected: _viewModel.selectedDuration == option,
+                    onTap: () => _viewModel.selectDuration(option))),
+        if (_part == 2)
+          for (final option in TrainingLocationOption.values)
+            Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OnboardingChoice(
+                    title: language.locationOptionTitle(option),
+                    selected: _viewModel.selectedLocation == option,
+                    onTap: () => _viewModel.selectLocation(option))),
       ],
     );
   }

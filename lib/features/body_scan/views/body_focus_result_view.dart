@@ -10,8 +10,11 @@ import '../models/body_progress_summary.dart';
 import '../repositories/body_assessment_repository.dart';
 import 'widgets/body_focus_panel.dart';
 import 'body_estimate_view.dart';
+import 'body_photo_review_view.dart';
 import 'body_comparison_view.dart';
 import 'widgets/saved_body_photos.dart';
+import 'widgets/physique_photo_report.dart';
+import 'widgets/composition_readings_sheet.dart';
 
 class BodyFocusResultView extends StatefulWidget {
   final BodyAssessment entry;
@@ -31,6 +34,36 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
   bool _changed = false;
   late BodyAssessment _entry = widget.entry;
   String? _error;
+  Future<void> _readings() async {
+    final owner = await CacheScope.userId();
+    if (!mounted || _deleting) return;
+    final readings = await showCompositionReadings(context,
+        initial: _entry.dashboard.readings, scanDate: _entry.recordedDate);
+    if (readings == null || !mounted || await CacheScope.userId() != owner) {
+      return;
+    }
+    setState(() {
+      _deleting = true;
+      _error = null;
+    });
+    try {
+      final updated = await BodyAssessmentRepository.shared
+          .updateReadings(_entry, readings);
+      if (mounted && await CacheScope.userId() == owner && mounted) {
+        setState(() {
+          _entry = updated;
+          _changed = true;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = BodyAssessmentRepository.message(error));
+      }
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
   Future<void> _deletePhotos() async {
     final owner = await CacheScope.userId();
     if (!mounted) return;
@@ -103,7 +136,8 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
     await Navigator.of(context).push<bool>(AppPageRoute(
         page: BodyEstimateView(
             female: _entry.gender == 'FEMALE',
-            fromPhotos: _entry.photos.length == 4,
+            fromPhotos: _entry.photos.isNotEmpty,
+            savedPhotos: _entry.photos,
             estimate: (stage, cancelled) => BodyAssessmentRepository.shared
                 .refreshFocus(_entry, cancelled: cancelled, onStage: stage),
             onCompleted: (entry) {
@@ -114,6 +148,12 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
                 });
               }
             })));
+  }
+
+  Future<void> _retakePhoto() async {
+    final changed = await Navigator.of(context).push<bool>(AppPageRoute(
+        page: BodyPhotoReviewView(female: _entry.gender == 'FEMALE')));
+    if (changed == true && mounted) Navigator.pop(context, true);
   }
 
   Future<void> _delete() async {
@@ -170,44 +210,81 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
                       onPressed: _close,
                       tooltip: 'Back',
                       icon: const Icon(CupertinoIcons.chevron_left, size: 22)),
-                  title: const FitnessText('Your body report',
-                      style: TextStyle(
+                  title: FitnessText(
+                      _entry.hasPhotoAssessment
+                          ? 'Your physique review'
+                          : 'Your body report',
+                      style: const TextStyle(
                           fontSize: 17, fontWeight: FontWeight.w600))),
               body: SafeArea(
                   top: false,
                   child: ListView(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                       children: [
-                        const FitnessText('Your saved assessment.',
-                            style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -.7)),
+                        if (!_entry.hasPhotoAssessment)
+                          const FitnessText('Your saved assessment.',
+                              style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -.7)),
                         const SizedBox(height: 18),
-                        BodyFocusPanel(
-                            assessment: _entry,
-                            compact: widget.compact,
-                            readings: [
-                              for (final metric in _entry.metrics.entries)
-                                if (bodyMetricSpecs.containsKey(metric.key))
-                                  BodyReading(
-                                      key: metric.key,
-                                      date: _entry.recordedDate,
-                                      metric: metric.value,
-                                      series: metric.value.source,
-                                      sourceLabel:
-                                          bodySourceLabel(metric.value.source))
-                            ],
-                            onOpenPhotos: _photos,
-                            onCompare: widget.baselines.isEmpty || _deleting
-                                ? null
-                                : () => Navigator.of(context).push(
-                                    AppPageRoute<void>(
-                                        page: BodyComparisonView(
-                                            current: _entry,
-                                            baselines: widget.baselines))),
-                            onRefreshReport: _deleting ? null : _refreshReport),
-                        if (widget.compact) ...[
+                        if (_entry.hasPhotoAssessment)
+                          PhysiquePhotoReport(
+                              entry: _entry,
+                              onRetake: _deleting ? null : _retakePhoto,
+                              onReadings:
+                                  _deleting || _entry.method != 'photo_review'
+                                      ? null
+                                      : _readings,
+                              onRefresh: _deleting ||
+                                      !_entry.visualCoachingConsent ||
+                                      _entry.photos.isEmpty
+                                  ? null
+                                  : _refreshReport,
+                              onCompare: _deleting ||
+                                      !widget.baselines
+                                          .any(_entry.canComparePhotosWith)
+                                  ? null
+                                  : () => Navigator.of(context).push(
+                                      AppPageRoute<void>(
+                                          page: BodyComparisonView(
+                                              current: _entry,
+                                              baselines: widget.baselines
+                                                  .where(
+                                                      _entry.canComparePhotosWith)
+                                                  .toList()))))
+                        else
+                          BodyFocusPanel(
+                              assessment: _entry,
+                              compact: widget.compact,
+                              readings: [
+                                for (final metric in _entry.metrics.entries)
+                                  if (bodyMetricSpecs.containsKey(metric.key))
+                                    BodyReading(
+                                        key: metric.key,
+                                        date: _entry.recordedDate,
+                                        metric: metric.value,
+                                        series: metric.value.source,
+                                        sourceLabel: bodySourceLabel(
+                                            metric.value.source))
+                              ],
+                              onOpenPhotos: _photos,
+                              onCompare: widget.baselines.isEmpty || _deleting
+                                  ? null
+                                  : () => Navigator.of(context).push(
+                                      AppPageRoute<void>(
+                                          page: BodyComparisonView(
+                                              current: _entry,
+                                              baselines: widget.baselines))),
+                              onRefreshReport:
+                                  _deleting ? null : _refreshReport),
+                        if (_entry.hasPhotoAssessment &&
+                            _entry.photos.isNotEmpty)
+                          TextButton.icon(
+                              onPressed: _photos,
+                              icon: const Icon(CupertinoIcons.photo, size: 16),
+                              label: const FitnessText('Manage saved photos')),
+                        if (widget.compact && !_entry.hasPhotoAssessment) ...[
                           if (_entry.photos.isNotEmpty)
                             TextButton.icon(
                                 onPressed: _photos,

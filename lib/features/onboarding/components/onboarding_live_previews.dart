@@ -63,8 +63,14 @@ class OnboardingFrequencyPreview extends StatelessWidget {
 class OnboardingMusclePreview extends StatefulWidget {
   final Set<String> selected;
   final bool female;
+  final double height;
+  final ValueChanged<String>? onSelected;
   const OnboardingMusclePreview(
-      {super.key, required this.selected, this.female = false});
+      {super.key,
+      required this.selected,
+      this.female = false,
+      this.height = 128,
+      this.onSelected});
   @override
   State<OnboardingMusclePreview> createState() =>
       _OnboardingMusclePreviewState();
@@ -75,9 +81,26 @@ class _OnboardingMusclePreviewState extends State<OnboardingMusclePreview>
   late final _controller =
       AnimationController(vsync: this, duration: DSMotion.selection, value: 1);
   Map<String, Color> _from = {}, _to = {};
-  static const _neutral = Color(0xFF717171);
+  static const _neutral = Color(0xFF505050);
+  static const _selected = Color(0xFFD56B55);
 
   Map<String, Color> get _colors => {
+        for (final id in const [
+          'chest',
+          'shoulders',
+          'biceps',
+          'triceps',
+          'forearms',
+          'upper_back',
+          'lats',
+          'lower_back',
+          'core',
+          'glutes',
+          'quads',
+          'hamstrings',
+          'calves'
+        ])
+          id: _neutral,
         for (final id in {..._from.keys, ..._to.keys})
           id: Color.lerp(_from[id] ?? _neutral, _to[id] ?? _neutral,
               DSMotion.snappy.transform(_controller.value))!,
@@ -86,7 +109,7 @@ class _OnboardingMusclePreviewState extends State<OnboardingMusclePreview>
   @override
   void initState() {
     super.initState();
-    _to = {for (final id in widget.selected) id: DSColors.silver};
+    _to = {for (final id in widget.selected) id: _selected};
     _from = Map.of(_to);
   }
 
@@ -98,7 +121,7 @@ class _OnboardingMusclePreviewState extends State<OnboardingMusclePreview>
       return;
     }
     _from = _colors;
-    _to = {for (final id in widget.selected) id: DSColors.silver};
+    _to = {for (final id in widget.selected) id: _selected};
     if (DSMotion.reduced(context)) {
       _controller.value = 1;
     } else {
@@ -130,10 +153,18 @@ class _OnboardingMusclePreviewState extends State<OnboardingMusclePreview>
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Column(children: [
                   SizedBox(
-                      width: 64,
-                      height: 128,
-                      child: AnatomicalMuscleIllustration(
-                          back: back, female: widget.female, colors: _colors)),
+                      width: widget.height / 2,
+                      height: widget.height,
+                      child: widget.onSelected == null
+                          ? AnatomicalMuscleIllustration(
+                              back: back,
+                              female: widget.female,
+                              colors: _colors)
+                          : AnatomicalTrainingMap(
+                              back: back,
+                              female: widget.female,
+                              colors: _colors,
+                              onSelected: widget.onSelected!)),
                   const SizedBox(height: 5),
                   FitnessText(back ? 'Back view' : 'Front view',
                       textAlign: TextAlign.center,

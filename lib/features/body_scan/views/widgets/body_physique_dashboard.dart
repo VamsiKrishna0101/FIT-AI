@@ -255,7 +255,7 @@ class _BodyPhysiqueDashboardState extends State<BodyPhysiqueDashboard> {
                       child: FitnessText(
                           overview?.profile?['weight'] != null
                               ? 'Profile weight: ${overview!.profile!['weight']} kg. Add a dated reading to start tracking.'
-                              : 'Start with your own measurements or a four-view photo review.',
+                              : 'Start with your own measurements or an optional photo review.',
                           style: const TextStyle(
                               fontSize: 12,
                               color: FitnessTheme.muted,

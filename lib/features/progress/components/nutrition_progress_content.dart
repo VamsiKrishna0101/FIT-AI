@@ -92,16 +92,17 @@ class _NutritionProgressContentState extends State<NutritionProgressContent> {
                 style:
                     const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 14),
-            ProgressFactGrid(facts: [
+            ProgressFactGrid(color: progressAmber, facts: [
               (
                 waterOnly ? 'Average water' : 'Calories',
                 progressValue(
                     context, _average(waterOnly ? 'water' : 'calories'),
-                    unit: waterOnly ? 'L' : 'kcal')
+                    unit: waterOnly ? 'L' : 'kcal', digits: waterOnly ? 1 : 0)
               ),
               (
                 'Protein',
-                progressValue(context, _average('protein'), unit: 'g')
+                progressValue(context, _average('protein'),
+                    unit: 'g', digits: 0)
               ),
             ]),
             const SizedBox(height: 14),
@@ -110,11 +111,12 @@ class _NutritionProgressContentState extends State<NutritionProgressContent> {
             if (overview.length > 1) ...[
               const SizedBox(height: 14),
               SizedBox(
-                  height: 42,
+                  height: 58,
                   width: double.infinity,
                   child: ProgressSparkline(
                       points: overview,
                       color: waterOnly ? progressCyan : progressAmber,
+                      bars: true,
                       daily: true)),
             ],
           ]));
@@ -128,23 +130,16 @@ class _NutritionProgressContentState extends State<NutritionProgressContent> {
       const SizedBox(height: 16),
       ProgressSurface(
           accent: colors[_metric],
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Icon(
-                  _metric == 'water'
-                      ? Icons.water_drop_outlined
-                      : Icons.restaurant_outlined,
-                  size: 20,
-                  color: colors[_metric]),
-              const SizedBox(width: 10),
               Expanded(
                   child: Text(fitnessText(context, labels[_metric]!),
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w600))),
             ]),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             ProgressChart(
                 key: ValueKey('nutrition-chart-$_metric'),
                 points: points,
@@ -170,7 +165,7 @@ class _NutritionProgressContentState extends State<NutritionProgressContent> {
           for (var i = 0; i < macros.length; i++) ...[
             if (i > 0)
               const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 18),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                   child: Divider(height: 1, color: DSColors.border)),
             _MacroAverage(
                 label: labels[macros[i]]!,
@@ -219,10 +214,10 @@ class _MacroAverage extends StatelessWidget {
           const SizedBox(width: 12),
           Flexible(
               child: Text(progressValue(context, value, unit: 'g', digits: 0),
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
-                      color: color))),
+                      color: progressSilver))),
         ]),
         if (target != null) ...[
           const SizedBox(height: 10),

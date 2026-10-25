@@ -50,6 +50,9 @@ class LiquidNameInput extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           TextField(
+            maxLength: 50,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
             controller: controller,
             onChanged: onChanged,
             style: const TextStyle(
@@ -61,6 +64,7 @@ class LiquidNameInput extends StatelessWidget {
             ),
             cursorColor: Colors.white,
             decoration: InputDecoration(
+              counterText: '',
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 4),
               hintText: placeholder,

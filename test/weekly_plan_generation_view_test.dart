@@ -9,6 +9,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
 import 'package:fitai_mobile/features/planner/views/weekly_plan_generation_view.dart';
 import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
+import 'package:fitai_mobile/features/planner/views/widgets/plan_particle_orb.dart';
+
+// Loading feedback deliberately keeps ticking, including with system motion
+// disabled. Advance finite frames instead of waiting for an idle loading view.
+Future<void> _advance(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 600));
+  await tester.pump(const Duration(milliseconds: 600));
+}
 
 class _ProgressRepository extends WeeklyPlanRepository {
   int calls = 0;
@@ -109,7 +118,7 @@ void main() {
       'progress': {'percent': 100, 'completedSteps': []}
     };
     await tester.pump(const Duration(seconds: 3));
-    await tester.pump();
+    await _advance(tester);
     expect(find.text('99%'), findsOneWidget);
     expect(find.text('View weekly plan'), findsNothing);
 
@@ -118,7 +127,7 @@ void main() {
       'plan': {'id': 'saved-plan'}
     };
     await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(find.text('100%'), findsOneWidget);
     expect(find.text('Your week is ready'), findsOneWidget);
     expect(find.text('View weekly plan'), findsOneWidget);
@@ -137,10 +146,63 @@ void main() {
     final repository = _ProgressRepository();
     await tester
         .pumpWidget(_screen(repository, reducedMotion: true, textScale: 1.8));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     await tester.scrollUntilVisible(find.text('Continue in background'), 150);
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Activity keeps moving with system animations disabled and pauses in background',
+      (tester) async {
+    final repository = _ProgressRepository();
+    await tester.pumpWidget(_screen(repository, reducedMotion: true));
+    await _advance(tester);
+    final paint = find.descendant(
+        of: find.byType(PlanParticleOrb), matching: find.byType(CustomPaint));
+    final painter = tester.widget<CustomPaint>(paint).painter!;
+    var frames = 0;
+    void repaint() => frames++;
+    painter.addListener(repaint);
+    await tester.pump(const Duration(seconds: 2));
+    expect(frames, greaterThan(0));
+    expect(find.text('41%'), findsOneWidget);
+    expect(find.text('4 of 7 muscle groups reviewed'), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    final paused = frames;
+    await tester.pump(const Duration(seconds: 6));
+    expect(frames, paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _advance(tester);
+    expect(frames, greaterThan(paused));
+    painter.removeListener(repaint);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Confirmed progress counts smoothly while the server is unchanged',
+      (tester) async {
+    var percent = 41;
+    late StateSetter update;
+    await tester.pumpWidget(
+        MaterialApp(home: StatefulBuilder(builder: (context, setState) {
+      update = setState;
+      return PlanParticleOrb(percent: percent);
+    })));
+    update(() => percent = 75);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 80));
+    final text =
+        tester.widget<Text>(find.byKey(const ValueKey('plan-progress-label')));
+    final shown = int.parse(text.data!.replaceAll('%', ''));
+    expect(shown, greaterThan(41));
+    expect(shown, lessThan(75));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('75%'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 10));
+    expect(find.text('75%'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -153,11 +215,11 @@ void main() {
       'canRetry': true
     };
     await tester.pumpWidget(_screen(repository, reducedMotion: true));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(find.text('Planning paused'), findsOneWidget);
     await tester.ensureVisible(find.text('Retry planning'));
     await tester.tap(find.text('Retry planning'));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(repository.retries, 1);
     expect(find.text('41%'), findsOneWidget);
     expect(find.text('Building your week'), findsOneWidget);
@@ -185,7 +247,7 @@ void main() {
       },
     };
     await tester.pumpWidget(_screen(repository, reducedMotion: true));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(find.text('91%'), findsOneWidget);
     expect(
         find.text(
@@ -201,7 +263,7 @@ void main() {
       (tester) async {
     final repository = _ProgressRepository();
     await tester.pumpWidget(_screen(repository, reducedMotion: true));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     repository.error = Exception('offline');
     await tester.pump(const Duration(seconds: 3));
     await tester.pump();
@@ -217,7 +279,7 @@ void main() {
       }
     };
     await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(find.text('75%'), findsOneWidget);
     expect(find.textContaining('Reconnecting'), findsNothing);
     await tester.pumpWidget(const SizedBox());
@@ -227,14 +289,14 @@ void main() {
       (tester) async {
     final repository = _ProgressRepository();
     await tester.pumpWidget(_screen(repository, reducedMotion: true));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pump();
     final calls = repository.calls;
     await tester.pump(const Duration(seconds: 15));
     expect(repository.calls, calls);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(repository.calls, greaterThan(calls));
     await tester.pumpWidget(const SizedBox());
   });
@@ -246,7 +308,7 @@ void main() {
         response: Response(
             requestOptions: RequestOptions(path: '/run'), statusCode: 404));
     await tester.pumpWidget(_screen(repository, reducedMotion: true));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     final calls = repository.calls;
     await tester.pump(const Duration(seconds: 15));
     expect(repository.calls, calls);
@@ -259,22 +321,20 @@ void main() {
     final repository = _ProgressRepository();
     await tester
         .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     await tester.ensureVisible(find.text('View plan progress'));
     await tester.tap(find.text('View plan progress'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.pump();
+    await _advance(tester);
+    await _advance(tester);
     expect(find.text('41%'), findsOneWidget);
     await tester.ensureVisible(find.text('Continue in background'));
     await tester.tap(find.text('Continue in background'));
-    await tester.pumpAndSettle();
+    await _advance(tester);
     expect(find.text('View plan progress'), findsOneWidget);
     await tester.ensureVisible(find.text('View plan progress'));
     await tester.tap(find.text('View plan progress'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.pump();
+    await _advance(tester);
+    await _advance(tester);
     expect(find.text('41%'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

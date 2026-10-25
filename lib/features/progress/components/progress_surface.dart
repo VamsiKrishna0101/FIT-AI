@@ -12,6 +12,13 @@ const progressBlue = Color(0xFF6AA9FF);
 const progressCyan = Color(0xFF72D9ED);
 const progressViolet = Color(0xFFB29AF7);
 const progressAmber = Color(0xFFEBC487);
+// Match the rest of Setcraft: shared backgrounds, neutral values, chart accents only.
+const progressCard = DSColors.bgCard;
+
+String progressTitle(String value) =>
+    value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
+
+Color progressMuscleColor(String id) => progressCyan;
 
 class ProgressSurface extends StatelessWidget {
   final Widget child;
@@ -21,31 +28,18 @@ class ProgressSurface extends StatelessWidget {
       {super.key,
       required this.child,
       this.accent,
-      this.padding = const EdgeInsets.all(18)});
+      this.padding = const EdgeInsets.all(16)});
   @override
   Widget build(BuildContext context) => SizedBox(
       width: double.infinity,
       child: Material(
-          color: DSColors.bgCard,
+          color: progressCard,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-              side: BorderSide(
-                  color: accent == null
-                      ? DSColors.border
-                      : Color.lerp(DSColors.border, accent, .16)!,
-                  width: .7)),
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: DSColors.border, width: .7)),
           clipBehavior: Clip.antiAlias,
           child: Ink(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                    accent == null
-                        ? DSColors.bgCard
-                        : Color.lerp(DSColors.bgCard, accent, .045)!,
-                    DSColors.bgCard,
-                  ])),
+              decoration: const BoxDecoration(color: progressCard),
               child: Padding(padding: padding, child: child))));
 }
 
@@ -57,7 +51,7 @@ class ProgressHeading extends StatelessWidget {
       {super.key, this.onTap, this.action = 'View all'});
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 7),
+      padding: const EdgeInsets.only(top: 24, bottom: 10),
       child: Row(children: [
         Expanded(
             child: Text(fitnessText(context, title),
@@ -101,8 +95,6 @@ class ProgressSetupRow extends StatelessWidget {
           child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(children: [
-                Icon(icon, color: color, size: 22),
-                const SizedBox(width: 14),
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,15 +191,10 @@ class ProgressNote extends StatelessWidget {
   const ProgressNote(this.text, {super.key, this.color = progressMuted});
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(CupertinoIcons.info_circle, size: 17, color: color),
-        const SizedBox(width: 10),
-        Expanded(
-            child: Text(fitnessText(context, text),
-                style: const TextStyle(
-                    fontSize: 13, height: 1.5, color: progressMuted))),
-      ]));
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Text(fitnessText(context, text),
+          style: const TextStyle(
+              fontSize: 12, height: 1.5, color: progressMuted)));
 }
 
 class ProgressFactGrid extends StatelessWidget {
@@ -217,60 +204,62 @@ class ProgressFactGrid extends StatelessWidget {
       {super.key, required this.facts, this.color = progressSilver});
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
-        var columns = box.maxWidth < 340 ? 2 : 3;
-        var minimumWidth = 100.0;
-        for (final fact in facts) {
-          final painter = TextPainter(
-              text: TextSpan(
-                  text: fact.$2,
-                  style: const TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -.6)),
-              textScaler: MediaQuery.textScalerOf(context),
-              textDirection: Directionality.of(context))
-            ..layout();
-          if (painter.width + 28 > minimumWidth) {
-            minimumWidth = painter.width + 28;
-          }
-          painter.dispose();
-        }
-        while (columns > 1 &&
-            (box.maxWidth - (columns - 1) * 10) / columns < minimumWidth) {
-          columns--;
-        }
-        return Wrap(spacing: 10, runSpacing: 10, children: [
-          for (var i = 0; i < facts.length; i++)
-            Container(
-                width: i == facts.length - 1 && facts.length % columns == 1
-                    ? box.maxWidth
-                    : (box.maxWidth - (columns - 1) * 10) / columns,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                    color: DSColors.bgInset,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: DSColors.border, width: .7)),
+        if (facts.isEmpty) return const SizedBox.shrink();
+        final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final columns = (box.maxWidth / (scale > 1.7 ? 150 : 100))
+            .floor()
+            .clamp(1, facts.length.clamp(1, 3));
+        final width = (box.maxWidth - (columns - 1) * 14) / columns;
+        return Wrap(spacing: 14, runSpacing: 16, children: [
+          for (final fact in facts)
+            SizedBox(
+                width: width,
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(facts[i].$2,
-                          style: TextStyle(
-                              fontSize: 23,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -.6,
-                              color: color)),
-                      const SizedBox(height: 6),
-                      Text(fitnessText(context, facts[i].$1),
+                      Text(fitnessText(context, fact.$1),
                           style: const TextStyle(
-                              fontSize: 13,
-                              color: progressMuted,
-                              height: 1.35)),
+                              fontSize: 11, color: progressMuted, height: 1.3)),
+                      const SizedBox(height: 7),
+                      ProgressValueText(fact.$2, color: progressSilver),
                     ])),
         ]);
       });
 }
 
-/// Wrapping selectors keep every metric discoverable, including long translations.
+/// Units stay visually subordinate and can wrap independently at larger text sizes.
+class ProgressValueText extends StatelessWidget {
+  final String value;
+  final Color color;
+  final double size;
+  const ProgressValueText(this.value,
+      {super.key, this.color = progressSilver, this.size = 23});
+  @override
+  Widget build(BuildContext context) {
+    final split =
+        RegExp(r'^(.+?)\s(kg·reps|kcal|kg|cm|g|L|h|ms|bpm|sets|reps|/100)$')
+            .firstMatch(value);
+    return Text.rich(
+        TextSpan(children: [
+          TextSpan(text: split?.group(1) ?? value),
+          if (split != null)
+            TextSpan(
+                text: ' ${split.group(2)}',
+                style: TextStyle(
+                    fontSize: size * .52,
+                    color: progressMuted,
+                    letterSpacing: 0)),
+        ]),
+        style: TextStyle(
+            fontSize: size,
+            height: 1.15,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -.65,
+            color: color));
+  }
+}
+
+/// One scrolling row keeps chart controls compact without clipping translations.
 class ProgressMetricPicker extends StatelessWidget {
   final Map<String, String> choices;
   final String selected;
@@ -283,43 +272,37 @@ class ProgressMetricPicker extends StatelessWidget {
       required this.onChanged,
       this.color = progressCyan});
   @override
-  Widget build(BuildContext context) => Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: choices.entries.map((entry) {
+  Widget build(BuildContext context) => SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+          children: choices.entries.map((entry) {
         final active = entry.key == selected;
-        return Semantics(
-            selected: active,
-            button: true,
-            child: Material(
-                color: active ? color.withValues(alpha: .14) : DSColors.bgCard,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: BorderSide(
-                        color: active
-                            ? color.withValues(alpha: .5)
-                            : DSColors.border)),
-                child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () => onChanged(entry.key),
-                    child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 14),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          if (active) ...[
-                            Icon(Icons.check, color: color, size: 16),
-                            const SizedBox(width: 6),
-                          ],
-                          Flexible(
-                              child: Text(fitnessText(context, entry.value),
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: active ? color : progressSilver,
-                                      fontWeight: active
-                                          ? FontWeight.w600
-                                          : FontWeight.w500))),
-                        ])))));
-      }).toList());
+        return Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Semantics(
+                selected: active,
+                button: true,
+                child: Material(
+                    color: active ? DSColors.bgRaised : progressCard,
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => onChanged(entry.key),
+                        child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 44),
+                            child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 13, vertical: 11),
+                                child: Text(fitnessText(context, entry.value),
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: active
+                                            ? progressSilver
+                                            : progressMuted,
+                                        fontWeight: active
+                                            ? FontWeight.w600
+                                            : FontWeight.w500))))))));
+      }).toList()));
 }
 
 class ProgressExerciseRow extends StatelessWidget {
@@ -336,7 +319,7 @@ class ProgressExerciseRow extends StatelessWidget {
     return ListTile(
         contentPadding: EdgeInsets.zero,
         onTap: onTap,
-        title: Text(exercise['name'] as String? ?? '',
+        title: Text(progressTitle(exercise['name'] as String? ?? ''),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),

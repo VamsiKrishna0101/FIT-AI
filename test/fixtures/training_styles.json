@@ -1,0 +1,7 @@
+{
+  "2": [["chest","shoulders","triceps"],["back","legs","biceps","core"]],
+  "3": [["chest","shoulders","triceps"],["back","biceps"],["legs","core"]],
+  "4": [["chest","triceps"],["back","biceps"],["legs","core"],["shoulders"]],
+  "5": [["chest","triceps"],["back","biceps"],["legs"],["shoulders"],["core"]],
+  "6": [["chest"],["back"],["legs"],["shoulders"],["biceps","triceps"],["core"]]
+}

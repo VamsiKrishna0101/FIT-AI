@@ -163,6 +163,48 @@ void main() {
         header);
     expect(tester.takeException(), isNull);
   });
+  for (final gender in ['MALE', 'FEMALE']) {
+    testWidgets(
+        '$gender first-session estimates keep the strength colour bands',
+        (tester) async {
+      await _size(tester);
+      final json =
+          jsonDecode(File('test/fixtures/training_map.json').readAsStringSync())
+              as Map<String, dynamic>;
+      json['gender'] = gender;
+      for (final region in json['regions'] as List) {
+        if (region['id'] == 'biceps') region['completedSets'] = 1;
+        region['strength'] = {
+          'tier': region['id'] == 'chest'
+              ? 1
+              : region['id'] == 'biceps'
+                  ? 5
+                  : 0,
+          'title': region['id'] == 'chest'
+              ? 'Beginner'
+              : region['id'] == 'biceps'
+                  ? 'Elite'
+                  : 'Not ranked yet',
+          'provisional': region['id'] == 'chest',
+          'exercises': [],
+        };
+      }
+      await tester
+          .pumpWidget(_app(_dashboard(data: TrainingMapData.fromJson(json))));
+      await tester.pump();
+      final map = tester
+          .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
+      expect(map.female, gender == 'FEMALE');
+      expect(map.colors['chest'], const Color(0xFFD89A72));
+      expect(map.colors['biceps'], const Color(0xFFAC8BEA));
+      expect(map.colors['quads'], const Color(0xFF606060));
+      expect(find.text('Strength map'), findsOneWidget);
+      expect(find.byKey(const ValueKey('body-strength-provisional')),
+          findsOneWidget);
+      expect(find.text('Elite'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
   testWidgets('muscle tapping opens real details and saves a soreness check-in',
       (tester) async {
     await _size(tester);

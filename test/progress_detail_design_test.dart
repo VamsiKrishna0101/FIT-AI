@@ -204,7 +204,7 @@ Widget screen(Widget content, Locale locale, {double scale = 1.4}) =>
                     key: const ValueKey('detail-capture'),
                     child: FitnessTheme(
                         child: Scaffold(
-                            appBar: AppBar(title: const Text('FitAI')),
+                            appBar: AppBar(title: const Text('Setcraft')),
                             body: SingleChildScrollView(
                                 key: ObjectKey(content),
                                 padding: const EdgeInsets.all(18),

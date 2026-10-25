@@ -1,7 +1,6 @@
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/premium_surface.dart';
@@ -9,6 +8,7 @@ import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../components/add_exercise_sheet.dart';
+import '../components/exercise_thumbnail.dart';
 import '../models/exercise_catalog_page.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/workout_repository.dart';
@@ -37,7 +37,8 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   Timer? _debounce;
   List<WorkoutExerciseModel> _exercises = [];
   bool _loading = true;
-  String? _bodyPart, _equipment, _error;
+  String? _bodyPart, _equipment, _mediaGender, _error;
+  String _lastSearch = '';
   int _page = 1, _total = 0, _totalPages = 0;
   static const _pageSize = 24;
   List<ExerciseFilterOption> _bodyParts = [], _equipmentOptions = [];
@@ -48,9 +49,17 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   void initState() {
     super.initState();
     _locale = LanguageManager.shared.currentLanguage.code;
-    _search.addListener(_filterChanged);
+    _search.addListener(_searchChanged);
     LanguageManager.shared.addListener(_languageChanged);
     unawaited(_load());
+  }
+
+  void _searchChanged() {
+    // TextEditingController also reports cursor and composing-region changes.
+    final query = _search.text.trim();
+    if (query == _lastSearch) return;
+    _lastSearch = query;
+    _filterChanged();
   }
 
   void _filterChanged() {
@@ -61,8 +70,9 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
       _loading = true;
       _error = null;
     });
+    if (_scroll.hasClients) _scroll.jumpTo(0);
     _debounce =
-        Timer(const Duration(milliseconds: 300), () => unawaited(_load()));
+        Timer(const Duration(milliseconds: 220), () => unawaited(_load()));
   }
 
   void _languageChanged() {
@@ -92,7 +102,12 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
             (values.toSet().toList()..sort())
                 .map((s) => ExerciseFilterOption(s, s))
                 .toList();
-        final filtered = all.where(_matches).toList();
+        final filtered = all
+            .where(_matches)
+            .map((exercise) => _mediaGender == null
+                ? exercise
+                : exercise.withDemo(_mediaGender!))
+            .toList();
         result = ExerciseCatalogPage(
             exercises:
                 filtered.skip((_page - 1) * _pageSize).take(_pageSize).toList(),
@@ -108,6 +123,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
             search: _search.text,
             bodyPart: _bodyPart,
             equipment: _equipment,
+            mediaGender: _mediaGender,
             forceRefresh: refresh);
       }
       if (!mounted || request != _request) return;
@@ -137,7 +153,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   @override
   void dispose() {
     LanguageManager.shared.removeListener(_languageChanged);
-    _search.removeListener(_filterChanged);
+    _search.removeListener(_searchChanged);
     _search.dispose();
     _scroll.dispose();
     _debounce?.cancel();
@@ -149,7 +165,8 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
         '${exercise.bodyPart} ${exercise.target} ${exercise.muscleGroup ?? ''}'
             .toLowerCase();
     final categoryMatches =
-        (_bodyPart == null || exercise.bodyPart == _bodyPart) &&
+        (_mediaGender == null || exercise.hasDemo(_mediaGender!)) &&
+            (_bodyPart == null || exercise.bodyPart == _bodyPart) &&
             (_equipment == null || exercise.equipment == _equipment);
     final query = _search.text.trim().toLowerCase();
     return categoryMatches &&
@@ -206,6 +223,8 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     final route = AppPageRoute<void>(
         page: ExerciseDetailView(
       exercise: exercise,
+      mediaGender: _mediaGender,
+      female: _mediaGender == null ? null : _mediaGender == 'female',
       addLabel: widget.onSelect != null
           ? 'Select'
           : widget.addToWorkout != null
@@ -245,6 +264,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     FocusScope.of(context).unfocus();
     var bodyPart = _bodyPart;
     var equipment = _equipment;
+    var mediaGender = _mediaGender;
     final apply = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -294,6 +314,35 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
                   style: const TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w600)),
               const SizedBox(height: 24),
+              Text(copy('Demonstration'),
+                  style:
+                      const TextStyle(fontSize: 13, color: FitnessTheme.muted)),
+              const SizedBox(height: 10),
+              Row(children: [
+                for (final entry in const {
+                  '': 'All',
+                  'male': 'Male',
+                  'female': 'Female'
+                }.entries)
+                  Expanded(
+                      child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: ChoiceChip(
+                      key: ValueKey('demo-filter-${entry.key}'),
+                      label: Center(child: Text(copy(entry.value))),
+                      selected: (mediaGender ?? '') == entry.key,
+                      showCheckmark: false,
+                      selectedColor: FitnessTheme.silver,
+                      labelStyle: TextStyle(
+                          color: (mediaGender ?? '') == entry.key
+                              ? FitnessTheme.canvas
+                              : FitnessTheme.silver),
+                      onSelected: (_) => update(() =>
+                          mediaGender = entry.key.isEmpty ? null : entry.key),
+                    ),
+                  )),
+              ]),
+              const SizedBox(height: 24),
               filter('Body part', bodyPart, _bodyParts,
                   (value) => bodyPart = value),
               const SizedBox(height: 18),
@@ -311,6 +360,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
                   onPressed: () => update(() {
                         bodyPart = null;
                         equipment = null;
+                        mediaGender = null;
                       }),
                   child: Text(copy('Reset filters'),
                       style: const TextStyle(color: FitnessTheme.muted))),
@@ -324,6 +374,8 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     setState(() {
       _bodyPart = bodyPart;
       _equipment = equipment;
+      _mediaGender = mediaGender;
+      _exercises = [];
       _page = 1;
     });
     unawaited(_load());
@@ -331,12 +383,15 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
 
   void _reset() {
     _debounce?.cancel();
-    _search.removeListener(_filterChanged);
+    _search.removeListener(_searchChanged);
     _search.clear();
-    _search.addListener(_filterChanged);
+    _lastSearch = '';
+    _search.addListener(_searchChanged);
     setState(() {
       _bodyPart = null;
       _equipment = null;
+      _mediaGender = null;
+      _exercises = [];
       _page = 1;
     });
     unawaited(_load());
@@ -344,14 +399,15 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
 
   Widget _intro() {
     String copy(String text) => fitnessText(context, text);
-    final filters = [_bodyPart, _equipment].whereType<String>().length;
+    final filters =
+        [_bodyPart, _equipment, _mediaGender].whereType<String>().length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(
             copy(widget.onSelect == null
-                ? 'Find your next movement.'
-                : 'Make it your workout.'),
+                ? 'Find your next movement'
+                : 'Make it your workout'),
             style: const TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.w500,
@@ -367,6 +423,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
           style: const TextStyle(fontSize: 14),
           textInputAction: TextInputAction.search,
           onSubmitted: (_) {
+            FocusScope.of(context).unfocus();
             _debounce?.cancel();
             unawaited(_load());
           },
@@ -392,6 +449,44 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
           ),
         ),
         const SizedBox(height: 12),
+        if (filters > 0) ...[
+          Wrap(spacing: 8, runSpacing: 4, children: [
+            if (_mediaGender != null)
+              InputChip(
+                key: const ValueKey('active-demo-filter'),
+                label: Text(copy(_mediaGender == 'male' ? 'Male' : 'Female')),
+                onDeleted: () {
+                  _mediaGender = null;
+                  _filterChanged();
+                },
+              ),
+            if (_bodyPart != null)
+              InputChip(
+                  key: const ValueKey('active-body-filter'),
+                  label: Text(_bodyParts
+                      .firstWhere((option) => option.value == _bodyPart,
+                          orElse: () =>
+                              ExerciseFilterOption(_bodyPart!, _bodyPart!))
+                      .label),
+                  onDeleted: () {
+                    _bodyPart = null;
+                    _filterChanged();
+                  }),
+            if (_equipment != null)
+              InputChip(
+                  key: const ValueKey('active-equipment-filter'),
+                  label: Text(_equipmentOptions
+                      .firstWhere((option) => option.value == _equipment,
+                          orElse: () =>
+                              ExerciseFilterOption(_equipment!, _equipment!))
+                      .label),
+                  onDeleted: () {
+                    _equipment = null;
+                    _filterChanged();
+                  }),
+          ]),
+          const SizedBox(height: 4),
+        ],
         SizedBox(
             width: double.infinity,
             child: Wrap(
@@ -447,18 +542,18 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     return PremiumSurface(
       key: ValueKey('exercise-${exercise.id}'),
       color: FitnessTheme.surface,
-      radius: 18,
-      padding: const EdgeInsets.fromLTRB(10, 12, 8, 12),
-      onTap: adding ? null : () => _open(exercise),
+      radius: 20,
+      padding: const EdgeInsets.fromLTRB(12, 14, 10, 14),
+      onTap: adding || _loading ? null : () => _open(exercise),
       child: Row(children: [
-        ExercisePoster(exercise: exercise, size: 62),
+        ExercisePoster(exercise: exercise, size: 72),
         const SizedBox(width: 12),
         Expanded(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(exercise.displayName,
               style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w500, height: 1.3)),
+                  fontSize: 15, fontWeight: FontWeight.w600, height: 1.3)),
           const SizedBox(height: 5),
           Text(exercise.targetLabel ?? fitnessText(context, exercise.target),
               style: const TextStyle(fontSize: 11, color: FitnessTheme.silver)),
@@ -472,7 +567,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
         IconButton(
           key: ValueKey('add-exercise-${exercise.id}'),
           tooltip: fitnessText(context, label),
-          onPressed: added || adding ? null : () => _add(exercise),
+          onPressed: added || adding || _loading ? null : () => _add(exercise),
           style: IconButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: .045),
               foregroundColor: FitnessTheme.silver),
@@ -532,12 +627,23 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
                             parent: BouncingScrollPhysics()),
                         slivers: [
                           SliverToBoxAdapter(child: _intro()),
-                          if (_loading)
+                          if (_loading && _exercises.isNotEmpty)
+                            const SliverToBoxAdapter(
+                                child: Padding(
+                              padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+                              child: LinearProgressIndicator(
+                                  key: ValueKey('exercise-search-progress'),
+                                  minHeight: 1,
+                                  color: FitnessTheme.silver,
+                                  backgroundColor: FitnessTheme.line),
+                            )),
+                          if (_loading && _exercises.isEmpty)
                             const SliverFillRemaining(
                                 hasScrollBody: false,
                                 child:
                                     Center(child: CupertinoActivityIndicator()))
-                          else if (_error != null || _exercises.isEmpty)
+                          else if (_error != null ||
+                              (!_loading && _exercises.isEmpty))
                             SliverFillRemaining(
                                 hasScrollBody: false,
                                 child: Padding(
@@ -643,28 +749,6 @@ class ExercisePoster extends StatelessWidget {
   final double size;
   const ExercisePoster({super.key, required this.exercise, this.size = 78});
   @override
-  Widget build(BuildContext context) {
-    final url = exercise.thumbnailUrl?.trim() ?? '';
-    const fallback = Center(
-        child: Icon(CupertinoIcons.person, color: Color(0xFF969696), size: 26));
-    return RepaintBoundary(
-        child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: SizedBox(
-                width: size,
-                height: size,
-                child: ColoredBox(
-                    color: const Color(0xFF2A2A2A),
-                    child: url.isEmpty
-                        ? fallback
-                        : CachedNetworkImage(
-                            imageUrl: url,
-                            fit: BoxFit.contain,
-                            memCacheWidth:
-                                (size * MediaQuery.devicePixelRatioOf(context))
-                                    .round(),
-                            fadeInDuration: const Duration(milliseconds: 120),
-                            placeholder: (_, __) => fallback,
-                            errorWidget: (_, __, ___) => fallback)))));
-  }
+  Widget build(BuildContext context) =>
+      ExerciseThumbnail(exercise: exercise, size: size);
 }

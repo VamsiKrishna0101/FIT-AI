@@ -51,6 +51,27 @@ class TrainingRepository {
   Future<void> discardPending(String owner) =>
       _queueLock(owner, () => _offline.clear(owner));
 
+  Future<void> ensureScheduleSynced() async {
+    await syncPending(retry: true);
+    final owner = await SecureSessionStore.shared.userId;
+    if (owner == null) throw StateError('Session changed');
+    if ((await _offline.read(owner)).isNotEmpty) {
+      throw const FormatException(
+          'Reconnect and sync your logged workouts before moving the schedule.');
+    }
+  }
+
+  Future<void> refreshScheduleDates(Set<String> dates) async {
+    for (final date in dates) {
+      final key = await _key(date);
+      _revision[key] = (_revision[key] ?? 0) + 1;
+      _memory.remove(key);
+      await LocalCache.shared.remove(key);
+    }
+    await Future.wait(dates.map((date) => load(date, refresh: true)
+        .then<void>((_) {}, onError: (Object _, StackTrace __) {})));
+  }
+
   Future<void> syncPending({bool retry = false}) async {
     final owner = await SecureSessionStore.shared.userId;
     final token = await SecureSessionStore.shared.accessToken;
@@ -146,7 +167,7 @@ class TrainingRepository {
   }
 
   Future<String> _key(String date) => CacheScope.userKey(
-      'training_v2_${LanguageManager.shared.currentLanguage.code}_$date');
+      'training_v3_${LanguageManager.shared.currentLanguage.code}_$date');
   Future<TrainingDay?> cached(String date) async {
     final key = await _key(date);
     final queued = await _pending(date);

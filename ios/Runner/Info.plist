@@ -16,13 +16,13 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose body progress photos to save or review in your private fitness journal.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Choose health readings to share with your FitAI account: steps, active calories, workouts, sleep, resting heart rate and heart rate variability. Optional weight and body fat help track Body progress. Readings are uploaded to FitAI to show your daily activity and fitness readiness estimate.</string>
+	<string>Choose health readings to share with your Setcraft account: steps, active calories, workouts, sleep. Optional weight and body fat help track Body progress. Readings are uploaded to Setcraft to show your daily activity and progress.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Fitai Mobile</string>
+	<string>Setcraft</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -30,7 +30,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>fitai_mobile</string>
+	<string>Setcraft</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

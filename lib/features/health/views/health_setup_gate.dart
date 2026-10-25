@@ -1,5 +1,5 @@
-import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/material.dart';
+import '../../../core/branding/setcraft_launch_screen.dart';
 import '../../../core/health/health_sync_service.dart';
 import 'health_connection_view.dart';
 
@@ -7,7 +7,9 @@ import 'health_connection_view.dart';
 class HealthSetupGate extends StatefulWidget {
   final Widget child;
   final HealthSyncService? service;
-  const HealthSetupGate({super.key, required this.child, this.service});
+  final bool? initialOffer;
+  const HealthSetupGate(
+      {super.key, required this.child, this.service, this.initialOffer});
   @override
   State<HealthSetupGate> createState() => _HealthSetupGateState();
 }
@@ -17,7 +19,8 @@ class _HealthSetupGateState extends State<HealthSetupGate> {
   @override
   void initState() {
     super.initState();
-    _check();
+    _offer = widget.initialOffer;
+    if (_offer == null) _check();
   }
 
   Future<void> _check() async {
@@ -30,9 +33,7 @@ class _HealthSetupGateState extends State<HealthSetupGate> {
 
   @override
   Widget build(BuildContext context) => _offer == null
-      ? const Scaffold(
-          backgroundColor: DSColors.bg,
-          body: Center(child: CircularProgressIndicator(color: Colors.white54)))
+      ? const SetcraftLaunchScreen()
       : _offer!
           ? HealthConnectionView(
               service: widget.service,

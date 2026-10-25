@@ -304,7 +304,7 @@ class ExerciseRankContent extends StatelessWidget {
               const SizedBox(height: 14),
               Text(
                   fitnessText(context,
-                      'Uses confirmed load units and two separate training days from the last 90 days. Reps above 10 are capped for a conservative estimate. References account for body weight and reference category, without age adjustment.'),
+                      'Your first qualifying training day gives a provisional estimate. A second day confirms it using the lower of your two strongest recent sessions. Load units must be specified. Reps above 10 are capped. References account for body weight and reference category, without age adjustment.'),
                   style: const TextStyle(fontSize: 13, height: 1.5)),
               const SizedBox(height: 14),
               Text(
@@ -478,6 +478,14 @@ class ExerciseRankContent extends StatelessWidget {
           Text(copy('Exercise-based estimate · last 90 days'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 11, color: DSColors.muted)),
+          if (strength['provisional'] == true) ...[
+            const SizedBox(height: 10),
+            Text(copy('Provisional · another training day confirms your level'),
+                key: const ValueKey('exercise-strength-provisional'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 12, height: 1.4, color: DSColors.silver)),
+          ],
           if (tier == 0) ...[
             const SizedBox(height: 18),
             Text(

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_native/liquid_glass_native.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart' as glass;
 
 import '../theme/ds_colors.dart';
 import 'animated_tab_stack.dart';
@@ -28,10 +27,10 @@ class LiquidSilverBottomBar extends StatefulWidget {
       !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   static double _height(BuildContext context) =>
-      60 + (MediaQuery.textScalerOf(context).scale(11) - 11).clamp(0, 14);
+      64 + (MediaQuery.textScalerOf(context).scale(11) - 11).clamp(0, 14);
 
   static double _bottomMargin(BuildContext context) =>
-      MediaQuery.viewPaddingOf(context).bottom + 12;
+      MediaQuery.viewPaddingOf(context).bottom + 8;
 
   static double scrollBottomInset(BuildContext context) =>
       math.max(
@@ -44,8 +43,8 @@ class LiquidSilverBottomBar extends StatefulWidget {
 
 class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
   static const _platform = MethodChannel('fitai/navigation');
-  static const _maxWidth = 320.0;
-  static const _sideMargin = 32.0;
+  static const _maxWidth = 376.0;
+  static const _sideMargin = 20.0;
   bool _nativeGlassAvailable = false;
   int? _previewIndex;
   bool _dragCancelled = false;
@@ -110,7 +109,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
     );
   }
 
-  static final _blur = ImageFilter.blur(sigmaX: 18, sigmaY: 18);
+  static final _blur = ImageFilter.blur(sigmaX: 12, sigmaY: 12);
   static const _icons = [
     CupertinoIcons.sun_max,
     CupertinoIcons.flame,
@@ -118,63 +117,24 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
     CupertinoIcons.chart_bar,
   ];
 
-  static const _glassSettings = glass.LiquidGlassSettings(
-    glassColor: DSColors.navGlassTint,
-    thickness: 7,
-    blur: 18,
-    refractiveIndex: 1.06,
-    lightIntensity: .22,
-    ambientStrength: .025,
-    saturation: 1,
-    chromaticAberration: 0,
-  );
-
   Widget _glassSurface(BuildContext context, Widget child) {
-    final reducedMotion = MediaQuery.disableAnimationsOf(context);
     final highContrast = MediaQuery.highContrastOf(context);
-    final contents = DecoratedBox(
-      decoration: const BoxDecoration(gradient: DSColors.navGlassSheenGradient),
-      child: reducedMotion || highContrast
-          ? child
-          : glass.GlassGlow(
-              glowColor: DSColors.navTouchGlow,
-              glowRadius: 1.15,
-              child: child,
-            ),
-    );
-
-    // UIKit owns the native iPhone material. Only Android uses this shader.
-    if (!LiquidSilverBottomBar._isIOS &&
-        !highContrast &&
-        ImageFilter.isShaderFilterSupported) {
-      return glass.LiquidGlass.withOwnLayer(
-        key: const ValueKey('navigation-refractive-glass'),
-        shape: const glass.LiquidRoundedSuperellipse(borderRadius: 30),
-        settings: _glassSettings,
-        child: contents,
-      );
-    }
-
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: BackdropFilter(
-        filter: _blur,
-        child: CustomPaint(
-          foregroundPainter: const _SilverRimPainter(),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: highContrast ? DSColors.bgElevated : null,
-              gradient: highContrast ? null : DSColors.navGlassGradient,
-              border: highContrast
-                  ? Border.all(color: DSColors.textSecondary)
-                  : null,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: glass.GlassGlowLayer(child: contents),
-          ),
-        ),
-      ),
-    );
+        borderRadius: BorderRadius.circular(32),
+        child: BackdropFilter(
+            filter: _blur,
+            child: DecoratedBox(
+                decoration: BoxDecoration(
+                    color: highContrast
+                        ? DSColors.bgCard
+                        : const Color(0xF21C1C1C),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                        color: highContrast
+                            ? DSColors.textSecondary
+                            : const Color(0xFF393939),
+                        width: .7)),
+                child: child)));
   }
 
   Widget _contents(BuildContext context, Duration duration) => Stack(children: [
@@ -191,8 +151,9 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
                 heightFactor: 1,
                 child: const DecoratedBox(
                   key: ValueKey('navigation-active-lens'),
-                  decoration:
-                      BoxDecoration(gradient: DSColors.navGlassLensGradient),
+                  decoration: BoxDecoration(
+                      color: Color(0xFF343434),
+                      borderRadius: BorderRadius.all(Radius.circular(25))),
                 ),
               ),
             ),
@@ -254,7 +215,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
       key: const ValueKey('navigation-backdrop'),
       decoration: const BoxDecoration(gradient: DSColors.navScrimGradient),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(_sideMargin, 40, _sideMargin,
+        padding: EdgeInsets.fromLTRB(_sideMargin, 24, _sideMargin,
             LiquidSilverBottomBar._bottomMargin(context)),
         child: Align(
           alignment: Alignment.bottomCenter,
@@ -308,13 +269,13 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
           behavior: HitTestBehavior.opaque,
           onTap: () => _selectTab(index),
           child: AnimatedOpacity(
-            opacity: selected ? 1 : .7,
+            opacity: selected ? 1 : .68,
             duration: duration,
             curve: AnimatedTabStack.curve,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(_icons[index], color: DSColors.navGlassText, size: 20),
+                Icon(_icons[index], color: DSColors.navGlassText, size: 21),
                 const SizedBox(height: 3),
                 Text(
                   labels[index],
@@ -325,7 +286,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
                     color: DSColors.navGlassText,
                     fontSize: 11,
                     height: 1.1,
-                    fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
               ],
@@ -385,49 +346,28 @@ class _DockTouchFeedbackState extends State<_DockTouchFeedback> {
       onPointerMove: (event) {
         if (event.pointer != _pointer) return;
         setState(() {
-          _stretch = (event.localPosition - _origin).withResistance(.12) * .22;
+          final delta = event.localPosition - _origin;
+          _stretch = Offset(delta.dx.clamp(-8, 8).toDouble(),
+              delta.dy.clamp(-5, 5).toDouble());
         });
       },
       onPointerUp: (event) => _release(event.pointer),
       onPointerCancel: (event) => _release(event.pointer),
       child: AnimatedScale(
-        scale: _pointer == null ? 1 : 1.015,
+        scale: _pointer == null ? 1 : 1.005,
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         child: TweenAnimationBuilder<Offset>(
           tween: Tween(end: _stretch),
           duration: Duration(milliseconds: _pointer == null ? 380 : 80),
-          curve: _pointer == null ? Curves.easeOutBack : Curves.easeOutCubic,
-          builder: (context, value, child) =>
-              glass.RawLiquidStretch(stretchPixels: value, child: child!),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) => Transform.translate(
+              key: const ValueKey('navigation-touch-offset'),
+              offset: value,
+              child: child),
           child: widget.child,
         ),
       ),
     );
   }
-}
-
-/// One faint edge catches light without outlining a second capsule.
-class _SilverRimPainter extends CustomPainter {
-  const _SilverRimPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bounds = Offset.zero & size;
-    final rim = RRect.fromRectAndRadius(
-        bounds.deflate(.5), Radius.circular(size.height / 2));
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .65
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0x26FFFFFF), Color(0x0CFFFFFF), Color(0x08FFFFFF)],
-        stops: [0, .4, 1],
-      ).createShader(bounds);
-    canvas.drawRRect(rim, paint);
-  }
-
-  @override
-  bool shouldRepaint(_SilverRimPainter oldDelegate) => false;
 }

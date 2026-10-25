@@ -45,6 +45,7 @@ Map<String, dynamic> _exercise(String id, String locale) => {
 class _Adapter implements HttpClientAdapter {
   final catalogueLocales = <String>[];
   final pageQueries = <Map<String, dynamic>>[];
+  final detailQueries = <Map<String, dynamic>>[];
   bool failPages = false;
   final heldSearches = <String, Completer<void>>{};
   bool failMutations = false;
@@ -75,20 +76,42 @@ class _Adapter implements HttpClientAdapter {
                       'name': 'Exercise $i',
                       'canonicalName': 'Exercise $i',
                       'bodyPart': i.isEven ? 'Chest' : 'Back',
+                      'target': i.isEven ? 'Pectorals' : 'Lats',
                       'equipment': i.isEven ? 'Dumbbell' : 'Band',
+                      'mediaVariants': {
+                        if (i % 3 != 1)
+                          'male': {'url': 'https://example.test/male-$i.mp4'},
+                        if (i % 3 != 0)
+                          'female': {
+                            'url': 'https://example.test/female-$i.mp4'
+                          },
+                      },
                     })
             .where((e) =>
+                (query['mediaGender'] == null ||
+                    (e['mediaVariants'] as Map)
+                        .containsKey(query['mediaGender'])) &&
                 (query['bodyPart'] == null ||
                     e['bodyPart'] == query['bodyPart']) &&
                 (query['equipment'] == null ||
                     e['equipment'] == query['equipment']) &&
-                (e['name'] as String)
-                    .toLowerCase()
-                    .contains(search.toLowerCase()))
+                ['name', 'bodyPart', 'target', 'equipment'].any((field) =>
+                    (e[field] as String)
+                        .toLowerCase()
+                        .contains(search.toLowerCase())))
             .toList();
         final page = query['page'] as int, size = query['pageSize'] as int;
         data = {
-          'data': rows.skip((page - 1) * size).take(size).toList(),
+          'data': rows
+              .skip((page - 1) * size)
+              .take(size)
+              .map((row) => {
+                    ...row,
+                    if (query['mediaGender'] != null)
+                      'url': (row['mediaVariants'] as Map)[query['mediaGender']]
+                          ['url'],
+                  })
+              .toList(),
           'pagination': {
             'page': page,
             'total': rows.length,
@@ -111,7 +134,15 @@ class _Adapter implements HttpClientAdapter {
         };
       }
     } else if (options.path.startsWith('/api/workout/exercises/')) {
-      data = {'data': _exercise('one', locale)};
+      detailQueries.add(Map<String, dynamic>.from(options.queryParameters));
+      data = {
+        'data': {
+          ..._exercise('one', locale),
+          if (options.queryParameters['mediaGender'] != null)
+            'url':
+                'https://example.test/${options.queryParameters['mediaGender']}.mp4'
+        }
+      };
     } else if (options.path.startsWith('/api/workout/me/')) {
       data = {
         'data': {
@@ -218,6 +249,7 @@ void main() {
         refreshToken: 'synthetic',
         userId: 'exercise-test');
     await LanguageManager.shared.restoreAccountLanguage('en');
+    await WorkoutRepository.shared.invalidateExerciseMedia();
   });
   test('catalogues are language scoped and preserve variants sharing a name',
       () async {
@@ -430,6 +462,54 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
+      'chest search includes presses and flies across pages and exposes active filters',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final adapter = _Adapter(),
+        original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    await WorkoutRepository.shared.invalidateExerciseMedia();
+    await tester.pumpWidget(_app(ExerciseLibraryView(onExerciseAdded: () {})));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('exercise-next')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byKey(const ValueKey('exercise-search')), 'chest');
+    await tester.pumpAndSettle();
+    expect(adapter.pageQueries.last['page'], 1);
+    expect(adapter.pageQueries.last['search'], 'chest');
+    expect(find.text('25 exercises'), findsOneWidget);
+    expect(find.text('Page 1 of 2'), findsOneWidget);
+    expect(find.byKey(const ValueKey('exercise-paged-0')), findsOneWidget);
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    expect(tester.testTextInput.isVisible, false);
+    await tester.tap(find.byKey(const ValueKey('exercise-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Page 2 of 2'), findsOneWidget);
+    expect(find.byKey(const ValueKey('exercise-paged-48')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('exercise-filters')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dumbbell').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Apply filters'));
+    await tester.pumpAndSettle();
+    final chip = find.byKey(const ValueKey('active-equipment-filter'));
+    expect(chip, findsOneWidget);
+    await tester
+        .tap(find.descendant(of: chip, matching: find.byTooltip('Delete')));
+    await tester.pumpAndSettle();
+    expect(chip, findsNothing);
+    expect(find.text('Page 1 of 2'), findsOneWidget);
+    expect(find.text('25 exercises'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets(
       'library ignores an old search response and fits small enlarged text',
       (tester) async {
     tester.view.physicalSize = const Size(320, 720);
@@ -457,6 +537,81 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('exercise-paged-48')), findsOneWidget);
     expect(find.byKey(const ValueKey('exercise-paged-47')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+      'demo filters stay scoped through searches, reset and detail caches',
+      (tester) async {
+    final adapter = _Adapter(),
+        original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    await tester.pumpWidget(_app(ExerciseLibraryView(onExerciseAdded: () {})));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('exercise-filters')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('demo-filter-male')));
+    await tester.tap(find.text('Apply filters'));
+    await tester.pumpAndSettle();
+    expect(adapter.pageQueries.last['mediaGender'], 'male');
+    expect(find.text('33 exercises'), findsOneWidget);
+    expect(find.byKey(const ValueKey('exercise-paged-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('exercise-paged-1')), findsNothing);
+    await tester.enterText(
+        find.byKey(const ValueKey('exercise-search')), 'chest');
+    await tester.pumpAndSettle();
+    expect(adapter.pageQueries.last['mediaGender'], 'male');
+    expect(find.text('17 exercises'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('exercise-filters')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('demo-filter-female')));
+    await tester.tap(find.text('Apply filters'));
+    await tester.pumpAndSettle();
+    expect(adapter.pageQueries.last['mediaGender'], 'female');
+    expect(find.text('16 exercises'), findsOneWidget);
+    expect(find.byKey(const ValueKey('exercise-paged-0')), findsNothing);
+    await tester.tap(find.text('Reset filters'));
+    await tester.pumpAndSettle();
+    // Reset can reuse the previously loaded unfiltered page without a new request.
+    expect(find.byKey(const ValueKey('active-demo-filter')), findsNothing);
+    expect(find.text('49 exercises'), findsOneWidget);
+    final male = await tester.runAsync(() =>
+        WorkoutRepository.shared.getExerciseDetail('one', mediaGender: 'male'));
+    final female = await tester.runAsync(() => WorkoutRepository.shared
+        .getExerciseDetail('one', mediaGender: 'female'));
+    expect(male?.url, endsWith('/male.mp4'));
+    expect(female?.url, endsWith('/female.mp4'));
+    expect(
+        adapter.detailQueries.map((q) => q['mediaGender']), ['male', 'female']);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+      'typing retains rows, debounces requests and ignores cursor changes',
+      (tester) async {
+    final adapter = _Adapter(),
+        original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    await tester.pumpWidget(_app(ExerciseLibraryView(onExerciseAdded: () {})));
+    await tester.pumpAndSettle();
+    final before = adapter.pageQueries.length;
+    final search = find.byKey(const ValueKey('exercise-search'));
+    await tester.enterText(search, 'c');
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.enterText(search, 'ch');
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(adapter.pageQueries.length, before);
+    expect(find.byKey(const ValueKey('exercise-paged-0')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('exercise-search-progress')), findsOneWidget);
+    await tester.enterText(search, 'chest');
+    await tester.pumpAndSettle();
+    expect(adapter.pageQueries.length, before + 1);
+    final controller = tester.widget<TextField>(search).controller!;
+    controller.selection = const TextSelection.collapsed(offset: 2);
+    await tester.pumpAndSettle();
+    expect(adapter.pageQueries.length, before + 1);
+    expect(find.text('25 exercises'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets(

@@ -1,6 +1,12 @@
 package com.example.fitai_mobile
 
 import android.content.Intent
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.PersistableBundle
+import android.view.WindowManager
+import android.os.Build
+import android.os.Bundle
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -17,11 +23,43 @@ import java.time.Instant
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var phoneSleep: PhoneSleepTracking
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Flutter's first frame draws the same stationary vector mark.
+            // Avoid the platform's extra icon fade/translation at that handoff.
+            splashScreen.setOnExitAnimationListener { splash -> splash.remove() }
+        }
+    }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "setcraft/credentials")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "protectScreen" -> {
+                        if (call.argument<Boolean>("enabled") == true) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        result.success(null)
+                    }
+                    "copyToken" -> {
+                        val value = call.argument<String>("value")
+                        if (value == null || !value.startsWith("sc_mcp_") || value.length > 150) {
+                            result.error("INVALID_TOKEN", "Could not copy this token.", null)
+                        } else {
+                            val clip = ClipData.newPlainText("Setcraft access token", value)
+                            clip.description.extras = PersistableBundle().apply {
+                                putBoolean("android.content.extra.IS_SENSITIVE", true)
+                            }
+                            getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
+                            result.success(null)
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
         val notifications = getSystemService(NotificationManager::class.java)
         notifications.createNotificationChannel(NotificationChannel(
-            "fitai_reminders", "FitAI reminders", NotificationManager.IMPORTANCE_DEFAULT
+            "fitai_reminders", "Setcraft reminders", NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
             description = "Workout reminders, check-ins and plan updates"
             lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE

@@ -38,9 +38,6 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
       ProgressSurface(
           accent: progressCyan,
           child: Row(children: [
-            const Icon(Icons.fitness_center_outlined,
-                size: 26, color: progressCyan),
-            const SizedBox(width: 16),
             Expanded(
                 child: Text(fitnessText(context, 'Muscles trained'),
                     style: const TextStyle(
@@ -66,7 +63,7 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
           const ProgressEmpty(
               'Log sets to build your muscle training history.'),
         for (var index = 0; index < rows.length; index++) ...[
-          if (index > 0) const Divider(height: 28, color: DSColors.border),
+          if (index > 0) const Divider(height: 18, color: DSColors.border),
           _row(context, rows[index], maximum),
         ],
       ])),
@@ -77,6 +74,7 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
 
   Widget _row(BuildContext context, ProgressJson row, double maximum) {
     final value = progressNumber(row[_metric]) ?? 0;
+    final color = progressMuscleColor(row['id'] as String? ?? '');
     return InkWell(
         onTap: () => widget.onMuscle(row),
         borderRadius: BorderRadius.circular(10),
@@ -91,7 +89,9 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
                 const SizedBox(width: 12),
                 Text(progressValue(context, value, digits: 0),
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w600)),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: progressSilver)),
                 const SizedBox(width: 10),
                 const Icon(Icons.chevron_right, size: 17, color: progressMuted),
               ]),
@@ -102,8 +102,8 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
                       value: value / maximum,
                       builder: (context, animated) => LinearProgressIndicator(
                           value: animated,
-                          minHeight: 7,
-                          color: progressCyan,
+                          minHeight: 8,
+                          color: color,
                           backgroundColor: DSColors.bgRaised))),
             ])));
   }
@@ -117,10 +117,11 @@ class MuscleProgressContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final muscle = data['muscle'] as Map? ?? {};
+    final color = progressMuscleColor(muscle['id'] as String? ?? '');
     final points = ProgressPoint.parse(progressRows(data['weeks']), 'sets');
     final exercises = progressRows(data['exercises']);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      ProgressFactGrid(color: progressCyan, facts: [
+      ProgressFactGrid(color: color, facts: [
         (
           'Direct sets',
           progressValue(context, progressNumber(muscle['directSets']),
@@ -139,7 +140,7 @@ class MuscleProgressContent extends StatelessWidget {
       ]),
       const SizedBox(height: 16),
       ProgressSurface(
-          accent: progressCyan,
+          accent: color,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(fitnessText(context, 'Direct sets'),
@@ -154,13 +155,14 @@ class MuscleProgressContent extends StatelessWidget {
             if (points.isEmpty)
               const ProgressEmpty('No sets in this period')
             else if (points.length <= 6)
-              ProgressWeeklyBars(points: points, metric: 'Direct sets')
+              ProgressWeeklyBars(
+                  points: points, metric: 'Direct sets', color: color)
             else
               ProgressChart(
                   points: points,
                   unit: 'sets',
                   bars: true,
-                  color: progressCyan,
+                  color: color,
                   height: 145,
                   showReadings: true),
           ])),

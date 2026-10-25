@@ -182,7 +182,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView>
                     FitnessText(
                         ready
                             ? 'Notifications are on for this phone.'
-                            : 'Choose what you want to hear from FitAI.',
+                            : 'Choose what you want to hear from Setcraft.',
                         style: const TextStyle(
                             fontSize: 12,
                             color: FitnessTheme.muted,

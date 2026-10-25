@@ -113,7 +113,7 @@ void main() {
     expect(find.byType(BackdropFilter), findsNothing);
     final bounds = tester.getRect(find.byType(UiKitView));
     expect(bounds.center.dx, closeTo(393 / 2, .01));
-    expect(bounds.width, 320);
+    expect(bounds.width, 353);
     // The host reaches the screen edge; UIKit floats the visible glass above
     // the home indicator instead of receiving the safe area twice.
     expect(bounds.bottom, closeTo(852, .01));
@@ -172,9 +172,9 @@ void main() {
       final capsule =
           tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
       expect(capsule.center.dx, closeTo(width / 2, .01));
-      expect(capsule.width, closeTo(width < 384 ? width - 64 : 320, .01));
-      expect(capsule.left, greaterThanOrEqualTo(32));
-      expect(capsule.bottom, closeTo(852 - 34 - 12, .01));
+      expect(capsule.width, closeTo(width < 416 ? width - 40 : 376, .01));
+      expect(capsule.left, greaterThanOrEqualTo(20));
+      expect(capsule.bottom, closeTo(852 - 34 - 8, .01));
       expect(find.byType(BackdropFilter), findsOneWidget);
       for (final label in ['Training', 'Körper', 'Fortschritt']) {
         await tester.tap(find.text(label));
@@ -202,7 +202,7 @@ void main() {
         tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
     final screenHeight =
         tester.view.physicalSize.height / tester.view.devicePixelRatio;
-    expect(screenHeight - capsule.bottom, closeTo(12, .01));
+    expect(screenHeight - capsule.bottom, closeTo(8, .01));
     final lens = find.byKey(const ValueKey('navigation-active-lens'));
     expect(tester.getCenter(lens).dx,
         closeTo(tester.getCenter(find.text('Today')).dx, .01));
@@ -234,7 +234,7 @@ void main() {
     )));
     expect(
         tester.getSize(find.byKey(const ValueKey('navigation-capsule'))).height,
-        closeTo(66.6, .01));
+        closeTo(70.6, .01));
     expect(tester.widget<AnimatedAlign>(find.byType(AnimatedAlign)).duration,
         Duration.zero);
     expect(find.byType(AnimatedScale), findsNothing);
@@ -278,9 +278,11 @@ void main() {
         closeTo(tester.getCenter(find.text('Progress')).dx, .1));
     expect(
         tester
-            .widget<glass.RawLiquidStretch>(find.byType(glass.RawLiquidStretch))
-            .stretchPixels
-            .dx,
+            .widget<Transform>(
+                find.byKey(const ValueKey('navigation-touch-offset')))
+            .transform
+            .getTranslation()
+            .x,
         greaterThan(0));
 
     await touch.up();
@@ -288,9 +290,12 @@ void main() {
     expect(selections, [3]);
     expect(
         tester
-            .widget<glass.RawLiquidStretch>(find.byType(glass.RawLiquidStretch))
-            .stretchPixels,
-        Offset.zero);
+            .widget<Transform>(
+                find.byKey(const ValueKey('navigation-touch-offset')))
+            .transform
+            .getTranslation()
+            .length,
+        0);
     expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale, 1);
     expect(tester.takeException(), isNull);
   });
@@ -356,9 +361,12 @@ void main() {
     expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale, 1);
     expect(
         tester
-            .widget<glass.RawLiquidStretch>(find.byType(glass.RawLiquidStretch))
-            .stretchPixels,
-        Offset.zero);
+            .widget<Transform>(
+                find.byKey(const ValueKey('navigation-touch-offset')))
+            .transform
+            .getTranslation()
+            .length,
+        0);
     expect(
         tester
             .getCenter(find.byKey(const ValueKey('navigation-active-lens')))
@@ -462,7 +470,7 @@ void main() {
     await tester.pumpAndSettle();
     final capsule =
         tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
-    expect(capsule.height, 60);
+    expect(capsule.height, 64);
     expect(
         tester
             .getRect(find.widgetWithText(OutlinedButton, 'Open workout'))

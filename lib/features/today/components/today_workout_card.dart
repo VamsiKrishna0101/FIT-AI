@@ -234,7 +234,9 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
                 child: FitVideoSurface(
                   url: activeItem.exercise.url,
                   fit: BoxFit.contain,
-                  aspectRatio: 16 / 10,
+                  aspectRatio: activeItem.exercise.demoAspectRatio,
+                  neutralBackground: true,
+                  backgroundColor: Colors.white,
                   borderRadius: BorderRadius.circular(19),
                   overlays: [
                     Container(

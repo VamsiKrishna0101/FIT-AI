@@ -19,7 +19,7 @@ const _data = HomeData(
       score: 8.4,
       label: 'Optimal Recovery',
       aiTarget: 'Sample guidance for this day.',
-      source: 'healthkit',
+      source: 'check_in_estimate',
       date: '2026-10-06',
       hrvMs: 68,
       restingHrBpm: 54,
@@ -86,18 +86,8 @@ void main() {
     final header = find.byKey(const ValueKey('today-fixed-header'));
     final before = tester.getRect(header);
     expect(
-        tester.getRect(find.byKey(const ValueKey('today-chart-card'))).top,
-        greaterThan(tester
-            .getRect(find.byKey(const ValueKey('today-weekly-rhythm')))
-            .bottom));
-    expect(
-        tester.getRect(find.byKey(const ValueKey('today-chart-card'))).bottom,
-        lessThan(tester.getTopLeft(find.text('Readiness').first).dy));
-    expect(
-        tester
-            .getRect(find.byKey(const ValueKey('today-weekly-rhythm')))
-            .bottom,
-        lessThan(tester.getTopLeft(find.text('Readiness').first).dy));
+        tester.getRect(find.byKey(const ValueKey('today-readiness-card'))).top,
+        greaterThan(before.bottom));
     final profileBefore = tester.getRect(find.text('VK'));
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
     await tester.pumpAndSettle();
@@ -114,16 +104,10 @@ void main() {
       tester.view.physicalSize = Size(width, 852);
       addTearDown(tester.view.reset);
       await tester.pumpWidget(_app(textScale: scale));
-      await tester.scrollUntilVisible(find.text('Apple Health'), 120,
+      await tester.scrollUntilVisible(find.text('Daily check-in estimate'), 120,
           scrollable: find.byType(Scrollable).first);
-      expect(find.text('Apple Health'), findsOneWidget);
+      expect(find.text('Daily check-in estimate'), findsOneWidget);
       expect(find.text('84'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.scrollUntilVisible(find.text('Recorded sleep'), 200,
-          scrollable: find.byType(Scrollable).first);
-      await tester.pumpAndSettle();
-      expect(find.text('Recorded sleep'), findsOneWidget);
-      expect(find.text('Recovery · last 7 days'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.scrollUntilVisible(find.text('Fat'), 300,
           scrollable: find.byType(Scrollable).first);
@@ -148,7 +132,7 @@ void main() {
     expect(profiles, 1);
     await tester.tap(find.text('84'));
     await tester.pumpAndSettle();
-    expect(find.text('Sample guidance for this day.'), findsOneWidget);
+    expect(find.text('How this is calculated'), findsOneWidget);
     expect(find.text('What went into your score'), findsOneWidget);
     expect(find.text('84'), findsOneWidget);
     Navigator.of(tester.element(find.text('84'))).pop();
@@ -164,7 +148,7 @@ void main() {
   testWidgets('Missing readings do not display invented values or a rest day',
       (tester) async {
     await tester.pumpWidget(_app(data: null));
-    expect(find.text('No readiness for this day'), findsOneWidget);
+    expect(find.text('Your readiness check-in'), findsOneWidget);
     expect(find.text('84'), findsNothing);
     expect(find.text('HRV'), findsNothing);
     expect(find.text('A day to recover'), findsNothing);
@@ -208,7 +192,7 @@ void main() {
     });
     await tester.pumpWidget(_app(data: data));
     expect(find.text('70'), findsOneWidget);
-    expect(find.text('Based on your check-in'), findsOneWidget);
+    expect(find.text('Daily check-in estimate'), findsOneWidget);
     expect(find.text('Okay'), findsOneWidget);
     expect(find.text('Somewhat rested'), findsOneWidget);
     await tester.tap(find.text('70'));
@@ -219,7 +203,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('One compact chart switches between actual readings',
+  testWidgets('Sleep chart preserves actual duration without heart metric tabs',
       (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(393, 852);
@@ -235,45 +219,37 @@ void main() {
     expect(tester.getSize(chart).height, lessThan(180));
     Finder label(String text) =>
         find.descendant(of: chart, matching: find.text(text));
-    expect(label('84 / 100'), findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp('No reading')), findsNWidgets(6));
-    await tester.tap(label('HRV'));
-    await tester.pump();
-    expect(label('68 ms'), findsOneWidget);
-    await tester.tap(label('Sleep'));
-    await tester.pump();
     expect(label('7 h 42 m'), findsOneWidget);
-    await tester.tap(label('RHR'));
-    await tester.pump();
-    expect(label('54 bpm'), findsOneWidget);
+    expect(label('HRV'), findsNothing);
+    expect(label('RHR'), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('No reading')), findsNWidgets(6));
     expect(tester.takeException(), isNull);
     semantics.dispose();
   });
 
   testWidgets(
-      'A real synced score keeps its heart readings for phone-only users',
+      'Legacy heart-based scores do not populate the manual readiness card',
       (tester) async {
     final data = HomeData.fromJson({
       ..._data.toJson(),
+      'readiness': {..._data.readiness!.toJson(), 'source': 'healthkit'},
       'wearableUsage': 'NONE',
     });
     await tester.pumpWidget(_app(data: data));
     final card = find.byKey(const ValueKey('today-readiness-card'));
-    expect(find.descendant(of: card, matching: find.text('68 ms')),
-        findsOneWidget);
-    expect(find.descendant(of: card, matching: find.text('54 bpm')),
-        findsOneWidget);
+    expect(
+        find.descendant(of: card, matching: find.text('68 ms')), findsNothing);
+    expect(
+        find.descendant(of: card, matching: find.text('54 bpm')), findsNothing);
     expect(find.descendant(of: card, matching: find.text('Add answer')),
-        findsNothing);
-    expect(find.descendant(of: card, matching: find.text('Apple Health')),
-        findsOneWidget);
+        findsNWidgets(3));
   });
 
   test('Home cache preserves measurement date, real source and session title',
       () {
     final restored = HomeData.fromJson(_data.toJson());
     expect(restored.readiness!.date, '2026-10-06');
-    expect(restored.readiness!.source, 'healthkit');
+    expect(restored.readiness!.source, 'check_in_estimate');
     expect(restored.readiness!.sleepEfficiency, 91);
     expect(restored.todayWorkout!.sessionTitle, 'Full-body strength');
   });

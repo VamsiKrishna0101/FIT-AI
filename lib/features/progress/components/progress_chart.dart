@@ -114,9 +114,9 @@ class _ProgressChartState extends State<ProgressChart> {
                                         color: progressMuted,
                                         letterSpacing: 0)),
                             ]),
-                            style: TextStyle(
-                                color: widget.color,
-                                fontSize: 33,
+                            style: const TextStyle(
+                                color: progressSilver,
+                                fontSize: 31,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -1.1)),
                       ])),
@@ -139,7 +139,7 @@ class _ProgressChartState extends State<ProgressChart> {
                       style: const TextStyle(
                           color: progressMuted, fontSize: 12)))),
       ]),
-      SizedBox(height: widget.compactHeader ? 12 : 18),
+      SizedBox(height: widget.compactHeader ? 12 : 16),
       if (points.length > 1) ...[
         SizedBox(
             height: widget.height,
@@ -296,12 +296,13 @@ class _ProgressChartState extends State<ProgressChart> {
 class ProgressSparkline extends StatelessWidget {
   final List<ProgressPoint> points;
   final Color color;
-  final bool daily;
+  final bool daily, bars;
   const ProgressSparkline(
       {super.key,
       required this.points,
       this.color = progressCyan,
-      this.daily = false});
+      this.daily = false,
+      this.bars = false});
 
   @override
   Widget build(BuildContext context) {
@@ -317,10 +318,11 @@ class ProgressSparkline extends StatelessWidget {
                 painter: _ChartPainter(
                     points: points,
                     progress: progress,
-                    min: low - padding,
+                    min: bars ? 0 : low - padding,
                     max: high + padding,
                     color: color,
                     daily: daily,
+                    bars: bars,
                     compact: true))));
   }
 }
@@ -389,7 +391,7 @@ class _ChartPainter extends CustomPainter {
     final geometry = _ChartGeometry(points, size, min, max);
     if (!compact) {
       final grid = Paint()
-        ..color = const Color(0x1FFFFFFF)
+        ..color = const Color(0x14FFFFFF)
         ..strokeWidth = .6;
       for (final y in [4.0, size.height / 2, size.height - 4]) {
         _dash(canvas, Offset(0, y), Offset(size.width, y), grid);
@@ -458,7 +460,7 @@ class _ChartPainter extends CustomPainter {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        color.withValues(alpha: .18),
+                        color.withValues(alpha: .14),
                         color.withValues(alpha: 0)
                       ]).createShader(Offset.zero & size));
             canvas.drawPath(line, paint);

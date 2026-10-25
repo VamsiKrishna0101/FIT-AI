@@ -1,3 +1,4 @@
+import 'package:fitai_mobile/features/body_scan/models/planned_physique_models.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:intl/date_symbol_data_local.dart';
@@ -71,6 +72,9 @@ BodyOverview _overview() => BodyOverview.fromJson({
     });
 
 class _Repository extends BodyAssessmentRepository {
+  @override
+  Future<PlannedPhysiqueData> plannedPhysique({DateTime? date}) async =>
+      PlannedPhysiqueData.fromJson({'status': 'none', 'workouts': []});
   int maps = 0;
   @override
   Future<Map<String, dynamic>> history(
@@ -219,31 +223,35 @@ void main() {
     await tester.pumpWidget(
         _app(BodyHistoryView(repository: _Repository(), onRecord: (_) {})));
     await tester.pumpAndSettle();
-    expect(find.text('Report only · Photos not saved'), findsNWidgets(2));
-    expect(
-        tester
-            .widget<OutlinedButton>(
-                find.widgetWithText(OutlinedButton, 'Compare'))
-            .onPressed,
-        isNull);
-    await tester.tap(find.text('Last month'));
+    expect(find.text('Report only'), findsNWidgets(2));
+    expect(find.widgetWithText(OutlinedButton, 'Compare'), findsNothing);
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Last month').last);
     await tester.pumpAndSettle();
     expect(find.text('No scans in this date range.'), findsOneWidget);
-    await tester.tap(find.text('All scans'));
+    await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
-    expect(find.text('Report only · Photos not saved'), findsNWidgets(2));
-    await tester.tap(find.text('Custom dates'));
+    await tester.tap(find.text('All scans').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Report only'), findsNWidgets(2));
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Custom dates').last);
     await tester.pumpAndSettle();
     expect(find.byType(DateRangePickerDialog), findsOneWidget);
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Report only · Photos not saved'), findsNWidgets(2));
+    expect(find.text('Report only'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
       'Training and Physique stay separate; measurements and history remain reachable',
       (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final repository = _Repository();
     await tester.pumpWidget(_app(BodyView(
         repository: repository, planRepository: _Plans(), onTrain: () {})));
@@ -255,7 +263,10 @@ void main() {
 
     await tester.tap(find.text('Physique'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Generate weekly plan'), 160,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Generate weekly plan'), findsOneWidget);
+    await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
     await tester.pumpAndSettle();
     expect(find.byType(WeeklyPlanView), findsOneWidget);
@@ -263,15 +274,15 @@ void main() {
     await tester.tap(find.text('Generate weekly plan'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Scan body'), findsOneWidget);
-    expect(find.text('Continue without scan'), findsOneWidget);
+    expect(find.text('Add measurements (optional)'), findsOneWidget);
+    expect(find.text('Continue without measurements'), findsOneWidget);
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Photo scan'), 180,
+    await tester.scrollUntilVisible(find.text('Photo review'), 180,
         scrollable: find.byType(Scrollable).last);
-    expect(find.text('Photo scan'), findsOneWidget);
+    expect(find.text('Photo review'), findsOneWidget);
     expect(find.byType(AnatomicalTrainingMap), findsOneWidget);
     await tester.scrollUntilVisible(find.text('View'), 220,
         scrollable: find.byType(Scrollable).last);
@@ -334,6 +345,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Physique'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Your weekly plan'), 160,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Your weekly plan'), findsOneWidget);
     expect(find.byType(BodyPhysiqueHome), findsOneWidget);
 
@@ -349,6 +362,8 @@ void main() {
     await tester.pumpAndSettle();
     final physique = find.byType(BodyPhysiqueHome);
     expect(physique, findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Your weekly plan'), 160,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Your weekly plan'), findsOneWidget);
     expect(find.byType(BodyPhysiqueHome), findsOneWidget);
     await tester
@@ -358,6 +373,8 @@ void main() {
         ))
         .onRefresh();
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Your weekly plan'), 160,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Your weekly plan'), findsOneWidget);
     expect(find.byType(BodyPhysiqueHome), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -382,8 +399,9 @@ void main() {
         .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
     map.onSelected('chest');
     await tester.pumpAndSettle();
-    expect(find.text('AI observation'), findsOneWidget);
-    expect(find.text('Saved measurements'), findsOneWidget);
+    expect(find.text('0 direct sets planned this week'), findsOneWidget);
+    expect(find.text('No exercises for this area in the selected plan view.'),
+        findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -410,7 +428,7 @@ void main() {
         BodyHistoryView(repository: _Repository(), onRecord: (_) {}),
         scale: 1.8));
     await tester.pumpAndSettle();
-    expect(find.text('Report only · Photos not saved'), findsNWidgets(2));
+    expect(find.text('Report only'), findsNWidgets(2));
     expect(find.text('Waist 82–92 cm'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

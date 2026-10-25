@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../core/branding/setcraft_launch_screen.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/localization/fitness_text.dart';
@@ -12,17 +11,25 @@ import '../../../core/theme/fitness_theme.dart';
 import '../../planner/views/weekly_plan_view.dart';
 import '../../subscription/subscription_service.dart';
 import '../../subscription/subscription_view.dart';
-import '../../subscription/subscription_pricing_view.dart';
-import '../../subscription/trial_access_hero.dart';
 import '../data/starter_plan_repository.dart';
-import '../components/starter_muscle_preview.dart';
+import '../components/starter_plan_reveal.dart';
+import '../../profile/repositories/settings_repository.dart';
+import '../data/discovery_repository.dart';
+import 'discovery_onboarding_gate.dart';
 import 'training_preferences_view.dart';
+import 'equipment_selection_view.dart';
 
 class StarterOnboardingGate extends StatefulWidget {
   final Widget child;
   final StarterPlanRepository? repository;
+  final DiscoveryRepository discoveryRepository;
+  final StarterEntryPreparation? preparation;
   const StarterOnboardingGate(
-      {super.key, required this.child, this.repository});
+      {super.key,
+      required this.child,
+      this.repository,
+      this.discoveryRepository = const DiscoveryRepository(),
+      this.preparation});
   @override
   State<StarterOnboardingGate> createState() => _StarterOnboardingGateState();
 }
@@ -34,7 +41,20 @@ class _StarterOnboardingGateState extends State<StarterOnboardingGate> {
   @override
   void initState() {
     super.initState();
-    _load();
+    final prepared = widget.preparation;
+    if (prepared != null) {
+      _apply(prepared.data);
+    } else {
+      _load();
+    }
+  }
+
+  void _apply(Map<String, dynamic>? data) {
+    _run = data?['run'] is Map
+        ? Map<String, dynamic>.from(data!['run'] as Map)
+        : null;
+    _offer = StarterEntryPreparation.shouldOffer(data);
+    _loading = false;
   }
 
   Future<void> _load() async {
@@ -43,18 +63,7 @@ class _StarterOnboardingGateState extends State<StarterOnboardingGate> {
       final data = await _repository.current();
       final currentOwner = await CacheScope.userId();
       if (!mounted || owner != currentOwner) return;
-      final run = data['run'] is Map
-          ? Map<String, dynamic>.from(data['run'] as Map)
-          : null;
-      setState(() {
-        _run = run;
-        _offer = data['eligible'] == true ||
-            (data['hasAccess'] == true &&
-                run != null &&
-                (run['plan'] is! Map ||
-                    (run['plan'] as Map)['status'] == 'DRAFT'));
-        _loading = false;
-      });
+      setState(() => _apply(data));
     } catch (_) {
       // Existing subscription access still controls the app if preview setup is offline.
       if (mounted) setState(() => _loading = false);
@@ -66,8 +75,8 @@ class _StarterOnboardingGateState extends State<StarterOnboardingGate> {
     if (id != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          Navigator.of(context).push(
-              AppPageRoute<void>(page: WeeklyPlanView(initialPlanId: id)));
+          Navigator.of(context).push(AppPageRoute<void>(
+              page: WeeklyPlanView(initialPlanId: id, fromOnboarding: true)));
         }
       });
     }
@@ -75,12 +84,15 @@ class _StarterOnboardingGateState extends State<StarterOnboardingGate> {
 
   @override
   Widget build(BuildContext context) => _loading
-      ? const Scaffold(
-          body:
-              Center(child: CircularProgressIndicator(color: DSColors.silver)))
+      ? const SetcraftLaunchScreen()
       : _offer
-          ? StarterPlanView(
-              repository: _repository, initialRun: _run, onComplete: _finished)
+          ? DiscoveryOnboardingGate(
+              repository: widget.discoveryRepository,
+              preparation: widget.preparation?.discovery,
+              child: StarterPlanView(
+                  repository: _repository,
+                  initialRun: _run,
+                  onComplete: _finished))
           : widget.child;
 }
 
@@ -89,11 +101,13 @@ class StarterPlanView extends StatefulWidget {
   final SubscriptionService? subscription;
   final Map<String, dynamic>? initialRun;
   final ValueChanged<String?> onComplete;
+  final Future<Map<String, dynamic>> Function()? profileLoader;
   const StarterPlanView(
       {super.key,
       this.repository,
       this.subscription,
       this.initialRun,
+      this.profileLoader,
       required this.onComplete});
   @override
   State<StarterPlanView> createState() => _StarterPlanViewState();
@@ -104,11 +118,25 @@ class _StarterPlanViewState extends State<StarterPlanView>
   late final _repo = widget.repository ?? StarterPlanRepository();
   late final _subscription = widget.subscription ?? SubscriptionService.shared;
   Map<String, dynamic>? _run;
+  Map<String, dynamic>? _profile;
   String? _error, _owner;
+  String? _errorCode;
   Timer? _timer;
   bool _busy = false, _polling = false, _foreground = true;
   bool get _ready => _run?['status'] == 'COMPLETED' && _run?['plan'] is Map;
   bool get _failed => _run?['status'] == 'FAILED';
+  String? get _failureCode => _run?['errorCode'] as String?;
+  bool get _equipmentIssue => _failed && _failureCode == 'CATALOG_GAP';
+  bool get _movementIssue =>
+      _failed && _failureCode == 'STARTER_REVIEW_REQUIRED';
+  bool get _canRetry => !_failed || _run?['canRetry'] != false;
+  String get _failureMessage => _equipmentIssue
+      ? 'We could not match a complete week to your equipment. Check what you have available.'
+      : _movementIssue
+          ? 'We could not match exercises to your movement notes. Review them if anything has changed.'
+          : _canRetry
+              ? 'Your answers are saved. You do not need to fill them in again.'
+              : 'Your answers are saved. Planning is unavailable right now.';
   Map<String, dynamic>? get _preview =>
       _ready && (_run!['plan'] as Map)['preview'] is Map
           ? Map<String, dynamic>.from((_run!['plan'] as Map)['preview'] as Map)
@@ -119,6 +147,23 @@ class _StarterPlanViewState extends State<StarterPlanView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _begin();
+    unawaited(_loadProfile());
+  }
+
+  Future<void> _loadProfile() async {
+    final owner = await CacheScope.userId();
+    try {
+      final profile = await (widget.profileLoader?.call() ??
+          SettingsRepository().profile());
+      if (mounted && owner == await CacheScope.userId()) {
+        setState(() => _profile = profile);
+      }
+    } catch (_) {
+      // Public plan data remains useful when cached profile details are offline.
+      if (mounted && owner == await CacheScope.userId()) {
+        setState(() => _profile = {});
+      }
+    }
   }
 
   Future<bool> _sameOwner() async {
@@ -141,6 +186,8 @@ class _StarterPlanViewState extends State<StarterPlanView>
     setState(() {
       _busy = true;
       _error = null;
+      _errorCode = null;
+      if (retry) _run = null;
     });
     _timer?.cancel();
     _owner = await CacheScope.userId();
@@ -195,28 +242,33 @@ class _StarterPlanViewState extends State<StarterPlanView>
       await _subscription.refresh();
       if (!await _sameOwner()) return;
       final id = (_run!['plan'] as Map)['id'] as String;
-      if (_subscription.access?.trialAvailable == true) {
+      if (_subscription.access?.hasAccess != true) {
         await _repo.prepareUnlock(id);
         if (!await _sameOwner()) return;
-        await _subscription.startTrial();
-      }
-      if (!await _sameOwner()) return;
-      if (_subscription.access?.hasAccess != true) {
-        if (_subscription.access?.trialAvailable == true ||
-            _subscription.error != null) {
-          throw StateError(_subscription.error ??
-              'Could not start your trial. Please try again.');
-        }
         if (mounted) {
           await Navigator.of(context).push(AppPageRoute<void>(
-              page: SubscriptionView(service: _subscription)));
+              page: SubscriptionView(
+                  service: _subscription,
+                  onContinue: () {
+                    if (_subscription.access?.hasAccess == true) {
+                      Navigator.pop(context);
+                    }
+                  })));
         }
+      }
+      if (!await _sameOwner() || _subscription.access?.hasAccess != true) {
         return;
       }
       await _repo.activate(id);
       if (await _sameOwner()) widget.onComplete(id);
     } catch (error) {
-      if (await _sameOwner()) setState(() => _error = _message(error));
+      if (await _sameOwner()) {
+        final details = error is DioException ? error.response?.data : null;
+        setState(() {
+          _error = _message(error);
+          _errorCode = details is Map ? details['code'] as String? : null;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -224,7 +276,9 @@ class _StarterPlanViewState extends State<StarterPlanView>
 
   Future<void> _review() async {
     await Navigator.of(context).push(AppPageRoute<void>(
-        page: const TrainingPreferencesView(editProfile: true)));
+        page: _equipmentIssue
+            ? const EquipmentSelectionView(editProfile: true)
+            : const TrainingPreferencesView(editProfile: true)));
     if (mounted) _begin(retry: true);
   }
 
@@ -257,12 +311,15 @@ class _StarterPlanViewState extends State<StarterPlanView>
   Widget build(BuildContext context) => FitnessTheme(
           child: Scaffold(
         appBar: AppBar(
-            title: const FitnessText('Your starting plan',
+            title: const FitnessText('Your plan',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             actions: [
               TextButton(
-                  onPressed: _busy ? null : () => widget.onComplete(null),
-                  child: const FitnessText('Not now'))
+                  onPressed: _busy
+                      ? null
+                      : () => Navigator.of(context).push(AppPageRoute<void>(
+                          page: SubscriptionView(service: _subscription))),
+                  child: const FitnessText('Membership'))
             ]),
         body: SafeArea(
             child: Column(children: [
@@ -271,35 +328,12 @@ class _StarterPlanViewState extends State<StarterPlanView>
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                   children: [
                 if (_ready && _preview != null) ...[
-                  const FitnessText('Your week is ready',
-                      style: TextStyle(
-                          fontSize: 34,
-                          height: 1.1,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -1.3)),
-                  const SizedBox(height: 10),
-                  const FitnessText('Your plan, built around you.',
-                      style: TextStyle(
-                          fontSize: 13, height: 1.4, color: Color(0xFF9AA3AE))),
-                  const SizedBox(height: 22),
-                  TrialAccessHero(
-                      days: _subscription.access?.state == 'trial'
-                          ? _subscription.access!.daysRemaining
-                          : 14),
-                  const SizedBox(height: 26),
-                  StarterPlanPreview(preview: _preview!),
+                  StarterPlanPreview(preview: _preview!, profile: _profile),
                 ] else ...[
                   const SizedBox(height: 28),
-                  Icon(
-                      _failed
-                          ? Icons.tune_rounded
-                          : Icons.auto_awesome_outlined,
-                      color: DSColors.silver,
-                      size: 36),
-                  const SizedBox(height: 20),
                   FitnessText(
-                      _failed
-                          ? 'Your plan needs a little more information'
+                      _failed || _error != null
+                          ? 'We could not finish your plan'
                           : 'Building your first week',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
@@ -323,12 +357,16 @@ class _StarterPlanViewState extends State<StarterPlanView>
                   ],
                   if (_failed) ...[
                     const SizedBox(height: 10),
-                    const FitnessText(
-                        'Review your equipment and movement notes, then try again.',
-                        textAlign: TextAlign.center),
-                    TextButton(
-                        onPressed: _busy ? null : _review,
-                        child: const FitnessText('Review preferences')),
+                    FitnessText(_failureMessage,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: FitnessTheme.muted, height: 1.5)),
+                    if (_equipmentIssue || _movementIssue)
+                      TextButton(
+                          onPressed: _busy ? null : _review,
+                          child: FitnessText(_equipmentIssue
+                              ? 'Review equipment'
+                              : 'Review movement notes')),
                   ],
                 ],
               ])),
@@ -342,46 +380,43 @@ class _StarterPlanViewState extends State<StarterPlanView>
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               fontSize: 12, color: FitnessTheme.coral))),
-                  if (_ready)
+                  if (_ready && _errorCode == 'STALE_PLAN')
                     TextButton(
-                        onPressed: _busy ? null : _review,
-                        child: const FitnessText('Review preferences')),
+                        onPressed: _busy ? null : () => _begin(retry: true),
+                        child: const FitnessText('Refresh my plan')),
                   const SizedBox(height: 8),
                 ],
                 if (_ready || _failed || _error != null)
                   LiquidChromeButton(
+                      pill: true,
+                      solid: true,
+                      showArrow: false,
                       title: _ready
                           ? (_subscription.access?.hasAccess == true
                               ? 'Open my full plan'
-                              : 'Start my 14-day trial')
-                          : 'Try again',
+                              : 'Unlock my plan')
+                          : _canRetry
+                              ? 'Try again'
+                              : 'View membership',
                       isLoading: _busy,
                       onPressed: _busy
                           ? null
                           : _ready
                               ? _unlock
-                              : () => _begin(retry: true)),
+                              : _canRetry
+                                  ? () => _begin(retry: true)
+                                  : () => Navigator.of(context).push(
+                                      AppPageRoute<void>(
+                                          page: SubscriptionView(
+                                              service: _subscription)))),
                 if (_ready) ...[
-                  const SizedBox(height: 4),
-                  Row(children: [
-                    const Expanded(
-                        child: FitnessText(
-                            'No payment details. No automatic charge.',
-                            style: TextStyle(
-                                fontSize: 10,
-                                height: 1.4,
-                                color: FitnessTheme.muted))),
-                    const SizedBox(width: 10),
-                    TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () => Navigator.of(context).push(
-                                AppPageRoute<void>(
-                                    page: SubscriptionPricingView(
-                                        service: _subscription))),
-                        child: const FitnessText('See pricing',
-                            style: TextStyle(fontSize: 11))),
-                  ]),
+                  const SizedBox(height: 9),
+                  const FitnessText('Choose your membership next',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          height: 1.4,
+                          color: FitnessTheme.muted)),
                 ],
               ])),
         ])),
@@ -390,105 +425,9 @@ class _StarterPlanViewState extends State<StarterPlanView>
 
 class StarterPlanPreview extends StatelessWidget {
   final Map<String, dynamic> preview;
-  const StarterPlanPreview({super.key, required this.preview});
+  final Map<String, dynamic>? profile;
+  const StarterPlanPreview({super.key, required this.preview, this.profile});
   @override
-  Widget build(BuildContext context) {
-    if ((preview['muscleGroups'] as List?)?.isNotEmpty == true) {
-      return StarterMusclePreview(preview: preview);
-    }
-    final days = (preview['workouts'] as List? ?? []).whereType<Map>().toList();
-    final first = preview['firstWorkout'] as Map?;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      if (preview['source'] == 'rules') ...[
-        const FitnessText('Rules-based starter plan',
-            style: TextStyle(
-                fontSize: 12,
-                color: FitnessTheme.silver,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(height: 5),
-        const FitnessText(
-            'AI planning is unavailable. This plan uses your confirmed setup and conservative training rules.',
-            style: TextStyle(
-                fontSize: 12, color: FitnessTheme.muted, height: 1.4)),
-        const SizedBox(height: 14),
-      ],
-      FitnessCard(
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const FitnessText('Your week',
-            style: TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 10),
-        for (final day in days)
-          Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child:
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                SizedBox(
-                    width: 64,
-                    child: Text(
-                        DateFormat.E(locale)
-                            .format(DateTime.parse(day['date'] as String)),
-                        style: const TextStyle(
-                            fontSize: 12, color: FitnessTheme.muted))),
-                Expanded(
-                    child: FitnessText(
-                        day['restDay'] == true ? 'Rest day' : '${day['name']}',
-                        style: const TextStyle(fontSize: 13))),
-              ])),
-      ])),
-      if (first != null) ...[
-        const SizedBox(height: 12),
-        FitnessCard(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const FitnessText('Your first workout',
-              style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 12),
-          for (final exercise
-              in (first['exercises'] as List? ?? []).whereType<Map>())
-            Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FitnessText('${exercise['name']}',
-                          style: const TextStyle(fontSize: 15)),
-                      const SizedBox(height: 4),
-                      FitnessText(
-                          '${exercise['sets']} × ${exercise['repsMin'] == exercise['repsMax'] ? exercise['repsMax'] : '${exercise['repsMin']}–${exercise['repsMax']}'} reps',
-                          style: const TextStyle(
-                              fontSize: 12, color: FitnessTheme.muted)),
-                    ])),
-        ])),
-      ],
-      const SizedBox(height: 12),
-      FitnessCard(
-          child: Stack(alignment: Alignment.center, children: [
-        ExcludeSemantics(
-            child: IgnorePointer(
-                child: ImageFiltered(
-          imageFilter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Column(children: [
-            for (var index = 0; index < 3; index++)
-              Container(
-                  height: 10,
-                  margin: const EdgeInsets.symmetric(vertical: 7),
-                  width: 170.0 - index * 20,
-                  decoration: BoxDecoration(
-                      color: DSColors.bgRaised,
-                      borderRadius: BorderRadius.circular(5))),
-          ]),
-        ))),
-        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.lock_outline_rounded, size: 17, color: DSColors.silver),
-          SizedBox(width: 8),
-          Flexible(
-              child: FitnessText('Unlock your complete plan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-        ]),
-      ])),
-    ]);
-  }
+  Widget build(BuildContext context) =>
+      StarterPlanReveal(preview: preview, profile: profile);
 }

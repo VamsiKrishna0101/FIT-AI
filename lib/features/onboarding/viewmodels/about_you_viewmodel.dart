@@ -109,14 +109,6 @@ class AboutYouViewModel extends ChangeNotifier {
     controller.checkpoint();
   }
 
-  String get countryCode => draft.countryCode;
-
-  void setCountry(String value) {
-    draft.countryCode = value;
-    controller.checkpoint();
-    notifyListeners();
-  }
-
   void setGender(String val) {
     if (_gender == val) return;
     _gender = val;

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/app_data_mode.dart';
 import '../../../core/cache/user_data_cache.dart';
 import '../../../core/media/video_cache.dart';
 import '../../../core/network/api_client.dart';
@@ -32,13 +33,43 @@ class WorkoutRepository {
 
   List<WorkoutExerciseModel>? _catalog;
   String? _catalogLocale;
+  String? _catalogOwner;
+  int _catalogRevision = 0;
   List<WorkoutExerciseModel>? get cachedCatalog =>
-      _catalogLocale == LanguageManager.shared.currentLanguage.code
+      _catalogOwner == AppDataMode.shared.owner &&
+              _catalogLocale == LanguageManager.shared.currentLanguage.code
           ? _catalog
           : null;
   final _catalogRequests = <String, Future<List<WorkoutExerciseModel>>>{};
-  static String _catalogKey(String locale) =>
-      'fitai_exercise_catalog_v3_$locale';
+  static Future<String> _catalogKey(String locale) =>
+      CacheScope.userKey('exercise_catalog_v5_$locale');
+
+  Future<String> _ensureCatalogOwner() async {
+    final owner = await CacheScope.userId();
+    if (_catalogOwner != owner) {
+      _catalogOwner = owner;
+      _catalog = null;
+      _pageCache.clear();
+      _pageRequests.clear();
+      _catalogRequests.clear();
+    }
+    return owner;
+  }
+
+  Future<void> invalidateExerciseMedia() async {
+    _catalogRevision++;
+    _catalog = null;
+    _pageCache.clear();
+    _pageRequests.clear();
+    _catalogRequests.clear();
+    await UserDataCache.shared.invalidate('exercise_detail');
+    final owner = await CacheScope.userId();
+    try {
+      await LocalCache.shared.removeByPrefix(
+          '${CacheScope.userPrefix}${owner}_exercise_catalog_v5_');
+    } catch (_) {/* Optional cache cleanup must not hide a saved profile. */}
+  }
+
   static Future<String> _planKey() => CacheScope.userDayKey(
       'plan_v2_${LanguageManager.shared.currentLanguage.code}');
   static const Duration _catalogTtl = Duration(days: 7);
@@ -51,17 +82,21 @@ class WorkoutRepository {
       String search = '',
       String? bodyPart,
       String? equipment,
+      String? mediaGender,
       bool forceRefresh = false}) async {
+    final owner = await _ensureCatalogOwner();
+    final revision = _catalogRevision;
     final locale = LanguageManager.shared.currentLanguage.code;
     final query = <String, dynamic>{
       'page': page,
       'pageSize': pageSize,
       if (search.trim().isNotEmpty) 'search': search.trim(),
       if (bodyPart != null) 'bodyPart': bodyPart,
-      if (equipment != null) 'equipment': equipment
+      if (equipment != null) 'equipment': equipment,
+      if (mediaGender != null) 'mediaGender': mediaGender,
     };
     final key =
-        '$locale:${Uri(queryParameters: query.map((key, value) => MapEntry(key, value.toString()))).query}';
+        '$owner:$revision:$locale:${Uri(queryParameters: query.map((key, value) => MapEntry(key, value.toString()))).query}';
     final cached = _pageCache[key];
     if (!forceRefresh &&
         cached != null &&
@@ -74,7 +109,9 @@ class WorkoutRepository {
       final response = await ApiClient.shared.get<Map<String, dynamic>>(
           Endpoints.workoutExercises,
           queryParameters: query);
-      if (LanguageManager.shared.currentLanguage.code != locale) {
+      if (await CacheScope.userId() != owner ||
+          revision != _catalogRevision ||
+          LanguageManager.shared.currentLanguage.code != locale) {
         throw StateError('Language changed');
       }
       final result = ExerciseCatalogPage.fromJson(response.data!);
@@ -420,6 +457,8 @@ class WorkoutRepository {
     String? bodyPart,
     bool forceRefresh = false,
   }) async {
+    final owner = await _ensureCatalogOwner();
+    final revision = _catalogRevision;
     final locale = LanguageManager.shared.currentLanguage.code;
     if (_catalogLocale != locale) {
       _catalog = null;
@@ -431,8 +470,12 @@ class WorkoutRepository {
 
     if (!forceRefresh) {
       if (_catalog != null) return _catalog!;
-      final entry = await LocalCache.shared.getEntry(_catalogKey(locale));
-      if (LanguageManager.shared.currentLanguage.code != locale) return [];
+      final entry = await LocalCache.shared.getEntry(await _catalogKey(locale));
+      if (await CacheScope.userId() != owner ||
+          revision != _catalogRevision ||
+          LanguageManager.shared.currentLanguage.code != locale) {
+        return [];
+      }
       if (entry != null && entry.$1 is List) {
         final list = _parseCatalog(entry.$1 as List);
         if (list.isNotEmpty) {
@@ -445,24 +488,29 @@ class WorkoutRepository {
     return _refreshCatalog();
   }
 
-  Future<List<WorkoutExerciseModel>> _refreshCatalog() {
+  Future<List<WorkoutExerciseModel>> _refreshCatalog() async {
+    final owner = await _ensureCatalogOwner();
+    final revision = _catalogRevision;
     final locale = LanguageManager.shared.currentLanguage.code;
-    return _catalogRequests[locale] ??= () async {
+    final requestKey = '$owner:$revision:$locale';
+    return _catalogRequests[requestKey] ??= () async {
       try {
         final list = await _fetchCatalog();
-        if (LanguageManager.shared.currentLanguage.code != locale) {
+        if (await CacheScope.userId() != owner ||
+            revision != _catalogRevision ||
+            LanguageManager.shared.currentLanguage.code != locale) {
           return <WorkoutExerciseModel>[];
         }
         if (list.isNotEmpty) {
           _catalog = list;
           await LocalCache.shared.saveEntry(
-            _catalogKey(locale),
+            await _catalogKey(locale),
             list.map((e) => e.toJson()).toList(),
           );
         }
         return _catalog ?? list;
       } finally {
-        _catalogRequests.remove(locale);
+        _catalogRequests.remove(requestKey);
       }
     }();
   }
@@ -489,6 +537,7 @@ class WorkoutRepository {
     String? category,
     String? bodyPart,
   }) async {
+    final owner = await CacheScope.userId();
     final locale = LanguageManager.shared.currentLanguage.code;
     try {
       final query = <String, dynamic>{};
@@ -503,6 +552,7 @@ class WorkoutRepository {
       if (response.statusCode == 200 && response.data != null) {
         final rawList = response.data!['data'] as List?;
         if (rawList != null &&
+            await CacheScope.userId() == owner &&
             LanguageManager.shared.currentLanguage.code == locale) {
           return _parseCatalog(rawList);
         }
@@ -511,22 +561,36 @@ class WorkoutRepository {
     return cachedCatalog ?? [];
   }
 
-  Future<WorkoutExerciseModel?> getExerciseDetail(String id) async {
+  Future<WorkoutExerciseModel?> getExerciseDetail(String id,
+      {String? mediaGender}) async {
+    final owner = await CacheScope.userId();
     final locale = LanguageManager.shared.currentLanguage.code;
-    final key = 'fitai_exercise_detail_v3_${locale}_$id';
+    final variantKey = mediaGender == null ? id : '$id:$mediaGender';
+    final key =
+        await CacheScope.userKey('exercise_detail_v5_${locale}_$variantKey');
     try {
-      final data =
-          await UserDataCache.shared.load('exercise_detail', id, () async {
-        final response = await ApiClient.shared
-            .get<Map<String, dynamic>>(Endpoints.workoutExerciseDetail(id));
+      // Revalidate form guides on open so media replacements are visible now;
+      // the saved guide below remains the offline fallback.
+      final data = await UserDataCache.shared
+          .load('exercise_detail', variantKey, () async {
+        final response = await ApiClient.shared.get<Map<String, dynamic>>(
+            Endpoints.workoutExerciseDetail(id),
+            queryParameters: {
+              if (mediaGender != null) 'mediaGender': mediaGender
+            });
         return Map<String, dynamic>.from(response.data!['data'] as Map);
-      }, ttl: const Duration(days: 1));
-      if (LanguageManager.shared.currentLanguage.code != locale) return null;
+      }, ttl: const Duration(days: 1), refresh: true);
+      if (await CacheScope.userId() != owner ||
+          LanguageManager.shared.currentLanguage.code != locale) {
+        return null;
+      }
       await LocalCache.shared.saveJson(key, data);
       return WorkoutExerciseModel.fromJson(data);
     } catch (_) {/* A downloaded form guide remains available offline. */}
     final data = await LocalCache.shared.getJson(key);
-    if (data != null && LanguageManager.shared.currentLanguage.code == locale) {
+    if (data != null &&
+        await CacheScope.userId() == owner &&
+        LanguageManager.shared.currentLanguage.code == locale) {
       return WorkoutExerciseModel.fromJson(data);
     }
     return null;

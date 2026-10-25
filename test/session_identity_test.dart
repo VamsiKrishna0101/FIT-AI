@@ -12,7 +12,8 @@ import 'package:fitai_mobile/core/network/api_client.dart';
 import 'package:fitai_mobile/core/storage/secure_session_store.dart';
 import 'package:fitai_mobile/features/auth/data/auth_repository.dart';
 import 'package:fitai_mobile/features/body_scan/views/body_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_focus_panel.dart';
+import 'package:fitai_mobile/features/body_scan/views/body_entry_view.dart';
+import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
 import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
 
 String _token(String owner) =>
@@ -166,7 +167,7 @@ void main() {
     expect(await CacheScope.userId(), 'anonymous');
   });
   testWidgets(
-      'token-only session loads saved Body history and prefills onboarding weight',
+      'token-only session loads saved Body history and prefills measurement weight',
       (tester) async {
     FlutterSecureStorage.setMockInitialValues(
         {'fitai_access_token': _token('existing-owner')});
@@ -181,19 +182,25 @@ void main() {
     await tester.tap(find.text('Physique'));
     await tester.pumpAndSettle();
     expect(find.text('Sign in to see your body assessments.'), findsNothing);
+    final overview =
+        tester.widget<BodyPhysiqueHome>(find.byType(BodyPhysiqueHome)).overview;
     expect(
-        tester
-            .widget<BodyFocusPanel>(find.byType(BodyFocusPanel))
-            .assessment
-            ?.id,
-        isNull,
-        reason: 'An entered measurement is not a photo assessment');
-    await tester.tap(find.text('Photo scan'));
+        overview?.records.map((record) => record.id), contains('saved-body'));
+    expect(overview?.profile?['weight'], 75);
+    tester.widget<BodyPhysiqueHome>(find.byType(BodyPhysiqueHome)).onManual();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.byType(TextField), 180,
-        scrollable: find.byType(Scrollable).first);
-    expect(tester.widget<TextField>(find.byType(TextField)).controller!.text,
-        '75.0');
+    expect(find.byType(BodyEntryView), findsOneWidget);
+    expect(
+        tester.widget<BodyEntryView>(find.byType(BodyEntryView)).profileWeight,
+        75);
+    final weightInput = find.byKey(const ValueKey('body-input-weightKg'));
+    await tester.scrollUntilVisible(weightInput, 180,
+        scrollable: find
+            .descendant(
+                of: find.byKey(const ValueKey('body-entry-scroll')),
+                matching: find.byType(Scrollable))
+            .first);
+    expect(tester.widget<TextField>(weightInput).controller!.text, '75.0');
     expect(tester.takeException(), isNull);
   });
 }

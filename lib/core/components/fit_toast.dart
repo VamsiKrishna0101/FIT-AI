@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - FitAI Premium Toast System
+// MARK: - Setcraft Premium Toast System
 //
 // Usage:
 //   FitToast.show(context, message: 'Please enter your name.');

@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fitai_mobile/features/onboarding/data/starter_plan_repository.dart';
 import 'package:fitai_mobile/features/onboarding/views/starter_plan_view.dart';
 import 'package:fitai_mobile/features/subscription/subscription_service.dart';
+import 'package:fitai_mobile/features/subscription/subscription_view.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 Map<String, dynamic> complete() => {
       'id': 'starter-run',
@@ -123,16 +125,63 @@ class StarterRepo extends StarterPlanRepository {
 
 class TrialService extends SubscriptionService {
   int starts = 0;
+  int pricingLoads = 0;
+  @override
+  bool get android => true;
+  @override
+  Future<void> initialize() async {
+    pricingLoads++;
+    storeReady = true;
+    final product = ProductDetails(
+        id: 'annual',
+        title: 'Annual',
+        description: 'Fixture',
+        price: '€99.99',
+        rawPrice: 99.99,
+        currencyCode: 'EUR');
+    offers['annual'] = MembershipOffer(
+        product: product,
+        price: product.price,
+        amount: product.rawPrice,
+        trialDays: 14);
+  }
+
+  @override
+  Future<void> purchase(String interval) async {
+    await startTrial();
+    notifyListeners();
+  }
+
   bool fail = false;
   VoidCallback? onRefresh;
   TrialService() {
     available();
   }
-  void available() => access = SubscriptionAccess(
-      {'state': 'available', 'serverTime': '2026-10-19T12:00:00Z'});
+  void available() => access = SubscriptionAccess({
+        'state': 'available',
+        'billingReady': true,
+        'serverTime': '2026-10-19T12:00:00Z'
+      });
   @override
   Future<void> refresh() async {
     onRefresh?.call();
+  }
+
+  @override
+  Future<Map<String, dynamic>> loadPricing() async {
+    pricingLoads++;
+    return {
+      'countryCode': 'GB',
+      'countries': [
+        {
+          'code': 'GB',
+          'name': 'United Kingdom',
+          'currency': 'GBP',
+          'monthly': 9.99,
+          'annual': 59.99
+        },
+      ]
+    };
   }
 
   @override
@@ -172,7 +221,18 @@ Widget screen(
       home: RepaintBoundary(
           key: capture,
           child: StarterPlanView(
-              repository: repo, subscription: service, onComplete: done)),
+              repository: repo,
+              subscription: service,
+              onComplete: done,
+              profileLoader: () async => {
+                    'name': 'Nora',
+                    'gender': 'FEMALE',
+                    'workingToward': 'BUILD_MUSCLE',
+                    'experience': 'BEGINNER',
+                    'trainingLocation': 'HOME',
+                    'equipmentIds': ['dumbbells'],
+                    'focusMuscles': <String>[]
+                  })),
     );
 void main() {
   setUpAll(() async {
@@ -186,40 +246,149 @@ void main() {
   setUp(() => FlutterSecureStorage.setMockInitialValues(
       {'fitai_access_token': 'opaque', 'fitai_user_id': 'starter-test'}));
   testWidgets(
-      'Preview reveals real details without starting access; explicit trial tap activates',
+      'Preview reveals real details, then verified store checkout activates the plan',
       (tester) async {
     final repo = StarterRepo(), service = TrialService();
     String? opened;
     await tester.pumpWidget(screen(repo, service, (id) => opened = id));
     await tester.pumpAndSettle();
-    expect(find.text('Rules-based starter plan'), findsOneWidget);
+    expect(find.text('How this plan was built'), findsOneWidget);
+    expect(find.text('Not now'), findsNothing);
+    expect(find.byIcon(Icons.auto_awesome_outlined), findsNothing);
+    expect(find.byIcon(Icons.view_week_outlined), findsNothing);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
     expect(find.text('Dumbbell floor press'), findsOneWidget);
     expect(find.text('Chest'), findsOneWidget);
-    expect(find.text('Back'), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byKey(const ValueKey('starter-muscle-regions')),
+            matching: find.text('Back')),
+        findsOneWidget);
     expect(find.text('Legs'), findsOneWidget);
     expect(service.starts, 0);
     expect(repo.activations, 0);
-    await tester.tap(find.text('Start my 14-day trial'));
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    expect(service.starts, 0);
+    expect(repo.activations, 0);
+    await tester.tap(find.text('Start my 14-day free trial'));
     await tester.pumpAndSettle();
     expect(service.starts, 1);
     expect(repo.activations, 1);
     expect(opened, 'starter-plan');
   });
+  testWidgets(
+      'Visible pricing opens without starting trial or activating the plan',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repo = StarterRepo(), service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}));
+    await tester.pumpAndSettle();
+    final pricing = find.text('Membership');
+    expect(pricing.hitTestable(), findsOneWidget);
+    await tester.tap(pricing);
+    await tester.pumpAndSettle();
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    expect(service.pricingLoads, 1);
+    expect(service.starts, 0);
+    expect(repo.activations, 0);
+  });
   testWidgets('Trial failure never activates a plan', (tester) async {
     final repo = StarterRepo(), service = TrialService()..fail = true;
     await tester.pumpWidget(screen(repo, service, (_) {}));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start my 14-day trial'));
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start my 14-day free trial'));
     await tester.pumpAndSettle();
     expect(repo.activations, 0);
     expect(service.access!.trialAvailable, true);
+  });
+  testWidgets(
+      'Planner failure keeps saved answers and retries without preferences',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const capture = ValueKey('starter-failure-preview');
+    final repo = StarterRepo()
+      ..value = {
+        'id': 'starter-run',
+        'status': 'FAILED',
+        'errorCode': 'PLAN_QUALITY',
+        'canRetry': true,
+      };
+    final service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}, capture: capture));
+    await tester.pumpAndSettle();
+    expect(find.text('We could not finish your plan'), findsOneWidget);
+    expect(
+        find.text(
+            'Your answers are saved. You do not need to fill them in again.'),
+        findsOneWidget);
+    expect(find.text('Review preferences'), findsNothing);
+    expect(
+        find.text('Your plan needs a little more information'), findsNothing);
+    await tester.runAsync(() async {
+      final image = await tester
+          .renderObject<RenderRepaintBoundary>(find.byKey(capture))
+          .toImage(pixelRatio: 2);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      File('build/starter-recovery-preview.png')
+          .writeAsBytesSync(bytes!.buffer.asUint8List());
+      image.dispose();
+    });
+    repo.value = complete();
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(repo.starts, 2);
+    expect(find.text('Nora, your plan is ready'), findsOneWidget);
+    expect(service.starts, 0);
+    expect(repo.activations, 0);
+  });
+  testWidgets('Only a catalogue gap offers equipment review', (tester) async {
+    final repo = StarterRepo()
+      ..value = {
+        'id': 'starter-run',
+        'status': 'FAILED',
+        'errorCode': 'CATALOG_GAP',
+        'canRetry': true,
+      };
+    await tester.pumpWidget(screen(repo, TrialService(), (_) {}));
+    await tester.pumpAndSettle();
+    expect(find.text('Review equipment'), findsOneWidget);
+    expect(find.text('Review preferences'), findsNothing);
+  });
+  testWidgets(
+      'Exhausted attempts leave clearly instead of repeating a failed run',
+      (tester) async {
+    final repo = StarterRepo()
+      ..value = {
+        'id': 'starter-run',
+        'status': 'FAILED',
+        'errorCode': 'RETRY_EXHAUSTED',
+        'canRetry': false,
+      };
+    final service = TrialService();
+    var closed = false;
+    await tester.pumpWidget(screen(repo, service, (_) => closed = true));
+    await tester.pumpAndSettle();
+    expect(find.text('Try again'), findsNothing);
+    await tester.tap(find.text('View membership'));
+    await tester.pumpAndSettle();
+    expect(closed, isFalse);
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    expect(repo.starts, 1);
+    expect(service.starts, 0);
   });
   testWidgets('An outdated preview never starts a trial', (tester) async {
     final repo = StarterRepo()..validationFails = true;
     final service = TrialService();
     await tester.pumpWidget(screen(repo, service, (_) {}));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start my 14-day trial'));
+    await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
     expect(service.starts, 0);
     expect(repo.activations, 0);
@@ -232,19 +401,21 @@ void main() {
     await tester.pumpAndSettle();
     service.onRefresh = () => FlutterSecureStorage.setMockInitialValues(
         {'fitai_access_token': 'other', 'fitai_user_id': 'other-user'});
-    await tester.tap(find.text('Start my 14-day trial'));
+    await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
     expect(service.starts, 0);
     expect(repo.activations, 0);
   });
-  testWidgets('Not now leaves without starting trial', (tester) async {
+  testWidgets('Membership never leaves the preview without verified access',
+      (tester) async {
     final repo = StarterRepo(), service = TrialService();
     var left = false;
     await tester.pumpWidget(screen(repo, service, (_) => left = true));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Not now'));
+    expect(find.text('Not now'), findsNothing);
+    await tester.tap(find.text('Membership'));
     await tester.pumpAndSettle();
-    expect(left, true);
+    expect(left, false);
     expect(service.starts, 0);
     expect(repo.activations, 0);
   });
@@ -286,7 +457,9 @@ void main() {
     final service = TrialService();
     await tester.pumpWidget(screen(repo, service, (_) {}));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start my 14-day trial'));
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start my 14-day free trial'));
     await tester.pumpAndSettle();
     repo.activationFails = false;
     await tester.tap(find.text('Open my full plan'));
@@ -315,7 +488,7 @@ void main() {
     repo.value = complete();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
-    expect(find.text('Your plan, built around you.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-ready-title')), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
   for (final locale in [

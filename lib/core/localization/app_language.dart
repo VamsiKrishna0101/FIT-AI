@@ -120,25 +120,25 @@ enum AppLanguage {
   String get subtitle {
     switch (this) {
       case AppLanguage.uk:
-        return 'Pick your daily driver for personalized coaching. Your FitAI, your vibe.';
+        return 'Pick your daily driver for personalized coaching. Your Setcraft, your vibe.';
       case AppLanguage.germany:
-        return 'Wähle Deinen Favoriten für personalisiertes Coaching. Dein FitAI, Dein Vibe.';
+        return 'Wähle Deinen Favoriten für personalisiertes Coaching. Dein Setcraft, Dein Vibe.';
       case AppLanguage.switzerland:
-        return 'Wähl din Favorit für dis Coaching. Dis FitAI, din Vibe.';
+        return 'Wähl din Favorit für dis Coaching. Dis Setcraft, din Vibe.';
       case AppLanguage.france:
-        return 'Choisissez votre langue pour un coaching sur-mesure. Votre FitAI, votre vibe.';
+        return 'Choisissez votre langue pour un coaching sur-mesure. Votre Setcraft, votre vibe.';
       case AppLanguage.sweden:
-        return 'Välj ditt språk för personlig coachning. Din FitAI, din vibe.';
+        return 'Välj ditt språk för personlig coachning. Din Setcraft, din vibe.';
       case AppLanguage.norway:
-        return 'Velg ditt daglige språk for personlig veiledning. Din FitAI, din vibe.';
+        return 'Velg ditt daglige språk for personlig veiledning. Din Setcraft, din vibe.';
       case AppLanguage.denmark:
-        return 'Vælg dit foretrukne sprog til personlig coaching. Din FitAI, dit vibe.';
+        return 'Vælg dit foretrukne sprog til personlig coaching. Din Setcraft, dit vibe.';
       case AppLanguage.netherlands:
-        return 'Kies jouw taal voor persoonlijke coaching. Jouw FitAI, jouw vibe.';
+        return 'Kies jouw taal voor persoonlijke coaching. Jouw Setcraft, jouw vibe.';
       case AppLanguage.spain:
-        return 'Elige tu idioma para un entrenamiento a tu medida. Tu FitAI, tu vibra.';
+        return 'Elige tu idioma para un entrenamiento a tu medida. Tu Setcraft, tu vibra.';
       case AppLanguage.italy:
-        return 'Scegli la tua lingua per un coaching personalizzato. Il tuo FitAI, il tuo vibe.';
+        return 'Scegli la tua lingua per un coaching personalizzato. Il tuo Setcraft, il tuo vibe.';
     }
   }
 
@@ -171,25 +171,25 @@ enum AppLanguage {
   String get subtitleGoal {
     switch (this) {
       case AppLanguage.uk:
-        return 'Pick your primary fitness focus. FitAI personalizes your program around this.';
+        return 'Pick your primary fitness focus. Setcraft personalizes your program around this.';
       case AppLanguage.germany:
-        return 'Wähle Deinen Trainingsfokus. FitAI passt Dein Programm maßgeschneidert an.';
+        return 'Wähle Deinen Trainingsfokus. Setcraft passt Dein Programm maßgeschneidert an.';
       case AppLanguage.switzerland:
-        return 'Wähl din Trainingsfokus. FitAI passt dis Coaching genau uf dich aa.';
+        return 'Wähl din Trainingsfokus. Setcraft passt dis Coaching genau uf dich aa.';
       case AppLanguage.france:
-        return 'Sélectionnez votre priorité sportive. FitAI personnalise vos entraînements sur mesure.';
+        return 'Sélectionnez votre priorité sportive. Setcraft personnalise vos entraînements sur mesure.';
       case AppLanguage.sweden:
-        return 'Välj ditt främsta träningsmål. FitAI anpassar din träning därefter.';
+        return 'Välj ditt främsta träningsmål. Setcraft anpassar din träning därefter.';
       case AppLanguage.norway:
-        return 'Velg ditt viktigste treningsmål. FitAI skreddersyr treningen for deg.';
+        return 'Velg ditt viktigste treningsmål. Setcraft skreddersyr treningen for deg.';
       case AppLanguage.denmark:
-        return 'Vælg dit primære fitnessfokus. FitAI skræddersyr din træning til dig.';
+        return 'Vælg dit primære fitnessfokus. Setcraft skræddersyr din træning til dig.';
       case AppLanguage.netherlands:
-        return 'Kies jouw belangrijkste fitnessfocus. FitAI stemt je schema hierop af.';
+        return 'Kies jouw belangrijkste fitnessfocus. Setcraft stemt je schema hierop af.';
       case AppLanguage.spain:
-        return 'Elige tu enfoque principal. FitAI adaptará tus entrenamientos a tu medida.';
+        return 'Elige tu enfoque principal. Setcraft adaptará tus entrenamientos a tu medida.';
       case AppLanguage.italy:
-        return 'Scegli il tuo focus principale. FitAI personalizzerà i tuoi allenamenti.';
+        return 'Scegli il tuo focus principale. Setcraft personalizzerà i tuoi allenamenti.';
     }
   }
 
@@ -197,6 +197,19 @@ enum AppLanguage {
     switch (this) {
       case AppLanguage.uk:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Build Muscle';
           case WorkingTowardGoal.loseBodyFat:
@@ -204,12 +217,25 @@ enum AppLanguage {
           case WorkingTowardGoal.loseWeight:
             return 'Lose Weight';
           case WorkingTowardGoal.getFitter:
-            return 'Get Fitter';
+            return 'Improve fitness';
           case WorkingTowardGoal.buildConsistency:
-            return 'Build Consistency';
+            return 'Build a routine';
         }
       case AppLanguage.germany:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Muskelaufbau';
           case WorkingTowardGoal.loseBodyFat:
@@ -223,6 +249,19 @@ enum AppLanguage {
         }
       case AppLanguage.switzerland:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Muskelufbau';
           case WorkingTowardGoal.loseBodyFat:
@@ -236,6 +275,19 @@ enum AppLanguage {
         }
       case AppLanguage.france:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Prendre du muscle';
           case WorkingTowardGoal.loseBodyFat:
@@ -249,6 +301,19 @@ enum AppLanguage {
         }
       case AppLanguage.sweden:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Bygga muskler';
           case WorkingTowardGoal.loseBodyFat:
@@ -262,6 +327,19 @@ enum AppLanguage {
         }
       case AppLanguage.norway:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Bygge muskler';
           case WorkingTowardGoal.loseBodyFat:
@@ -275,6 +353,19 @@ enum AppLanguage {
         }
       case AppLanguage.denmark:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Opbygge muskler';
           case WorkingTowardGoal.loseBodyFat:
@@ -288,6 +379,19 @@ enum AppLanguage {
         }
       case AppLanguage.netherlands:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Spieren opbouwen';
           case WorkingTowardGoal.loseBodyFat:
@@ -301,6 +405,19 @@ enum AppLanguage {
         }
       case AppLanguage.spain:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Ganar músculo';
           case WorkingTowardGoal.loseBodyFat:
@@ -314,6 +431,19 @@ enum AppLanguage {
         }
       case AppLanguage.italy:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de': 'Stärker werden',
+                  'de-CH': 'Stärker werden',
+                  'fr': 'Devenir plus fort',
+                  'nl': 'Sterker worden',
+                  'sv': 'Bli starkare',
+                  'no': 'Bli sterkere',
+                  'da': 'Bliv stærkere',
+                  'es': 'Ganar fuerza',
+                  'it': 'Diventare più forte'
+                }[code] ??
+                'Get stronger';
           case WorkingTowardGoal.buildMuscle:
             return 'Aumentare massa muscolare';
           case WorkingTowardGoal.loseBodyFat:
@@ -332,6 +462,21 @@ enum AppLanguage {
     switch (this) {
       case AppLanguage.uk:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrophy, raw strength & gains';
           case WorkingTowardGoal.loseBodyFat:
@@ -345,6 +490,21 @@ enum AppLanguage {
         }
       case AppLanguage.germany:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrophie, Kraft & Muskelmasse';
           case WorkingTowardGoal.loseBodyFat:
@@ -358,6 +518,21 @@ enum AppLanguage {
         }
       case AppLanguage.switzerland:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrophi, Chraft & Muskle';
           case WorkingTowardGoal.loseBodyFat:
@@ -371,6 +546,21 @@ enum AppLanguage {
         }
       case AppLanguage.france:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrophie, force pure & volume';
           case WorkingTowardGoal.loseBodyFat:
@@ -384,6 +574,21 @@ enum AppLanguage {
         }
       case AppLanguage.sweden:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrofi, styrka & muskelmassa';
           case WorkingTowardGoal.loseBodyFat:
@@ -397,6 +602,21 @@ enum AppLanguage {
         }
       case AppLanguage.norway:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrofi, styrke & muskelmasse';
           case WorkingTowardGoal.loseBodyFat:
@@ -410,6 +630,21 @@ enum AppLanguage {
         }
       case AppLanguage.denmark:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hypertrofi, styrke & muskelvækst';
           case WorkingTowardGoal.loseBodyFat:
@@ -423,6 +658,21 @@ enum AppLanguage {
         }
       case AppLanguage.netherlands:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Spiermassa, kracht & progressie';
           case WorkingTowardGoal.loseBodyFat:
@@ -436,6 +686,21 @@ enum AppLanguage {
         }
       case AppLanguage.spain:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Hipertrofia, fuerza y masa muscular';
           case WorkingTowardGoal.loseBodyFat:
@@ -449,6 +714,21 @@ enum AppLanguage {
         }
       case AppLanguage.italy:
         switch (goal) {
+          case WorkingTowardGoal.getStronger:
+            return const {
+                  'de':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'de-CH':
+                      'Kraft aufbauen und Fortschritte bei deinen Übungen verfolgen.',
+                  'fr': 'Développez votre force et suivez vos progrès.',
+                  'nl': 'Bouw kracht op en volg je vooruitgang.',
+                  'sv': 'Bygg styrka och följ dina framsteg.',
+                  'no': 'Bygg styrke og følg fremgangen din.',
+                  'da': 'Opbyg styrke og følg dine fremskridt.',
+                  'es': 'Desarrolla fuerza y sigue tu progreso.',
+                  'it': 'Aumenta la forza e segui i tuoi progressi.'
+                }[code] ??
+                'Build strength and track progress in your main exercises.';
           case WorkingTowardGoal.buildMuscle:
             return 'Ipertrofia, forza pura e massa magra';
           case WorkingTowardGoal.loseBodyFat:

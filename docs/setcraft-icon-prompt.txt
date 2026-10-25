@@ -1,0 +1,6 @@
+Use case: precise-object-edit / logo-brand.
+Edit target: attached current SETCRAFT white-on-black circular S app icon.
+Keep: square full-bleed pure black canvas, white circular outline, monochrome flat sports identity, optical centering.
+Change: simplify and strengthen the central S. Remove the tiny cut through the middle. Replace the fussy many-cornered construction with ONE continuous clean capital S stroke, gently forward leaning, two broad open angular bends with subtly chamfered corners. Consistent medium-fine line weight and plain clean ends. No isolated fragments. The S must be clearly legible at 48-pixel icon size, and feel confident, minimal and athletic.
+Exact proportions: outer diameter of circle 70% of canvas; circle line thickness 1.8% of canvas. Centered S width about 35% of canvas, height about 37% of canvas, uniform S stroke about 2.8% of canvas. The S is visibly larger in relation to the ring than in the input. Plenty of black air between S and circle and around circle.
+Pure black and solid white only. Crisp perfectly even lines, no texture, gradients, glow, shadow, bevel, 3D or other letters/text. No hexagon, no solid chunky ribbon, no lightning bolt, no W. Production app icon, not a mockup.

@@ -4,6 +4,7 @@ import '../models/progress_models.dart';
 import 'progress_chart.dart';
 import 'progress_surface.dart';
 import 'progress_trend_summary.dart';
+import 'progress_workout_history.dart';
 
 class ExerciseProgressContent extends StatefulWidget {
   final ProgressJson data;
@@ -16,6 +17,7 @@ class ExerciseProgressContent extends StatefulWidget {
 
 class _ExerciseProgressContentState extends State<ExerciseProgressContent> {
   String? _metric;
+  String _section = 'trends';
   @override
   Widget build(BuildContext context) {
     final series = progressRows(widget.data['series']);
@@ -38,132 +40,137 @@ class _ExerciseProgressContentState extends State<ExerciseProgressContent> {
             : 'kg';
     final points = ProgressPoint.parse(series, _metric!);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (best != null)
-        ProgressSurface(
-            accent: progressAmber,
-            padding: const EdgeInsets.all(22),
-            child: Row(children: [
-              const Icon(Icons.emoji_events_outlined,
-                  color: progressAmber, size: 27),
-              const SizedBox(width: 14),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(fitnessText(context, 'Best recorded load'),
-                        style: const TextStyle(
-                            color: progressMuted, fontSize: 13)),
-                    const SizedBox(height: 5),
-                    Text(
-                        '${progressValue(context, progressNumber(best['weight']), unit: 'kg')} × ${best['reps']}',
-                        style: const TextStyle(
-                            color: progressAmber,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -.7)),
-                    const SizedBox(height: 5),
-                    Text(
-                        '${fitnessText(context, 'All time')} · ${progressDate(best['date'] as String?, locale)}',
-                        style: const TextStyle(
-                            color: progressMuted, fontSize: 12)),
-                  ])),
-            ])),
-      const SizedBox(height: 12),
-      ProgressMetricPicker(
-          choices: choices,
-          selected: _metric!,
+      ProgressChoices(
+          choices: const {'trends': 'Trends', 'history': 'Set history'},
+          selected: _section,
           color: progressCyan,
-          onChanged: (value) => setState(() => _metric = value)),
-      const SizedBox(height: 16),
-      ProgressSurface(
-          accent: progressCyan,
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(fitnessText(context, choices[_metric]!),
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 20),
-            ProgressChart(
-                points: points,
-                unit: unit,
-                color: progressCyan,
-                height: 160,
-                showReadings: true,
-                bars: _metric == 'volume'),
-            ProgressTrendSummary(
-                points: points, unit: unit, color: progressCyan),
-            if (_metric == 'estimatedStrength')
+          onChanged: (value) => setState(() => _section = value)),
+      const SizedBox(height: 12),
+      if (_section == 'trends') ...[
+        ProgressMetricPicker(
+            choices: choices,
+            selected: _metric!,
+            color: progressCyan,
+            onChanged: (value) => setState(() => _metric = value)),
+        const SizedBox(height: 12),
+        ProgressSurface(
+            accent: progressCyan,
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(fitnessText(context, choices[_metric]!),
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              ProgressChart(
+                  points: points,
+                  unit: unit,
+                  color: progressCyan,
+                  height: 160,
+                  bars: _metric == 'volume'),
+              ProgressTrendSummary(
+                  points: points, unit: unit, color: progressCyan),
+              if (_metric == 'estimatedStrength')
+                const ProgressNote(
+                    'An estimate from eligible logged sets, not a tested maximum.'),
+            ])),
+        if (best != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: ProgressSurface(
+                  accent: progressAmber,
+                  child: Row(children: [
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          Text(fitnessText(context, 'Best recorded load'),
+                              style: const TextStyle(
+                                  fontSize: 11, color: progressMuted)),
+                          const SizedBox(height: 4),
+                          Text(
+                              '${progressValue(context, progressNumber(best['weight']), unit: 'kg')} × ${best['reps']}',
+                              style: const TextStyle(
+                                  color: progressSilver,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(
+                              '${fitnessText(context, 'All time')} · ${progressDate(best['date'] as String?, locale)}',
+                              style: const TextStyle(
+                                  fontSize: 10, color: progressMuted)),
+                        ])),
+                  ]))),
+        if (progressRows(widget.data['previous']).isNotEmpty) ...[
+          const ProgressHeading('Last two training days'),
+          ProgressSurface(
+              child: Column(children: [
+            for (final row in progressRows(widget.data['previous']).reversed)
               Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                      fitnessText(context,
-                          'An estimate from eligible logged sets, not a tested maximum.'),
-                      style: const TextStyle(
-                          fontSize: 13, color: progressMuted, height: 1.4))),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(children: [
+                    Expanded(
+                        child: Text(
+                            progressDate(row['date'] as String?, locale),
+                            style: const TextStyle(
+                                fontSize: 12, color: progressMuted))),
+                    Flexible(
+                        child: Text(
+                            progressSetLabel(
+                                context,
+                                Map<String, dynamic>.from(
+                                    row['bestSet'] as Map? ?? {})),
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600))),
+                  ])),
           ])),
-      if (progressRows(widget.data['previous']).isNotEmpty) ...[
-        const ProgressHeading('Last two training days'),
-        ProgressSurface(
-            child: Column(
-                children:
-                    progressRows(widget.data['previous']).reversed.map((row) {
-          final set = row['bestSet'] as Map?;
-          return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(children: [
-                Expanded(
-                    child: Text(progressDate(row['date'] as String?, locale),
-                        style: const TextStyle(
-                            color: progressMuted, fontSize: 12))),
-                Text(
-                    '${set?['weight'] != null && (set!['weight'] as num) > 0 ? '${progressValue(context, progressNumber(set['weight']), unit: 'kg')} × ' : ''}${set?['reps'] ?? '—'} ${fitnessText(context, 'reps')}',
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w600)),
-              ]));
-        }).toList())),
+        ],
+      ] else ...[
+        if (history.isEmpty)
+          const ProgressEmpty('No sets in this period')
+        else
+          ProgressSurface(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Column(children: [
+                for (var i = 0; i < history.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, color: Color(0x12FFFFFF)),
+                  ProgressSetHistory(row: history[i]),
+                ],
+              ])),
+        if (widget.onMore != null)
+          Center(
+              child: TextButton(
+                  onPressed: widget.onMore,
+                  child: Text(fitnessText(context, 'Load more')))),
+        if (progressRows(records['repsAtLoad']).isNotEmpty) ...[
+          const ProgressHeading('Rep records by load'),
+          ProgressSurface(
+              accent: progressAmber,
+              child: Column(children: [
+                for (final row in progressRows(records['repsAtLoad']))
+                  Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(children: [
+                        Expanded(
+                            child: Text(
+                                progressNumber(row['weight']) == 0
+                                    ? fitnessText(context, 'No external load')
+                                    : progressNumber(row['weight']) == null
+                                        ? fitnessText(
+                                            context, 'Weight not recorded')
+                                        : progressValue(context,
+                                            progressNumber(row['weight']),
+                                            unit: 'kg'),
+                                style: const TextStyle(
+                                    fontSize: 12, color: progressMuted))),
+                        Text('${row['reps']} ${fitnessText(context, 'reps')}',
+                            style: const TextStyle(
+                                color: progressSilver,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13)),
+                      ])),
+              ])),
+        ],
       ],
-      if (progressRows(records['repsAtLoad']).isNotEmpty) ...[
-        const ProgressHeading('Rep records by load'),
-        ProgressSurface(
-            child: Column(
-                children: progressRows(records['repsAtLoad'])
-                    .map((row) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(children: [
-                          Expanded(
-                              child: Text(
-                                  progressNumber(row['weight']) == null ||
-                                          progressNumber(row['weight']) == 0
-                                      ? fitnessText(context, 'No external load')
-                                      : progressValue(context,
-                                          progressNumber(row['weight']),
-                                          unit: 'kg'),
-                                  style: const TextStyle(fontSize: 13))),
-                          Text('${row['reps']} ${fitnessText(context, 'reps')}',
-                              style: const TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w600)),
-                          const SizedBox(width: 12),
-                          Text(progressDate(row['date'] as String?, locale),
-                              style: const TextStyle(
-                                  fontSize: 13, color: progressMuted)),
-                        ])))
-                    .toList())),
-      ],
-      const ProgressHeading('Set history'),
-      if (history.isEmpty)
-        const ProgressEmpty('No sets in this period')
-      else
-        ProgressSurface(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Column(
-                children: history
-                    .map((row) => ProgressSetHistory(row: row))
-                    .toList())),
-      if (widget.onMore != null)
-        Center(
-            child: TextButton(
-                onPressed: widget.onMore,
-                child: Text(fitnessText(context, 'Load more')))),
     ]);
   }
 }
@@ -182,28 +189,9 @@ class ProgressSetHistory extends StatelessWidget {
         shape: const Border(),
         collapsedShape: const Border(),
         title: Text(progressDate(row['date'] as String?, locale, year: true),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         subtitle: Text('${entries.length} ${fitnessText(context, 'sets')}',
-            style: const TextStyle(fontSize: 13, color: progressMuted)),
-        children: entries
-            .map((set) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: Row(children: [
-                  SizedBox(
-                      width: 35,
-                      child: Text('${set['setNumber']}',
-                          style: const TextStyle(
-                              color: progressMuted, fontSize: 12))),
-                  Expanded(
-                      child: Text(
-                          '${set['weight'] != null && (set['weight'] as num) > 0 ? '${progressValue(context, progressNumber(set['weight']), unit: 'kg')} × ' : ''}${set['reps']} ${fitnessText(context, 'reps')}',
-                          style: const TextStyle(fontSize: 13))),
-                  if (set['rpe'] != null)
-                    Text(
-                        'RPE ${progressValue(context, progressNumber(set['rpe']))}',
-                        style: const TextStyle(
-                            color: progressMuted, fontSize: 13)),
-                ])))
-            .toList());
+            style: const TextStyle(fontSize: 11, color: progressMuted)),
+        children: [ProgressSetTable(entries: entries)]);
   }
 }

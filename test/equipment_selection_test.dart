@@ -140,7 +140,9 @@ void main() {
     await tester.pumpWidget(
         _app(EquipmentSelectionView(onContinue: () => continued = true)));
     await tester.pumpAndSettle();
-    expect(find.text('5 / 8'), findsOneWidget);
+    expect(find.text('5 / 8'), findsNothing);
+    expect(
+        find.byKey(const ValueKey('onboarding-progress-fill')), findsOneWidget);
     expect(find.text('0 selected'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('equipment-dumbbells')));
     await tester.pumpAndSettle();

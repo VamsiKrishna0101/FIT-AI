@@ -582,22 +582,27 @@ void main() {
                 onNutrition: () {},
                 onBody: () {}))));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Steps'), 200,
+        scrollable: find.byType(Scrollable).first);
     expect(find.text('Steps'), findsOneWidget);
-    expect(find.text('Health data synced'), findsOneWidget);
+    await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('today-readiness-card')), -200,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('Your readiness check-in'), findsOneWidget);
     expect(find.text('Connect your health'), findsNothing);
     expect(find.text('Health connection'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('today-readiness-card')));
     await tester.pumpAndSettle();
     expect(find.text('Synced sleep'), findsOneWidget);
-    expect(find.text('Synced heart readings'), findsOneWidget);
-    expect(find.text('Missing'), findsNWidgets(2));
+    expect(find.text('Synced heart readings'), findsNothing);
+    expect(find.text('Missing'), findsNWidgets(4));
     expect(find.text('Connect your health'), findsNothing);
     expect(find.text('0 / 100'), findsNothing);
     expect(find.text('0'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-      'saved legacy readings show their date without a fabricated HRV method',
+      'Health connection hides legacy heart readings while preserving their date',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
@@ -609,9 +614,9 @@ void main() {
     await tester.pumpWidget(MaterialApp(
         theme: ThemeData.dark(), home: HealthConnectionView(service: service)));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('42 ms'), 150);
+    await tester.scrollUntilVisible(find.text('Readings · 2026-10-10'), 150);
     await tester.pumpAndSettle();
-    expect(find.text('42 ms'), findsOneWidget);
+    expect(find.text('42 ms'), findsNothing);
     expect(find.text('Readings · 2026-10-10'), findsOneWidget);
     expect(find.textContaining('null'), findsNothing);
     expect(tester.takeException(), isNull);

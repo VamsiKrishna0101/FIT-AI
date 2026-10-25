@@ -5,7 +5,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/ds_colors.dart';
 import 'package:fitai_mobile/core/theme/fitness_theme.dart';
 import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
 import 'package:fitai_mobile/features/onboarding/components/onboarding_live_previews.dart';
@@ -86,13 +85,13 @@ void main() {
             find.byType(AnatomicalMuscleIllustration))
         .toList();
     expect(illustrations.length, 2);
-    expect(illustrations.first.colors['chest'], isNot(DSColors.silver));
+    expect(illustrations.first.colors['chest'], isNot(const Color(0xFFD56B55)));
     await tester.pumpAndSettle();
     illustrations = tester
         .widgetList<AnatomicalMuscleIllustration>(
             find.byType(AnatomicalMuscleIllustration))
         .toList();
-    expect(illustrations.first.colors['chest'], DSColors.silver);
+    expect(illustrations.first.colors['chest'], const Color(0xFFD56B55));
     await tester
         .pumpWidget(page(const OnboardingMusclePreview(selected: {'lats'})));
     await tester.pumpAndSettle();
@@ -101,8 +100,8 @@ void main() {
             find.byType(AnatomicalMuscleIllustration))
         .toList();
     expect(illustrations.last.back, isTrue);
-    expect(illustrations.last.colors['lats'], DSColors.silver);
-    expect(illustrations.first.colors['chest'], const Color(0xFF717171));
+    expect(illustrations.last.colors['lats'], const Color(0xFFD56B55));
+    expect(illustrations.first.colors['chest'], const Color(0xFF505050));
     expect(tester.takeException(), isNull);
   });
 
@@ -117,7 +116,7 @@ void main() {
         .widgetList<AnatomicalMuscleIllustration>(
             find.byType(AnatomicalMuscleIllustration))
         .first;
-    expect(illustration.colors['quads'], DSColors.silver);
+    expect(illustration.colors['quads'], const Color(0xFFD56B55));
     expect(tester.hasRunningAnimations, isFalse);
   });
 

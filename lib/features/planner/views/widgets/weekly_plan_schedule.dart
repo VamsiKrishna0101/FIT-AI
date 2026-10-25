@@ -1,3 +1,8 @@
+import '../../../train/components/workout_warmup.dart';
+import '../../../../core/cache/cache_scope.dart';
+import '../../../../core/components/liquid_chrome_button.dart';
+import '../../../train/views/workout_session_view.dart';
+import '../../../train/components/reschedule_workout_sheet.dart';
 import 'dart:async';
 import '../../../../core/navigation/onboarding_page_route.dart';
 import '../../../train/models/training_session.dart';
@@ -18,9 +23,16 @@ class WeeklyPlanSchedule extends StatefulWidget {
   final Map<String, dynamic> payload;
   final bool active;
   final Future<TrainingDay> Function(String)? loadDay;
+  final Future<TrainingDay> Function(String)? startDay;
+  final bool fromOnboarding;
 
   const WeeklyPlanSchedule(
-      {super.key, required this.payload, this.active = false, this.loadDay});
+      {super.key,
+      required this.payload,
+      this.active = false,
+      this.loadDay,
+      this.startDay,
+      this.fromOnboarding = false});
 
   @override
   State<WeeklyPlanSchedule> createState() => _WeeklyPlanScheduleState();
@@ -30,6 +42,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
     with SingleTickerProviderStateMixin {
   int _day = 0;
   int _section = 0;
+  bool _startingFirst = false;
   late final _reveal =
       AnimationController(vsync: this, duration: DSMotion.regular);
   bool _revealed = false;
@@ -60,6 +73,16 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   @override
   void initState() {
     super.initState();
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final current = _days.indexWhere((day) => day['date'] == today);
+    final firstWorkout = _days.indexWhere((day) => day['restDay'] != true);
+    _day = widget.fromOnboarding && firstWorkout >= 0
+        ? firstWorkout
+        : current >= 0
+            ? current
+            : firstWorkout >= 0
+                ? firstWorkout
+                : 0;
     _subscription = TrainingRepository.shared.changes.stream.listen((day) {
       if (mounted &&
           widget.active &&
@@ -105,6 +128,59 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
     if (mounted) await _loadSelected();
   }
 
+  Future<void> _startFirstWorkout(String date) async {
+    final live = _live[date];
+    if (_startingFirst ||
+        !widget.active ||
+        live == null ||
+        live.restDay ||
+        live.items.isEmpty ||
+        live.finished ||
+        (!live.started && date != CacheScope.todayKey())) {
+      return;
+    }
+    setState(() => _startingFirst = true);
+    final owner = await CacheScope.userId();
+    try {
+      final day = live.started
+          ? live
+          : await (widget.startDay?.call(date) ??
+              TrainingRepository.shared.mutate(date, 'POST', '/start'));
+      final currentOwner = await CacheScope.userId();
+      if (!mounted || owner != currentOwner) return;
+      await Navigator.of(context)
+          .push(AppPageRoute<void>(page: WorkoutSessionView(initial: day)));
+      final returningOwner = await CacheScope.userId();
+      if (mounted && owner == returningOwner) await _loadSelected();
+    } catch (error) {
+      final currentOwner = await CacheScope.userId();
+      if (mounted && owner == currentOwner) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: FitnessText(TrainingRepository.errorMessage(
+                error, 'Could not start your workout. Please try again.'))));
+      }
+    } finally {
+      if (mounted) setState(() => _startingFirst = false);
+    }
+  }
+
+  Future<void> _viewFirstWorkout(String date) async {
+    await Navigator.of(context).push(AppPageRoute<void>(
+        page: TrainView(standalone: true, initialDate: date)));
+    if (mounted) await _loadSelected();
+  }
+
+  Future<void> _restToday(String date) async {
+    final changed = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: FitnessTheme.surface,
+        builder: (_) => FractionallySizedBox(
+            heightFactor: .9,
+            child: FitnessTheme(child: RescheduleWorkoutSheet(date: date))));
+    if (changed == true && mounted) await _loadSelected();
+  }
+
   Map<String, dynamic> _currentWorkout(Map<String, dynamic> saved) {
     final live = _live[saved['date']];
     if (!widget.active || live == null) return saved;
@@ -113,6 +189,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
       ...saved,
       'name': live.name,
       'restDay': live.restDay,
+      'warmup': live.json['warmup'],
       'estimatedMinutes': live.estimatedMinutes,
       'exercises': [
         for (final item in live.items)
@@ -284,6 +361,41 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
               fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -.5)),
       const SizedBox(height: 8),
       if (widget.active) ...[
+        if (widget.fromOnboarding &&
+            day['restDay'] != true &&
+            _days.where((d) => d['restDay'] != true).firstOrNull?['date'] ==
+                day['date'] &&
+            _live[day['date']] != null &&
+            !_errors.contains(day['date']) &&
+            _live[day['date']]!.items.isNotEmpty &&
+            _live[day['date']]?.finished != true) ...[
+          LiquidChromeButton(
+              key: const ValueKey('onboarding-first-workout-action'),
+              solid: true,
+              pill: true,
+              showArrow: false,
+              isLoading: _startingFirst,
+              title: _live[day['date']]!.started
+                  ? 'Resume workout'
+                  : day['date'] == CacheScope.todayKey()
+                      ? 'Start my first workout'
+                      : 'View my first workout',
+              onPressed: _startingFirst
+                  ? null
+                  : day['date'] == CacheScope.todayKey() ||
+                          _live[day['date']]!.started
+                      ? () => _startFirstWorkout(day['date'] as String)
+                      : () => _viewFirstWorkout(day['date'] as String)),
+          const SizedBox(height: 14),
+        ],
+        if (day['date'] == DateFormat('yyyy-MM-dd').format(DateTime.now()) &&
+            _live[day['date']]?.json['canReschedule'] == true)
+          Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                  onPressed: () => _restToday(day['date'] as String),
+                  child: const FitnessText('Rest today',
+                      style: TextStyle(color: FitnessTheme.silver)))),
         if (_errors.contains(day['date']))
           TextButton.icon(
               onPressed: _loadSelected,
@@ -328,6 +440,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
             '${exercises.length} ${exercises.length == 1 ? 'exercise' : 'exercises'} · ${day['estimatedMinutes']} min',
             style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
         const SizedBox(height: 16),
+        WorkoutWarmup(warmup: (day['warmup'] as Map?)?.cast<String, dynamic>()),
         for (var index = 0; index < exercises.length; index++)
           SlideTransition(
             key: ValueKey('plan-card-reveal-$index'),
@@ -340,10 +453,6 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
             child:
                 _exercise(exercises[index], index + 1, day['date'] as String),
           ),
-        const FitnessText(
-            'Effort is out of 10. Weights follow your previous logging convention.',
-            style: TextStyle(
-                fontSize: 11, color: FitnessTheme.muted, height: 1.4)),
       ],
     ]);
   }
@@ -351,18 +460,25 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   Widget _exercise(Map exercise, int number, String date) {
     final targets =
         (exercise['setPrescriptions'] as List? ?? []).whereType<Map>().toList();
+    final sameTargets = targets.isNotEmpty &&
+        targets.every((set) =>
+            set['repsMin'] == targets.first['repsMin'] &&
+            set['repsMax'] == targets.first['repsMax'] &&
+            set['weightKg'] == targets.first['weightKg']);
     final unit = exercise['weightUnit'] == 'per_hand'
         ? ' per hand'
         : exercise['weightUnit'] == 'total_load'
             ? ' total'
             : '';
+    final weight =
+        sameTargets ? targets.first['weightKg'] : exercise['weightKg'];
     final load = exercise['weightBasis'] == 'bodyweight'
         ? 'Bodyweight'
-        : exercise['weightKg'] == null
+        : weight == null
             ? 'Choose starting load'
             : exercise['weightBasis'] == 'estimated_start'
-                ? '~${exercise['weightKg']} kg · suggested start'
-                : '${exercise['weightKg']} kg · as logged';
+                ? '~$weight kg$unit · suggested start'
+                : '$weight kg$unit · as logged';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -380,12 +496,12 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
                         fontSize: 16, fontWeight: FontWeight.w600))),
           ]),
           const SizedBox(height: 14),
-          if (targets.isEmpty)
+          if (targets.isEmpty || sameTargets)
             FitnessText(
-                '${exercise['sets']} × ${exercise['targetReps'] ?? (exercise['repsMin'] == exercise['repsMax'] ? exercise['repsMax'] : '${exercise['repsMin']}–${exercise['repsMax']}')} · $load',
+                '${sameTargets ? targets.length : exercise['sets']} × ${sameTargets ? (targets.first['repsMin'] == targets.first['repsMax'] ? targets.first['repsMax'] : '${targets.first['repsMin']}–${targets.first['repsMax']}') : exercise['targetReps'] ?? (exercise['repsMin'] == exercise['repsMax'] ? exercise['repsMax'] : '${exercise['repsMin']}–${exercise['repsMax']}')} · $load',
                 style:
                     const TextStyle(fontSize: 14, color: FitnessTheme.silver)),
-          for (final set in targets)
+          for (final set in sameTargets ? <Map>[] : targets)
             Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
                 child: Row(children: [
@@ -460,6 +576,23 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
           '${(totals['calories'] as num).round()} kcal · ${(totals['protein'] as num).round()} g protein',
           style: const TextStyle(fontSize: 13, color: FitnessTheme.muted)),
       const SizedBox(height: 16),
+      if (nutrition?['guidance'] case final Map guidance) ...[
+        FitnessCard(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const FitnessText('Your training and nutrition',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          FitnessText('${guidance['activity']}',
+              style: const TextStyle(
+                  fontSize: 12, color: FitnessTheme.muted, height: 1.45)),
+          const SizedBox(height: 8),
+          FitnessText('${guidance['review']}',
+              style: const TextStyle(
+                  fontSize: 12, color: FitnessTheme.muted, height: 1.45)),
+        ])),
+        const SizedBox(height: 12),
+      ],
       for (final meal in (foodDay['meals'] as List).whereType<Map>())
         Padding(
           padding: const EdgeInsets.only(bottom: 12),

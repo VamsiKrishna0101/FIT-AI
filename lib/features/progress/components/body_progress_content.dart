@@ -58,9 +58,6 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
             accent: progressCyan,
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Icon(Icons.monitor_weight_outlined,
-                  color: progressCyan, size: 30),
-              const SizedBox(height: 14),
               Text(fitnessText(context, 'Body changes'),
                   style: const TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w600)),
@@ -107,22 +104,15 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
           accent: progressCyan,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            DropdownButtonFormField<String>(
-                key: ValueKey(selected['id']),
-                initialValue: selected['id'] as String,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
-                items: metrics
-                    .map((row) => DropdownMenuItem(
-                        value: row['id'] as String,
-                        child: Text(
-                            fitnessText(context, row['label'] as String),
-                            style: const TextStyle(fontSize: 14))))
-                    .toList(),
+            ProgressMetricPicker(
+                choices: {
+                  for (final row in metrics)
+                    row['id'] as String: row['label'] as String
+                },
+                selected: selected['id'] as String,
+                color: progressCyan,
                 onChanged: (value) => setState(() {
-                      _metric = value!;
+                      _metric = value;
                       _source = null;
                     })),
             if (sources.length > 1)
@@ -141,7 +131,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
                 points: ProgressPoint.parse(
                     progressRows(series?['points']), 'value'),
                 color: progressCyan,
-                height: 160,
+                height: 170,
                 showReadings: true,
                 unit: selected['unit'] as String),
             ProgressTrendSummary(
@@ -215,7 +205,9 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
                   progressValue(context, progressNumber(latest?['value']),
                       unit: row['unit'] as String),
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w500)));
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: progressSilver)));
         }).toList())),
       const ProgressHeading('Saved assessments'),
       if (progressRows(widget.data['assessments']).isEmpty)

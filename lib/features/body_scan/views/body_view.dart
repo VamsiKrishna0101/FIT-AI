@@ -14,6 +14,7 @@ import '../../profile/views/profile_view.dart';
 import '../../planner/repositories/weekly_plan_repository.dart';
 import '../../planner/views/weekly_plan_card.dart';
 import '../models/body_assessment_models.dart';
+import '../models/planned_physique_models.dart';
 import '../repositories/body_assessment_repository.dart';
 import 'body_entry_view.dart';
 import 'body_photo_review_view.dart';
@@ -24,6 +25,7 @@ import 'widgets/body_physique_home.dart';
 import 'widgets/body_controls.dart';
 import 'body_measurements_view.dart';
 import 'body_history_view.dart';
+import 'widgets/physique_week_filter.dart';
 
 class BodyView extends StatefulWidget {
   final VoidCallback onTrain;
@@ -48,6 +50,10 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
   String? _owner, _error;
   int _request = 0;
   bool _loading = true;
+  PlannedPhysiqueData? _planData;
+  String? _planError;
+  DateTime _selectedWeek = physiqueWeekStart(DateTime.now());
+  bool _planLoading = true;
   int _section = 0;
   StreamSubscription<HealthSnapshotPayload>? _healthUpdates;
   double? get _profileWeight => (_data?.profile?['weight'] as num?)?.toDouble();
@@ -90,24 +96,51 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
     if (owner == 'anonymous' && widget.repository == null) {
       setState(() {
         _overview.value = null;
+        _planData = null;
+        _planError = null;
         _loading = false;
+        _planLoading = false;
         _error = 'Sign in to see your body assessments.';
       });
       return;
     }
     setState(() {
-      if (owner != _owner) _overview.value = null;
+      if (owner != _owner) {
+        _overview.value = null;
+        _planData = null;
+        _planError = null;
+        _selectedWeek = physiqueWeekStart(DateTime.now());
+      }
       _owner = owner;
       _loading = _overview.value == null;
       _error = null;
+      _planLoading = true;
     });
     try {
-      final data = await _repository.load();
+      BodyOverview? data;
+      PlannedPhysiqueData? planData;
+      String? bodyError, planError;
+      await Future.wait([
+        _repository.load().then<void>((value) {
+          data = value;
+        }, onError: (Object error) {
+          bodyError = BodyAssessmentRepository.message(error);
+        }),
+        _repository.plannedPhysique(date: _selectedWeek).then<void>((value) {
+          planData = value;
+        }, onError: (Object error) {
+          planError = BodyAssessmentRepository.message(error);
+        }),
+      ]);
       final currentOwner = await CacheScope.userId();
       if (!mounted || request != _request || currentOwner != owner) return;
       setState(() {
-        _overview.value = data;
+        if (data != null) _overview.value = data;
+        _planData = planData;
+        _planError = planError;
+        _error = bodyError;
         _loading = false;
+        _planLoading = false;
       });
     } catch (error) {
       if (mounted &&
@@ -115,10 +148,24 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
           await CacheScope.userId() == owner) {
         setState(() {
           _loading = false;
+          _planLoading = false;
           _error = BodyAssessmentRepository.message(error);
         });
       }
     }
+  }
+
+  void _changeWeek(DateTime date) {
+    if (!mounted) return;
+    final week = physiqueWeekStart(date);
+    if (week == _selectedWeek) return;
+    setState(() {
+      _selectedWeek = week;
+      _planData = null;
+      _planError = null;
+      _planLoading = true;
+    });
+    unawaited(_load());
   }
 
   Future<void> _route(Widget page) async {
@@ -129,10 +176,16 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
   }
 
   void _openRecord(BodyAssessment entry) => _route(
-        entry.photos.isNotEmpty ||
+        entry.hasPhotoAssessment ||
+                entry.photos.isNotEmpty ||
                 entry.observations.isNotEmpty ||
                 entry.physiqueReport != null
-            ? BodyFocusResultView(entry: entry, compact: true)
+            ? BodyFocusResultView(
+                entry: entry,
+                compact: true,
+                baselines:
+                    _data?.records.where(entry.canComparePhotosWith).toList() ??
+                        const [])
             : BodyRecordView(entry: entry),
       );
 
@@ -218,14 +271,22 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                     child: BodyPhysiqueHome(
                         key: ValueKey(_owner),
                         overview: _data,
-                        planCard: WeeklyPlanCard(
-                          isActive: widget.isActive && _section == 1,
-                          repository: widget.planRepository,
-                          onReturn: () async {
-                            await _repository.invalidate();
-                            await _load();
-                          },
-                        ),
+                        planData: _planData,
+                        planError: _planError,
+                        planLoading: _planLoading,
+                        selectedWeek: _selectedWeek,
+                        onWeekChanged: _changeWeek,
+                        planCard:
+                            _selectedWeek == physiqueWeekStart(DateTime.now())
+                                ? WeeklyPlanCard(
+                                    isActive: widget.isActive && _section == 1,
+                                    repository: widget.planRepository,
+                                    onReturn: () async {
+                                      await _repository.invalidate();
+                                      await _load();
+                                    },
+                                  )
+                                : null,
                         isActive: widget.isActive && _section == 1,
                         loading: _loading,
                         error: _error,
@@ -235,9 +296,11 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                         },
                         onMeasurements: _measurements,
                         onHistory: _history,
+                        onRecord: _openRecord,
                         onManual: () => _route(
                             BodyEntryView(profileWeight: _profileWeight)),
                         onPhotos: () => _route(BodyPhotoReviewView(
+                            repository: _repository,
                             female: _data?.female ?? false,
                             profileWeight: _profileWeight,
                             profileHeight: (_data?.profile?['height'] as num?)

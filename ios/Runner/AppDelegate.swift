@@ -13,6 +13,19 @@ import HealthKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    if let credentialsRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "SetcraftCredentials") {
+      let credentials = FlutterMethodChannel(name: "setcraft/credentials", binaryMessenger: credentialsRegistrar.messenger())
+      credentials.setMethodCallHandler { call, result in
+        guard call.method == "copyToken", let args = call.arguments as? [String: Any],
+              let value = args["value"] as? String, value.hasPrefix("sc_mcp_"), value.count <= 150 else {
+          result(FlutterError(code: "INVALID_TOKEN", message: "Could not copy this token.", details: nil))
+          return
+        }
+        UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: value]],
+          options: [.localOnly: true, .expirationDate: Date().addingTimeInterval(300)])
+        result(nil)
+      }
+    }
 
     if let navigationRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "FitAINavigation") {
       let navigationChannel = FlutterMethodChannel(

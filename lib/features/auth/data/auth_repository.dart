@@ -68,6 +68,55 @@ class AuthRepository {
     await LanguageManager.shared.restoreAccountLanguage(auth.language);
   }
 
+  Future<AuthResponse> exchangeSocialToken(String idToken) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      Endpoints.socialExchange,
+      data: {'idToken': idToken},
+    );
+    final auth = AuthResponse.fromJson(response.data!);
+    await _persistSession(auth);
+    return auth;
+  }
+
+  Future<bool> hasProfile() async {
+    try {
+      await _api.get<Map<String, dynamic>>(Endpoints.onboarding);
+      return true;
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) return false;
+      rethrow;
+    }
+  }
+
+  /// Only save a member-confirmed setup; never overwrite an existing profile
+  /// with the draft from this device when signing into a returning account.
+  Future<void> completeMissingProfile(OnboardingDraft draft) async {
+    final token = await SecureSessionStore.shared.accessToken;
+    final owner = await SecureSessionStore.shared.userId;
+    if (token == null || token.isEmpty || owner == null) {
+      throw const AuthFlowException('Please sign in to save your profile.');
+    }
+    final exists = await hasProfile();
+    if (await SecureSessionStore.shared.userId != owner) {
+      throw const AuthFlowException('Your session changed. Please try again.');
+    }
+    if (exists) return;
+    final payload = _onboardingPayload(draft);
+    if (await SecureSessionStore.shared.userId != owner) {
+      throw const AuthFlowException('Your session changed. Please try again.');
+    }
+    try {
+      await _api.post<Map<String, dynamic>>(Endpoints.onboarding,
+          data: payload);
+    } on DioException catch (error) {
+      // Another confirmed setup may have finished on this account meanwhile.
+      if (error.response?.statusCode != 409) rethrow;
+    }
+    if (await SecureSessionStore.shared.userId == owner) {
+      await OnboardingDraft.clear();
+    }
+  }
+
   Map<String, dynamic> _onboardingPayload(OnboardingDraft draft) {
     final equipment = EquipmentCatalog.backendCategories(draft.equipmentIds);
     final requiredValues = <String, Object?>{
@@ -129,10 +178,13 @@ class AuthRepository {
       if (data is Map && data['error'] is String) {
         return data['error'] as String;
       }
+      if (data is Map && data['message'] is String) {
+        return data['message'] as String;
+      }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout) {
-        return 'Could not reach FitAI. Check your connection and try again.';
+        return 'Could not reach Setcraft. Check your connection and try again.';
       }
       return 'Something went wrong. Please try again.';
     }

@@ -245,6 +245,24 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
                     fontSize: 13, height: 1.5, color: DSColors.silver),
               ),
             ),
+            if (!_complete &&
+                !_failed &&
+                !_unavailable &&
+                _run['stage'] == 'specialists') ...[
+              const SizedBox(height: 6),
+              FitnessText(
+                  '${_steps.intersection({
+                        'chest',
+                        'back',
+                        'legs',
+                        'shoulders',
+                        'biceps',
+                        'triceps',
+                        'core'
+                      }).length} of 7 muscle groups reviewed',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 11, color: DSColors.muted)),
+            ],
             const SizedBox(height: 22),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -341,9 +359,7 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
               ? const Icon(CupertinoIcons.checkmark_circle_fill,
                   color: DSColors.silver, size: 18)
               : active && !_failed && !_unavailable && _foreground
-                  ? CupertinoActivityIndicator(
-                      radius: 8,
-                      animating: !MediaQuery.disableAnimationsOf(context))
+                  ? const CupertinoActivityIndicator(radius: 8)
                   : Center(
                       child: Text('$number',
                           style: const TextStyle(

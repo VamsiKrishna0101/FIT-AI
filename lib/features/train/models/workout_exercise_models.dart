@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import '../../../core/localization/fitness_copy.dart';
 
-// MARK: - Workout & Exercise Models adhering to FitAI Exercise Schema
+// MARK: - Workout & Exercise Models adhering to Setcraft Exercise Schema
 
 class WorkoutExerciseModel {
   final String id;
@@ -21,10 +21,24 @@ class WorkoutExerciseModel {
   final String equipment;
   final String difficulty;
   final String category;
+  final String? exerciseType;
+  final double? mediaAspectRatio;
+  double get demoAspectRatio => isGif
+      ? 1
+      : mediaAspectRatio != null &&
+              mediaAspectRatio!.isFinite &&
+              mediaAspectRatio! >= .5 &&
+              mediaAspectRatio! <= 2.5
+          ? mediaAspectRatio!
+          : 16 / 9;
+  bool get supportsRepLogging =>
+      exerciseType == null ||
+      const ['weight_reps', 'bodyweight_reps'].contains(exerciseType);
   final String description;
   final List<String> instructions;
   final String? url;
   final String? thumbnailUrl;
+  final Map<String, dynamic>? mediaVariants;
   final int duration;
   final String? muscleGroup;
   final String? mediaId;
@@ -48,10 +62,13 @@ class WorkoutExerciseModel {
     required this.equipment,
     required this.difficulty,
     required this.category,
+    this.exerciseType,
+    this.mediaAspectRatio,
     required this.description,
     required this.instructions,
     this.url,
     this.thumbnailUrl,
+    this.mediaVariants,
     this.duration = 0,
     this.muscleGroup,
     this.mediaId,
@@ -59,6 +76,21 @@ class WorkoutExerciseModel {
     this.instructionsByLang,
     this.instructionStepsByLang,
   });
+
+  bool hasDemo(String gender) =>
+      mediaVariants?[gender] is Map &&
+      (mediaVariants![gender]['url']?.toString().endsWith('.mp4') ?? false);
+
+  WorkoutExerciseModel withDemo(String gender) {
+    final variant = mediaVariants?[gender];
+    if (variant is! Map) return this;
+    return WorkoutExerciseModel.fromJson({
+      ...toJson(),
+      'url': variant['url'],
+      'thumbnailUrl': variant['posterUrl'],
+      'mediaAspectRatio': variant['aspectRatio'],
+    });
+  }
 
   /// True if the animation is an animated GIF
   bool get isGif {
@@ -169,11 +201,16 @@ class WorkoutExerciseModel {
       equipment: (json['equipment'] ?? 'None').toString(),
       difficulty: (json['difficulty'] ?? 'Beginner').toString(),
       category: (json['category'] ?? 'Strength').toString(),
+      exerciseType: json['exerciseType']?.toString(),
+      mediaAspectRatio: (json['mediaAspectRatio'] as num?)?.toDouble(),
       description: (json['description'] ?? '').toString(),
       instructions: (json['instructions'] is List)
           ? (json['instructions'] as List).map((e) => e.toString()).toList()
           : <String>[],
       url: (json['url'] ?? json['videoUrl'])?.toString(),
+      mediaVariants: json['mediaVariants'] is Map
+          ? Map<String, dynamic>.from(json['mediaVariants'] as Map)
+          : null,
       thumbnailUrl: (json['thumbnailUrl'] ??
               json['posterUrl'] ??
               json['thumbnail'] ??
@@ -206,10 +243,13 @@ class WorkoutExerciseModel {
       'equipment': equipment,
       'difficulty': difficulty,
       'category': category,
+      'exerciseType': exerciseType,
+      'mediaAspectRatio': mediaAspectRatio,
       'description': description,
       'instructions': instructions,
       'url': url,
       'thumbnailUrl': thumbnailUrl,
+      'mediaVariants': mediaVariants,
       'duration': duration,
       'muscleGroup': muscleGroup,
       'mediaId': mediaId,
@@ -394,6 +434,7 @@ class TodayPlanItemModel {
 }
 
 class TodayPlanModel {
+  final Map<String, dynamic>? warmup;
   final String id;
   final String weekLabel;
   final String status;
@@ -401,6 +442,7 @@ class TodayPlanModel {
   final List<TodayPlanItemModel> items;
 
   const TodayPlanModel({
+    this.warmup,
     required this.id,
     required this.weekLabel,
     required this.status,
@@ -420,6 +462,7 @@ class TodayPlanModel {
       );
 
   TodayPlanModel copyWith({
+    Map<String, dynamic>? warmup,
     String? id,
     String? weekLabel,
     String? status,
@@ -427,6 +470,7 @@ class TodayPlanModel {
     List<TodayPlanItemModel>? items,
   }) {
     return TodayPlanModel(
+      warmup: warmup ?? this.warmup,
       id: id ?? this.id,
       weekLabel: weekLabel ?? this.weekLabel,
       status: status ?? this.status,
@@ -446,6 +490,7 @@ class TodayPlanModel {
       weekLabel: (json['weekLabel'] ?? 'Week 1').toString(),
       status: (json['status'] ?? 'IN_PROGRESS').toString(),
       aiNote: json['aiNote']?.toString(),
+      warmup: (json['warmup'] as Map?)?.cast<String, dynamic>(),
       items: itemsList,
     );
   }
@@ -456,6 +501,7 @@ class TodayPlanModel {
       'weekLabel': weekLabel,
       'status': status,
       'aiNote': aiNote,
+      'warmup': warmup,
       'items': items.map((i) => i.toJson()).toList(),
     };
   }

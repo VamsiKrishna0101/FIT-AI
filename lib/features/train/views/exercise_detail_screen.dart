@@ -10,6 +10,8 @@ import '../../../core/components/premium_surface.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/media/fit_video_surface.dart';
+import '../../../core/cache/cache_scope.dart';
+import '../../profile/repositories/settings_repository.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/workout_repository.dart';
 import '../components/workout_item_actions.dart';
@@ -21,7 +23,10 @@ class ExerciseDetailView extends StatefulWidget {
   final Future<bool> Function()? onAddToPlan;
   final String addLabel;
   final bool loadDetail;
+  final String? mediaGender;
   final ExerciseProgressLoader? historyLoader;
+  final bool? female;
+  final Future<String?> Function()? profileGenderLoader;
   const ExerciseDetailView(
       {super.key,
       this.planItem,
@@ -30,7 +35,10 @@ class ExerciseDetailView extends StatefulWidget {
       this.onAddToPlan,
       this.addLabel = 'Add to today',
       this.loadDetail = true,
-      this.historyLoader});
+      this.mediaGender,
+      this.historyLoader,
+      this.female,
+      this.profileGenderLoader});
   @override
   State<ExerciseDetailView> createState() => _ExerciseDetailViewState();
 }
@@ -42,12 +50,15 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   String _locale = '';
   int _request = 0;
   int _tab = 0;
+  bool? _female;
   TodayPlanItemModel? _planItem;
   StreamSubscription<TodayPlanModel?>? _planSubscription;
   @override
   void initState() {
     super.initState();
     _exercise = widget.exercise;
+    _female = widget.female;
+    if (_female == null) unawaited(_loadBodyStyle());
     _locale = LanguageManager.shared.currentLanguage.code;
     final item = widget.planItem;
     _planItem = item;
@@ -71,14 +82,29 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     if (widget.loadDetail) unawaited(_load());
   }
 
+  Future<void> _loadBodyStyle() async {
+    final owner = await CacheScope.userId();
+    try {
+      final gender = widget.profileGenderLoader != null
+          ? await widget.profileGenderLoader!()
+          : (await SettingsRepository().profile())['gender'] as String?;
+      if (!mounted || owner != await CacheScope.userId()) return;
+      setState(() => _female = gender?.toUpperCase() == 'FEMALE');
+    } catch (_) {
+      if (mounted && owner == await CacheScope.userId()) {
+        setState(() => _female = false);
+      }
+    }
+  }
+
   Future<void> _load() async {
     final request = ++_request;
     setState(() {
       _loading = true;
       _detailFailed = false;
     });
-    final exercise =
-        await WorkoutRepository.shared.getExerciseDetail(widget.exercise.id);
+    final exercise = await WorkoutRepository.shared
+        .getExerciseDetail(widget.exercise.id, mediaGender: widget.mediaGender);
     if (mounted && request == _request) {
       setState(() {
         if (exercise != null) _exercise = exercise;
@@ -168,31 +194,28 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   Widget _demo() => ClipRRect(
         key: const ValueKey('exercise-demo-stage'),
         borderRadius: BorderRadius.circular(20),
-        child: LayoutBuilder(builder: (context, bounds) {
-          final height = (bounds.maxWidth * .76).clamp(210.0, 280.0);
-          return SizedBox(
-            height: height,
-            child: RepaintBoundary(
-              child: FitVideoSurface(
-                url: _exercise.url,
-                fit: BoxFit.contain,
-                backgroundColor: DSColors.bgCard,
-                neutralBackground: true,
-                tapToToggle: true,
-                placeholder: _exercise.thumbnailUrl?.isNotEmpty == true
-                    ? CachedNetworkImage(
-                        imageUrl: _exercise.thumbnailUrl!,
-                        fit: BoxFit.contain,
-                        errorWidget: (_, __, ___) => const Center(
-                            child: Icon(CupertinoIcons.person,
-                                size: 36, color: DSColors.muted)))
-                    : const Center(
-                        child: Icon(CupertinoIcons.person,
-                            size: 36, color: DSColors.muted)),
-              ),
+        child: AspectRatio(
+          aspectRatio: _exercise.demoAspectRatio,
+          child: RepaintBoundary(
+            child: FitVideoSurface(
+              url: _exercise.url,
+              fit: BoxFit.contain,
+              backgroundColor: Colors.white,
+              neutralBackground: true,
+              tapToToggle: false,
+              placeholder: _exercise.thumbnailUrl?.isNotEmpty == true
+                  ? CachedNetworkImage(
+                      imageUrl: _exercise.thumbnailUrl!,
+                      fit: BoxFit.contain,
+                      errorWidget: (_, __, ___) => const Center(
+                          child: Icon(CupertinoIcons.person,
+                              size: 36, color: DSColors.muted)))
+                  : const Center(
+                      child: Icon(CupertinoIcons.person,
+                          size: 36, color: DSColors.muted)),
             ),
-          );
-        }),
+          ),
+        ),
       );
 
   Widget _targets(TodayPlanItemModel item) => PremiumSurface(
@@ -284,41 +307,31 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
 
   Widget _info(TodayPlanItemModel? item, List<String> steps) => ListView(
         key: PageStorageKey('exercise-info-${_exercise.id}'),
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+        padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
         physics: const BouncingScrollPhysics(),
         children: [
           _demo(),
           const SizedBox(height: 16),
-          PremiumSurface(child: ExerciseMuscleMap(exercise: _exercise)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: PremiumSurface(
+                child: ExerciseMuscleMap(
+                    exercise: _exercise,
+                    female: _female ?? false,
+                    anatomyReady: _female != null)),
+          ),
           if (item != null) ...[
             const SizedBox(height: 16),
-            _targets(item),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _targets(item),
+            ),
           ],
           const SizedBox(height: 16),
-          _guide(steps),
-          if (_exercise.description.isNotEmpty)
-            Theme(
-              data:
-                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                key: PageStorageKey('exercise-overview-${_exercise.id}'),
-                tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-                title: Text(fitnessText(context, 'Overview'),
-                    style: const TextStyle(fontSize: 14)),
-                childrenPadding: const EdgeInsets.fromLTRB(4, 0, 4, 14),
-                children: [
-                  Text(_exercise.description,
-                      style: const TextStyle(
-                          color: DSColors.muted, fontSize: 13, height: 1.5))
-                ],
-              ),
-            ),
-          if (_exercise.attribution?.isNotEmpty == true)
-            Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(_exercise.attribution!,
-                    style:
-                        const TextStyle(color: DSColors.muted, fontSize: 10))),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _guide(steps),
+          ),
         ],
       );
 
@@ -344,11 +357,39 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
         appBar: AppBar(
           backgroundColor: DSColors.bg,
           surfaceTintColor: Colors.transparent,
-          title: Text(copy('Exercise details'),
-              style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: DSColors.muted)),
+          toolbarHeight: (MediaQuery.textScalerOf(context).scale(18) * 2.4 +
+                  MediaQuery.textScalerOf(context).scale(11) * 1.4 +
+                  12)
+              .clamp(72.0, 180.0),
+          leadingWidth: 44,
+          titleSpacing: 0,
+          title: Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                        letterSpacing: -.4)),
+                const SizedBox(height: 4),
+                Text(
+                    [
+                      exercise.targetLabel ?? copy(exercise.target),
+                      exercise.equipmentLabel ?? copy(exercise.equipment)
+                    ].where((label) => label.isNotEmpty).join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 11, height: 1.4, color: DSColors.muted)),
+              ],
+            ),
+          ),
           leading: IconButton(
               tooltip: copy('Back'),
               icon: const Icon(CupertinoIcons.chevron_left, size: 21),
@@ -359,28 +400,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w500,
-                            height: 1.2,
-                            letterSpacing: -.6)),
-                    const SizedBox(height: 8),
-                    Text(
-                        [
-                          exercise.targetLabel ?? copy(exercise.target),
-                          exercise.equipmentLabel ?? copy(exercise.equipment)
-                        ].where((label) => label.isNotEmpty).join(' · '),
-                        style: const TextStyle(
-                            fontSize: 12, height: 1.4, color: DSColors.muted)),
-                  ]),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TabBar(
                 isScrollable: MediaQuery.textScalerOf(context).scale(13) > 17,
                 tabAlignment: MediaQuery.textScalerOf(context).scale(13) > 17
@@ -401,9 +421,9 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                 labelStyle:
                     const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 tabs: [
-                  Tab(text: copy('Info')),
-                  Tab(text: copy('Progress')),
-                  Tab(text: copy('Rank'))
+                  Tab(height: 38, text: copy('Info')),
+                  Tab(height: 38, text: copy('Progress')),
+                  Tab(height: 38, text: copy('Rank'))
                 ],
               ),
             ),
@@ -423,7 +443,8 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
             )),
           ]),
         ),
-        bottomNavigationBar: item != null || widget.onAddToPlan != null
+        bottomNavigationBar: item != null ||
+                (widget.onAddToPlan != null && exercise.supportsRepLogging)
             ? SafeArea(
                 top: false,
                 child: Padding(

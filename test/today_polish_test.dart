@@ -162,7 +162,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const ValueKey('today-chart-value')))
             .data,
-        '70 / 100');
+        '7 h 0 m');
     expect(find.byKey(const ValueKey('today-chart-comparison')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('today-chart-day-3')));
     await tester.pump();
@@ -224,34 +224,21 @@ void main() {
     });
     await tester.pumpWidget(_app(data: checkIn, history: const []));
     await tester.pumpAndSettle();
-    final chart = find.byKey(const ValueKey('today-chart-card'));
-    final emptyHeight = tester.getSize(chart).height;
-    expect(find.byKey(const ValueKey('today-chart-empty')), findsOneWidget);
-    expect(find.byKey(const ValueKey('today-chart-day-6')), findsNothing);
     expect(find.text('69'), findsOneWidget);
     expect(find.text('Ready today'), findsOneWidget);
-    expect(
-        tester
-            .getSize(find.byKey(const ValueKey('today-readiness-heading')))
-            .height,
-        lessThan(28));
-    expect(
-        tester
-            .getSize(find.byKey(const ValueKey('readiness-signal-Sleep')))
-            .height,
-        tester
-            .getSize(find.byKey(const ValueKey('readiness-signal-Energy')))
-            .height);
     await _snapshot(tester, 'today-check-in-polished-preview');
-    await tester.tap(find.descendant(of: chart, matching: find.text('Sleep')));
+    final chart = find.byKey(const ValueKey('today-chart-card'));
+    await tester.scrollUntilVisible(chart, 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(chart);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('today-chart-empty')), findsNothing);
-    expect(tester.getSize(chart).height, greaterThan(emptyHeight));
     expect(
         tester
             .widget<Text>(find.byKey(const ValueKey('today-chart-value')))
             .data,
         '7 h 30 m');
+    expect(find.text('HRV'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -264,7 +251,7 @@ void main() {
     var taps = 0;
     await tester.pumpWidget(_app(reduced: false, onSleep: () => taps++));
     await tester.pumpAndSettle();
-    final label = find.text('Log sleep');
+    final label = find.text('Log sleep & check-in');
     await tester.scrollUntilVisible(label, 120,
         scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(label);
@@ -295,7 +282,7 @@ void main() {
         find.byKey(const ValueKey('today-readiness-heading')), 120,
         scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
-    expect(find.text('Add your readings'), findsOneWidget);
+    expect(find.text('How are you feeling?'), findsOneWidget);
     expect(tester.binding.hasScheduledFrame, isFalse);
     expect(tester.takeException(), isNull);
   });

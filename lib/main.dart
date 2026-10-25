@@ -15,14 +15,17 @@ import 'core/localization/language_manager.dart';
 import 'core/localization/app_language.dart';
 import 'features/onboarding/views/onboarding_view.dart';
 import 'features/notifications/services/notification_service.dart';
+import 'core/branding/app_startup.dart';
+import 'core/branding/setcraft_brand.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Paint the matching vector immediately. Never hold the native starting
+  // window while storage or account synchronization is pending.
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks(['react-native-body-highlighter'],
         await rootBundle.loadString('assets/anatomy/LICENSE'));
   });
-  await initializeDateFormatting();
 
   // Set system UI to immersive dark mode
   SystemChrome.setSystemUIOverlayStyle(
@@ -34,7 +37,17 @@ void main() async {
     ),
   );
 
-  // Initialize localization engine from cache
+  runApp(FitAIApp(
+    initialHome: AppStartup(
+      initialize: _initializeHome,
+      onReady: () => unawaited(NotificationService.shared.initialize()),
+    ),
+  ));
+}
+
+Future<Widget> _initializeHome() async {
+  await initializeDateFormatting();
+  // Initialize localization engine from cache.
   await LanguageManager.shared.init();
 
   // Check persisted auth session token from secure hardware storage
@@ -44,17 +57,12 @@ void main() async {
         .syncAccountLanguage()
         .timeout(const Duration(seconds: 4), onTimeout: () {});
   }
-  final Widget initialHome = (token != null && token.isNotEmpty)
+  return (token != null && token.isNotEmpty)
       ? authenticatedHome()
       : const OnboardingView();
-
-  runApp(FitAIApp(initialHome: initialHome));
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    unawaited(NotificationService.shared.initialize());
-  });
 }
 
-// MARK: - Root FitAI Mobile Application
+// MARK: - Root Setcraft Mobile Application
 class FitAIApp extends StatelessWidget {
   final Widget initialHome;
 
@@ -65,7 +73,7 @@ class FitAIApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: LanguageManager.shared,
       builder: (context, _) => MaterialApp(
-        title: 'FitAI',
+        title: SetcraftBrand.name,
         scaffoldMessengerKey: NotificationService.messengerKey,
         locale: LanguageManager.shared.currentLanguage.locale,
         supportedLocales: AppLanguage.values.map((language) => language.locale),

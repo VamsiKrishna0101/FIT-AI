@@ -1,5 +1,5 @@
 name: fitai_mobile
-description: "FitAI Pro-Grade AI Fitness & Biometric Intelligence Engine"
+description: "Setcraft Pro-Grade AI Fitness & Biometric Intelligence Engine"
 publish_to: "none"
 version: 1.0.0+1
 
@@ -38,8 +38,11 @@ dependencies:
   in_app_purchase: ^3.3.1
   url_launcher: ^6.3.3
   in_app_purchase_android: ^0.5.4
+  in_app_purchase_storekit: ^0.4.13+2
   liquid_glass_renderer:
     path: packages/liquid_glass_renderer
+  firebase_auth: ">=6.0.0 <7.0.0"
+  google_sign_in: 7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -58,4 +61,6 @@ flutter:
     - assets/fonts/OFL.txt
     - assets/branding/
     - assets/onboarding_images/
+    - assets/onboarding_bodies/
+    - assets/exercise_anatomy/
     - assets/anatomy/LICENSE

@@ -12,6 +12,7 @@ import '../../train/models/training_session.dart';
 import '../../body_scan/views/body_entry_view.dart';
 import '../../train/repositories/training_repository.dart';
 import '../components/progress_activity.dart';
+import '../components/progress_workout_history.dart';
 import '../components/progress_date_filter.dart';
 import '../components/progress_surface.dart';
 import '../components/progress_trend_tiles.dart';
@@ -183,7 +184,6 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
         ProgressPoint.parse(progressRows(weightSeries?['points']), 'value');
     final recoveryPoints = ProgressPoint.parse(
         progressRows(data.wellness['recovery']), 'recovery');
-    final locale = Localizations.localeOf(context).toLanguageTag();
     return [
       ProgressTrainingSummary(summary: data.summary, rangeLabel: _rangeLabel),
       ProgressHeading('Exercise progress', onTap: _exercises),
@@ -197,7 +197,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
               for (var i = 0; i < pinned.length; i++) ...[
                 if (i > 0) const SizedBox(width: 12),
                 SizedBox(
-                    width: 218,
+                    width: 188,
                     child: ProgressExercisePreview(
                         exercise: pinned[i],
                         onTap: () => _open(pinned[i]['name'] as String,
@@ -209,6 +209,27 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
           weeks: data.weeks,
           activity: data.activity,
           endDate: (data.json['range'] as Map?)?['end'] as String?),
+      ProgressHeading('Workout history',
+          onTap: () => _open('Workout history', '/sessions', 'sessions')),
+      if (data.sessions.isEmpty)
+        const ProgressEmpty('No workouts in this period')
+      else
+        ProgressSurface(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(children: [
+              for (var i = 0; i < data.sessions.length; i++) ...[
+                if (i > 0)
+                  const Divider(
+                      height: 1, indent: 60, color: Color(0x12FFFFFF)),
+                ProgressWorkoutTile(
+                    session: data.sessions[i],
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => ProgressWorkoutRecap(
+                            session: data.sessions[i],
+                            onExercise: (row) => _open(row['name'] as String,
+                                '/exercises/${row['id']}', 'exercise'))))),
+              ],
+            ])),
       ProgressHeading('Muscle distribution',
           onTap: () => _open('Muscle distribution', '', 'muscles',
               initial: {'muscles': data.muscles})),
@@ -237,6 +258,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
           Expanded(
               child: ProgressMetricPreview(
                   title: 'Weight',
+                  color: progressViolet,
                   unit: 'kg',
                   points: weightPoints,
                   onTap: () => _open('Body changes', '/body', 'body',
@@ -263,6 +285,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
         else
           ProgressMetricPreview(
               title: 'Weight',
+              color: progressViolet,
               unit: 'kg',
               points: weightPoints,
               onTap: () =>
@@ -309,30 +332,6 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
             color: progressAmber,
             onTap: () => _open('Nutrition', '/wellness', 'nutrition',
                 initial: data.wellness)),
-      ProgressHeading('Workout history',
-          onTap: () => _open('Workout history', '/sessions', 'sessions')),
-      ProgressSurface(
-          child: data.sessions.isEmpty
-              ? const ProgressEmpty('No workouts in this period')
-              : Column(
-                  children: data.sessions
-                      .map((row) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          onTap: () =>
-                              _open('Workout history', '/sessions', 'sessions'),
-                          title: Text(fitnessText(context, row['name'] as String? ?? 'Workout'),
-                              style: const TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w500)),
-                          subtitle: Text('${progressDate(row['date'] as String?, locale)} · ${row['sets']} ${fitnessText(context, 'sets')}',
-                              style: const TextStyle(
-                                  color: progressMuted, fontSize: 12)),
-                          trailing: Icon(
-                              row['status'] == 'COMPLETED'
-                                  ? CupertinoIcons.checkmark_circle
-                                  : CupertinoIcons.clock,
-                              color: progressMuted,
-                              size: 18)))
-                      .toList())),
     ];
   }
 

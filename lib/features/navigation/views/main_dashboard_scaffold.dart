@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import '../../../core/branding/setcraft_launch_screen.dart';
 import '../../../core/components/animated_tab_stack.dart';
 import '../../../core/components/liquid_silver_bottom_bar.dart';
 import '../../../core/localization/fitai_copy.dart';
@@ -22,7 +23,6 @@ import '../../planner/views/weekly_plan_view.dart';
 import '../../wellness/views/sleep_entry_view.dart';
 import '../../nutrition/views/food_library_view.dart';
 import '../../today/repositories/today_repository.dart';
-import '../../subscription/subscription_gate.dart';
 import '../../subscription/subscription_view.dart';
 import '../../subscription/subscription_service.dart';
 
@@ -157,6 +157,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
 
   @override
   Widget build(BuildContext context) {
+    if (!_modeReady) return const SetcraftLaunchScreen();
     final copy = FitAiCopy.of(context);
     return PopScope(
       canPop: _currentIndex == 0,
@@ -172,52 +173,35 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
           data: MediaQuery.of(context).copyWith(
             padding: MediaQuery.paddingOf(context).copyWith(bottom: 0),
           ),
-          child: Column(children: [
-            const SubscriptionBanner(),
-            Expanded(
-                child: MediaQuery.removePadding(
-                    context: context,
-                    removeTop: AppDataMode.shared.available ||
-                        (SubscriptionService.shared.access != null &&
-                            !(SubscriptionService.shared.access!.state ==
-                                    'active' &&
-                                SubscriptionService.shared.access!.hasAccess)),
-                    child: !_modeReady
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                                color: Colors.white54))
-                        : AnimatedTabStack(
-                            key: ValueKey(AppDataMode.shared.dataset),
-                            index: _currentIndex,
-                            children: <Widget>[
-                              _visitedTabs.contains(0)
-                                  ? TodayHomeView(
-                                      isActive: _currentIndex == 0,
-                                      onSelectTab: _onTabSelected,
-                                      onOpenProfile: () =>
-                                          _openRoute(const ProfileView()),
-                                    )
-                                  : const SizedBox.shrink(),
-                              _visitedTabs.contains(1)
-                                  ? TrainView(isActive: _currentIndex == 1)
-                                  : const SizedBox.shrink(),
-                              _visitedTabs.contains(2)
-                                  ? BodyView(
-                                      onTrain: () => _onTabSelected(1),
-                                      isActive: _currentIndex == 2)
-                                  : const SizedBox.shrink(),
-                              _visitedTabs.contains(3)
-                                  ? ProgressView(isActive: _currentIndex == 3)
-                                  : const SizedBox.shrink(),
-                            ]
-                                .asMap()
-                                .entries
-                                .map((entry) => TickerMode(
-                                    enabled: _currentIndex == entry.key,
-                                    child: entry.value))
-                                .toList(),
-                          ))),
-          ]),
+          child: AnimatedTabStack(
+            key: ValueKey(AppDataMode.shared.dataset),
+            index: _currentIndex,
+            children: <Widget>[
+              _visitedTabs.contains(0)
+                  ? TodayHomeView(
+                      isActive: _currentIndex == 0,
+                      onSelectTab: _onTabSelected,
+                      onOpenProfile: () => _openRoute(const ProfileView()),
+                    )
+                  : const SizedBox.shrink(),
+              _visitedTabs.contains(1)
+                  ? TrainView(isActive: _currentIndex == 1)
+                  : const SizedBox.shrink(),
+              _visitedTabs.contains(2)
+                  ? BodyView(
+                      onTrain: () => _onTabSelected(1),
+                      isActive: _currentIndex == 2)
+                  : const SizedBox.shrink(),
+              _visitedTabs.contains(3)
+                  ? ProgressView(isActive: _currentIndex == 3)
+                  : const SizedBox.shrink(),
+            ]
+                .asMap()
+                .entries
+                .map((entry) => TickerMode(
+                    enabled: _currentIndex == entry.key, child: entry.value))
+                .toList(),
+          ),
         ),
         bottomNavigationBar: LiquidSilverBottomBar(
           selectedIndex: _currentIndex,

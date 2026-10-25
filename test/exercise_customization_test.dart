@@ -192,6 +192,43 @@ void main() {
   });
 
   testWidgets(
+      'Weight convention is explicit and saving keeps the entered loads',
+      (tester) async {
+    Map<String, dynamic>? saved;
+    final raw = Map<String, dynamic>.from(
+        (day('2026-10-18')['items'] as List).first as Map);
+    raw['setTargets'] = {
+      ...raw['setTargets'] as Map,
+      'weightUnit': 'as_logged'
+    };
+    final item = TodayPlanItemModel.fromJson(raw);
+    await tester.pumpWidget(app(Scaffold(
+        body: Builder(
+            builder: (context) => TextButton(
+                onPressed: () async =>
+                    saved = await editTrainingTargets(context, item),
+                child: const Text('Open'))))));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    final selector = find.byKey(const ValueKey('training-weight-unit'));
+    expect(
+        tester.widget<DropdownButtonFormField<String>>(selector).initialValue,
+        'as_logged');
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Total load including bar').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save'));
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    final targets = saved!['setTargets'] as Map;
+    expect(targets['weightUnit'], 'total_load');
+    expect(targets['sets'][0]['weightKg'], 12);
+    expect(targets['sets'][1]['weightKg'], 14);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
       'Adding from a weekly workout saves to its selected date with explicit targets',
       (tester) async {
     const date = '2026-10-18';

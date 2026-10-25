@@ -9,9 +9,11 @@ import '../../body_scan/views/body_entry_view.dart';
 import '../../body_scan/views/body_record_view.dart';
 import '../components/body_progress_content.dart';
 import '../components/exercise_progress_content.dart';
+import '../components/exercise_overview_control.dart';
 import '../components/muscle_progress_content.dart';
 import '../components/progress_date_filter.dart';
 import '../components/progress_surface.dart';
+import '../components/progress_workout_history.dart';
 import '../components/wellness_progress_content.dart';
 import '../models/progress_models.dart';
 import '../repositories/progress_repository.dart';
@@ -178,20 +180,18 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
         return WellnessProgressContent(
             data: data, nutrition: widget.kind == 'nutrition');
       case 'sessions':
-        final sessions = progressRows(data['items']);
-        return Column(children: [
-          if (sessions.isEmpty)
-            const ProgressEmpty('No workouts in this period'),
-          ...sessions.map((session) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ProgressSurface(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                  child: _SessionTile(session: session)))),
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ProgressWorkoutHistory(
+              sessions: progressRows(data['items']),
+              onSession: (session) => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => ProgressWorkoutRecap(
+                          session: session, onExercise: _exercise)))),
           if (data['nextCursor'] != null)
-            TextButton(
-                onPressed: _more ? null : () => _load(more: true),
-                child: Text(fitnessText(context, 'Load more'))),
+            Center(
+                child: TextButton(
+                    onPressed: _more ? null : () => _load(more: true),
+                    child: Text(fitnessText(context, 'Load more')))),
         ]);
       default:
         return const SizedBox.shrink();
@@ -208,13 +208,14 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
               title: Text(
                   fitnessText(
                       context,
-                      (_data?['exercise'] as Map?)?['name'] as String? ??
-                          (_data?['muscle'] as Map?)?['label'] as String? ??
-                          widget.title),
+                      progressTitle(
+                          (_data?['exercise'] as Map?)?['name'] as String? ??
+                              (_data?['muscle'] as Map?)?['label'] as String? ??
+                              widget.title)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w600))),
+                      fontSize: 18, fontWeight: FontWeight.w600))),
           body: RefreshIndicator(
               onRefresh: () => _load(refresh: true),
               color: progressSilver,
@@ -234,7 +235,7 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                           });
                           _load(refresh: true);
                         }),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                     if (_loading && _data == null)
                       const Padding(
                           padding: EdgeInsets.all(50),
@@ -261,6 +262,13 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                                 style: const TextStyle(
                                     color: progressMuted, fontSize: 12))),
                       _content(),
+                      if (widget.kind == 'exercise' &&
+                          widget.query['dataset'] != 'preview')
+                        ExerciseOverviewControl(
+                            key: ValueKey(widget.path),
+                            exerciseId: (_data?['exercise'] as Map?)?['id']
+                                    as String? ??
+                                widget.path.split('/').last),
                     ],
                     if (_more)
                       const Padding(
@@ -269,56 +277,4 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                               child: CircularProgressIndicator(
                                   color: progressSilver, strokeWidth: 2))),
                   ]))));
-}
-
-class _SessionTile extends StatelessWidget {
-  final ProgressJson session;
-  const _SessionTile({required this.session});
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final seconds = progressNumber(session['durationSeconds']);
-    return ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 12),
-        shape: const Border(),
-        collapsedShape: const Border(),
-        title: Text(
-            fitnessText(context, session['name'] as String? ?? 'Workout'),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-        subtitle: Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Text(
-                '${progressDate(session['date'] as String?, locale)} · ${session['sets']} ${fitnessText(context, 'sets')}${seconds != null && seconds > 0 ? ' · ${(seconds / 60).round()} ${fitnessText(context, 'min')}' : ''} · ${fitnessText(context, session['status'] == 'COMPLETED' ? 'Completed' : 'In progress')}',
-                style: const TextStyle(color: progressMuted, fontSize: 13))),
-        children: progressRows(session['exercises'])
-            .map((exercise) =>
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Padding(
-                      padding: const EdgeInsets.only(top: 10, bottom: 8),
-                      child: Text(exercise['name'] as String,
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600))),
-                  for (final set in progressRows(exercise['entries']))
-                    Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(children: [
-                          SizedBox(
-                              width: 32,
-                              child: Text('${set['setNumber']}',
-                                  style: const TextStyle(
-                                      color: progressMuted, fontSize: 13))),
-                          Expanded(
-                              child: Text(
-                                  '${set['weight'] != null && (set['weight'] as num) > 0 ? '${progressValue(context, progressNumber(set['weight']), unit: 'kg')} × ' : ''}${set['reps']} ${fitnessText(context, 'reps')}',
-                                  style: const TextStyle(fontSize: 12))),
-                          if (set['rpe'] != null)
-                            Text(
-                                'RPE ${progressValue(context, progressNumber(set['rpe']))}',
-                                style: const TextStyle(
-                                    color: progressMuted, fontSize: 13)),
-                        ])),
-                ]))
-            .toList());
-  }
 }

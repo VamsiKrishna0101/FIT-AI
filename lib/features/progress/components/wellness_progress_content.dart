@@ -21,6 +21,7 @@ class WellnessProgressContent extends StatefulWidget {
 
 class _WellnessProgressContentState extends State<WellnessProgressContent> {
   String _metric = 'recovery';
+  bool _selectedByUser = false;
   static const choices = {
     'recovery': 'Recovery',
     'sleep': 'Sleep',
@@ -44,6 +45,12 @@ class _WellnessProgressContentState extends State<WellnessProgressContent> {
           data: widget.data, compact: widget.compact);
     }
     var rows = progressRows(widget.data['recovery']);
+    if (!_selectedByUser &&
+        !rows.any((row) => progressNumber(row[_metric]) != null)) {
+      _metric = choices.keys.firstWhere(
+          (key) => rows.any((row) => progressNumber(row[key]) != null),
+          orElse: () => 'recovery');
+    }
     String? method;
     if (_metric == 'hrv') {
       method = rows
@@ -59,20 +66,16 @@ class _WellnessProgressContentState extends State<WellnessProgressContent> {
           choices: choices,
           selected: _metric,
           color: color,
-          onChanged: (value) => setState(() => _metric = value)),
+          onChanged: (value) => setState(() {
+                _metric = value;
+                _selectedByUser = true;
+              })),
       const SizedBox(height: 16),
       ProgressSurface(
           accent: color,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Icon(
-                  _metric == 'sleep'
-                      ? Icons.bedtime_outlined
-                      : Icons.monitor_heart_outlined,
-                  color: color,
-                  size: 21),
-              const SizedBox(width: 10),
               Expanded(
                   child: Text(fitnessText(context, choices[_metric]!),
                       style: const TextStyle(
@@ -81,12 +84,13 @@ class _WellnessProgressContentState extends State<WellnessProgressContent> {
                 Text(method,
                     style: const TextStyle(fontSize: 12, color: progressMuted)),
             ]),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             ProgressChart(
                 key: ValueKey('wellness-$_metric-$method'),
                 points: points,
                 unit: units[_metric]!,
-                bars: ['recovery', 'steps', 'activeCalories'].contains(_metric),
+                bars: ['recovery', 'sleep', 'steps', 'activeCalories']
+                    .contains(_metric),
                 average: true,
                 showReference: true,
                 daily: true,

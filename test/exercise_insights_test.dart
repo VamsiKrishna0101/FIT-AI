@@ -14,7 +14,7 @@ import 'package:fitai_mobile/core/localization/language_manager.dart';
 import 'package:fitai_mobile/core/network/api_client.dart';
 import 'package:fitai_mobile/core/storage/secure_session_store.dart';
 import 'package:fitai_mobile/features/progress/repositories/progress_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:fitai_mobile/features/train/components/graphite_anatomy.dart';
 import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
 import 'package:fitai_mobile/features/progress/components/exercise_progress_content.dart';
 import 'package:fitai_mobile/features/train/components/exercise_insights.dart';
@@ -208,25 +208,25 @@ void main() {
     await LanguageManager.shared.restoreAccountLanguage('en');
   });
 
-  test('canonical muscles stay separate and target crop excludes the full body',
+  test('canonical muscle tags select finite regions in each graphite figure',
       () {
     expect(exerciseMuscleIds(['Pectorals']), {'chest'});
     expect(exerciseMuscleIds(['Triceps', 'Delts']), {'triceps', 'shoulders'});
     expect(exerciseMuscleIds(['adductors']), isEmpty);
-    final paths = musclePaths(back: false);
-    final painter =
-        ExerciseMusclePainter(paths, {'chest'}, {'shoulders'}, {'chest'});
-    expect(painter.viewport.height, lessThan(200));
-    expect(painter.viewport.bottom, lessThan(300));
     for (final female in [false, true]) {
       for (final back in [false, true]) {
-        final geometry = musclePaths(back: back, female: female);
-        for (final muscle in geometry.keys) {
-          expect(
-              ExerciseMusclePainter(geometry, {muscle}, {}, {muscle})
-                  .viewport
-                  .isFinite,
-              isTrue);
+        final geometry = graphiteMusclePaths(back: back, female: female);
+        final viewport = GraphiteAnatomyPainter(
+            image: null,
+            female: female,
+            back: back,
+            primary: const {},
+            secondary: const {}).viewport;
+        for (final paths in geometry.values) {
+          for (final path in paths) {
+            expect(path.getBounds().isFinite, isTrue);
+            expect(viewport.overlaps(path.getBounds()), isTrue);
+          }
         }
       }
     }
@@ -289,7 +289,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 5));
     await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('exercise-cropped-map')), 250,
+        find.byKey(const ValueKey('exercise-anatomy-map')), 250,
         scrollable: find.byType(Scrollable).last);
     await tester.pumpAndSettle();
     await _capture(tester, 'exercise-muscles');
@@ -309,6 +309,10 @@ void main() {
         ),
         scale: 1.6));
     await tester.pumpAndSettle();
+    final stage = find.byKey(const ValueKey('exercise-demo-stage'));
+    expect(tester.getTopLeft(stage).dx, 0);
+    expect(tester.getSize(stage).width, 320);
+    expect(tester.getSize(stage).height, closeTo(180, .1));
     expect(
         tester
             .getSize(find.byKey(const ValueKey('exercise-demo-stage')))
@@ -328,6 +332,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('timed demonstrations do not offer rep-based workout logging',
+      (tester) async {
+    final timed = WorkoutExerciseModel.fromJson(
+        {..._exercise.toJson(), 'exerciseType': 'duration'});
+    expect(timed.supportsRepLogging, false);
+    expect(WorkoutExerciseModel.fromJson(_exercise.toJson()).supportsRepLogging,
+        true);
+    await tester.pumpWidget(_app(ExerciseDetailView(
+        exercise: timed, loadDetail: false, onAddToPlan: () async => true)));
+    await tester.pumpAndSettle();
+    expect(find.text('Add to today'), findsNothing);
+    expect(find.byKey(const ValueKey('exercise-demo-stage')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('square MP4 uses its verified dimensions without side padding',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 760);
+    addTearDown(tester.view.reset);
+    final square = WorkoutExerciseModel.fromJson(
+        {..._exercise.toJson(), 'mediaAspectRatio': 1});
+    expect(WorkoutExerciseModel.fromJson(square.toJson()).demoAspectRatio, 1);
+    await tester.pumpWidget(
+        _app(ExerciseDetailView(exercise: square, loadDetail: false)));
+    await tester.pumpAndSettle();
+    final stage = find.byKey(const ValueKey('exercise-demo-stage'));
+    expect(tester.getTopLeft(stage).dx, 0);
+    expect(tester.getSize(stage), const Size(320, 320));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('history appends older days without duplicate entries',
       (tester) async {
     final cursors = <String?>[];
@@ -339,9 +375,14 @@ void main() {
               return _history(cursor: cursor);
             }))));
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(ListView).first, const Offset(0, -1400));
+    await tester.tap(find.text('Set history'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Load more'));
+    await tester.scrollUntilVisible(find.text('Load more'), 300,
+        scrollable: find
+            .descendant(
+                of: find.byType(ListView).first,
+                matching: find.byType(Scrollable))
+            .first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Load more'));
     await tester.pumpAndSettle();
@@ -351,7 +392,11 @@ void main() {
     await tester.ensureVisible(find.byType(ProgressSetHistory).first);
     await tester.tap(find.byType(ProgressSetHistory).first);
     await tester.pumpAndSettle();
-    expect(find.textContaining('16 kg × 10 reps'), findsWidgets);
+    final firstDay = find.byType(ProgressSetHistory).first;
+    expect(find.descendant(of: firstDay, matching: find.text('16')),
+        findsOneWidget);
+    expect(find.descendant(of: firstDay, matching: find.text('10')),
+        findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

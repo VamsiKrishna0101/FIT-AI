@@ -6,7 +6,7 @@ import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
 import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
 import 'package:fitai_mobile/features/planner/views/weekly_plan_card.dart';
 import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_photo_review_view.dart';
+import 'package:fitai_mobile/features/body_scan/views/body_entry_view.dart';
 
 class _Repository extends WeeklyPlanRepository {
   bool generated = false;
@@ -27,7 +27,9 @@ class _Repository extends WeeklyPlanRepository {
                       DateTime.now().toIso8601String().substring(0, 10),
                   'status': 'SAVED',
                   'method': 'photo_review',
-                  'metrics': {},
+                  'metrics': {
+                    'chestCm': {'value': 100, 'source': 'tape'}
+                  },
                   'updatedAt': DateTime.now().toIso8601String(),
                 }
               ]
@@ -100,7 +102,10 @@ class _Repository extends WeeklyPlanRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> generate({required DateTime weekStart}) async {
+  Future<Map<String, dynamic>> generate(
+      {required DateTime weekStart,
+      DateTime? startDate,
+      List<DateTime>? trainingDates}) async {
     generations++;
     generated = true;
     return {'id': 'run', 'status': 'COMPLETED'};
@@ -114,6 +119,12 @@ class _Repository extends WeeklyPlanRepository {
   Future<void> activate(String id) async {
     activations++;
   }
+}
+
+class _UnavailableMeasurementsRepository extends _Repository {
+  @override
+  Future<BodyOverview> bodyOverview() async => throw DioException(
+      requestOptions: RequestOptions(path: '/api/body/overview'));
 }
 
 void main() {
@@ -135,34 +146,40 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
-  test('Only a saved photo assessment from this local week skips the prompt',
+  test(
+      'Entered measurements are reused; photo estimates do not skip the prompt',
       () {
-    BodyOverview overview(String date, {String method = 'photo_review'}) =>
+    BodyOverview overview(String date, {String source = 'tape'}) =>
         BodyOverview.fromJson({
           'records': [
             {
               'id': 'scan',
               'recordedDate': date,
               'status': 'SAVED',
-              'method': method,
-              'metrics': {},
+              'method': 'entered',
+              'metrics': {
+                'chestCm': {'value': 100, 'source': source}
+              },
               'updatedAt': '2026-10-12T09:00:00Z',
             }
           ]
         });
     final today = DateTime(2026, 10, 12, 23);
     expect(
-        WeeklyPlanRepository.hasCurrentWeekScan(overview('2026-10-12'), today),
+        WeeklyPlanRepository.hasEnteredMeasurements(
+            overview('2026-10-12'), today),
         isTrue);
     expect(
-        WeeklyPlanRepository.hasCurrentWeekScan(overview('2026-10-11'), today),
+        WeeklyPlanRepository.hasEnteredMeasurements(
+            overview('2026-10-11'), today),
+        isTrue);
+    expect(
+        WeeklyPlanRepository.hasEnteredMeasurements(
+            overview('2026-10-13'), today),
         isFalse);
     expect(
-        WeeklyPlanRepository.hasCurrentWeekScan(overview('2026-10-13'), today),
-        isFalse);
-    expect(
-        WeeklyPlanRepository.hasCurrentWeekScan(
-            overview('2026-10-12', method: 'entered'), today),
+        WeeklyPlanRepository.hasEnteredMeasurements(
+            overview('2026-10-12', source: 'photo_estimate'), today),
         isFalse);
   });
 
@@ -171,7 +188,7 @@ void main() {
         'fitai_user_id': 'weekly-plan-test',
       }));
 
-  testWidgets('Missing scan prompts before generation and allows continuing',
+  testWidgets('Missing measurements are optional before generation',
       (tester) async {
     final repository = _Repository()..currentScan = false;
     await tester
@@ -179,18 +196,39 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use these dates'));
+    await tester.tap(find.text('Use these dates'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Scan body'), findsOneWidget);
-    expect(find.text('Add photos for a more personal plan'), findsOneWidget);
+    expect(find.text('Add measurements'), findsOneWidget);
+    expect(find.text('Add measurements (optional)'), findsOneWidget);
     expect(repository.generations, 0);
-    await tester.tap(find.text('Continue without scan'));
+    await tester.tap(find.text('Continue without measurements'));
     await tester.pumpAndSettle();
     expect(repository.generations, 1);
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Scan action opens photo flow without starting generation',
+  testWidgets('Measurement service failure does not block a training plan',
+      (tester) async {
+    final repository = _UnavailableMeasurementsRepository();
+    await tester
+        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Generate weekly plan'));
+    await tester.tap(find.text('Generate weekly plan'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use these dates'));
+    await tester.tap(find.text('Use these dates'));
+    await tester.pumpAndSettle();
+    expect(repository.generations, 1);
+    expect(find.text('Add measurements (optional)'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Measurement action opens entered measurements before generation',
       (tester) async {
     final repository = _Repository()..currentScan = false;
     await tester
@@ -198,11 +236,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use these dates'));
+    await tester.tap(find.text('Use these dates'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('Scan body'));
+    await tester.tap(find.text('Add measurements'));
     await tester.pumpAndSettle();
-    expect(find.byType(BodyPhotoReviewView), findsOneWidget);
+    expect(find.byType(BodyEntryView), findsOneWidget);
     expect(repository.generations, 0);
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -221,6 +262,9 @@ void main() {
     expect(find.text('Use test history'), findsNothing);
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use these dates'));
+    await tester.tap(find.text('Use these dates'));
     // Start the route ticker before advancing time; the underlying generate
     // button remains busy while the progress page is open.
     await tester.pump();
@@ -260,7 +304,8 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Saved plan replaces generation with view and next availability',
+  testWidgets(
+      'Saved plan shows its content without a duplicate open-plan footer',
       (tester) async {
     final repository = _Repository()..generated = true;
 
@@ -269,12 +314,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Generate weekly plan'), findsNothing);
-    expect(find.text('View weekly plan'), findsOneWidget);
+    expect(find.text('View weekly plan'), findsNothing);
     expect(find.textContaining('Next plan available'), findsOneWidget);
-
-    await tester.ensureVisible(find.text('View weekly plan'));
-    await tester.tap(find.text('View weekly plan'));
-    await tester.pumpAndSettle();
+    expect(find.text('Dumbbell floor press'), findsOneWidget);
 
     expect(repository.generations, 0);
     expect(tester.takeException(), isNull);

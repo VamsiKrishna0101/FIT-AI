@@ -1,3 +1,5 @@
+import 'physique_dashboard_models.dart';
+
 const bodyMetricSpecs = <String,
     ({String label, String unit, String? region, double min, double max})>{
   'weightKg': (label: 'Weight', unit: 'kg', region: null, min: 20, max: 500),
@@ -93,6 +95,8 @@ class BodyPhoto {
 }
 
 class BodyAssessment {
+  PhysiqueDashboardData get dashboard =>
+      PhysiqueDashboardData.fromJson(physiqueReport?['dashboard'] as Map?);
   final String id, recordedDate, status, method, updatedAt, createdAt;
   final String? photoRetention;
   final bool visualCoachingConsent;
@@ -162,6 +166,18 @@ class BodyAssessment {
       method == 'photo_review' ||
       photos.isNotEmpty ||
       (physiqueReport?['photosUsed'] as num? ?? 0) > 0;
+
+  bool canComparePhotosWith(BodyAssessment earlier) =>
+      id != earlier.id &&
+      !synthetic &&
+      !earlier.synthetic &&
+      status == 'SAVED' &&
+      earlier.status == 'SAVED' &&
+      hasPhotoAssessment &&
+      earlier.hasPhotoAssessment &&
+      earlier.isEarlierThan(this) &&
+      photos.any(
+          (photo) => earlier.photos.any((before) => before.view == photo.view));
 }
 
 class BodyOverview {

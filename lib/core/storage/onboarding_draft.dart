@@ -54,7 +54,7 @@ class OnboardingDraft {
 
   OnboardingDraft({
     this.languageCode = 'en',
-    this.countryCode = 'GB',
+    this.countryCode = 'ZZ',
     this.workingToward,
     String? goal,
     this.name,
@@ -151,7 +151,7 @@ class OnboardingDraft {
 
     return OnboardingDraft(
       languageCode: json['languageCode'] as String? ?? 'en',
-      countryCode: json['countryCode'] as String? ?? 'GB',
+      countryCode: json['countryCode'] as String? ?? 'ZZ',
       workingToward: (json['workingToward'] ?? json['goal']) as String?,
       name: json['name'] as String?,
       experienceLevel: json['experienceLevel'] as String?,

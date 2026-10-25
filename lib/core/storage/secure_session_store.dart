@@ -15,6 +15,9 @@ class SecureSessionStore {
 
   SecureSessionStore._();
 
+  int _revision = 0;
+  int get revision => _revision;
+
   Future<void> _writes = Future<void>.value();
   Future<T> _write<T>(Future<T> Function() action) {
     final result = _writes.then((_) => action());
@@ -66,6 +69,7 @@ class SecureSessionStore {
 
   Future<void> _saveTokens(
       String accessToken, String refreshToken, String? userId) async {
+    _revision++;
     await _storage.write(key: _accessTokenKey, value: accessToken);
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
     final owner = userId ?? _ownerFromToken(accessToken);
@@ -89,10 +93,12 @@ class SecureSessionStore {
   }
 
   Future<void> saveUserId(String id) async {
+    _revision++;
     await _storage.write(key: _userIdKey, value: id);
   }
 
   Future<void> clear() => _write(() async {
+        _revision++;
         await _phoneSleepOwner(null);
         await _storage.delete(key: _accessTokenKey);
         await _storage.delete(key: _refreshTokenKey);

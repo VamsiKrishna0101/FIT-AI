@@ -38,7 +38,7 @@ class _SleepEntryViewState extends State<SleepEntryView> {
   bool get _fallback => _usage == 'NONE';
   bool get _busy => _saving || _changing;
   bool get _completeCheckIn =>
-      _fallback && _rested != null && _energy != null && _soreness != null;
+      _rested != null && _energy != null && _soreness != null;
 
   @override
   void initState() {
@@ -137,8 +137,6 @@ class _SleepEntryViewState extends State<SleepEntryView> {
       setState(() {
         _usage = usage;
         if (!_fallback) {
-          _rested = null;
-          _soreness = null;
           _accepted = null;
           _suggested = null;
           _tracking = false;
@@ -278,8 +276,8 @@ class _SleepEntryViewState extends State<SleepEntryView> {
     try {
       final entry = await repository.save(
           CacheScope.todayKey(_date), (hours * 60 + minutes).round(), _energy,
-          rested: _fallback ? _rested : null,
-          soreness: _fallback ? _soreness : null,
+          rested: _rested,
+          soreness: _soreness,
           estimate: _fallback ? _accepted : null);
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -367,7 +365,7 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                         FitnessText(
                             _fallback
                                 ? 'Sleep, rest and energy. A quick check-in without a wearable.'
-                                : 'Add missing sleep. Synced sleep is used when available.',
+                                : 'Sleep and how you feel. Your check-in is optional.',
                             style: const TextStyle(
                                 color: FitnessTheme.muted,
                                 fontSize: 14,
@@ -562,25 +560,22 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                                     controller: _minutes,
                                     numeric: true))
                           ]),
-                          if (_fallback)
-                            _rating(
-                                'How rested do you feel?',
-                                'Not rested',
-                                'Somewhat rested',
-                                'Well rested',
-                                _rested,
-                                (v) => _rested = v),
-                          if (_fallback)
-                            _rating('How is your energy?', 'Low energy', 'Okay',
-                                'Energized', _energy, (v) => _energy = v),
-                          if (_fallback)
-                            _rating(
-                                'How sore are you?',
-                                'Little soreness',
-                                'Some soreness',
-                                'Very sore',
-                                _soreness,
-                                (v) => _soreness = v),
+                          _rating(
+                              'How rested do you feel?',
+                              'Not rested',
+                              'Somewhat rested',
+                              'Well rested',
+                              _rested,
+                              (v) => _rested = v),
+                          _rating('How is your energy?', 'Low energy', 'Okay',
+                              'Energized', _energy, (v) => _energy = v),
+                          _rating(
+                              'How sore are you?',
+                              'Little soreness',
+                              'Some soreness',
+                              'Very sore',
+                              _soreness,
+                              (v) => _soreness = v),
                           const SizedBox(height: 20),
                           FitnessText(
                               _accepted == null
@@ -594,7 +589,7 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                                   ? (_completeCheckIn
                                       ? 'Your check-in is complete. Save to see your daily estimate.'
                                       : 'Sleep can be saved now. Answer rest, energy and soreness to see your daily estimate.')
-                                  : 'Entered sleep can support a readiness estimate when heart readings are available.',
+                                  : 'Sleep can be saved now. Answer rest, energy and soreness to see your daily estimate.',
                               style: const TextStyle(
                                   color: FitnessTheme.muted,
                                   fontSize: 12,

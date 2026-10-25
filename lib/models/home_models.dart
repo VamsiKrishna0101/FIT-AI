@@ -1,4 +1,4 @@
-// MARK: - FitAI Home Dashboard Models (matches GET /api/home)
+// MARK: - Setcraft Home Dashboard Models (matches GET /api/home)
 
 class HomeData {
   final String wearableUsage;

@@ -84,10 +84,6 @@ class HealthSyncService extends ChangeNotifier {
         HealthDataType.STEPS,
         HealthDataType.ACTIVE_ENERGY_BURNED,
         HealthDataType.WORKOUT,
-        HealthDataType.RESTING_HEART_RATE,
-        _android
-            ? HealthDataType.HEART_RATE_VARIABILITY_RMSSD
-            : HealthDataType.HEART_RATE_VARIABILITY_SDNN,
         HealthDataType.SLEEP_ASLEEP,
         HealthDataType.SLEEP_DEEP,
         HealthDataType.SLEEP_REM,

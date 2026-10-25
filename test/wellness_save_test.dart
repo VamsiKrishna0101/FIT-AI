@@ -185,14 +185,15 @@ void main() {
     expect(await WellnessRepository.shared.wearableUsage(), 'WEARABLE');
   });
 
-  test('Switching to a wearable immediately removes the check-in-only score',
+  test('Switching to a wearable preserves a saved manual check-in score',
       () async {
     adapter.saveResponse = entry();
     await WellnessRepository.shared.save(date, 480, 3, rested: 3, soreness: 3);
     adapter.heldHome = Completer<ResponseBody>();
     await WellnessRepository.shared.setWearableUsage('WEARABLE');
     expect(TodayRepository.shared.current?.wearableUsage, 'WEARABLE');
-    expect(TodayRepository.shared.current?.readiness, isNull);
+    expect(
+        TodayRepository.shared.current?.readiness?.source, 'check_in_estimate');
     expect(TodayRepository.shared.current?.sleepLog?['sleepMinutes'], 480);
     adapter.heldHome!.complete(adapter.response({
       ...adapter.home,

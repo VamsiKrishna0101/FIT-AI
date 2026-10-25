@@ -294,7 +294,7 @@ class _TrainingDateFilter extends StatelessWidget {
     final isToday = DateUtils.isSameDay(date, today);
     final isYesterday = DateUtils.isSameDay(date, yesterday);
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final start = date.subtract(Duration(days: date.weekday - 1));
+    final start = DateTime(date.year, date.month, date.day - date.weekday + 1);
     final label = daily
         ? DateFormat.yMMMd(locale).format(date)
         : '${DateFormat.MMMd(locale).format(start)} – ${DateFormat.yMMMd(locale).format(date)}';
@@ -372,7 +372,17 @@ class TrainingMapDashboard extends StatefulWidget {
 class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
   bool _back = false;
   String? _selected;
-  Color _color(MuscleRegion region) => FitnessAccents.rank(region.strengthTier);
+  Color _color(MuscleRegion region) =>
+      FitnessAccents.rank(region.completedSets > 0 ? region.strengthTier : 0);
+
+  @override
+  void didUpdateWidget(TrainingMapDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data?.date != widget.data?.date ||
+        oldWidget.daily != widget.daily) {
+      _selected = null;
+    }
+  }
 
   void _select(String id) {
     final region = widget.data?.regions.where((r) => r.id == id).firstOrNull;
@@ -401,6 +411,17 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
     final date = DateTime.tryParse(data?.date ?? '') ?? DateTime.now();
     final regions = [...?data?.regions]
       ..sort((a, b) => (b.isFocus ? 1 : 0).compareTo(a.isFocus ? 1 : 0));
+    final provisional = regions
+        .any((r) => r.completedSets > 0 && r.strength['provisional'] == true);
+    final missingRank = (data?.summary['loggedSets'] as num? ?? 0) > 0 &&
+        regions
+            .where((r) => r.completedSets > 0)
+            .every((r) => r.strengthTier == 0);
+    final missingReason = regions
+        .expand((r) => r.rankedExercises)
+        .map((exercise) => exercise['reason'])
+        .whereType<String>()
+        .firstOrNull;
     return Column(children: [
       if (widget.showHeader)
         Padding(
@@ -514,7 +535,7 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                                         fontWeight: FontWeight.w600)),
                                 SizedBox(height: 4),
                                 FitnessText(
-                                    'Based on recent exercise performance',
+                                    'Muscles trained in the selected period',
                                     style: TextStyle(
                                         fontSize: 12,
                                         color: FitnessTheme.muted))
@@ -546,6 +567,14 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                                     selected: _selected,
                                     onSelected: _select))),
                         const SizedBox(height: 6),
+                        if ((data.summary['loggedSets'] as num? ?? 0) == 0) ...[
+                          const FitnessText('No sets logged for this period',
+                              key: ValueKey('body-period-empty'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 12, color: FitnessTheme.muted)),
+                          const SizedBox(height: 12),
+                        ],
                         Wrap(
                             spacing: 14,
                             runSpacing: 8,
@@ -582,6 +611,31 @@ class _TrainingMapDashboardState extends State<TrainingMapDashboard> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: 11, color: FitnessTheme.muted)),
+                        if (provisional) ...[
+                          const SizedBox(height: 8),
+                          const FitnessText(
+                              'Provisional · another training day confirms your level',
+                              key: ValueKey('body-strength-provisional'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  height: 1.4,
+                                  color: FitnessTheme.silver)),
+                        ],
+                        if (missingRank) ...[
+                          const SizedBox(height: 12),
+                          FitnessText(
+                              missingReason ??
+                                  'Your sets are saved. A matching exercise reference and logged load are needed to estimate strength.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  height: 1.5,
+                                  color: FitnessTheme.muted)),
+                          TextButton(
+                              onPressed: widget.onTrain,
+                              child: const FitnessText('Review logged sets')),
+                        ],
                       ])),
                       const SizedBox(height: 22),
                       if (DateUtils.isSameDay(date, DateTime.now()))
@@ -829,7 +883,8 @@ class _MuscleDetailState extends State<_MuscleDetail> {
     final r = widget.region;
     final today = DateUtils.isSameDay(widget.date, DateTime.now());
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final rankColor = FitnessAccents.rank(r.strengthTier);
+    final rankColor =
+        FitnessAccents.rank(r.completedSets > 0 ? r.strengthTier : 0);
 
     return SizedBox(
       key: const ValueKey('muscle-detail-sheet'),
@@ -854,8 +909,8 @@ class _MuscleDetailState extends State<_MuscleDetail> {
                         values: {
                           'date': DateFormat.MMMd(locale).format(widget.daily
                               ? widget.date
-                              : widget.date.subtract(
-                                  Duration(days: widget.date.weekday - 1)))
+                              : DateTime(widget.date.year, widget.date.month,
+                                  widget.date.day - widget.date.weekday + 1))
                         }),
                     style: const TextStyle(
                         fontSize: 13, color: FitnessTheme.muted)),
@@ -1010,7 +1065,12 @@ class _MuscleDetailState extends State<_MuscleDetail> {
                                 color: rankColor, shape: BoxShape.circle)),
                         const SizedBox(width: 8),
                         Expanded(
-                            child: FitnessText(r.strengthTitle,
+                            child: FitnessText(
+                                r.completedSets == 0
+                                    ? 'No direct sets in this period'
+                                    : r.strength['provisional'] == true
+                                        ? '${fitnessText(context, r.strengthTitle)} · ${fitnessText(context, 'Provisional')}'
+                                        : r.strengthTitle,
                                 style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600,
@@ -1020,13 +1080,17 @@ class _MuscleDetailState extends State<_MuscleDetail> {
                       ])),
                   children: [
                     FitnessText(
-                        r.strength['reason'] as String? ??
-                            'A level appears when enough supported lifts are logged.',
+                        r.completedSets == 0
+                            ? 'No direct sets in this period'
+                            : r.strength['reason'] as String? ??
+                                'A level appears when enough supported lifts are logged.',
                         style: const TextStyle(
                             fontSize: 13,
                             height: 1.5,
                             color: FitnessTheme.muted)),
-                    for (final exercise in r.rankedExercises)
+                    for (final exercise in r.completedSets > 0
+                        ? r.rankedExercises
+                        : <Map<String, dynamic>>[])
                       ListTile(
                           contentPadding: EdgeInsets.zero,
                           onTap: () =>

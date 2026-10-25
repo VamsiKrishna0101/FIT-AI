@@ -39,7 +39,8 @@ class TrainingDay {
   int get estimatedMinutes => items.isEmpty
       ? 0
       : (items.fold<int>(
-                  0,
+                  (json['warmup']?['durationMinutes'] as num? ?? 0).toInt() *
+                      60,
                   (seconds, item) =>
                       seconds +
                       item.targetSets * 45 +

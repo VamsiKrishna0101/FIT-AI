@@ -126,13 +126,16 @@ void main() {
     expect(find.text('Body'), findsNothing);
     await tester.tap(find.text(fitnessCopyData['de']!['Physique']!));
     await tester.pumpAndSettle();
-    expect(find.text(fitnessCopyData['de']!['Photo scan']!), findsOneWidget);
+    await tester.scrollUntilVisible(
+        find.text(fitnessCopyData['de']!['Photo review']!), 200,
+        scrollable: find.byType(Scrollable).last);
+    expect(find.text(fitnessCopyData['de']!['Photo review']!), findsOneWidget);
     await LanguageManager.shared.selectLanguage(AppLanguage.france);
     await tester.pumpWidget(_app(
         BodyView(repository: repository, onTrain: () {}), AppLanguage.france));
     await tester.pumpAndSettle();
     expect(find.text(fitnessCopyData['fr']!['Body']!), findsOneWidget);
-    expect(find.text(fitnessCopyData['fr']!['Photo scan']!), findsOneWidget);
+    expect(find.text(fitnessCopyData['fr']!['Photo review']!), findsOneWidget);
     expect(
         tester
             .widget<AnimatedTabStack>(find.byType(AnimatedTabStack).first)

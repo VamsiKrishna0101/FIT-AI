@@ -1,17 +1,14 @@
 import '../viewmodels/onboarding_controller.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/components/fit_toast.dart';
-import '../../../core/localization/app_language.dart';
-import '../../../core/localization/fitness_copy.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/about_you_controls.dart';
 import '../components/biometric_ruler_card.dart';
-import '../components/experience_card.dart';
 import '../components/onboarding_scaffold.dart';
+import '../components/training_hero.dart';
+import '../components/onboarding_focus_body.dart';
 import '../models/experience_level.dart';
 import '../viewmodels/about_you_viewmodel.dart';
 import 'schedule_location_view.dart';
@@ -29,6 +26,7 @@ class AboutYouExperienceView extends StatefulWidget {
 
 class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   bool _advancing = false;
+  int _part = 0;
   late final AboutYouViewModel _viewModel;
   late final TextEditingController _nameController;
   String _selectedMetric = 'weight';
@@ -66,26 +64,21 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   }
 
   void _onBack() {
-    Navigator.of(context).pop();
+    if (_part > 0) {
+      setState(() => _part--);
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   void _onContinue() async {
     if (_advancing) return;
-    final language = _viewModel.selectedLanguage;
-    if (!_viewModel.isValid) {
-      HapticFeedback.mediumImpact();
-      final String msg = _viewModel.name.trim().length < 2
-          ? language.nameValidationPrompt
-          : 'Please pick your experience level to continue.';
-      FitToast.show(
-        context,
-        message: msg,
-        icon: _viewModel.name.trim().length < 2
-            ? CupertinoIcons.person
-            : CupertinoIcons.sparkles,
-      );
+    if (_part < 3) {
+      FocusScope.of(context).unfocus();
+      setState(() => _part++);
       return;
     }
+    if (!_viewModel.isValid) return;
 
     setState(() => _advancing = true);
     try {
@@ -106,107 +99,141 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   @override
   Widget build(BuildContext context) {
     final language = _viewModel.selectedLanguage;
-    final selectedExperience = _viewModel.selectedExperience;
-
+    final titles = [
+      'Let’s make it yours.',
+      'A little about you',
+      'Your starting point',
+      language.experienceSectionTitle,
+    ];
+    final subtitles = [
+      language.namePlaceholder,
+      'This helps personalize your experience.',
+      'Confirm your age, height, weight and target.',
+      'Choose the description that feels most like you.',
+    ];
     return OnboardingScaffold(
       step: _viewModel.currentStep,
       totalSteps: _viewModel.totalSteps,
-      title: language.headlineAboutYou,
-      subtitle: 'A few details to build a plan around you.',
+      sectionLabel: 'About you',
+      part: _part,
+      parts: 4,
+      canPop: _part == 0,
+      title: titles[_part],
+      subtitle: subtitles[_part],
       actionTitle: language.continueButtonTitle,
       loading: _advancing,
       onBack: _onBack,
-      onContinue: _onContinue,
+      onContinue: !_viewModel.controller.ready ||
+              (_part == 0 && _viewModel.name.trim().length < 2)
+          ? null
+          : _onContinue,
       children: [
-        // ── SECTION 1: ABOUT YOU ─────────────────────────────
-        // Name Input (Zero icons, Apple liquid glass)
-        LiquidNameInput(
-          controller: _nameController,
-          label: language.nameLabel,
-          placeholder: language.namePlaceholder,
-          onChanged: _viewModel.setName,
-        ),
-
-        const SizedBox(height: 16),
-        // Full-Width Apple Gender Selector (Male / Female)
-        AppleGenderSelector(
-          selectedGender: _viewModel.gender,
-          maleLabel: language.genderMale,
-          femaleLabel: language.genderFemale,
-          onSelected: _viewModel.setGender,
-        ),
-
-        const SizedBox(height: 24),
-
-        // ── BIOMETRICS SECTION WITH APPLE UNIT SWITCHER ──────
-        BiometricsHeaderWithUnits(
-          title: language.biometricsSectionTitle,
-          isImperial: _viewModel.isImperial,
-          imperialLabel: language.unitImperialLabel,
-          metricLabel: language.unitMetricLabel,
-          onUnitChanged: _viewModel.setImperial,
-        ),
-
-        const SizedBox(height: 10),
-
-        _biometrics(),
-
-        const SizedBox(height: 28),
-
-        // ── SECTION 2: YOUR EXPERIENCE (Text-only header, no stars) ──
-        FitnessText(
-          language.experienceSectionTitle.toUpperCase(),
-          style: const TextStyle(
-            fontFamily: null,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: Color(0xFF8E8E93),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Selection feedback stays local; the route owns the page transition.
-        ...List.generate(ExperienceLevel.values.length, (index) {
-          final level = ExperienceLevel.values[index];
-          return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ExperienceCard(
-                level: level,
-                title: language.experienceTitle(level),
-                subtitle: language.experienceSubtitle(level),
-                isSelected: selectedExperience == level,
-                onTap: () => _viewModel.selectExperience(level),
-              ));
-        }),
-
-        DropdownButtonFormField<String>(
-          key: const ValueKey('onboarding-country'),
-          initialValue: appCountries.containsKey(_viewModel.countryCode)
-              ? _viewModel.countryCode
-              : 'ZZ',
-          isExpanded: true,
-          dropdownColor: const Color(0xFF242424),
-          decoration: InputDecoration(
-            labelText: fitnessText(context, 'Country'),
-            helperText: fitnessText(
-                context, 'Your country helps us suggest practical foods.'),
-            helperMaxLines: 2,
-          ),
-          items: appCountries.entries
-              .map((country) => DropdownMenuItem(
-                    value: country.key,
-                    child: FitnessText(country.value),
-                  ))
-              .toList(),
-          onChanged: (value) {
-            if (value != null) _viewModel.setCountry(value);
-          },
-        ),
-        const SizedBox(height: 16),
+        if (_part == 0)
+          LiquidNameInput(
+              controller: _nameController,
+              label: language.nameLabel,
+              placeholder: language.namePlaceholder,
+              onChanged: (value) {
+                final valid = _viewModel.name.trim().length >= 2;
+                _viewModel.setName(value);
+                if (valid != (_viewModel.name.trim().length >= 2)) {
+                  setState(() {});
+                }
+              }),
+        if (_part == 1) ...[
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            for (final gender in ['MALE', 'FEMALE'])
+              Expanded(
+                  child: _genderChoice(
+                      gender,
+                      gender == 'MALE'
+                          ? language.genderMale
+                          : language.genderFemale)),
+          ]),
+        ],
+        if (_part == 2) ...[
+          BiometricsHeaderWithUnits(
+              title: language.biometricsSectionTitle,
+              isImperial: _viewModel.isImperial,
+              imperialLabel: language.unitImperialLabel,
+              metricLabel: language.unitMetricLabel,
+              onUnitChanged: _viewModel.setImperial),
+          const SizedBox(height: 16),
+          _biometrics(),
+        ],
+        if (_part == 3)
+          for (final level in ExperienceLevel.values)
+            Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OnboardingChoice(
+                    title: language.experienceTitle(level),
+                    subtitle: language.experienceSubtitle(level),
+                    selected: _viewModel.selectedExperience == level,
+                    onTap: () => _viewModel.selectExperience(level))),
+        if (_part == 3) ...[
+          const SizedBox(height: 8),
+          OnboardingContextNote(
+              title: 'The right starting point matters.',
+              detail: switch (_viewModel.selectedExperience) {
+                ExperienceLevel.beginner =>
+                  'Your experience helps us choose approachable exercises and a manageable starting workload.',
+                ExperienceLevel.intermediate =>
+                  'Your plan can build on movements you know, with a clear structure for progressing.',
+                ExperienceLevel.advanced =>
+                  'Your experience helps guide exercise selection, workload and progression.',
+                null =>
+                  'Choose your experience so your plan starts at the right level for you.',
+              }),
+        ],
       ],
     );
+  }
+
+  Widget _genderChoice(String gender, String label) {
+    final selected = _viewModel.gender == gender;
+    return Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+                key: ValueKey('onboarding-gender-$gender'),
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => _viewModel.setGender(gender),
+                child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(children: [
+                      Opacity(
+                          opacity: selected ? 1 : .38,
+                          child: SizedBox(
+                              height: ((MediaQuery.sizeOf(context).width - 80) /
+                                      2 *
+                                      2.2)
+                                  .clamp(240.0, 360.0),
+                              child: Image.asset(
+                                  onboardingBodyAsset(
+                                      female: gender == 'FEMALE'),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 500,
+                                  excludeFromSemantics: true))),
+                      const SizedBox(height: 20),
+                      Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                              color: selected
+                                  ? FitnessTheme.silver
+                                  : FitnessTheme.surface,
+                              borderRadius: BorderRadius.circular(30)),
+                          child: FitnessText(label,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color:
+                                      selected ? Colors.black : Colors.white))),
+                    ])))));
   }
 
   Widget _biometrics() {

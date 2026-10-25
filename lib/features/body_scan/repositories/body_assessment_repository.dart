@@ -7,12 +7,14 @@ import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_session_store.dart';
 import '../models/body_assessment_models.dart';
 import '../models/training_map_models.dart';
+import '../models/planned_physique_models.dart';
 
 class BodyAssessmentRepository {
   static final shared = BodyAssessmentRepository();
   Future<Map<String, dynamic>> _read(String path,
           {String bucket = 'body', Map<String, dynamic>? query}) =>
-      UserDataCache.shared.load(bucket, 'v2:$path:${query.toString()}',
+      UserDataCache.shared.load(bucket,
+          '${bucket == 'training_map' ? 'v3' : 'v2'}:$path:${query.toString()}',
           () async {
         await _requireSession();
         final response = await ApiClient.shared
@@ -40,14 +42,25 @@ class BodyAssessmentRepository {
     final data =
         await _read('/api/heatmap/training', bucket: 'training_map', query: {
       'date': CacheScope.todayKey(date ?? DateTime.now()),
-      'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
-      if (daily) 'period': 'day',
+      'utcOffsetMinutes': (date ?? DateTime.now()).timeZoneOffset.inMinutes,
+      'period': daily ? 'day' : 'week',
     });
     return TrainingMapData.fromJson(data);
   }
 
   Future<BodyOverview> load() async {
     return BodyOverview.fromJson(await _read('/api/body', bucket: 'body_real'));
+  }
+
+  Future<PlannedPhysiqueData> plannedPhysique({DateTime? date}) async {
+    await _requireSession();
+    // Plan edits must be visible immediately when returning from a workout.
+    final response = await ApiClient.shared
+        .get<Map<String, dynamic>>('/api/heatmap/plan', queryParameters: {
+      'date': CacheScope.todayKey(date ?? DateTime.now()),
+      'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
+    });
+    return PlannedPhysiqueData.fromJson(response.data!);
   }
 
   Future<Map<String, dynamic>> history(
@@ -90,6 +103,16 @@ class BodyAssessmentRepository {
     await invalidate();
   }
 
+  Future<BodyAssessment> updateReadings(
+      BodyAssessment entry, Map<String, dynamic> readings) async {
+    await _requireSession();
+    final response = await ApiClient.shared.patch<Map<String, dynamic>>(
+        '/api/body/entries/${entry.id}/readings',
+        data: {'expectedUpdatedAt': entry.updatedAt, 'readings': readings});
+    await invalidate();
+    return BodyAssessment.fromJson(response.data!);
+  }
+
   Future<BodyAssessment> deletePhotos(String id) async {
     await _requireSession();
     final response = await ApiClient.shared
@@ -111,7 +134,7 @@ class BodyAssessmentRepository {
               'expectedUpdatedAt': entry.updatedAt,
               'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
               'consentToVisualCoaching':
-                  entry.visualCoachingConsent && entry.photos.length == 4
+                  entry.visualCoachingConsent && entry.photos.isNotEmpty
             },
             options: Options(receiveTimeout: const Duration(seconds: 180)));
     if (cancelled() || await CacheScope.userId() != owner) {

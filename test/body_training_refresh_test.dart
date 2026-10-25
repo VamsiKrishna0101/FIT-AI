@@ -13,6 +13,120 @@ import 'package:fitai_mobile/features/train/repositories/training_repository.dar
 import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
 
 void main() {
+  testWidgets(
+      'Empty day is grey even when an older response includes strength ranks',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    final json =
+        jsonDecode(File('test/fixtures/training_map.json').readAsStringSync())
+            as Map<String, dynamic>;
+    json['summary'] = {'loggedSets': 0, 'trainedMuscles': 0, 'sessions': 0};
+    for (final region in json['regions'] as List) {
+      region['completedSets'] = 0;
+      region['strength'] = {
+        'tier': 5,
+        'title': 'Elite',
+        'provisional': true,
+        'exercises': []
+      };
+    }
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: TrainingMapDashboard(
+      data: TrainingMapData.fromJson(json),
+      daily: true,
+      onRefresh: () async {},
+      onCheckIn: (_, __) async {},
+      onTrain: () {},
+      onPreferences: () {},
+      onProfile: () {},
+    ))));
+    await tester.pumpAndSettle();
+    final map = tester
+        .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
+    expect(map.colors.values.every((color) => color == const Color(0xFF606060)),
+        isTrue);
+    expect(find.byKey(const ValueKey('body-period-empty')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('body-strength-provisional')), findsNothing);
+    map.onSelected('chest');
+    await tester.pumpAndSettle();
+    expect(find.text('No direct sets in this period'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Day/week transitions clear previous totals and filtered failures never restore old results',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    final today = DateUtils.dateOnly(DateTime.now());
+    final dayResult = Completer<TrainingMapData>();
+    var fail = false;
+    Future<TrainingMapData> load(DateTime date, bool daily) async {
+      if (fail) throw StateError('Offline');
+      if (daily) return dayResult.future;
+      return TrainingMapData.fromJson({
+        'date': CacheScope.todayKey(date),
+        'weekStart': CacheScope.todayKey(date),
+        'regions': [],
+        'summary': {'loggedSets': 18, 'trainedMuscles': 2, 'sessions': 2}
+      });
+    }
+
+    await tester.pumpWidget(
+        MaterialApp(home: BodyTrainingView(onTrain: () {}, loadMap: load)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Day'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+        tester
+            .widget<TrainingMapDashboard>(find.byType(TrainingMapDashboard))
+            .data,
+        isNull);
+    dayResult.complete(TrainingMapData.fromJson({
+      'date': CacheScope.todayKey(today),
+      'weekStart': CacheScope.todayKey(today),
+      'regions': [],
+      'summary': {'loggedSets': 0, 'trainedMuscles': 0, 'sessions': 0}
+    }));
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<TrainingMapDashboard>(find.byType(TrainingMapDashboard))
+            .data!
+            .summary['loggedSets'],
+        0);
+    await tester.tap(find.text('Week'));
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<TrainingMapDashboard>(find.byType(TrainingMapDashboard))
+            .data!
+            .summary['loggedSets'],
+        18);
+    fail = true;
+    await tester.tap(find.text('Yesterday'));
+    await tester.pumpAndSettle();
+    final dashboard =
+        tester.widget<TrainingMapDashboard>(find.byType(TrainingMapDashboard));
+    expect(dashboard.failed, isTrue);
+    expect(dashboard.data, isNull);
+    fail = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<TrainingMapDashboard>(find.byType(TrainingMapDashboard))
+            .data!
+            .date,
+        CacheScope.todayKey(DateTime(today.year, today.month, today.day - 1)));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('Training filters load the chosen date and ignore late responses',
       (tester) async {
     SharedPreferences.setMockInitialValues({});

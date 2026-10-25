@@ -10,15 +10,21 @@ import 'onboarding_chrome.dart';
 /// One scrollable content region and one reachable action across every step.
 class OnboardingScaffold extends StatelessWidget {
   final int step, totalSteps;
-  final String title, subtitle, actionTitle;
+  final String title, subtitle, actionTitle, sectionLabel;
   final List<Widget> children;
   final VoidCallback? onBack, onContinue;
   final bool loading;
   final bool showProgress;
+  final int part, parts;
+  final bool canPop;
   final String? footer;
+  final String? actionMessage;
+  final Widget? secondaryAction;
+  final Widget? header;
   const OnboardingScaffold(
       {super.key,
       required this.step,
+      required this.sectionLabel,
       this.totalSteps = 8,
       required this.title,
       required this.subtitle,
@@ -28,6 +34,12 @@ class OnboardingScaffold extends StatelessWidget {
       this.onContinue,
       this.loading = false,
       this.showProgress = true,
+      this.part = 0,
+      this.parts = 1,
+      this.canPop = true,
+      this.secondaryAction,
+      this.header,
+      this.actionMessage,
       this.footer});
   @override
   Widget build(BuildContext context) => FitnessTheme(
@@ -38,70 +50,115 @@ class OnboardingScaffold extends StatelessWidget {
               statusBarBrightness: Brightness.dark,
               systemNavigationBarColor: FitnessTheme.canvas,
               systemNavigationBarIconBrightness: Brightness.light),
-          child: Scaffold(
-            backgroundColor: FitnessTheme.canvas,
-            resizeToAvoidBottomInset: true,
-            body: SafeArea(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                  if (showProgress)
-                    OnboardingTopBar(
-                        currentStep: step,
-                        totalSteps: totalSteps,
-                        onBack: onBack)
-                  else
-                    Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                        child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: onBack == null
-                                ? const SizedBox(height: 44)
-                                : OnboardingBackButton(onPressed: onBack!))),
-                  Expanded(
-                      child: ListView(
-                          key: const ValueKey('onboarding-scroll'),
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                          children: [
-                        FitnessText(title,
-                            style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -.8,
-                                height: 1.12)),
-                        const SizedBox(height: 9),
-                        FitnessText(subtitle,
-                            style: const TextStyle(
-                                fontSize: 14,
-                                color: FitnessTheme.muted,
-                                height: 1.45)),
-                        const SizedBox(height: 24),
-                        ...children
-                      ])),
-                  Container(
-                      decoration: const BoxDecoration(
-                          color: FitnessTheme.canvas,
-                          border: Border(
-                              top: BorderSide(color: Color(0x0FFFFFFF)))),
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                      child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        LiquidChromeButton(
-                            title: actionTitle,
-                            onPressed: onContinue,
-                            isLoading: loading),
-                        if (footer != null &&
-                            MediaQuery.viewInsetsOf(context).bottom == 0) ...[
-                          const SizedBox(height: 10),
-                          FitnessText(footer!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 11, color: FitnessTheme.muted))
-                        ],
-                      ])),
-                ])),
-          )));
+          child: PopScope(
+              canPop: canPop,
+              onPopInvokedWithResult: (didPop, result) {
+                if (!didPop) onBack?.call();
+              },
+              child: Scaffold(
+                backgroundColor: FitnessTheme.canvas,
+                resizeToAvoidBottomInset: true,
+                body: SafeArea(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                      if (showProgress)
+                        OnboardingTopBar(
+                            currentStep: step,
+                            totalSteps: totalSteps,
+                            sectionLabel: sectionLabel,
+                            part: part,
+                            parts: parts,
+                            onBack: onBack)
+                      else
+                        Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                            child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: onBack == null
+                                    ? const SizedBox(height: 44)
+                                    : OnboardingBackButton(
+                                        onPressed: onBack!))),
+                      Expanded(
+                          child: KeyedSubtree(
+                              key: ValueKey('onboarding-page-$step-$part'),
+                              child: ListView(
+                                  key: const ValueKey('onboarding-scroll'),
+                                  keyboardDismissBehavior:
+                                      ScrollViewKeyboardDismissBehavior.onDrag,
+                                  padding:
+                                      const EdgeInsets.fromLTRB(24, 32, 24, 28),
+                                  children: [
+                                    if (header != null) ...[
+                                      header!,
+                                      const SizedBox(height: 24)
+                                    ],
+                                    if (sectionLabel.isNotEmpty) ...[
+                                      FitnessText(sectionLabel,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              letterSpacing: 1.6,
+                                              color: Color(0xFF969696),
+                                              fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 13),
+                                    ],
+                                    FitnessText(title,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: -.8,
+                                            height: 1.18)),
+                                    if (subtitle.isNotEmpty) ...[
+                                      const SizedBox(height: 14),
+                                      FitnessText(subtitle,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              color: FitnessTheme.muted,
+                                              height: 1.45)),
+                                    ],
+                                    const SizedBox(height: 28),
+                                    ...children
+                                  ]))),
+                      Container(
+                          decoration:
+                              const BoxDecoration(color: FitnessTheme.canvas),
+                          padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                          child:
+                              Column(mainAxisSize: MainAxisSize.min, children: [
+                            if (actionMessage != null) ...[
+                              Semantics(
+                                  liveRegion: true,
+                                  child: FitnessText(actionMessage!,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          height: 1.4,
+                                          color: Color(0xFFE0B7B7)))),
+                              const SizedBox(height: 10),
+                            ],
+                            LiquidChromeButton(
+                                pill: true,
+                                solid: true,
+                                showArrow: false,
+                                title: actionTitle,
+                                onPressed: onContinue,
+                                isLoading: loading),
+                            if (secondaryAction != null) secondaryAction!,
+                            if (footer != null &&
+                                MediaQuery.viewInsetsOf(context).bottom ==
+                                    0) ...[
+                              const SizedBox(height: 10),
+                              FitnessText(footer!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontSize: 11, color: FitnessTheme.muted))
+                            ],
+                          ])),
+                    ])),
+              ))));
 }
 
 class OnboardingChoice extends StatelessWidget {
@@ -109,10 +166,12 @@ class OnboardingChoice extends StatelessWidget {
   final String? subtitle;
   final bool selected;
   final VoidCallback onTap;
+  final Widget? leading;
   const OnboardingChoice(
       {super.key,
       required this.title,
       this.subtitle,
+      this.leading,
       required this.selected,
       required this.onTap});
   @override
@@ -122,13 +181,13 @@ class OnboardingChoice extends StatelessWidget {
       child: MotionPress(
           child: Material(
               animationDuration: DSMotion.duration(context, DSMotion.selection),
-              color: selected ? const Color(0xFF292929) : FitnessTheme.surface,
+              color: selected ? const Color(0xFFF4F4F4) : FitnessTheme.surface,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(20),
                   side: BorderSide(
                       color: selected
-                          ? const Color(0xFFBCBCBC)
-                          : Colors.transparent,
+                          ? const Color(0xFFF4F4F4)
+                          : const Color(0xFF303030),
                       width: .8)),
               child: InkWell(
                 splashFactory: NoSplash.splashFactory,
@@ -140,23 +199,31 @@ class OnboardingChoice extends StatelessWidget {
                 },
                 child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                        horizontal: 20, vertical: 20),
                     child: Row(children: [
+                      if (leading != null) ...[
+                        leading!,
+                        const SizedBox(width: 16)
+                      ],
                       Expanded(
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                             FitnessText(title,
-                                style: const TextStyle(
-                                    fontSize: 15,
+                                style: TextStyle(
+                                    color:
+                                        selected ? Colors.black : Colors.white,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w500,
                                     letterSpacing: -.2)),
                             if (subtitle != null) ...[
                               const SizedBox(height: 5),
                               FitnessText(subtitle!,
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: FitnessTheme.muted,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: selected
+                                          ? const Color(0xFF4B4B4B)
+                                          : FitnessTheme.muted,
                                       height: 1.4))
                             ],
                           ])),
@@ -167,7 +234,7 @@ class OnboardingChoice extends StatelessWidget {
                                   ? Icons.check_circle
                                   : Icons.circle_outlined,
                               color: selected
-                                  ? FitnessTheme.silver
+                                  ? Colors.black
                                   : const Color(0xFF606060),
                               key: ValueKey(selected),
                               size: 20))

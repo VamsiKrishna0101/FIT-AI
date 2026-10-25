@@ -1,7 +1,9 @@
 import '../../onboarding/viewmodels/onboarding_controller.dart';
 import '../../../core/theme/ds_motion.dart';
-import '../../../core/theme/ds_colors.dart';
+import '../../../core/theme/fitness_theme.dart';
+import '../../../core/branding/setcraft_brand.dart';
 import 'dart:async';
+import 'package:dio/dio.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,17 +11,28 @@ import 'package:flutter/services.dart';
 import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
-import '../../../core/navigation/authenticated_home.dart';
+import '../../../core/navigation/prepare_authenticated_home.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../../../models/auth_models.dart';
-import '../../onboarding/components/onboarding_scaffold.dart';
+import '../../../core/localization/fitness_text.dart';
+import '../../../core/storage/secure_session_store.dart';
 import '../auth_copy.dart';
 import '../data/auth_repository.dart';
+import '../data/social_sign_in.dart';
 
 class AuthView extends StatefulWidget {
   final bool initialSignIn;
   final OnboardingController? controller;
-  const AuthView({super.key, this.initialSignIn = false, this.controller});
+  final AuthRepository? repository;
+  final SocialSignIn? socialSignIn;
+  final Future<Widget> Function(bool newlyRegistered)? prepareHome;
+  const AuthView(
+      {super.key,
+      this.initialSignIn = false,
+      this.controller,
+      this.repository,
+      this.socialSignIn,
+      this.prepareHome});
 
   @override
   State<AuthView> createState() => _AuthViewState();
@@ -30,11 +43,15 @@ class _AuthViewState extends State<AuthView> {
   final _passwordController = TextEditingController();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
-  final _repository = AuthRepository();
+  late final _repository = widget.repository ?? AuthRepository();
+  late final _social = widget.socialSignIn ?? SocialSignIn();
 
   late bool _isSignIn = widget.initialSignIn;
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
+  bool _navigating = false;
+  int _credentialRevision = 0;
+  _PendingAccountEntry? _pendingAccount;
   String? _errorMessage;
 
   AuthCopy get _copy =>
@@ -55,6 +72,7 @@ class _AuthViewState extends State<AuthView> {
 
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
+    final credentialRevision = _credentialRevision;
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
       setState(() => _errorMessage = _copy.invalidEmail);
       return;
@@ -70,9 +88,17 @@ class _AuthViewState extends State<AuthView> {
     });
 
     try {
-      if (_isSignIn) {
-        await _repository.signIn(email: email, password: password);
-        if (mounted) _openApp();
+      if (await _resumeAccountEntry()) return;
+      final previousEntry = _pendingAccount;
+      if (_isSignIn || previousEntry?.newlyRegistered == true) {
+        if (!_isSignIn) setState(() => _isSignIn = true);
+        final auth = await _repository.signIn(email: email, password: password);
+        _pendingAccount = _PendingAccountEntry(auth.user.id, credentialRevision,
+            newlyRegistered: previousEntry?.owner == auth.user.id &&
+                previousEntry?.newlyRegistered == true,
+            profileCommitted: previousEntry?.owner == auth.user.id &&
+                previousEntry?.profileCommitted == true);
+        if (mounted) await _finishAccountEntry(_pendingAccount!);
         return;
       }
 
@@ -107,111 +133,330 @@ class _AuthViewState extends State<AuthView> {
           },
         ),
       );
-      if (result != null && mounted) _openApp(newlyRegistered: true);
+      if (result != null && mounted) {
+        _pendingAccount = _PendingAccountEntry(
+            result.user.id, credentialRevision,
+            newlyRegistered: true, profileCommitted: true);
+        await _finishAccountEntry(_pendingAccount!);
+      }
     } catch (error) {
+      _invalidateEntrySession(error);
       if (mounted) {
         setState(() => _errorMessage = AuthRepository.messageFor(error));
       }
     } finally {
-      if (mounted && _isSubmitting) setState(() => _isSubmitting = false);
+      if (mounted && _isSubmitting && !_navigating) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
-  void _openApp({bool newlyRegistered = false}) {
-    Navigator.of(context).pushAndRemoveUntil<void>(
-      OnboardingPageRoute<void>(
-          page: authenticatedHome(newlyRegistered: newlyRegistered)),
-      (route) => false,
-    );
+  void _credentialsChanged(String _) {
+    _credentialRevision++;
+    _pendingAccount = null;
   }
 
-  void _showProviderMessage() {
-    HapticFeedback.selectionClick();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(_copy.comingSoon),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF222222),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+  Future<bool> _resumeAccountEntry({SocialProvider? provider}) async {
+    final pending = _pendingAccount;
+    if (pending == null ||
+        pending.requiresAuthentication ||
+        pending.provider != provider ||
+        pending.credentialRevision != _credentialRevision ||
+        await SecureSessionStore.shared.userId != pending.owner ||
+        (await SecureSessionStore.shared.accessToken)?.isNotEmpty != true) {
+      return false;
+    }
+    await _finishAccountEntry(pending);
+    return true;
+  }
+
+  Future<void> _finishAccountEntry(_PendingAccountEntry pending) async {
+    if (await SecureSessionStore.shared.userId != pending.owner) {
+      throw const AuthFlowException(
+          'Your session changed. Please sign in again.');
+    }
+    if (!pending.profileCommitted && widget.controller != null) {
+      await widget.controller!.flush();
+      await _repository.completeMissingProfile(widget.controller!.draft);
+      widget.controller!.finish();
+    }
+    pending.profileCommitted = true;
+    if (mounted) await _openApp(newlyRegistered: pending.newlyRegistered);
+  }
+
+  void _invalidateEntrySession(Object error) {
+    if (error is DioException && error.response?.statusCode == 401) {
+      _pendingAccount?.requiresAuthentication = true;
+    }
+  }
+
+  Future<void> _openApp({bool newlyRegistered = false}) async {
+    setState(() => _isSubmitting = true);
+    final destination = await (widget.prepareHome?.call(newlyRegistered) ??
+        prepareAuthenticatedHome(
+            newlyRegistered: newlyRegistered, auth: _repository));
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil<void>(
+      OnboardingPageRoute<void>(page: destination),
+      (route) => false,
+    );
+    _navigating = true;
   }
 
   void _toggleMode() {
     setState(() {
       _isSignIn = !_isSignIn;
+      _pendingAccount = null;
       _errorMessage = null;
     });
+  }
+
+  Future<void> _continueWithProvider(SocialProvider provider) async {
+    if (_isSubmitting || !_social.available(provider)) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      if (await _resumeAccountEntry(provider: provider)) return;
+      final token = await _social.authenticate(provider);
+      if (token == null || !mounted) return;
+      final auth = await _repository.exchangeSocialToken(token);
+      _pendingAccount = _PendingAccountEntry(auth.user.id, _credentialRevision,
+          provider: provider);
+      if (mounted) await _finishAccountEntry(_pendingAccount!);
+    } catch (error) {
+      _invalidateEntrySession(error);
+      if (mounted) {
+        setState(() => _errorMessage = error is StateError
+            ? 'Sign-in is unavailable right now — continue with email'
+            : AuthRepository.messageFor(error));
+      }
+    } finally {
+      if (mounted && !_navigating) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final copy = _copy;
-
-    return OnboardingScaffold(
-      step: 8,
-      title: copy.title(_isSignIn),
-      subtitle: copy.subtitle,
-      actionTitle: _isSignIn
-          ? copy.signInTitle
-          : LanguageManager.shared.currentLanguage.continueButtonTitle,
-      onBack: () => Navigator.of(context).maybePop(),
-      loading: _isSubmitting,
-      onContinue: _isSubmitting ? null : _continue,
-      children: [
-        _AppleSignInButton(
-          title: copy.continueApple,
-          onTap: _showProviderMessage,
-        ),
-        const SizedBox(height: 10),
-        _GoogleSignInButton(
-          title: copy.continueGoogle,
-          onTap: _showProviderMessage,
-        ),
-        const SizedBox(height: 22),
-        _OrDivider(label: copy.or),
-        const SizedBox(height: 20),
-        _LuxuryEmailField(
-          controller: _emailController,
-          focusNode: _emailFocus,
-          label: copy.email,
-          onSubmitted: (_) => _passwordFocus.requestFocus(),
-        ),
-        const SizedBox(height: 12),
-        _LuxuryPasswordField(
-          controller: _passwordController,
-          focusNode: _passwordFocus,
-          label: copy.password,
-          hint: copy.passwordHint,
-          isSignIn: _isSignIn,
-          isPasswordVisible: _isPasswordVisible,
-          onToggleVisibility: () => setState(
-            () => _isPasswordVisible = !_isPasswordVisible,
-          ),
-          onSubmitted: (_) => _continue(),
-        ),
-        if (_errorMessage != null) ...[
-          const SizedBox(height: 12),
-          _InlineError(message: _errorMessage!),
-        ],
-        const SizedBox(height: 18),
-        Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _isSubmitting ? null : _toggleMode,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              child: _buildAuthModeSwitcher(copy),
-            ),
-          ),
-        ),
-      ],
-    );
+    final apple = _social.available(SocialProvider.apple);
+    final google = _social.available(SocialProvider.google);
+    return FitnessTheme(
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: PopScope(
+          canPop: !_isSubmitting,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            resizeToAvoidBottomInset: false,
+            body: Stack(fit: StackFit.expand, children: [
+              const ColoredBox(
+                  key: ValueKey('auth-background'), color: Colors.black),
+              SafeArea(
+                  child: Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.viewInsetsOf(context).bottom),
+                child: Column(children: [
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                          padding: const EdgeInsets.only(left: 12, top: 4),
+                          child: IconButton(
+                              tooltip: MaterialLocalizations.of(context)
+                                  .backButtonTooltip,
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () => Navigator.of(context).maybePop(),
+                              icon: const Icon(Icons.arrow_back_rounded,
+                                  color: Colors.white)))),
+                  Expanded(
+                      child: LayoutBuilder(
+                          builder: (context, constraints) =>
+                              SingleChildScrollView(
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
+                                padding:
+                                    const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                      minHeight: (constraints.maxHeight - 40)
+                                          .clamp(0, double.infinity)),
+                                  child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              ExcludeSemantics(
+                                                  child:
+                                                      SetcraftMark(size: 34)),
+                                              SizedBox(width: 9),
+                                              Text('SETCRAFT',
+                                                  textScaler:
+                                                      TextScaler.noScaling,
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.white,
+                                                      letterSpacing: 2.6)),
+                                            ]),
+                                        const SizedBox(height: 30),
+                                        Text(copy.title(_isSignIn),
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                                fontSize: 30,
+                                                height: 1.15,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: -.9,
+                                                color: Colors.white)),
+                                        const SizedBox(height: 10),
+                                        const FitnessText(
+                                            'Your plan, your progress, together',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                height: 1.5,
+                                                color: Color(0xFF999999))),
+                                        const SizedBox(height: 30),
+                                        AutofillGroup(
+                                            child: Column(children: [
+                                          _LuxuryEmailField(
+                                              controller: _emailController,
+                                              focusNode: _emailFocus,
+                                              readOnly: _isSubmitting,
+                                              onChanged: _credentialsChanged,
+                                              label: copy.email,
+                                              onSubmitted: (_) => _passwordFocus
+                                                  .requestFocus()),
+                                          const SizedBox(height: 12),
+                                          _LuxuryPasswordField(
+                                              controller: _passwordController,
+                                              focusNode: _passwordFocus,
+                                              readOnly: _isSubmitting,
+                                              onChanged: _credentialsChanged,
+                                              label: copy.password,
+                                              hint: copy.passwordHint,
+                                              isSignIn: _isSignIn,
+                                              isPasswordVisible:
+                                                  _isPasswordVisible,
+                                              onToggleVisibility: () =>
+                                                  setState(() =>
+                                                      _isPasswordVisible =
+                                                          !_isPasswordVisible),
+                                              onSubmitted: (_) => _continue()),
+                                        ])),
+                                        const SizedBox(height: 20),
+                                        if (_errorMessage != null) ...[
+                                          Semantics(
+                                              liveRegion: true,
+                                              child: _InlineError(
+                                                  message: _errorMessage!)),
+                                          const SizedBox(height: 14),
+                                        ],
+                                        LiquidChromeButton(
+                                            title: _isSubmitting
+                                                ? (_isSignIn
+                                                    ? 'Signing in'
+                                                    : 'Creating account')
+                                                : _isSignIn
+                                                    ? 'Sign in'
+                                                    : LanguageManager
+                                                        .shared
+                                                        .currentLanguage
+                                                        .continueButtonTitle,
+                                            solid: true,
+                                            pill: true,
+                                            showArrow: false,
+                                            isLoading: _isSubmitting,
+                                            onPressed: _isSubmitting
+                                                ? null
+                                                : _continue),
+                                        const SizedBox(height: 12),
+                                        TextButton(
+                                            onPressed: _isSubmitting
+                                                ? null
+                                                : _toggleMode,
+                                            child:
+                                                _buildAuthModeSwitcher(copy)),
+                                        Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 18),
+                                            child: Row(children: [
+                                              const Expanded(
+                                                  child: Divider(
+                                                      color:
+                                                          Color(0xFF292929))),
+                                              Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 14),
+                                                  child: Text(copy.or,
+                                                      style: const TextStyle(
+                                                          color:
+                                                              Color(0xFF777777),
+                                                          fontSize: 12))),
+                                              const Expanded(
+                                                  child: Divider(
+                                                      color:
+                                                          Color(0xFF292929))),
+                                            ])),
+                                        Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                  child: _ProviderButton(
+                                                      key: const ValueKey(
+                                                          'auth-apple'),
+                                                      title: copy.continueApple,
+                                                      apple: true,
+                                                      configured: apple,
+                                                      onPressed: _isSubmitting
+                                                          ? null
+                                                          : () =>
+                                                              _continueWithProvider(
+                                                                  SocialProvider
+                                                                      .apple))),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                  child: _ProviderButton(
+                                                      key: const ValueKey(
+                                                          'auth-google'),
+                                                      title: copy
+                                                          .continueGoogle,
+                                                      apple: false,
+                                                      configured: google,
+                                                      onPressed: _isSubmitting
+                                                          ? null
+                                                          : () =>
+                                                              _continueWithProvider(
+                                                                  SocialProvider
+                                                                      .google))),
+                                            ]),
+                                        if (!apple && !google)
+                                          const Padding(
+                                              padding: EdgeInsets.only(top: 12),
+                                              child: FitnessText('Coming soon',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                      fontSize: 11,
+                                                      color:
+                                                          Color(0xFF777777)))),
+                                      ]),
+                                ),
+                              ))),
+                ]),
+              )),
+            ]),
+          )),
+    ));
   }
 
   Widget _buildAuthModeSwitcher(AuthCopy copy) {
@@ -256,529 +501,62 @@ class _AuthViewState extends State<AuthView> {
   }
 }
 
-class _AppleSignInButton extends StatefulWidget {
+class _PendingAccountEntry {
+  final String owner;
+  final int credentialRevision;
+  final bool newlyRegistered;
+  final SocialProvider? provider;
+  bool profileCommitted;
+  bool requiresAuthentication = false;
+  _PendingAccountEntry(this.owner, this.credentialRevision,
+      {this.newlyRegistered = false,
+      this.provider,
+      this.profileCommitted = false});
+}
+
+class _ProviderButton extends StatelessWidget {
+  const _ProviderButton(
+      {super.key,
+      required this.title,
+      required this.apple,
+      required this.configured,
+      required this.onPressed});
   final String title;
-  final VoidCallback onTap;
-
-  const _AppleSignInButton({
-    required this.title,
-    required this.onTap,
-  });
-
+  final bool apple, configured;
+  final VoidCallback? onPressed;
   @override
-  State<_AppleSignInButton> createState() => _AppleSignInButtonState();
-}
-
-class _AppleSignInButtonState extends State<_AppleSignInButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap();
-      },
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: DSMotion.duration(context, DSMotion.press),
-        curve: Curves.easeOutCubic,
-        child: AnimatedContainer(
-          duration: DSMotion.duration(context, DSMotion.press),
-          curve: Curves.easeOutCubic,
-          constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            // Apple frosted liquid glass
-            color: DSColors.bgCard,
-            border: Border.all(
-              color: _pressed
-                  ? Colors.white.withValues(alpha: 0.45)
-                  : Colors.white.withValues(alpha: 0.16),
-              width: 0.8,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+  Widget build(BuildContext context) => Semantics(
+      label: title,
+      child: OutlinedButton(
+        onPressed: configured ? onPressed : null,
+        style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            disabledForegroundColor: const Color(0xFFA6A6A6),
+            backgroundColor: const Color(0xFF111111),
+            side: const BorderSide(color: Color(0xFF303030)),
+            minimumSize: const Size(0, 52),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16))),
+        child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
-              const Icon(
-                Icons.apple_rounded,
-                size: 22,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 10),
-              Flexible(
-                  child: Text(
-                widget.title,
-                style: const TextStyle(
-                  fontFamily: null,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: -0.2,
-                ),
-              )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GoogleSignInButton extends StatefulWidget {
-  final String title;
-  final VoidCallback onTap;
-
-  const _GoogleSignInButton({
-    required this.title,
-    required this.onTap,
-  });
-
-  @override
-  State<_GoogleSignInButton> createState() => _GoogleSignInButtonState();
-}
-
-class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap();
-      },
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: DSMotion.duration(context, DSMotion.press),
-        curve: Curves.easeOutCubic,
-        child: AnimatedContainer(
-          duration: DSMotion.duration(context, DSMotion.press),
-          curve: Curves.easeOutCubic,
-          constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            // Apple frosted liquid glass
-            color: DSColors.bgCard,
-            border: Border.all(
-              color: _pressed
-                  ? Colors.white.withValues(alpha: 0.45)
-                  : Colors.white.withValues(alpha: 0.16),
-              width: 0.8,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/branding/google_g_logo.png',
-                width: 20,
-                height: 20,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.medium,
-              ),
-              const SizedBox(width: 10),
-              Flexible(
-                  child: Text(
-                widget.title,
-                style: const TextStyle(
-                  fontFamily: null,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: -0.2,
-                ),
-              )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OrDivider extends StatelessWidget {
-  final String label;
-
-  const _OrDivider({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 0.8,
-            color: Colors.white.withValues(alpha: 0.08),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontFamily: null,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.0,
-              color: Color(0xFF8E8E93),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 0.8,
-            color: Colors.white.withValues(alpha: 0.08),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LuxuryEmailField extends StatefulWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String label;
-  final ValueChanged<String>? onSubmitted;
-
-  const _LuxuryEmailField({
-    required this.controller,
-    required this.focusNode,
-    required this.label,
-    this.onSubmitted,
-  });
-
-  @override
-  State<_LuxuryEmailField> createState() => _LuxuryEmailFieldState();
-}
-
-class _LuxuryEmailFieldState extends State<_LuxuryEmailField> {
-  bool _isFocused = false;
-  bool _hasContent = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _isFocused = widget.focusNode.hasFocus;
-    _hasContent = widget.controller.text.isNotEmpty;
-    widget.focusNode.addListener(_onFocusChange);
-    widget.controller.addListener(_onTextChanged);
-  }
-
-  void _onFocusChange() {
-    if (mounted && _isFocused != widget.focusNode.hasFocus) {
-      setState(() => _isFocused = widget.focusNode.hasFocus);
-    }
-  }
-
-  void _onTextChanged() {
-    final hasContent = widget.controller.text.isNotEmpty;
-    if (mounted && _hasContent != hasContent) {
-      setState(() => _hasContent = hasContent);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode.removeListener(_onFocusChange);
-    widget.controller.removeListener(_onTextChanged);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isValidEmail = _hasContent &&
-        RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-            .hasMatch(widget.controller.text.trim());
-
-    return AnimatedContainer(
-      duration: DSMotion.duration(context, DSMotion.press),
-      curve: Curves.easeOutCubic,
-      constraints: const BoxConstraints(minHeight: 54),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        // Apple frosted liquid glass
-        color: DSColors.bgCard,
-        border: Border.all(
-          color: _isFocused
-              ? Colors.white.withValues(alpha: 0.60)
-              : Colors.white.withValues(alpha: 0.12),
-          width: _isFocused ? 1.0 : 0.8,
-        ),
-      ),
-      child: TextField(
-        controller: widget.controller,
-        focusNode: widget.focusNode,
-        keyboardType: TextInputType.emailAddress,
-        textInputAction: TextInputAction.next,
-        autofillHints: const [AutofillHints.email],
-        autocorrect: false,
-        cursorColor: Colors.white,
-        onSubmitted: widget.onSubmitted,
-        style: const TextStyle(
-          fontFamily: null,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          letterSpacing: -0.2,
-          color: Colors.white,
-        ),
-        decoration: InputDecoration(
-          filled: false,
-          hintText: widget.label,
-          hintStyle: const TextStyle(
-            fontFamily: null,
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.2,
-            color: Color(0xFF8E8E93),
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 16, right: 12),
-            child: Icon(
-              Icons.mail_outline_rounded,
-              size: 20,
-              color: _isFocused ? Colors.white : const Color(0xFF8E8E93),
-            ),
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 48,
-            minHeight: 24,
-          ),
-          suffixIcon: isValidEmail
-              ? const Padding(
-                  padding: EdgeInsets.only(right: 16),
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    size: 18,
-                    color: Color(0xFFDADADA),
-                  ),
-                )
-              : null,
-          suffixIconConstraints: const BoxConstraints(
-            minWidth: 44,
-            minHeight: 24,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 15,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LuxuryPasswordField extends StatefulWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String label;
-  final String hint;
-  final bool isSignIn;
-  final bool isPasswordVisible;
-  final VoidCallback onToggleVisibility;
-  final ValueChanged<String>? onSubmitted;
-
-  const _LuxuryPasswordField({
-    required this.controller,
-    required this.focusNode,
-    required this.label,
-    required this.hint,
-    required this.isSignIn,
-    required this.isPasswordVisible,
-    required this.onToggleVisibility,
-    this.onSubmitted,
-  });
-
-  @override
-  State<_LuxuryPasswordField> createState() => _LuxuryPasswordFieldState();
-}
-
-class _LuxuryPasswordFieldState extends State<_LuxuryPasswordField> {
-  bool _isFocused = false;
-  int _charCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _isFocused = widget.focusNode.hasFocus;
-    _charCount = widget.controller.text.length;
-    widget.focusNode.addListener(_onFocusChange);
-    widget.controller.addListener(_onTextChanged);
-  }
-
-  void _onFocusChange() {
-    if (mounted && _isFocused != widget.focusNode.hasFocus) {
-      setState(() => _isFocused = widget.focusNode.hasFocus);
-    }
-  }
-
-  void _onTextChanged() {
-    final len = widget.controller.text.length;
-    if (mounted && _charCount != len) {
-      setState(() => _charCount = len);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode.removeListener(_onFocusChange);
-    widget.controller.removeListener(_onTextChanged);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final meetsRequirement = _charCount >= 8;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AnimatedContainer(
-          duration: DSMotion.duration(context, DSMotion.press),
-          curve: Curves.easeOutCubic,
-          constraints: const BoxConstraints(minHeight: 54),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            // Apple frosted liquid glass
-            color: DSColors.bgCard,
-            border: Border.all(
-              color: _isFocused
-                  ? Colors.white.withValues(alpha: 0.60)
-                  : Colors.white.withValues(alpha: 0.12),
-              width: _isFocused ? 1.0 : 0.8,
-            ),
-          ),
-          child: TextField(
-            controller: widget.controller,
-            focusNode: widget.focusNode,
-            obscureText: !widget.isPasswordVisible,
-            textInputAction: TextInputAction.done,
-            autofillHints: [
-              widget.isSignIn
-                  ? AutofillHints.password
-                  : AutofillHints.newPassword,
-            ],
-            autocorrect: false,
-            enableSuggestions: false,
-            cursorColor: Colors.white,
-            onSubmitted: widget.onSubmitted,
-            style: const TextStyle(
-              fontFamily: null,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.2,
-              color: Colors.white,
-            ),
-            decoration: InputDecoration(
-              filled: false,
-              hintText: widget.label,
-              hintStyle: const TextStyle(
-                fontFamily: null,
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                letterSpacing: -0.2,
-                color: Color(0xFF8E8E93),
-              ),
-              prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 16, right: 12),
-                child: Icon(
-                  Icons.lock_outline_rounded,
-                  size: 20,
-                  color: _isFocused ? Colors.white : const Color(0xFF8E8E93),
-                ),
-              ),
-              prefixIconConstraints: const BoxConstraints(
-                minWidth: 48,
-                minHeight: 24,
-              ),
-              suffixIcon: IconButton(
-                tooltip: widget.isPasswordVisible
-                    ? 'Hide password'
-                    : 'Show password',
-                splashRadius: 20,
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  widget.onToggleVisibility();
-                },
-                icon: Icon(
-                  widget.isPasswordVisible
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                  size: 20,
-                  color: widget.isPasswordVisible
-                      ? Colors.white
-                      : const Color(0xFF8E8E93),
-                ),
-              ),
-              suffixIconConstraints: const BoxConstraints(
-                minWidth: 48,
-                minHeight: 24,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 15,
-              ),
-            ),
-          ),
-        ),
-        if (!widget.isSignIn) ...[
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 6),
-            child: Row(
-              children: [
-                AnimatedSwitcher(
-                  duration: DSMotion.duration(context, DSMotion.selection),
-                  child: Icon(
-                    meetsRequirement
-                        ? Icons.check_circle_rounded
-                        : Icons.info_outline_rounded,
-                    key: ValueKey(meetsRequirement),
-                    size: 13,
-                    color: meetsRequirement
-                        ? const Color(0xFFDADADA)
-                        : const Color(0xFF8E8E93),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                    child: AnimatedDefaultTextStyle(
-                  duration: DSMotion.duration(context, DSMotion.selection),
-                  style: TextStyle(
-                    fontFamily:
-                        Theme.of(context).textTheme.bodyMedium?.fontFamily,
-                    fontSize: 12,
-                    fontWeight:
-                        meetsRequirement ? FontWeight.w500 : FontWeight.w400,
-                    color: meetsRequirement
-                        ? const Color(0xFFDADADA)
-                        : const Color(0xFF8E8E93),
-                  ),
-                  child: Text(widget.hint),
-                )),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
+              if (apple)
+                const Icon(Icons.apple, size: 21)
+              else
+                Image.asset('assets/branding/google_g_logo.png',
+                    width: 19,
+                    height: 19,
+                    cacheWidth: 57,
+                    excludeFromSemantics: true),
+              Text(apple ? 'Apple' : 'Google',
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w500)),
+            ]),
+      ));
 }
 
 class _InlineError extends StatelessWidget {
@@ -1204,3 +982,102 @@ class OtpCodeField extends StatelessWidget {
         },
       );
 }
+
+class _LuxuryEmailField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String label;
+  final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+  final bool readOnly;
+  const _LuxuryEmailField(
+      {required this.controller,
+      required this.focusNode,
+      required this.label,
+      this.onSubmitted,
+      this.onChanged,
+      this.readOnly = false});
+  @override
+  Widget build(BuildContext context) => TextField(
+        key: const ValueKey('auth-email'),
+        controller: controller,
+        focusNode: focusNode,
+        keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.username, AutofillHints.email],
+        autocorrect: false,
+        enableSuggestions: false,
+        onSubmitted: onSubmitted,
+        onChanged: onChanged,
+        readOnly: readOnly,
+        style: const TextStyle(fontSize: 16, color: Colors.white),
+        decoration: _authDecoration(label),
+      );
+}
+
+class _LuxuryPasswordField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String label, hint;
+  final bool isSignIn, isPasswordVisible;
+  final VoidCallback onToggleVisibility;
+  final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+  final bool readOnly;
+  const _LuxuryPasswordField(
+      {required this.controller,
+      required this.focusNode,
+      required this.label,
+      required this.hint,
+      required this.isSignIn,
+      required this.isPasswordVisible,
+      required this.onToggleVisibility,
+      this.onSubmitted,
+      this.onChanged,
+      this.readOnly = false});
+  @override
+  Widget build(BuildContext context) => TextField(
+        key: const ValueKey('auth-password'),
+        controller: controller,
+        focusNode: focusNode,
+        obscureText: !isPasswordVisible,
+        textInputAction: TextInputAction.done,
+        autofillHints: [
+          isSignIn ? AutofillHints.password : AutofillHints.newPassword
+        ],
+        autocorrect: false,
+        enableSuggestions: false,
+        onSubmitted: onSubmitted,
+        onChanged: onChanged,
+        readOnly: readOnly,
+        style: const TextStyle(fontSize: 16, color: Colors.white),
+        decoration: _authDecoration(label).copyWith(
+            helperText: isSignIn ? null : hint,
+            helperMaxLines: 3,
+            helperStyle:
+                const TextStyle(color: Color(0xFF969696), fontSize: 11),
+            suffixIcon: IconButton(
+                tooltip: isPasswordVisible ? 'Hide password' : 'Show password',
+                onPressed: onToggleVisibility,
+                icon: Icon(
+                    isPasswordVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: const Color(0xFFA8A8A8),
+                    size: 21))),
+      );
+}
+
+InputDecoration _authDecoration(String label) => InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: const Color(0xFF181818),
+      labelStyle: const TextStyle(color: Color(0xFFA0A0A0), fontSize: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 19),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(17),
+          borderSide: const BorderSide(color: Color(0xFF343434))),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(17),
+          borderSide: const BorderSide(color: Color(0xFFD8D8D8))),
+    );

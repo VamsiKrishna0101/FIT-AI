@@ -32,6 +32,7 @@ class _TargetEditorState extends State<_TargetEditor> {
   final _efforts = <double?>[];
   final _removed = <TextEditingController>[];
   late final TextEditingController _rest;
+  late String _weightUnit;
   bool get _bodyweight =>
       widget.item.setTargets?['weightBasis'] == 'bodyweight' ||
       widget.item.exercise.equipment.toLowerCase() == 'body weight';
@@ -41,6 +42,10 @@ class _TargetEditorState extends State<_TargetEditor> {
   void initState() {
     super.initState();
     final item = widget.item;
+    final storedUnit = item.setTargets?['weightUnit'];
+    _weightUnit = ['per_hand', 'total_load'].contains(storedUnit)
+        ? storedUnit as String
+        : 'as_logged';
     _rest = TextEditingController(text: '${item.restSeconds}');
     for (var index = 0; index < item.targetSets; index++) {
       final target = item.targetForSet(index + 1);
@@ -100,9 +105,7 @@ class _TargetEditorState extends State<_TargetEditor> {
             : !anyLoad
                 ? 'establish_starting_load'
                 : widget.item.setTargets?['weightBasis'] ?? 'estimated_start',
-        'weightUnit': _bodyweight
-            ? 'bodyweight'
-            : widget.item.setTargets?['weightUnit'] ?? 'as_logged',
+        'weightUnit': _bodyweight ? 'bodyweight' : _weightUnit,
         'sets': sets,
       },
     });
@@ -153,6 +156,35 @@ class _TargetEditorState extends State<_TargetEditor> {
                           fontSize: 12, color: DSColors.silver)),
                 ],
                 const SizedBox(height: 22),
+                if (!_bodyweight) ...[
+                  DropdownButtonFormField<String>(
+                    key: const ValueKey('training-weight-unit'),
+                    initialValue: _weightUnit,
+                    isExpanded: true,
+                    decoration:
+                        InputDecoration(labelText: copy('Weight convention')),
+                    items: [
+                      DropdownMenuItem(
+                          value: 'as_logged',
+                          child: Text(copy('Not specified'))),
+                      DropdownMenuItem(
+                          value: 'total_load',
+                          child: Text(copy('Total load including bar'))),
+                      DropdownMenuItem(
+                          value: 'per_hand', child: Text(copy('Per dumbbell'))),
+                    ],
+                    onChanged: (unit) {
+                      if (unit != null) setState(() => _weightUnit = unit);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                      copy(
+                          'Choose what your kilogram entries mean. This also applies to this exercise’s saved sets.'),
+                      style: const TextStyle(
+                          fontSize: 11, height: 1.4, color: DSColors.muted)),
+                  const SizedBox(height: 18),
+                ],
                 for (var index = 0; index < _reps.length; index++)
                   Padding(
                       padding: const EdgeInsets.only(bottom: 14),

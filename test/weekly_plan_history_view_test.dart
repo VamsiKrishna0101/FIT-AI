@@ -115,7 +115,10 @@ class _HistoryRepository extends WeeklyPlanRepository {
       };
 
   @override
-  Future<Map<String, dynamic>> generate({required DateTime weekStart}) async {
+  Future<Map<String, dynamic>> generate(
+      {required DateTime weekStart,
+      DateTime? startDate,
+      List<DateTime>? trainingDates}) async {
     generations++;
     throw StateError('History must not generate a plan.');
   }
@@ -177,8 +180,8 @@ void main() {
     await tester
         .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Plan history'));
-    await tester.tap(find.text('Plan history'));
+    await tester.ensureVisible(find.text('History'));
+    await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('See older weeks'), 200);
     await tester.ensureVisible(find.text('See older weeks'));

@@ -33,7 +33,7 @@ class ReadinessDetailView extends StatelessWidget {
         child: Scaffold(
       backgroundColor: FitnessTheme.canvas,
       appBar: AppBar(
-          title: const FitnessText('Readiness',
+          title: const FitnessText('Training readiness',
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
           backgroundColor: FitnessTheme.canvas,
           surfaceTintColor: Colors.transparent),
@@ -104,7 +104,7 @@ class ReadinessDetailView extends StatelessWidget {
                       const SizedBox(height: 10),
                       FitnessText(
                           checkIn
-                              ? 'Sleep contributes 40%. Rest, energy and soreness contribute 20% each. This uses your saved sleep and check-in answers. It is a fitness estimate, not a wearable recovery measurement.'
+                              ? 'Sleep contributes 40%. Rest, energy and soreness contribute 20% each. Very short reported sleep limits the estimate. This uses your saved sleep and check-in answers. It is a fitness estimate, not a wearable recovery measurement.'
                               : readiness.source == 'mixed_estimate'
                                   ? 'Uses your entered sleep and available heart readings from your health app. This is a fitness estimate.'
                                   : 'Uses the recorded inputs shown above. This is a fitness estimate, not a medical assessment.',

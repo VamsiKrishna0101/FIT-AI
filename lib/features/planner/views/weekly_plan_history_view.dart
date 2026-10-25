@@ -125,53 +125,7 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 26),
-                    sliver: SliverToBoxAdapter(
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: .055),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: FitnessTheme.line),
-                          ),
-                          child: const Icon(CupertinoIcons.clock,
-                              color: FitnessTheme.silver, size: 23),
-                        ),
-                        const SizedBox(height: 22),
-                        const FitnessText('YOUR TRAINING ARCHIVE',
-                            style: TextStyle(
-                                fontSize: 10,
-                                letterSpacing: 2,
-                                color: FitnessTheme.muted,
-                                fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 10),
-                        const FitnessText('Your saved weeks',
-                            style: TextStyle(
-                                fontSize: 30,
-                                letterSpacing: -.8,
-                                fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 10),
-                        const FitnessText(
-                            'Revisit the workouts and meals you’ve saved.',
-                            style: TextStyle(
-                                color: FitnessTheme.muted,
-                                fontSize: 13,
-                                height: 1.5)),
-                        if (_plans.isNotEmpty) ...[
-                          const SizedBox(height: 26),
-                          const FitnessText('LATEST FIRST',
-                              style: TextStyle(
-                                  color: FitnessTheme.muted,
-                                  fontSize: 10,
-                                  letterSpacing: 1.7)),
-                        ],
-                      ],
-                    )),
-                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   if (!_loading && _plans.isEmpty && _error == null)
                     const SliverToBoxAdapter(
                         child: Padding(
@@ -211,7 +165,7 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
                       sliver: SliverList.builder(
                         itemCount: _plans.length,
                         itemBuilder: (context, index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: _planCard(_plans[index]),
                         ),
                       ),
@@ -259,10 +213,12 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
 
   Widget _planCard(Map<String, dynamic> plan) {
     final start = DateTime.tryParse(plan['weekStart'] as String? ?? '');
-    final end = start?.add(const Duration(days: 6));
+    final end =
+        start == null ? null : DateTime(start.year, start.month, start.day + 6);
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final dateRange = start == null || end == null
         ? 'Saved week'
-        : '${DateFormat.MMMd().format(start)} – ${DateFormat.MMMd().add_y().format(end)}';
+        : '${DateFormat.MMMd(locale).format(start)} – ${DateFormat.yMMMd(locale).format(end)}';
     final label = plan['synthetic'] == true
         ? 'Test'
         : switch (plan['status']) {
@@ -270,84 +226,50 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
             'ARCHIVED' => 'Archived',
             _ => 'Saved',
           };
-    final color = label == 'Test'
-        ? FitnessTheme.coral
-        : label == 'Active'
-            ? const Color(0xFF93C8B5)
-            : FitnessTheme.silver;
     final trainingDays = plan['trainingDays'] as int? ?? 0;
     final opening = _openingId == plan['id'];
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: .1)),
-        gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: .07),
-              Colors.white.withValues(alpha: .025)
-            ]),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(22),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap:
-              _openingId != null ? null : () => _openPlan(plan['id'] as String),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
+    return Material(
+      color: FitnessTheme.surface,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: FitnessTheme.line)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap:
+            _openingId != null ? null : () => _openPlan(plan['id'] as String),
+        child: Padding(
+            padding: const EdgeInsets.all(16),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Expanded(
                     child: Text(dateRange,
                         style: const TextStyle(
-                            fontSize: 18,
-                            letterSpacing: -.4,
-                            fontWeight: FontWeight.w600))),
-                const SizedBox(width: 12),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -.3))),
+                const SizedBox(width: 10),
                 if (opening)
                   const CupertinoActivityIndicator()
                 else
-                  const Icon(CupertinoIcons.arrow_up_right,
-                      size: 18, color: FitnessTheme.muted),
+                  FitnessText(label,
+                      style: const TextStyle(
+                          color: FitnessTheme.silver, fontSize: 11)),
               ]),
-              const SizedBox(height: 14),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                    color: color.withValues(alpha: .09),
-                    borderRadius: BorderRadius.circular(8)),
-                child: FitnessText(label,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(height: 18),
-              FitnessText(
-                  '$trainingDays ${trainingDays == 1 ? 'training day' : 'training days'}',
-                  style: const TextStyle(
-                      color: FitnessTheme.silver, fontSize: 13)),
-              const SizedBox(height: 6),
-              FitnessText(
-                  plan['foodPlanIncluded'] == true
-                      ? 'Food plan included'
-                      : 'Food plan not included',
-                  style:
-                      const TextStyle(color: FitnessTheme.muted, fontSize: 12)),
-              const SizedBox(height: 18),
-              const Divider(color: FitnessTheme.line, height: 1),
-              const SizedBox(height: 14),
-              const FitnessText('Review week',
-                  style: TextStyle(color: FitnessTheme.silver, fontSize: 12)),
-            ]),
-          ),
-        ),
+              const SizedBox(height: 8),
+              Wrap(spacing: 12, runSpacing: 4, children: [
+                FitnessText(
+                    '$trainingDays training ${trainingDays == 1 ? 'day' : 'days'}',
+                    style: const TextStyle(
+                        color: FitnessTheme.muted, fontSize: 12)),
+                FitnessText(
+                    plan['foodPlanIncluded'] == true
+                        ? 'Food plan included'
+                        : 'Food plan not included',
+                    style: const TextStyle(
+                        color: FitnessTheme.muted, fontSize: 12)),
+              ]),
+            ])),
       ),
     );
   }

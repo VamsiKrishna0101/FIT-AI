@@ -48,7 +48,7 @@ class DateAdapter implements HttpClientAdapter {
                 'date': date,
                 'score': selected.day / 10,
                 'label': 'Recorded readiness $date',
-                'source': 'manual',
+                'source': 'check_in_estimate',
                 'sleepMinutes': selected.day * 10,
               }
             : null,
@@ -89,6 +89,13 @@ class DateAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+Future<void> tapDay(WidgetTester tester, Finder day) async {
+  await tester.scrollUntilVisible(day, 200,
+      scrollable: find.byType(Scrollable).first);
+  await tester.ensureVisible(day);
+  await tester.tap(day);
 }
 
 void main() {
@@ -132,10 +139,10 @@ void main() {
         ? monday.add(const Duration(days: 3))
         : latest;
     adapter.heldDate = CacheScope.todayKey(first);
-    await tester.tap(
+    await tapDay(tester,
         find.byKey(ValueKey('today-week-day-${CacheScope.todayKey(first)}')));
     await tester.pump();
-    await tester.tap(
+    await tapDay(tester,
         find.byKey(ValueKey('today-week-day-${CacheScope.todayKey(second)}')));
     await tester.pumpAndSettle();
     adapter.release.complete();
@@ -174,7 +181,8 @@ void main() {
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(
         find.descendant(
-            of: find.byType(BottomSheet), matching: find.text('Sleep logged')),
+            of: find.byType(BottomSheet),
+            matching: find.text('How are you feeling today?')),
         findsOneWidget);
     expect(find.text('0 / 100'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -198,7 +206,7 @@ void main() {
     await LocalCache.shared.saveJson(
         'fitai_u_${owner}_home_v9_en_${date}_real', {'user': 'invalid'});
     adapter.failedDate = date;
-    await tester.tap(find.byKey(ValueKey('today-week-day-$date')));
+    await tapDay(tester, find.byKey(ValueKey('today-week-day-$date')));
     await tester.pumpAndSettle();
     var dashboard = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
     expect(dashboard.loading, isFalse);
@@ -206,7 +214,7 @@ void main() {
     expect(find.byKey(const ValueKey('today-readiness-card')), findsNothing);
     adapter.failedDate = null;
     adapter.recordedReadiness = true;
-    await tester.tap(find.byKey(ValueKey('today-week-day-$date')));
+    await tapDay(tester, find.byKey(ValueKey('today-week-day-$date')));
     await tester.pumpAndSettle();
     dashboard = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
     expect(dashboard.data!.calendarDate, date);

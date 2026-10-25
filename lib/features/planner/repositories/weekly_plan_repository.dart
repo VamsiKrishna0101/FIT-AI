@@ -25,16 +25,20 @@ class WeeklyPlanRepository {
       }, ttl: ttl);
   Future<BodyOverview> bodyOverview() => BodyAssessmentRepository.shared.load();
 
-  static bool hasCurrentWeekScan(BodyOverview body, DateTime now) {
+  static bool hasEnteredMeasurements(BodyOverview body, DateTime now) {
     final today = DateTime(now.year, now.month, now.day);
-    final monday = today.subtract(Duration(days: today.weekday - 1));
     return body.records.any((entry) {
       final date = DateTime.tryParse(entry.recordedDate);
       return entry.status == 'SAVED' &&
-          entry.method == 'photo_review' &&
           date != null &&
-          !date.isBefore(monday) &&
-          !date.isAfter(today);
+          !date.isAfter(today) &&
+          entry.metrics.values.any((metric) => [
+                'tape',
+                'scale',
+                'smart_scale',
+                'dexa',
+                'calipers'
+              ].contains(metric.source));
     });
   }
 
@@ -64,13 +68,19 @@ class WeeklyPlanRepository {
     return _read('/api/plans/saved/$id');
   }
 
-  Future<Map<String, dynamic>> generate({required DateTime weekStart}) async {
+  Future<Map<String, dynamic>> generate(
+      {required DateTime weekStart,
+      DateTime? startDate,
+      List<DateTime>? trainingDates}) async {
     await UserDataCache.shared.invalidate('plans');
     final zone = await FlutterTimezone.getLocalTimezone();
     final response = await ApiClient.shared
         .post<Map<String, dynamic>>('/api/plans/generate', data: {
       'weekStart': CacheScope.todayKey(weekStart),
       'timezone': zone.identifier,
+      if (startDate != null) 'startDate': CacheScope.todayKey(startDate),
+      if (trainingDates != null)
+        'trainingDates': trainingDates.map(CacheScope.todayKey).toList(),
     });
     return Map<String, dynamic>.from(response.data!['data'] as Map);
   }

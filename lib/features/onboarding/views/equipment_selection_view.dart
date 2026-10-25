@@ -1,5 +1,4 @@
 import '../viewmodels/onboarding_controller.dart';
-import '../../../core/theme/ds_motion.dart';
 import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -94,30 +93,20 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
     _viewModel.toggleEquipment(id);
   }
 
-  Widget _grid(List<EquipmentItem> items) {
-    final scale = MediaQuery.textScalerOf(context);
-    return GridView.builder(
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            mainAxisExtent: 178 + (scale.scale(13) - 13) * 3.6),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return _EquipmentCard(
-              key: ValueKey(item.id),
-              item: item,
-              title: EquipmentCopy.item(_viewModel.selectedLanguage, item.id),
-              selected: _viewModel.selectedIds.contains(item.id),
-              onTap: _viewModel.isReady && !_submitting
-                  ? () => _toggle(item.id)
-                  : null);
-        });
-  }
+  Widget _grid(List<EquipmentItem> items) => Column(children: [
+        for (final item in items)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _EquipmentCard(
+                  key: ValueKey(item.id),
+                  item: item,
+                  title:
+                      EquipmentCopy.item(_viewModel.selectedLanguage, item.id),
+                  selected: _viewModel.selectedIds.contains(item.id),
+                  onTap: _viewModel.isReady && !_submitting
+                      ? () => _toggle(item.id)
+                      : null)),
+      ]);
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +121,7 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
         .length;
     return OnboardingScaffold(
         step: _viewModel.currentStep,
+        sectionLabel: 'Your equipment',
         totalSteps: _viewModel.totalSteps,
         showProgress: !widget.editProfile,
         title: EquipmentCopy.equipmentTitle(language),
@@ -298,107 +288,24 @@ class _EquipmentCard extends StatelessWidget {
       required this.onTap});
   @override
   Widget build(BuildContext context) {
-    final path = item.assetPath;
-    return Semantics(
-        button: true,
-        selected: selected,
-        label: title,
-        child: AnimatedContainer(
-            key: ValueKey('equipment-${item.id}'),
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : DSMotion.press,
-            decoration: BoxDecoration(
-                color: FitnessTheme.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: selected
-                        ? const Color(0xFFBDBDBD)
-                        : const Color(0x14FFFFFF),
-                    width: 1)),
-            child: ClipRRect(
-                borderRadius: BorderRadius.circular(19),
-                child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                        splashFactory: NoSplash.splashFactory,
-                        highlightColor: Colors.transparent,
-                        onTap: onTap == null
-                            ? null
-                            : () {
-                                HapticFeedback.selectionClick();
-                                onTap!();
-                              },
-                        child: Column(children: [
-                          Expanded(
-                              child: Stack(fit: StackFit.expand, children: [
-                            Container(
-                                color: const Color(0xFF151515),
-                                padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
-                                child: path == null
-                                    ? Icon(item.fallbackIcon,
-                                        color: FitnessTheme.muted)
-                                    : LayoutBuilder(
-                                        builder: (context, bounds) => Image.asset(
-                                            path,
-                                            fit: BoxFit.contain,
-                                            excludeFromSemantics: true,
-                                            gaplessPlayback: true,
-                                            // Decode by width only to preserve the source aspect ratio.
-                                            cacheWidth: (bounds.maxWidth *
-                                                    MediaQuery
-                                                        .devicePixelRatioOf(
-                                                            context))
-                                                .ceil(),
-                                            filterQuality: FilterQuality.medium,
-                                            errorBuilder: (_, __, ___) => Icon(
-                                                item.fallbackIcon,
-                                                size: 36,
-                                                color: FitnessTheme.muted)))),
-                            Positioned(
-                                top: 10,
-                                right: 10,
-                                child: Container(
-                                    width: 22,
-                                    height: 22,
-                                    decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: selected
-                                            ? FitnessTheme.silver
-                                            : const Color(0xAA171717),
-                                        border: Border.all(
-                                            color: selected
-                                                ? FitnessTheme.silver
-                                                : const Color(0xFF656565),
-                                            width: .8)),
-                                    child: selected
-                                        ? const Icon(CupertinoIcons.check_mark,
-                                            size: 13, color: Color(0xFF161616))
-                                        : null)),
-                          ])),
-                          Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(10, 12, 10, 12),
-                              child: SizedBox(
-                                  height: MediaQuery.textScalerOf(context)
-                                          .scale(13) *
-                                      2.5,
-                                  child: Center(
-                                      child: FitnessText(title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 13,
-                                              height: 1.2,
-                                              fontWeight: selected
-                                                  ? FontWeight.w600
-                                                  : FontWeight.w500,
-                                              letterSpacing: -.15,
-                                              color: selected
-                                                  ? Colors.white
-                                                  : const Color(
-                                                      0xFFDFDFDF)))))),
-                        ]))))));
+    return KeyedSubtree(
+        key: ValueKey('equipment-${item.id}'),
+        child: IgnorePointer(
+            ignoring: onTap == null,
+            child: Opacity(
+                opacity: onTap == null ? .5 : 1,
+                child: OnboardingChoice(
+                    leading: item.assetPath == null
+                        ? null
+                        : SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Image.asset(item.assetPath!,
+                                fit: BoxFit.contain,
+                                cacheWidth: 144,
+                                excludeFromSemantics: true)),
+                    title: title,
+                    selected: selected,
+                    onTap: onTap ?? () {}))));
   }
 }

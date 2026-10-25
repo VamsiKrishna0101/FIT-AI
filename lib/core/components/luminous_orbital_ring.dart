@@ -19,7 +19,7 @@ class LuminousOrbitalRing extends StatefulWidget {
     super.key,
     required this.score,
     this.label = 'READINESS SCORE',
-    this.title = 'FITAI RECOVERY',
+    this.title = 'SETCRAFT RECOVERY',
     this.leftMetric = '+4.2%',
     this.leftLabel = 'VS BASELINE',
     this.rightMetric = '-0.8x',

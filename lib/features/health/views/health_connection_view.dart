@@ -150,8 +150,8 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                 title: const FitnessText('Manage health access'),
                 content: FitnessText(service.currentProvider ==
                         HealthProviderType.appleHealthKit
-                    ? 'Open Apple Health, tap your profile, then Apps and FitAI to review access. Apple does not tell FitAI which read permissions you declined.'
-                    : 'Open Health Connect, then App permissions and FitAI to review access.'),
+                    ? 'Open Apple Health, tap your profile, then Apps and Setcraft to review access. Apple does not tell Setcraft which read permissions you declined.'
+                    : 'Open Health Connect, then App permissions and Setcraft to review access.'),
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -229,7 +229,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                             FitnessText(
                                 unsupported
                                     ? 'Health sync is unavailable on this device. You can continue with manual logging.'
-                                    : 'Bring your daily movement, sleep, and recovery readings into FitAI.',
+                                    : 'Bring your daily movement, sleep, and recovery readings into Setcraft.',
                                 style: const TextStyle(
                                     fontSize: 14,
                                     color: FitnessTheme.muted,
@@ -238,8 +238,8 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                             _category(CupertinoIcons.flame, 'Activity',
                                 'Steps, active calories, workouts'),
                             const SizedBox(height: 10),
-                            _category(CupertinoIcons.moon_stars, 'Recovery',
-                                'Sleep, resting heart rate, HRV'),
+                            _category(CupertinoIcons.moon_stars, 'Sleep',
+                                'Sleep duration and stages'),
                             const SizedBox(height: 10),
                             PremiumSurface(
                                 child: SwitchListTile.adaptive(
@@ -299,16 +299,6 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                                           data.sleepTotalMinutes == null
                                               ? null
                                               : '${data.sleepTotalMinutes!.round() ~/ 60} h ${data.sleepTotalMinutes!.round() % 60} m'),
-                                      _reading(
-                                          'Resting heart rate',
-                                          data.restingHR == null
-                                              ? null
-                                              : '${data.restingHR!.round()} bpm'),
-                                      _reading(
-                                          'HRV',
-                                          data.hrv == null
-                                              ? null
-                                              : '${data.hrv!.round()} ms${data.hrvMethod == null ? '' : ' · ${data.hrvMethod}'}'),
                                     ],
                                   ])),
                               const SizedBox(height: 12),
@@ -326,7 +316,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                                             fontWeight: FontWeight.w500)),
                                     const SizedBox(height: 8),
                                     const FitnessText(
-                                        'Recorded in your health app. FitAI sets and volume stay separate.',
+                                        'Recorded in your health app. Setcraft sets and volume stay separate.',
                                         style: TextStyle(
                                             fontSize: 11,
                                             height: 1.4,
@@ -389,7 +379,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                               ]),
                             const SizedBox(height: 16),
                             const FitnessText(
-                                'You choose what to share. Selected readings are synced to your FitAI account to power your dashboard. You can stop syncing at any time.',
+                                'You choose what to share. Selected readings are synced to your Setcraft account to power your dashboard. You can stop syncing at any time.',
                                 style: TextStyle(
                                     fontSize: 12,
                                     height: 1.5,
@@ -486,9 +476,9 @@ class HealthPrivacyView extends StatelessWidget {
           child: SingleChildScrollView(
               padding: EdgeInsets.all(24),
               child: FitnessText(
-                  'FitAI requests read access to steps, active calories, workouts, sleep, resting heart rate, and heart rate variability. Weight and body fat are optional.\n\n'
-                  'The phone reads the categories you choose from Health Connect or Apple Health. FitAI uploads daily readings, source information, and imported workout details to its backend and saves them in your signed-in account. These records power dated dashboards and trends. Readiness is a FitAI estimate, not a measurement provided by your health app.\n\n'
-                  'FitAI does not request permission to write health records in this connection flow. You can decline categories or choose Set up later. Missing data is not replaced with example readings.\n\n'
+                  'Setcraft requests read access to steps, active calories, workouts, sleep. Weight and body fat are optional.\n\n'
+                  'The phone reads the categories you choose from Health Connect or Apple Health. Setcraft uploads daily readings, source information, and imported workout details to its backend and saves them in your signed-in account. These records power dated dashboards and trends. Readiness uses your optional sleep and check-in answers; it is not measured recovery.\n\n'
+                  'Setcraft does not request permission to write health records in this connection flow. You can decline categories or choose Set up later. Missing data is not replaced with example readings.\n\n'
                   'Stop syncing in Profile → Health connection. Review or revoke operating-system access in Health Connect or Apple Health. Stopping sync does not delete previously saved account records.\n\n'
                   'Apple does not disclose whether individual read permissions were denied; no readable records can mean missing data or restricted access.',
                   style: TextStyle(

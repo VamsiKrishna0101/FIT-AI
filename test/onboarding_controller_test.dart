@@ -212,6 +212,10 @@ void main() {
         isTrue);
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
     await tester
         .ensureVisible(find.byKey(const ValueKey('biometric-ruler-track')));
     final before =

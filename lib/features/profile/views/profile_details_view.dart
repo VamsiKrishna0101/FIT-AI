@@ -295,6 +295,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                             _goal,
                             const {
                               'BUILD_MUSCLE': 'Build muscle',
+                              'GET_STRONGER': 'Get stronger',
                               'LOSE_BODY_FAT': 'Lose body fat',
                               'LOSE_WEIGHT': 'Lose weight',
                               'GET_FITTER': 'Get fitter',

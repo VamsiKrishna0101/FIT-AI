@@ -10,14 +10,16 @@ class LiquidChromeButton extends StatefulWidget {
   final String title;
   final VoidCallback? onPressed;
   final double height;
-  final bool isLoading, showArrow;
+  final bool isLoading, showArrow, pill, solid;
   const LiquidChromeButton(
       {super.key,
       required this.title,
       required this.onPressed,
       this.height = 54,
       this.isLoading = false,
-      this.showArrow = true});
+      this.showArrow = true,
+      this.pill = false,
+      this.solid = false});
   @override
   State<LiquidChromeButton> createState() => _LiquidChromeButtonState();
 }
@@ -26,6 +28,7 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null && !widget.isLoading;
+    final radius = BorderRadius.circular(widget.pill ? 40 : 18);
     return Semantics(
       button: true,
       liveRegion: widget.isLoading,
@@ -38,20 +41,26 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
             child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: radius,
                   onTap: enabled
                       ? () {
                           HapticFeedback.lightImpact();
                           widget.onPressed!();
                         }
                       : null,
-                  child: Ink(
+                  child: Container(
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0xFFF0F0F0), Color(0xFFCDCDCD)]),
+                          borderRadius: radius,
+                          color: widget.solid ? const Color(0xFFF4F4F4) : null,
+                          gradient: widget.solid
+                              ? null
+                              : const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                      Color(0xFFF0F0F0),
+                                      Color(0xFFCDCDCD)
+                                    ]),
                           border: Border.all(
                               color: const Color(0xFFF4F4F4), width: .6)),
                       child: ConstrainedBox(

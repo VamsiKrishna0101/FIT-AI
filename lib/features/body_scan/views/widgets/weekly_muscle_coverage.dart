@@ -57,18 +57,17 @@ class WeeklyMuscleCoverage extends StatelessWidget {
   String _sets(BuildContext context, int value) => NumberFormat.decimalPattern(
           Localizations.localeOf(context).toLanguageTag())
       .format(value);
-  String _description(BuildContext context, MuscleCoverageGroup group) => group
-              .target >
-          0
-      ? fitnessText(context, '{completed} of {target} planned sets', values: {
-          'completed': _sets(context, group.completed),
-          'target': _sets(context, group.target)
-        })
-      : group.completed == 0
-          ? fitnessText(context, 'Not trained yet')
-          : fitnessText(
-              context, daily ? '{count} sets today' : '{count} sets this week',
-              values: {'count': _sets(context, group.completed)});
+  String _description(BuildContext context, MuscleCoverageGroup group) =>
+      group.target > 0
+          ? fitnessText(context, '{completed} of {target} planned sets',
+              values: {
+                  'completed': _sets(context, group.completed),
+                  'target': _sets(context, group.target)
+                })
+          : group.completed == 0
+              ? fitnessText(context, 'Not trained yet')
+              : fitnessText(context, '{count} sets',
+                  values: {'count': _sets(context, group.completed)});
 
   Future<void> _open(BuildContext context, MuscleCoverageGroup group) async {
     if (group.regions.isEmpty) return;
@@ -225,12 +224,18 @@ class WeeklyMuscleCoverage extends StatelessWidget {
                                                       child: IgnorePointer(
                                                           child: AnatomicalMuscleIllustration(
                                                               female: female,
-                                                              back: group.id == 'back',
+                                                              back: group.id ==
+                                                                  'back',
                                                               colors: {
                                                             for (final region
                                                                 in group
                                                                     .regions)
-                                                              region.id: accent
+                                                              region.id: region
+                                                                          .completedSets >
+                                                                      0
+                                                                  ? accent
+                                                                  : FitnessAccents
+                                                                      .rank(0)
                                                           }))))
                                               : MotionValue(
                                                   value: group.progress!,
@@ -238,8 +243,17 @@ class WeeklyMuscleCoverage extends StatelessWidget {
                                                       painter: _CoverageRing(
                                                           progress, accent),
                                                       child: Center(
-                                                          child: Text(_sets(context, group.completed),
-                                                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, letterSpacing: -.8))))))),
+                                                          child: Text(
+                                                              _sets(
+                                                                  context,
+                                                                  group
+                                                                      .completed),
+                                                              style: const TextStyle(
+                                                                  fontSize: 22,
+                                                                  fontWeight: FontWeight
+                                                                      .w600,
+                                                                  letterSpacing:
+                                                                      -.8))))))),
                                   const SizedBox(height: 10),
                                   Text(caption,
                                       style: const TextStyle(

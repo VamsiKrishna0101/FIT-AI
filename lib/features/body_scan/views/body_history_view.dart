@@ -10,6 +10,8 @@ import '../models/body_assessment_models.dart';
 import '../repositories/body_assessment_repository.dart';
 import 'widgets/body_controls.dart';
 import 'widgets/private_body_photo.dart';
+import '../../../core/navigation/onboarding_page_route.dart';
+import 'body_comparison_view.dart';
 
 class BodyHistoryView extends StatefulWidget {
   final ValueChanged<BodyAssessment> onRecord;
@@ -29,6 +31,7 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
   BodyAssessmentRepository get repository =>
       widget.repository ?? BodyAssessmentRepository.shared;
   List<BodyAssessment> _records = [];
+  List<BodyAssessment> _baselines = [];
   String _period = 'All scans';
   DateTimeRange? _range;
   bool _loading = true;
@@ -65,6 +68,11 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
             .where((entry) => !entry.synthetic && entry.hasPhotoAssessment)
             .toList();
         _total = (data['total'] as num).toInt();
+        _baselines = (data['comparisonBaselines'] as List? ?? [])
+            .whereType<Map>()
+            .map((e) => BodyAssessment.fromJson(Map<String, dynamic>.from(e)))
+            .where((e) => !e.synthetic && e.hasPhotoAssessment)
+            .toList();
         _pageSize = (data['pageSize'] as num).toInt();
         _loading = false;
       });
@@ -130,6 +138,10 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final pages = (_total / _pageSize).ceil();
+    final comparisonRecords = [..._records, ..._baselines];
+    final comparable = _records
+        .where((entry) => comparisonRecords.any(entry.canComparePhotosWith))
+        .firstOrNull;
     return FitnessTheme(
         child: Scaffold(
       backgroundColor: FitnessTheme.canvas,
@@ -144,35 +156,41 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            const FitnessText('Your scans, over time.',
+            const FitnessText('Your progress. In focus.',
                 style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.w500,
                     letterSpacing: -.5)),
             const SizedBox(height: 18),
-            Wrap(spacing: 8, runSpacing: 4, children: [
-              for (final period in [
-                'All scans',
-                'This week',
-                'Last week',
-                'Last month',
-                'Custom dates'
-              ])
-                ChoiceChip(
-                  label: FitnessText(period,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: _period == period
-                              ? FitnessTheme.canvas
-                              : FitnessTheme.silver)),
-                  selectedColor: FitnessTheme.silver,
-                  backgroundColor: FitnessTheme.surface,
-                  shape: const StadiumBorder(),
-                  side: const BorderSide(color: FitnessTheme.line),
-                  selected: _period == period,
-                  showCheckmark: false,
-                  onSelected: _loading ? null : (_) => _periodChanged(period),
-                ),
+            Row(children: [
+              Expanded(
+                  child: FitnessText(
+                      '$_total saved ${_total == 1 ? 'scan' : 'scans'}',
+                      style: const TextStyle(
+                          fontSize: 12, color: FitnessTheme.muted))),
+              PopupMenuButton<String>(
+                  enabled: !_loading,
+                  initialValue: _period,
+                  onSelected: _periodChanged,
+                  itemBuilder: (_) => [
+                        for (final period in [
+                          'All scans',
+                          'This week',
+                          'Last week',
+                          'Last month',
+                          'Custom dates'
+                        ])
+                          PopupMenuItem(
+                              value: period, child: FitnessText(period))
+                      ],
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(children: [
+                        FitnessText(_period,
+                            style: const TextStyle(fontSize: 12)),
+                        const SizedBox(width: 7),
+                        const Icon(CupertinoIcons.chevron_down, size: 12)
+                      ])))
             ]),
             if (_range != null)
               Padding(
@@ -188,20 +206,21 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
                   child: FitnessText('Saved scans',
                       style: TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w500))),
-              Tooltip(
-                message: 'Coming soon',
-                child: OutlinedButton.icon(
-                  onPressed: null,
+              if (comparable != null)
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                      AppPageRoute<void>(
+                          page: BodyComparisonView(
+                              current: comparable,
+                              baselines: comparisonRecords
+                                  .where(comparable.canComparePhotosWith)
+                                  .toList(),
+                              repository: repository))),
                   icon: const Icon(CupertinoIcons.arrow_left_right, size: 14),
                   label: const FitnessText('Compare',
                       style: TextStyle(fontSize: 11)),
                 ),
-              ),
             ]),
-            const Align(
-                alignment: Alignment.centerRight,
-                child: FitnessText('Comparison coming soon',
-                    style: TextStyle(fontSize: 10, color: FitnessTheme.muted))),
             const SizedBox(height: 16),
             if (_loading)
               const Padding(
@@ -238,10 +257,18 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
                 ]),
               ))
             else ...[
-              for (final entry in _records)
-                Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _scan(entry)),
+              LayoutBuilder(
+                  builder: (context, constraints) => GridView.count(
+                      crossAxisCount: constraints.maxWidth < 270 ||
+                              MediaQuery.textScalerOf(context).scale(14) > 21
+                          ? 1
+                          : 2,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: .70,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [for (final entry in _records) _scan(entry)])),
               if (pages > 1)
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -270,42 +297,102 @@ class _BodyHistoryViewState extends State<BodyHistoryView> {
     ));
   }
 
-  Widget _scan(BodyAssessment entry) => MotionPress(
-        child: FitnessCard(
-            padding: EdgeInsets.zero,
+  Widget _scan(BodyAssessment entry) {
+    final photo = entry.photos.where((p) => p.view == 'front').firstOrNull ??
+        entry.photos.firstOrNull;
+    final score = entry.dashboard.score;
+    return MotionPress(
+        child: Semantics(
+            button: true,
+            label: 'Scan ${bodyDate(entry.recordedDate)}',
             child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                onTap: () => widget.onRecord(entry),
-                leading: SizedBox(
-                    width: 44,
-                    height: 54,
-                    child: entry.photos.isNotEmpty
-                        ? PrivateBodyPhoto(
-                            photo: entry.photos.first, fit: BoxFit.cover)
-                        : Container(
-                            decoration: BoxDecoration(
-                                color: FitnessTheme.canvas,
-                                borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(CupertinoIcons.doc_text,
-                                size: 19, color: FitnessTheme.muted))),
-                title: Text(bodyDate(entry.recordedDate),
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500)),
-                subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: FitnessText(
-                        entry.photos.isEmpty
-                            ? 'Report only · Photos not saved'
-                            : 'Private photos saved',
-                        style: const TextStyle(
-                            fontSize: 11, color: FitnessTheme.muted))),
-                trailing: const Icon(CupertinoIcons.chevron_right,
-                    size: 12, color: FitnessTheme.muted),
-              ),
-            )),
-      );
+                color: FitnessTheme.surface,
+                borderRadius: BorderRadius.circular(20),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                    key: ValueKey('scan-history-${entry.id}'),
+                    onTap: () => widget.onRecord(entry),
+                    child: Stack(fit: StackFit.expand, children: [
+                      if (photo != null)
+                        PrivateBodyPhoto(
+                            photo: photo, fit: BoxFit.cover, cacheWidth: 640)
+                      else
+                        const Center(
+                            child: Icon(CupertinoIcons.doc_text,
+                                size: 34, color: FitnessTheme.muted)),
+                      const DecoratedBox(
+                          decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                            Colors.transparent,
+                            Color(0x33000000),
+                            Color(0xF5000000)
+                          ],
+                                  stops: [
+                            0,
+                            .45,
+                            1
+                          ]))),
+                      Positioned(
+                          top: 12,
+                          left: 12,
+                          child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: .55),
+                                  borderRadius: BorderRadius.circular(7)),
+                              child: const Icon(CupertinoIcons.lock_fill,
+                                  size: 11, color: Color(0xFFC1D7F6)))),
+                      Positioned(
+                          left: 14,
+                          right: 12,
+                          bottom: 14,
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (score != null)
+                                  Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text('${score.round()}',
+                                            style: const TextStyle(
+                                                fontSize: 31,
+                                                height: 1.1,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white)),
+                                        const SizedBox(width: 4),
+                                        const Text('/100',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: Color(0xFF9EB7DA)))
+                                      ]),
+                                if (score != null)
+                                  const Padding(
+                                      padding: EdgeInsets.only(bottom: 9),
+                                      child: FitnessText('VISUAL INDEX',
+                                          style: TextStyle(
+                                              fontSize: 8,
+                                              letterSpacing: 1,
+                                              color: Color(0xFF9EB7DA)))),
+                                Text(bodyDate(entry.recordedDate),
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 5),
+                                FitnessText(
+                                    photo == null
+                                        ? 'Report only'
+                                        : '${entry.photos.length} ${entry.photos.length == 1 ? 'view' : 'views'}',
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Color(0xFFADB8C8))),
+                              ])),
+                    ])))));
+  }
 }

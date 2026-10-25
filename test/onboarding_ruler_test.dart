@@ -160,6 +160,11 @@ void main() {
         .save();
     await tester.pumpWidget(_app(const AboutYouExperienceView()));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await _capture(tester, 'body-selection');
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
     expect(find.byType(BiometricRulerCard), findsOneWidget);
     await _capture(tester, 'about-you-ruler');
     final height = find.byKey(const ValueKey('select-biometric-height'));
@@ -188,10 +193,18 @@ void main() {
     await tester.pumpWidget(
         _app(TrainingPreferencesView(onContinue: () => continued = true)));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Choose individual muscles'));
+    await tester.tap(find.text('Choose individual muscles'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Biceps'));
     await tester.tap(find.text('Biceps'));
     await tester.pumpAndSettle();
     await _capture(tester, 'make-it-yours');
-    await tester.tap(find.text('Continue'));
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.text('Build my plan'));
     await tester.pumpAndSettle();
     expect((await OnboardingDraft.load()).focusMuscles, ['chest', 'biceps']);
     expect(continued, isTrue);

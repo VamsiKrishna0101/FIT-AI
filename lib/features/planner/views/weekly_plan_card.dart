@@ -130,15 +130,8 @@ class _WeeklyPlanCardState extends State<WeeklyPlanCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(children: [
-                Icon(CupertinoIcons.sparkles,
-                    size: 20, color: FitnessTheme.silver),
-                SizedBox(width: 10),
-                Expanded(
-                    child: FitnessText('Your weekly plan',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600))),
-              ]),
+              const FitnessText('Your weekly plan',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               FitnessText(description,
                   style: const TextStyle(

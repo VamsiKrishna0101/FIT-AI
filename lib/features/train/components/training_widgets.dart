@@ -2,8 +2,7 @@ import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
+import 'exercise_thumbnail.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/workout_exercise_models.dart';
@@ -85,25 +84,8 @@ class TrainingPoster extends StatelessWidget {
   final double size;
   const TrainingPoster({super.key, required this.exercise, this.size = 48});
   @override
-  Widget build(BuildContext context) => ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-          width: size,
-          height: size,
-          child: exercise.thumbnailUrl == null
-              ? const ColoredBox(
-                  color: Color(0xFF303030),
-                  child: Icon(CupertinoIcons.sportscourt, color: trainingMuted))
-              : CachedNetworkImage(
-                  imageUrl: exercise.thumbnailUrl!,
-                  fit: BoxFit.contain,
-                  memCacheWidth: 174,
-                  memCacheHeight: 174,
-                  placeholder: (_, __) =>
-                      const ColoredBox(color: Color(0xFF303030)),
-                  errorWidget: (_, __, ___) => const Icon(
-                      CupertinoIcons.sportscourt,
-                      color: trainingMuted))));
+  Widget build(BuildContext context) =>
+      ExerciseThumbnail(exercise: exercise, size: size);
 }
 
 Future<String?> trainingName(

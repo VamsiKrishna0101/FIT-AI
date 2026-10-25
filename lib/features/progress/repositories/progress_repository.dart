@@ -13,11 +13,12 @@ class ProgressRepository {
   final updates = StreamController<String>.broadcast();
   final _requests = <String, Future<ProgressJson>>{};
   final _versions = <String, int>{};
+  Future<void> _pinWrites = Future<void>.value();
   static const ttl = Duration(minutes: 5);
 
   Future<String> _key(String path, String period, Map<String, dynamic> query) =>
       CacheScope.userKey(
-          'progress_v4_${LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${DateTime.now().timeZoneOffset.inMinutes}_${path}_${period}_${query.toString()}');
+          'progress_v5_${LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${DateTime.now().timeZoneOffset.inMinutes}_${path}_${period}_${query.toString()}');
 
   Future<ProgressJson?> cached(String path, String period,
       {Map<String, dynamic> query = const {}}) async {
@@ -94,7 +95,7 @@ class ProgressRepository {
     final owner = await CacheScope.userId();
     _versions[owner] = (_versions[owner] ?? 0) + 1;
     _requests.clear();
-    for (final version in [2, 3, 4]) {
+    for (final version in [2, 3, 4, 5]) {
       await LocalCache.shared.removeByPrefix(
           '${CacheScope.userPrefix}${owner}_progress_v${version}_');
     }
@@ -102,20 +103,42 @@ class ProgressRepository {
   }
 
   Future<List<String>> pins() async {
+    final owner = await CacheScope.userId();
     final key = await CacheScope.userKey('progress_pins');
     final json = await LocalCache.shared.getJson(key);
+    if (owner != await CacheScope.userId()) throw StateError('Session changed');
     return (json?['ids'] as List? ?? []).whereType<String>().take(3).toList();
   }
 
   Future<void> pin(String id) async {
     final ids = await pins();
-    if (ids.contains(id)) {
-      ids.remove(id);
-    } else {
-      if (ids.length == 3) ids.removeAt(0);
-      ids.add(id);
-    }
-    await LocalCache.shared
-        .saveJson(await CacheScope.userKey('progress_pins'), {'ids': ids});
+    await setPinned(id, !ids.contains(id));
+  }
+
+  Future<void> setPinned(String id, bool selected) async {
+    final owner = await CacheScope.userId();
+    final pending = _pinWrites.then((_) async {
+      if (owner != await CacheScope.userId()) {
+        throw StateError('Session changed');
+      }
+      final ids = await pins();
+      if (selected && !ids.contains(id)) {
+        if (ids.length >= 3) {
+          throw const FormatException(
+              'Your overview already shows three exercises. Remove one before adding another.');
+        }
+        ids.add(id);
+      } else if (!selected) {
+        ids.remove(id);
+      }
+      final key = await CacheScope.userKey('progress_pins');
+      if (owner != await CacheScope.userId()) {
+        throw StateError('Session changed');
+      }
+      await LocalCache.shared.saveJson(key, {'ids': ids});
+    });
+    _pinWrites =
+        pending.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    await pending;
   }
 }

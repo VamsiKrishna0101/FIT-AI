@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// MARK: - FitAI Design System — Pure Black OLED & Premium Obsidian Glass
+// MARK: - Setcraft Design System — Pure Black OLED & Premium Obsidian Glass
 class DSColors {
   // ── Canvas ────────────────────────────────────────────────────────────────
   static const Color bg = Color(0xFF000000);

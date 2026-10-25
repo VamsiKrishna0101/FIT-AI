@@ -14,6 +14,7 @@ import 'package:fitai_mobile/features/profile/views/privacy_settings_view.dart';
 import 'package:fitai_mobile/features/profile/views/settings_preferences_view.dart';
 import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
 import 'package:fitai_mobile/features/body_scan/repositories/body_assessment_repository.dart';
+import 'helpers/fake_mcp_repository.dart';
 
 class _SettingsRepository extends SettingsRepository {
   Map<String, dynamic>? saved;
@@ -161,8 +162,9 @@ void main() {
 
   testWidgets('Settings opens MCP then a detailed unconnected Claude screen',
       (tester) async {
-    await tester
-        .pumpWidget(_app(ProfileView(repository: _SettingsRepository())));
+    await tester.pumpWidget(_app(ProfileView(
+        repository: _SettingsRepository(),
+        mcpRepository: FakeMcpRepository())));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('MCP & integrations'), 180);
     await tester.pumpAndSettle();
@@ -170,13 +172,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(
         find.text(
-            'No AI apps are connected. This feature is not available yet.'),
+            'Creating a token does not connect an AI app automatically. You choose where to use it.'),
         findsOneWidget);
     await tester.tap(find.text('Claude'));
     await tester.pumpAndSettle();
-    expect(find.text('FitAI × Claude'), findsOneWidget);
-    expect(find.text('Weekly plans'), findsOneWidget);
-    expect(find.text('Coming soon'), findsOneWidget);
+    expect(find.text('Setcraft × Claude'), findsOneWidget);
+    expect(find.text('Create access token'), findsOneWidget);
+    expect(find.text('Ready when you are'), findsOneWidget);
     expect(find.text('Connect'), findsNothing);
     expect(find.text('Connected'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -288,7 +290,7 @@ void main() {
     for (final page in [
       ProfileView(repository: _SettingsRepository()),
       const McpConnectionsView(),
-      const ClaudeConnectionView(),
+      ClaudeConnectionView(repository: FakeMcpRepository()),
       const SettingsPreferencesView(),
       const SettingsLanguageView(),
       ProfileDetailsView(repository: _SettingsRepository()),
@@ -311,7 +313,8 @@ void main() {
         .pumpWidget(_app(ProfileView(repository: _SettingsRepository())));
     await tester.pumpAndSettle();
     await _capture(tester, 'settings-overview');
-    await tester.pumpWidget(_app(const ClaudeConnectionView()));
+    await tester.pumpWidget(
+        _app(ClaudeConnectionView(repository: FakeMcpRepository())));
     await tester.pumpAndSettle();
     await _capture(tester, 'settings-claude');
     expect(tester.takeException(), isNull);

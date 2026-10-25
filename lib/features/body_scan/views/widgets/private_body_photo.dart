@@ -9,8 +9,12 @@ import '../../repositories/body_assessment_repository.dart';
 class PrivateBodyPhoto extends StatefulWidget {
   final BodyPhoto photo;
   final BoxFit fit;
+  final int? cacheWidth;
   const PrivateBodyPhoto(
-      {super.key, required this.photo, this.fit = BoxFit.contain});
+      {super.key,
+      required this.photo,
+      this.fit = BoxFit.contain,
+      this.cacheWidth});
   @override
   State<PrivateBodyPhoto> createState() => _PrivateBodyPhotoState();
 }
@@ -48,6 +52,7 @@ class _PrivateBodyPhotoState extends State<PrivateBodyPhoto> {
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Image.memory(snapshot.data!,
+                        cacheWidth: widget.cacheWidth,
                         fit: widget.fit,
                         gaplessPlayback: false,
                         errorBuilder: (_, __, ___) => const Center(

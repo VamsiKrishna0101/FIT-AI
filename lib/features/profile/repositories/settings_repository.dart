@@ -1,4 +1,5 @@
 import '../../train/repositories/training_repository.dart';
+import '../../train/repositories/workout_repository.dart';
 import 'dart:async';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/cache/user_data_cache.dart';
@@ -39,6 +40,7 @@ class SettingsRepository {
       throw StateError('Your session changed. Reopen Settings.');
     }
     await UserDataCache.shared.invalidate('profile');
+    await WorkoutRepository.shared.invalidateExerciseMedia();
     await UserDataCache.shared.invalidate('body');
     TodayRepository.shared.invalidate();
     unawaited(TodayRepository.shared
