@@ -26,7 +26,7 @@ class _NutritionProgressContentState extends State<NutritionProgressContent> {
     'water': 'Water'
   };
   static const colors = {
-    'calories': progressAmber,
+    'calories': progressNutrition,
     'protein': progressBlue,
     'carbs': progressViolet,
     'fat': progressAmber,

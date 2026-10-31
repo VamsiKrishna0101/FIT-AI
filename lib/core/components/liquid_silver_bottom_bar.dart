@@ -123,6 +123,10 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
         : index.toDouble();
     final travel =
         (position - (_previewPosition ?? widget.selectedIndex)).abs();
+    // A light detent each time the dragged lens crosses into another tab.
+    if (dragging && _previewIndex != null && index != _previewIndex) {
+      HapticFeedback.selectionClick();
+    }
     setState(() {
       _previewIndex = index;
       _previewPosition = position;
@@ -195,59 +199,87 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
           heightFactor: 1,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 300),
-            child: _GlassCapsule(
-              key: const ValueKey('navigation-capsule'),
-              highContrast: highContrast,
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: LayoutBuilder(builder: (context, constraints) {
-                  final size = Size(constraints.maxWidth, 48);
-                  return SizedBox(
-                    key: const ValueKey('navigation-tabs'),
-                    height: size.height,
-                    child: Listener(
-                      onPointerDown: (event) => _down(event, size, direction),
-                      onPointerUp: _up,
-                      onPointerCancel: _cancel,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onHorizontalDragStart: (event) => _preview(
-                            event.localPosition, size, direction,
-                            dragging: true),
-                        onHorizontalDragUpdate: (event) => _preview(
-                            event.localPosition, size, direction,
-                            dragging: true),
-                        onHorizontalDragEnd: (_) => _release(),
-                        onHorizontalDragCancel: _clearPreview,
-                        child: Stack(children: [
-                          _LiquidSelection(
-                            position: _previewPosition ??
-                                widget.selectedIndex.toDouble(),
-                            dragging: _dragging,
-                            pressed: _pressed,
-                            dragStretch: _dragStretch,
-                            reducedMotion: reduced,
-                            highContrast: highContrast,
-                            direction: direction,
-                            width: size.width,
-                            height: size.height,
-                          ),
-                          Row(children: [
+            child: LayoutBuilder(builder: (context, constraints) {
+              final size = Size(constraints.maxWidth - 4, 48);
+              // The lens paints above the icons so its optics bend them, and
+              // outside the dock's clip so a pressed lens can swell past it.
+              return Stack(clipBehavior: Clip.none, children: [
+                _GlassCapsule(
+                  key: const ValueKey('navigation-capsule'),
+                  highContrast: highContrast,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: SizedBox(
+                      key: const ValueKey('navigation-tabs'),
+                      height: size.height,
+                      child: Listener(
+                        onPointerDown: (event) =>
+                            _down(event, size, direction),
+                        onPointerUp: _up,
+                        onPointerCancel: _cancel,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onHorizontalDragStart: (event) => _preview(
+                              event.localPosition, size, direction,
+                              dragging: true),
+                          onHorizontalDragUpdate: (event) => _preview(
+                              event.localPosition, size, direction,
+                              dragging: true),
+                          onHorizontalDragEnd: (_) => _release(),
+                          onHorizontalDragCancel: _clearPreview,
+                          child: Row(children: [
                             for (var index = 0; index < 4; index++)
                               Expanded(child: _tab(index, duration)),
                           ]),
-                        ]),
+                        ),
                       ),
                     ),
-                  );
-                }),
-              ),
-            ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Stack(clipBehavior: Clip.none, children: [
+                      _LiquidSelection(
+                        position:
+                            _previewPosition ?? widget.selectedIndex.toDouble(),
+                        dragging: _dragging,
+                        pressed: _pressed,
+                        dragStretch: _dragStretch,
+                        reducedMotion: reduced,
+                        highContrast: highContrast,
+                        direction: direction,
+                        width: size.width,
+                        height: size.height,
+                        icons: _lensIcons,
+                      ),
+                    ]),
+                  ),
+                ),
+              ]);
+            }),
           ),
         ),
       ),
     );
   }
+
+  /// Crisp glyphs shown only inside the lens, magnified while it is held.
+  Widget _lensIcons(double scale) => Row(children: [
+        for (var index = 0; index < 4; index++)
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: Center(
+                child: Transform.scale(
+                  scale: scale,
+                  child: NavigationGlyph(
+                      kind: _icons[index], color: DSColors.navGlassText),
+                ),
+              ),
+            ),
+          ),
+      ]);
 
   Widget _tab(int index, Duration duration) {
     final selected = (_previewIndex ?? widget.selectedIndex) == index;
@@ -312,8 +344,9 @@ class _GlassCapsule extends StatelessWidget {
       );
 }
 
-/// Refraction is confined to the moving lens. A blurred shell avoids nesting
-/// two optical passes while the lens moves; icons paint above both surfaces.
+/// Refraction is confined to the moving lens, which paints as a sibling above
+/// the blurred shell and its icons, so the optics bend real content and the
+/// two passes never nest.
 class _NavigationGlass extends StatelessWidget {
   const _NavigationGlass({
     required this.highContrast,
@@ -327,9 +360,10 @@ class _NavigationGlass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The optical shader multiplies dark tints into its backdrop. On black it
-    // cannot supply a visible surface, so paint the smoke/silver finish above
-    // the optics on every renderer, including Android's shader path.
+    final optics = lens && ui.ImageFilter.isShaderFilterSupported;
+    // With real optics the lens stays nearly clear so the refraction reads;
+    // only a whisper of frost marks its body. Without the shader a blur alone
+    // cannot separate it from the dock, so the fallback keeps a silver finish.
     final finish = DecoratedBox(
       key: ValueKey(lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
       decoration: BoxDecoration(
@@ -337,14 +371,23 @@ class _NavigationGlass extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: lens
+          colors: optics
               ? [
-                  Color.lerp(const Color(0x669EA5AE), const Color(0x8AABB2BA),
+                  Color.lerp(const Color(0x1AFFFFFF), const Color(0x26FFFFFF),
                       pressure)!,
-                  Color.lerp(const Color(0x52798089), const Color(0x737F8892),
+                  Color.lerp(const Color(0x06FFFFFF), const Color(0x0DFFFFFF),
                       pressure)!,
                 ]
-              : const [Color(0xCC34363A), Color(0xD9232529)],
+              : lens
+                  ? [
+                      Color.lerp(const Color(0x669EA5AE),
+                          const Color(0x8AABB2BA), pressure)!,
+                      Color.lerp(const Color(0x52798089),
+                          const Color(0x737F8892), pressure)!,
+                    ]
+                  // A lighter smoke lets content scrolling beneath show
+                  // through the frost while staying distinct from black.
+                  : const [Color(0xB0383B40), Color(0xBF26282C)],
         ),
       ),
       child: child,
@@ -354,26 +397,26 @@ class _NavigationGlass extends StatelessWidget {
       surface = ColoredBox(
           color: lens ? const Color(0xFF535A63) : DSColors.bgRaised,
           child: child);
-    } else if (lens && ui.ImageFilter.isShaderFilterSupported) {
+    } else if (optics) {
       surface = glass.LiquidGlass.withOwnLayer(
         shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
         settings: glass.LiquidGlassSettings(
-          glassColor: Colors.transparent,
-          thickness: 9,
-          blur: 2,
-          refractiveIndex: 1.18,
-          chromaticAberration: 0,
+          glassColor: const Color(0x0AFFFFFF),
+          thickness: 16 + pressure * 6,
+          blur: .6,
+          refractiveIndex: 1.4,
+          chromaticAberration: .35,
           lightAngle: -math.pi / 3,
-          lightIntensity: .16 + pressure * .12,
-          ambientStrength: .025,
-          saturation: 1.05,
+          lightIntensity: .45 + pressure * .25,
+          ambientStrength: .08,
+          saturation: 1.25,
         ),
         child: finish,
       );
     } else {
       surface = BackdropFilter(
         filter:
-            ui.ImageFilter.blur(sigmaX: lens ? 2 : 10, sigmaY: lens ? 2 : 10),
+            ui.ImageFilter.blur(sigmaX: lens ? 2 : 14, sigmaY: lens ? 2 : 14),
         child: finish,
       );
     }
@@ -394,10 +437,14 @@ class _LiquidSelection extends StatefulWidget {
     required this.direction,
     required this.width,
     required this.height,
+    required this.icons,
   });
   final double position, dragStretch, width, height;
   final bool dragging, pressed, reducedMotion, highContrast;
   final TextDirection direction;
+
+  /// Builds the icon row at a given magnification; clipped to the lens.
+  final Widget Function(double scale) icons;
 
   @override
   State<_LiquidSelection> createState() => _LiquidSelectionState();
@@ -405,8 +452,9 @@ class _LiquidSelection extends StatefulWidget {
 
 class _LiquidSelectionState extends State<_LiquidSelection>
     with TickerProviderStateMixin {
+  // Slightly under-damped: the lens overshoots once and settles like liquid.
   static const _spring =
-      SpringDescription(mass: 1, stiffness: 460, damping: 38);
+      SpringDescription(mass: 1, stiffness: 460, damping: 28);
   late double _target;
   late final AnimationController _motion, _press;
 
@@ -472,39 +520,65 @@ class _LiquidSelectionState extends State<_LiquidSelection>
           final stretch = widget.reducedMotion
               ? 0.0
               : widget.dragging
-                  ? .04 + widget.dragStretch
-                  : (_motion.velocity.abs() * .012).clamp(0.0, .16);
+                  ? .06 + widget.dragStretch * 1.4
+                  : (_motion.velocity.abs() * .018).clamp(0.0, .22);
           final slot = widget.width / 4;
+          // Holding swells the lens past the dock like a drop of glass;
+          // speed squashes it, wide and short, in the direction of travel.
           final width =
-              math.min(slot - 4, 48.0) * (1 + stretch + pressure * .04);
-          final height = 42 * (1 + pressure * .025 - stretch * .16);
+              math.min(slot - 4, 48.0) * (1 + stretch + pressure * .32);
+          final height = 42 * (1 + pressure * .3 - stretch * .22);
           final center = ((physicalPosition + .5) * slot)
               .clamp(width / 2, widget.width - width / 2);
-          return Positioned(
-            left: center - width / 2,
-            top: (widget.height - height) / 2,
-            width: width,
-            height: height,
+          final lens = Rect.fromLTWH(
+              center - width / 2,
+              (widget.height - height) / 2 - pressure * 2,
+              width,
+              height);
+          return Positioned.fill(
             child: IgnorePointer(
               child: ExcludeSemantics(
-                child: _NavigationGlass(
-                  lens: true,
-                  pressure: pressure,
-                  highContrast: widget.highContrast,
-                  child: CustomPaint(
-                    key: const ValueKey('navigation-active-pill'),
-                    foregroundPainter: _GlassRim(
-                        highContrast: widget.highContrast,
-                        lens: true,
-                        pressure: pressure),
-                    child: const SizedBox.expand(),
+                child: Stack(clipBehavior: Clip.none, children: [
+                  Positioned.fromRect(
+                    rect: lens,
+                    child: _NavigationGlass(
+                      lens: true,
+                      pressure: pressure,
+                      highContrast: widget.highContrast,
+                      child: CustomPaint(
+                        key: const ValueKey('navigation-active-pill'),
+                        foregroundPainter: _GlassRim(
+                            highContrast: widget.highContrast,
+                            lens: true,
+                            pressure: pressure),
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned.fill(
+                    child: ClipPath(
+                      clipper: _LensClipper(lens),
+                      child: widget.icons(1 + pressure * .12),
+                    ),
+                  ),
+                ]),
               ),
             ),
           );
         },
       );
+}
+
+class _LensClipper extends CustomClipper<Path> {
+  const _LensClipper(this.lens);
+  final Rect lens;
+
+  @override
+  Path getClip(Size size) => Path()
+    ..addRRect(RRect.fromRectAndRadius(lens, Radius.circular(lens.height / 2)));
+
+  @override
+  bool shouldReclip(_LensClipper oldClipper) => oldClipper.lens != lens;
 }
 
 class _GlassRim extends CustomPainter {

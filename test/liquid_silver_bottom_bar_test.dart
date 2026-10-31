@@ -349,7 +349,8 @@ void main() {
     await tester.pumpAndSettle();
     final bar = tester.getRect(find.byKey(const ValueKey('navigation-tabs')));
     final icons = tester
-        .widgetList<NavigationGlyph>(find.byType(NavigationGlyph))
+        .widgetList<NavigationGlyph>(find.descendant(
+            of: find.byType(Tooltip), matching: find.byType(NavigationGlyph)))
         .toList();
     expect(icons.map((icon) => icon.kind), [
       NavigationGlyphKind.today,

@@ -278,11 +278,7 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                       const SizedBox(height: 14),
                     ],
                     if (_loading && _data == null)
-                      const Padding(
-                          padding: EdgeInsets.all(50),
-                          child: Center(
-                              child: CircularProgressIndicator(
-                                  color: progressSilver, strokeWidth: 2))),
+                      const ProgressSkeleton(heights: [260, 150]),
                     if (_failed)
                       Row(children: [
                         Expanded(

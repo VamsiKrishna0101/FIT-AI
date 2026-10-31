@@ -1,5 +1,6 @@
 import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import '../../../core/components/animated_tab_stack.dart';
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'dart:async';
@@ -220,7 +221,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
     final empty = (progressNumber(data.summary['workouts']) ?? 0) == 0 &&
         (progressNumber(data.summary['sets']) ?? 0) == 0 &&
         data.exercises.isEmpty;
-    return [
+    final blocks = [
       if (empty)
         ProgressSurface(
             key: const ValueKey('progress-empty-summary'),
@@ -272,6 +273,11 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                   onPressed: () => _changeSection(ProgressSection.trends),
                   icon: const Icon(CupertinoIcons.chart_bar, size: 17),
                   label: Text(fitnessText(context, 'All trends'))))),
+    ];
+    // Blocks fade in one after another on first appearance only.
+    return [
+      for (var i = 0; i < blocks.length; i++)
+        MotionEntrance(order: i, child: blocks[i]),
     ];
   }
 
@@ -325,12 +331,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                                 onOpen: (kind) => _trend(kind, _data!))
                           ]
                   else if (_loading)
-                    const ProgressSurface(
-                        child: SizedBox(
-                            height: 160,
-                            child: Center(
-                                child: CircularProgressIndicator(
-                                    color: progressSilver, strokeWidth: 2)))),
+                    const ProgressSkeleton(),
                 ]))
           ]));
   bool _expandedHeader(BuildContext context) =>

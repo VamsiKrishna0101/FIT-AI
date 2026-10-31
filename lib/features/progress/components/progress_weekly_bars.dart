@@ -24,6 +24,13 @@ class ProgressWeeklyBars extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final maximum =
         points.fold<double>(1, (max, point) => math.max(max, point.value));
+    final barHeight = compact ? 40.0 : 70.0;
+    // The latest week leads in full colour; earlier weeks recede behind it.
+    Color tone(ProgressPoint point) => point.value == 0
+        ? progressMuted
+        : identical(point, points.last)
+            ? color
+            : color.withValues(alpha: .5);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (!compact) ...[
         Text(fitnessText(context, 'Weekly total'),
@@ -48,22 +55,36 @@ class ProgressWeeklyBars extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: compact ? 12 : 13,
                                 fontWeight: FontWeight.w600,
-                                color:
-                                    point.value == 0 ? progressMuted : color)),
+                                color: identical(point, points.last) &&
+                                        point.value > 0
+                                    ? color
+                                    : progressMuted)),
                         SizedBox(height: compact ? 6 : 8),
                         SizedBox(
-                            height: compact ? 32 : 70,
+                            height: barHeight,
                             child: Align(
                                 alignment: Alignment.bottomCenter,
                                 child: MotionValue(
                                     value: point.value / maximum,
                                     builder: (context, value) => Container(
-                                        width: compact ? 20 : 24,
-                                        height: math.max(
-                                            2, value * (compact ? 32 : 70)),
+                                        width: compact ? 22 : 24,
+                                        height: math.max(2, value * barHeight),
                                         decoration: BoxDecoration(
                                             borderRadius:
-                                                BorderRadius.circular(5),
+                                                const BorderRadius.vertical(
+                                                    top: Radius.circular(7),
+                                                    bottom: Radius.circular(3)),
+                                            boxShadow: [
+                                              if (identical(
+                                                      point, points.last) &&
+                                                  point.value > 0)
+                                                BoxShadow(
+                                                    color: color.withValues(
+                                                        alpha: .35),
+                                                    blurRadius: 12,
+                                                    offset:
+                                                        const Offset(0, 2)),
+                                            ],
                                             gradient: LinearGradient(
                                                 begin: Alignment.topCenter,
                                                 end: Alignment.bottomCenter,
@@ -77,9 +98,11 @@ class ProgressWeeklyBars extends StatelessWidget {
                                                                 alpha: .25)
                                                       ]
                                                     : [
-                                                        color,
-                                                        color.withValues(
-                                                            alpha: .5)
+                                                        tone(point),
+                                                        tone(point).withValues(
+                                                            alpha:
+                                                                tone(point).a *
+                                                                    .45)
                                                       ])))))),
                         SizedBox(height: compact ? 7 : 10),
                         Text(DateFormat.Md(locale).format(point.date),

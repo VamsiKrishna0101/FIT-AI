@@ -2,6 +2,7 @@ import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -138,7 +139,8 @@ class _ProgressChartState extends State<ProgressChart> {
                       fontSize: widget.headlineSize,
                       height: 1.12,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: -1.1)),
+                      letterSpacing: -1.1,
+                      fontFeatures: const [FontFeature.tabularFigures()])),
               if (widget.showChange && points.length > 1 && _selected == null)
                 Padding(
                     padding: const EdgeInsets.only(bottom: 3),
@@ -576,13 +578,14 @@ class _ChartPainter extends CustomPainter {
           ..shader = LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [color, color.withValues(alpha: .72)]).createShader(rect);
+              colors: [color, color.withValues(alpha: .4)]).createShader(rect);
         if (selected != null && selected != i) {
           bar.shader = null;
           bar.color = color.withValues(alpha: .3);
         }
         canvas.drawRRect(
-            RRect.fromRectAndRadius(rect, const Radius.circular(3)), bar);
+            RRect.fromRectAndRadius(rect, Radius.circular(math.min(4.0, width / 2))),
+            bar);
       }
     } else {
       canvas.save();
@@ -609,10 +612,27 @@ class _ChartPainter extends CustomPainter {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        color.withValues(alpha: compact ? .07 : .12),
+                        color.withValues(alpha: compact ? .12 : .24),
                         color.withValues(alpha: 0)
                       ]).createShader(Offset.zero & size));
-            canvas.drawPath(line, paint);
+            // A soft bloom beneath the stroke makes the line read as lit.
+            canvas.drawPath(
+                line,
+                Paint()
+                  ..color = color.withValues(alpha: compact ? .22 : .32)
+                  ..strokeWidth = paint.strokeWidth * 3
+                  ..strokeCap = StrokeCap.round
+                  ..style = PaintingStyle.stroke
+                  ..maskFilter =
+                      MaskFilter.blur(BlurStyle.normal, compact ? 3 : 6));
+            // Older readings fade back so the eye travels to the latest.
+            canvas.drawPath(
+                line,
+                paint
+                  ..shader = LinearGradient(colors: [
+                    color.withValues(alpha: .5),
+                    color
+                  ]).createShader(Offset.zero & size));
           } else {
             canvas.drawCircle(
                 geometry.position(start), 2.5, Paint()..color = color);
@@ -628,8 +648,14 @@ class _ChartPainter extends CustomPainter {
           }
         }
         final last = geometry.position(selected ?? points.length - 1);
-        canvas.drawCircle(last, 5, Paint()..color = const Color(0xFF1D1E20));
-        canvas.drawCircle(last, 3.5, Paint()..color = color);
+        canvas.drawCircle(
+            last,
+            10,
+            Paint()
+              ..color = color.withValues(alpha: .3)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+        canvas.drawCircle(last, 5.5, Paint()..color = const Color(0xFF161618));
+        canvas.drawCircle(last, 4, Paint()..color = color);
       }
     }
     if (!bars) canvas.restore();

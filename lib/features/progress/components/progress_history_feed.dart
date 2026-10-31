@@ -4,6 +4,7 @@ import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 import '../repositories/progress_repository.dart';
 import 'progress_surface.dart';
+import 'progress_training_heatmap.dart';
 import 'progress_workout_history.dart';
 
 class ProgressHistoryFeed extends StatefulWidget {
@@ -103,14 +104,12 @@ class ProgressHistoryFeedState extends State<ProgressHistoryFeed> {
                 child: Text(fitnessText(context, 'Retry'))),
           ]),
         if (_loading && _sessions.isEmpty)
-          const Padding(
-              padding: EdgeInsets.all(40),
-              child: Center(
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: progressSilver)))
-        else
+          const ProgressSkeleton(heights: [150, 110, 110, 110])
+        else ...[
+          if (_sessions.isNotEmpty) ProgressTrainingHeatmap(sessions: _sessions),
           ProgressWorkoutHistory(
               sessions: _sessions, onSession: widget.onSession),
+        ],
         if (_cursor != null)
           Padding(
               padding: const EdgeInsets.only(top: 16),

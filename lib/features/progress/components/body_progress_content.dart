@@ -55,7 +55,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
       final locale = Localizations.localeOf(context).toLanguageTag();
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         ProgressSurface(
-            accent: progressCyan,
+            accent: progressBody,
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(fitnessText(context, 'Body changes'),
@@ -101,7 +101,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
     final latestPoint = progressRows(series?['points']).lastOrNull;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ProgressSurface(
-          accent: progressCyan,
+          accent: progressBody,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             ProgressMetricPicker(
@@ -110,7 +110,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
                     row['id'] as String: row['label'] as String
                 },
                 selected: selected['id'] as String,
-                color: progressCyan,
+                color: progressBody,
                 onChanged: (value) => setState(() {
                       _metric = value;
                       _source = null;
@@ -130,7 +130,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
             ProgressChart(
                 points: ProgressPoint.parse(
                     progressRows(series?['points']), 'value'),
-                color: progressCyan,
+                color: progressBody,
                 height: 170,
                 showReadings: true,
                 unit: selected['unit'] as String),
@@ -138,7 +138,7 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
                 points: ProgressPoint.parse(
                     progressRows(series?['points']), 'value'),
                 unit: selected['unit'] as String,
-                color: progressCyan),
+                color: progressBody),
             if (series != null) ...[
               const SizedBox(height: 12),
               Text(

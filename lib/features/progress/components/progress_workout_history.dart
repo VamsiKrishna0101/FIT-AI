@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -6,6 +7,8 @@ import '../../../core/theme/ds_colors.dart';
 import '../models/progress_models.dart';
 import 'progress_surface.dart';
 
+/// One session on the history timeline: a tinted date badge, the workout name
+/// and its volume as chips. Sessions with records carry a gold badge.
 class ProgressWorkoutTile extends StatelessWidget {
   final ProgressJson session;
   final VoidCallback onTap;
@@ -17,28 +20,37 @@ class ProgressWorkoutTile extends StatelessWidget {
     final date = DateTime.tryParse(session['date']?.toString() ?? '');
     final seconds = progressNumber(session['durationSeconds']);
     final exercises = progressRows(session['exercises']);
+    final records = (progressNumber(session['records']) ?? 0).toInt();
+    final tint = progressSessionColor(session);
     return InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+            padding: const EdgeInsets.all(12),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Container(
-                  width: 44,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  width: 46,
+                  padding: const EdgeInsets.symmetric(vertical: 7),
                   decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(13)),
+                      color: tint.withValues(alpha: .12),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                          color: tint.withValues(alpha: .22), width: .7)),
                   child: Column(children: [
                     Text(date == null ? '—' : DateFormat.d(locale).format(date),
                         style: const TextStyle(
                             color: progressSilver,
-                            fontSize: 19,
-                            fontWeight: FontWeight.w600)),
+                            fontSize: 18,
+                            height: 1.1,
+                            fontWeight: FontWeight.w700)),
                     Text(
-                        date == null ? '' : DateFormat.MMM(locale).format(date),
-                        style: const TextStyle(
-                            color: progressSilver, fontSize: 10)),
+                        date == null
+                            ? ''
+                            : DateFormat.MMM(locale).format(date).toUpperCase(),
+                        style: TextStyle(
+                            color: tint,
+                            fontSize: 9.5,
+                            letterSpacing: .6,
+                            fontWeight: FontWeight.w600)),
                   ])),
               const SizedBox(width: 12),
               Expanded(
@@ -49,55 +61,89 @@ class ProgressWorkoutTile extends StatelessWidget {
                         progressTitle(fitnessText(
                             context, session['name'] as String? ?? 'Workout')),
                         style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                             height: 1.3)),
-                    const SizedBox(height: 6),
-                    Text(
-                        [
-                          if (exercises.isNotEmpty)
-                            '${exercises.length} ${fitnessText(context, 'exercises')}',
-                          '${session['sets'] ?? 0} ${fitnessText(context, 'sets')}',
-                          if (seconds != null && seconds > 0)
-                            '${(seconds / 60).round()} ${fitnessText(context, 'min')}',
-                        ].join(' · '),
-                        style: const TextStyle(
-                            fontSize: 11, color: progressMuted, height: 1.5)),
-                    if ((progressNumber(session['records']) ?? 0) > 0) ...[
-                      const SizedBox(height: 7),
-                      _RecordBadge(count: (session['records'] as num).toInt()),
+                    const SizedBox(height: 8),
+                    Wrap(spacing: 6, runSpacing: 6, children: [
+                      if (exercises.isNotEmpty)
+                        _Chip(
+                            '${exercises.length} ${fitnessText(context, 'exercises')}'),
+                      _Chip(
+                          '${session['sets'] ?? 0} ${fitnessText(context, 'sets')}'),
+                      if (seconds != null && seconds > 0)
+                        _Chip(
+                            '${(seconds / 60).round()} ${fitnessText(context, 'min')}'),
+                    ]),
+                    if (records > 0) ...[
+                      const SizedBox(height: 8),
+                      _RecordBadge(count: records),
                     ],
                     if (session['status'] != 'COMPLETED') ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(fitnessText(context, 'In progress'),
                           style: const TextStyle(
                               color: progressMuted, fontSize: 11)),
                     ],
                   ])),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               const Padding(
                   padding: EdgeInsets.only(top: 14),
-                  child: Icon(Icons.chevron_right,
-                      size: 18, color: progressMuted)),
+                  child: Icon(CupertinoIcons.chevron_right,
+                      size: 13, color: progressMuted)),
             ])));
   }
+}
+
+/// Gold for a session with records, mint once completed, grey while open.
+Color progressSessionColor(ProgressJson session) =>
+    (progressNumber(session['records']) ?? 0) > 0
+        ? progressRecord
+        : session['status'] == 'COMPLETED'
+            ? progressTraining
+            : progressMuted;
+
+class _Chip extends StatelessWidget {
+  final String text;
+  const _Chip(this.text);
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+      decoration: BoxDecoration(
+          color: const Color(0x0DFFFFFF),
+          borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(text,
+              style: const TextStyle(
+                  fontSize: 11, color: progressSilver, height: 1.3))));
 }
 
 class _RecordBadge extends StatelessWidget {
   final int count;
   const _RecordBadge({required this.count});
   @override
-  Widget build(BuildContext context) =>
-      Row(mainAxisSize: MainAxisSize.min, children: [
-        Flexible(
-            child: Text('${fitnessText(context, 'New records')} · $count',
-                style: const TextStyle(
-                    color: progressMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600))),
-      ]);
+  Widget build(BuildContext context) => DecoratedBox(
+      decoration: BoxDecoration(
+          color: progressRecord.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+              color: progressRecord.withValues(alpha: .3), width: .7)),
+      child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(CupertinoIcons.rosette, size: 12, color: progressRecord),
+            const SizedBox(width: 5),
+            Flexible(
+                child: Text('${fitnessText(context, 'New records')} · $count',
+                    style: const TextStyle(
+                        color: progressRecord,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600))),
+          ])));
 }
 
+/// Sessions grouped by month along a vertical rail; each dot takes the
+/// session's colour so records and unfinished workouts stand out.
 class ProgressWorkoutHistory extends StatelessWidget {
   final List<ProgressJson> sessions;
   final ValueChanged<ProgressJson> onSession;
@@ -118,29 +164,68 @@ class ProgressWorkoutHistory extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       for (final group in groups.entries) ...[
         Padding(
-            padding: const EdgeInsets.fromLTRB(4, 17, 4, 10),
+            padding: const EdgeInsets.fromLTRB(4, 18, 4, 12),
             child: Text(
                 group.key.isEmpty
                     ? fitnessText(context, 'Workout history')
                     : DateFormat.yMMMM(locale)
                         .format(DateTime.parse('${group.key}-01')),
                 style: const TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.w600))),
-        ProgressSurface(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(children: [
-              for (var i = 0; i < group.value.length; i++) ...[
-                if (i > 0)
-                  const Divider(
-                      height: 1, color: Color(0x12FFFFFF), indent: 60),
-                ProgressWorkoutTile(
-                    session: group.value[i],
-                    onTap: () => onSession(group.value[i])),
-              ],
-            ])),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -.4))),
+        Stack(children: [
+          PositionedDirectional(
+              start: 7,
+              top: 10,
+              bottom: 10,
+              child: Container(width: 1.5, color: const Color(0x1FFFFFFF))),
+          Column(children: [
+            for (var i = 0; i < group.value.length; i++)
+              Padding(
+                  padding: EdgeInsets.only(
+                      bottom: i == group.value.length - 1 ? 0 : 10),
+                  child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                            padding: const EdgeInsets.only(top: 26),
+                            child: _TimelineDot(
+                                color: progressSessionColor(group.value[i]))),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: ProgressSurface(
+                                padding: EdgeInsets.zero,
+                                child: ProgressWorkoutTile(
+                                    session: group.value[i],
+                                    onTap: () => onSession(group.value[i])))),
+                      ])),
+          ]),
+        ]),
       ],
     ]);
   }
+}
+
+class _TimelineDot extends StatelessWidget {
+  final Color color;
+  const _TimelineDot({required this.color});
+  @override
+  Widget build(BuildContext context) => Container(
+      width: 16,
+      height: 16,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: DSColors.bg,
+          border: Border.all(color: color.withValues(alpha: .45), width: 1.2),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: .35), blurRadius: 8),
+          ]),
+      child: Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color)));
 }
 
 /// Uses the saved session payload; opening a recap never modifies the workout.

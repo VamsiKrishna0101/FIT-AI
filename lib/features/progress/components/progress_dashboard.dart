@@ -48,43 +48,77 @@ class ProgressSectionControl extends StatelessWidget {
                         if (section != null) onChanged(section);
                       }))));
     }
+    final count = ProgressSection.values.length;
+    final duration = DSMotion.duration(context, DSMotion.regular);
     return DecoratedBox(
         decoration: BoxDecoration(
-            color: const Color(0xFF17181B),
-            borderRadius: BorderRadius.circular(15)),
+            color: const Color(0xFF111113),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: DSColors.border, width: .7)),
         child: Padding(
             padding: const EdgeInsets.all(4),
-            child: Row(children: [
-              for (final section in ProgressSection.values)
-                Expanded(
-                    child: Semantics(
-                        selected: section == selected,
-                        button: true,
-                        child: AnimatedContainer(
-                            duration: DSMotion.duration(context, DSMotion.fast),
-                            curve: DSMotion.effects,
-                            decoration: BoxDecoration(
-                                color: section == selected
-                                    ? const Color(0xFF35373C)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(11)),
-                            child: InkWell(
-                                key: ValueKey(
-                                    'progress-section-${section.name}'),
-                                borderRadius: BorderRadius.circular(11),
-                                onTap: () => onChanged(section),
-                                child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4, vertical: 12),
-                                    child: Text(
-                                        fitnessText(context, _label(section)),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: section == selected
-                                                ? progressSilver
-                                                : progressMuted,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500))))))),
+            child: Stack(children: [
+              // One raised pill glides between sections instead of each tab
+              // fading its own background.
+              Positioned.fill(
+                  child: AnimatedAlign(
+                      duration: duration,
+                      curve: Curves.easeOutBack,
+                      alignment: AlignmentDirectional(
+                          count == 1
+                              ? 0.0
+                              : -1 + 2 * selected.index / (count - 1),
+                          0),
+                      child: FractionallySizedBox(
+                          widthFactor: 1 / count,
+                          heightFactor: 1,
+                          child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0xFF3C3F45),
+                                        Color(0xFF2A2C31)
+                                      ]),
+                                  border: Border.all(
+                                      color: DSColors.borderHi, width: .7),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                        color: Color(0x66000000),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 3)),
+                                  ]))))),
+              Row(children: [
+                for (final section in ProgressSection.values)
+                  Expanded(
+                      child: Semantics(
+                          selected: section == selected,
+                          button: true,
+                          child: InkWell(
+                              key: ValueKey('progress-section-${section.name}'),
+                              borderRadius: BorderRadius.circular(100),
+                              onTap: () => onChanged(section),
+                              child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 11),
+                                  child: AnimatedDefaultTextStyle(
+                                      duration: DSMotion.duration(
+                                          context, DSMotion.fast),
+                                      curve: DSMotion.effects,
+                                      style: TextStyle(
+                                          color: section == selected
+                                              ? DSColors.textPrimary
+                                              : progressMuted,
+                                          fontSize: 13,
+                                          fontWeight: section == selected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500),
+                                      child: Text(
+                                          fitnessText(context, _label(section)),
+                                          textAlign: TextAlign.center)))))),
+              ]),
             ])));
   }
 }
@@ -192,6 +226,23 @@ class ProgressExerciseTrends extends StatelessWidget {
       for (final id in pins)
         if (available[id] != null) available[id]!,
     ];
+    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    if (scale <= 1.28) {
+      // Pinned exercises lead the shelf; the most recent fill the rest.
+      final shelf = [
+        ...chosen,
+        ...exercises.where((row) => !chosen.contains(row)),
+      ].take(6).toList();
+      return SizedBox(
+          height: 92 + scale * 96,
+          child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              itemCount: shelf.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, i) => _ExerciseCard(
+                  exercise: shelf[i], onTap: () => onOpen(shelf[i]))));
+    }
     if (chosen.isEmpty) chosen.addAll(exercises.take(3));
     return ProgressSurface(
         padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -202,6 +253,84 @@ class ProgressExerciseTrends extends StatelessWidget {
                 exercise: chosen[i], onTap: () => onOpen(chosen[i])),
           ],
         ]));
+  }
+}
+
+/// A shelf card: the exercise, its latest top value, the period change and a
+/// sparkline of recent sessions in the strength hue.
+class _ExerciseCard extends StatelessWidget {
+  final ProgressJson exercise;
+  final VoidCallback onTap;
+  const _ExerciseCard({required this.exercise, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final points =
+        ProgressPoint.parse(progressRows(exercise['sparkline']), 'value');
+    final latest = exercise['latest'] as Map?;
+    final loaded = exercise['metric'] == 'load' ||
+        (exercise['metric'] == null &&
+            (progressNumber(latest?['weight']) ?? 0) > 0);
+    final value = points.lastOrNull?.value ??
+        progressNumber(latest?[loaded ? 'weight' : 'reps']);
+    final change = progressNumber(exercise['change']);
+    final reps = progressNumber(latest?['reps']);
+    final date = exercise['latestDate'] as String?;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final caption = loaded && reps != null
+        ? '${progressValue(context, reps, unit: 'reps', digits: 0)} · ${fitnessText(context, 'Last session')}'
+        : date != null
+            ? progressDate(date, locale)
+            : fitnessText(context, 'Latest');
+    return SizedBox(
+        width: 158,
+        child: ProgressSurface(
+            accent: progressStrength,
+            padding: EdgeInsets.zero,
+            child: InkWell(
+                key: ValueKey('progress-exercise-${exercise['id']}'),
+                onTap: onTap,
+                child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(progressTitle(exercise['name'] as String? ?? ''),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.35,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(caption,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 11, color: progressMuted)),
+                          const Spacer(),
+                          ProgressValueText(
+                              progressValue(
+                                  context, value, unit: loaded ? 'kg' : 'reps'),
+                              size: 22),
+                          if (loaded && change != null && change.isFinite) ...[
+                            const SizedBox(height: 6),
+                            ProgressChangeChip(
+                                change: change,
+                                label:
+                                    '${change > 0 ? '+' : ''}${progressValue(context, change)}%'),
+                          ],
+                          if (points.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            SizedBox(
+                                width: double.infinity,
+                                height: 32,
+                                child: ExcludeSemantics(
+                                    child: ProgressSparkline(
+                                        points: points,
+                                        color: progressStrength))),
+                          ],
+                        ])))));
   }
 }
 
@@ -324,6 +453,8 @@ class ProgressBeyondTraining extends StatelessWidget {
             label: body.label,
             unit: body.unit,
             points: body.points,
+            color: progressBody,
+            icon: CupertinoIcons.resize,
             contextLabel: _bodySourceLabel(body.source),
             onTap: onBody),
       if (recovery.points.isNotEmpty)
@@ -331,13 +462,17 @@ class ProgressBeyondTraining extends StatelessWidget {
             label: recovery.label,
             unit: recovery.unit,
             points: recovery.points,
+            color: progressRecovery,
+            icon: CupertinoIcons.moon_fill,
             average: true,
             onTap: onRecovery),
-      if (recovery.points.isEmpty && nutrition.points.isNotEmpty)
+      if (nutrition.points.isNotEmpty)
         _TrendPreview(
             label: nutrition.label,
             unit: nutrition.unit,
             points: nutrition.points,
+            color: progressNutrition,
+            icon: Icons.restaurant_rounded,
             average: true,
             onTap: onNutrition),
     ];
@@ -352,12 +487,18 @@ class ProgressBeyondTraining extends StatelessWidget {
           ]
         ])
       else
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const SizedBox(width: 12),
-            Expanded(child: children[i]),
-          ]
-        ]),
+        // Two columns; an odd last tile spans the row so the grid stays even.
+        LayoutBuilder(builder: (context, box) {
+          final half = (box.maxWidth - 12) / 2;
+          return Wrap(spacing: 12, runSpacing: 12, children: [
+            for (var i = 0; i < children.length; i++)
+              SizedBox(
+                  width: children.length.isOdd && i == children.length - 1
+                      ? box.maxWidth
+                      : half,
+                  child: children[i]),
+          ]);
+        }),
     ]);
   }
 }
@@ -367,11 +508,15 @@ class _TrendPreview extends StatelessWidget {
   final List<ProgressPoint> points;
   final bool average;
   final String? contextLabel;
+  final Color color;
+  final IconData icon;
   final VoidCallback onTap;
   const _TrendPreview(
       {required this.label,
       required this.unit,
       required this.points,
+      required this.color,
+      required this.icon,
       required this.onTap,
       this.contextLabel,
       this.average = false});
@@ -382,34 +527,39 @@ class _TrendPreview extends StatelessWidget {
         : points.last.value;
     final change = points.last.value - points.first.value;
     return ProgressSurface(
+        accent: color,
         padding: EdgeInsets.zero,
         child: InkWell(
             onTap: onTap,
             child: Padding(
-                padding: const EdgeInsets.all(13),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
+                        _IconChip(icon: icon, color: color),
+                        const SizedBox(width: 8),
                         Expanded(
                             child: Text(fitnessText(context, label),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                    color: progressMuted, fontSize: 12))),
+                                    color: progressMuted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500))),
                         const Icon(CupertinoIcons.chevron_right,
                             size: 12, color: progressMuted),
                       ]),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       ProgressValueText(
                           progressValue(context, value, unit: unit),
-                          size: 23),
+                          size: 24),
                       const SizedBox(height: 10),
                       SizedBox(
                           width: double.infinity,
-                          height: 28,
+                          height: 34,
                           child: ProgressSparkline(
-                              points: points,
-                              daily: average,
-                              color: progressBlue)),
+                              points: points, daily: average, color: color)),
                       const SizedBox(height: 10),
                       Text(
                           contextLabel != null
@@ -423,6 +573,23 @@ class _TrendPreview extends StatelessWidget {
                               fontSize: 11, color: progressMuted)),
                     ]))));
   }
+}
+
+/// A small tinted square holding an area's icon.
+class _IconChip extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final double size;
+  const _IconChip({required this.icon, required this.color, this.size = 26});
+
+  @override
+  Widget build(BuildContext context) => Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: .15),
+          borderRadius: BorderRadius.circular(size * .32)),
+      child: Icon(icon, size: size * .52, color: color));
 }
 
 class ProgressTrendsList extends StatelessWidget {
@@ -500,60 +667,103 @@ class ProgressTrendsList extends StatelessWidget {
                 unit: recovery.unit)
       ),
     ];
+    const colors = {
+      'training': progressTraining,
+      'exercises': progressStrength,
+      'muscles': progressMuscle,
+      'body': progressBody,
+      'nutrition': progressNutrition,
+      'recovery': progressRecovery,
+    };
+    return Column(children: [
+      for (var i = 0; i < items.length; i++) ...[
+        if (i > 0) const SizedBox(height: 12),
+        _TrendCard(
+            kind: items[i].$1,
+            title: items[i].$2,
+            icon: items[i].$3,
+            points: items[i].$4,
+            summary: items[i].$5,
+            color: colors[items[i].$1]!,
+            onTap: () => onOpen(items[i].$1)),
+      ],
+    ]);
+  }
+}
+
+/// One area of progress: its tinted icon, the current figure and, once there
+/// are readings, a full-width chart of the period in that area's hue.
+class _TrendCard extends StatelessWidget {
+  final String kind, title, summary;
+  final IconData icon;
+  final List<ProgressPoint> points;
+  final Color color;
+  final VoidCallback onTap;
+  const _TrendCard(
+      {required this.kind,
+      required this.title,
+      required this.icon,
+      required this.points,
+      required this.summary,
+      required this.color,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final recorded = points.isNotEmpty && summary.isNotEmpty;
     return ProgressSurface(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Column(children: [
-          for (var i = 0; i < items.length; i++) ...[
-            if (i > 0)
-              const Divider(height: 1, color: Color(0x12FFFFFF), indent: 46),
-            InkWell(
-                key: ValueKey('progress-trend-${items[i].$1}'),
-                onTap: () => onOpen(items[i].$1),
-                child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Row(children: [
-                      Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFF2A2C30),
-                              borderRadius: BorderRadius.circular(11)),
-                          child: Icon(items[i].$3,
-                              size: 18, color: progressSilver)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                            Text(fitnessText(context, items[i].$2),
-                                style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 4),
-                            Text(
-                                items[i].$4.isEmpty || items[i].$5.isEmpty
-                                    ? fitnessText(context, 'Not recorded yet')
-                                    : items[i].$5,
-                                style: const TextStyle(
-                                    fontSize: 11, color: progressMuted)),
-                          ])),
-                      if (items[i].$4.isNotEmpty &&
-                          MediaQuery.textScalerOf(context).scale(14) < 20) ...[
+        accent: recorded ? color : null,
+        padding: EdgeInsets.zero,
+        child: InkWell(
+            key: ValueKey('progress-trend-$kind'),
+            onTap: onTap,
+            child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        _IconChip(
+                            icon: icon,
+                            color: recorded ? color : progressMuted,
+                            size: 36),
+                        const SizedBox(width: 12),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(fitnessText(context, title),
+                                  style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -.2)),
+                              const SizedBox(height: 3),
+                              Text(
+                                  recorded
+                                      ? summary
+                                      : fitnessText(context, 'Not recorded yet'),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: recorded
+                                          ? progressSilver
+                                          : progressMuted)),
+                            ])),
                         const SizedBox(width: 10),
+                        const Icon(CupertinoIcons.chevron_right,
+                            size: 13, color: progressMuted),
+                      ]),
+                      if (points.isNotEmpty) ...[
+                        const SizedBox(height: 14),
                         SizedBox(
-                            width: 64,
-                            height: 30,
+                            width: double.infinity,
+                            height: 56,
                             child: ExcludeSemantics(
                                 child: ProgressSparkline(
-                                    points: items[i].$4,
-                                    color: progressBlue,
+                                    points: points,
+                                    color: color,
                                     daily: ['nutrition', 'recovery']
-                                        .contains(items[i].$1)))),
+                                        .contains(kind)))),
                       ],
-                      const SizedBox(width: 10),
-                      const Icon(CupertinoIcons.chevron_right,
-                          size: 13, color: progressMuted),
-                    ]))),
-          ],
-        ]));
+                    ]))));
   }
 }

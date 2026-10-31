@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme/ds_colors.dart';
 import '../theme/ds_radius.dart';
@@ -55,7 +56,7 @@ class LiquidGlass extends StatelessWidget {
       padding: const EdgeInsets.all(0.8),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius - 1),
-        child: Stack(
+        child: _frost(Stack(
           children: [
             Positioned.fill(
               child: DecoratedBox(
@@ -63,7 +64,11 @@ class LiquidGlass extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [top, base, DSColors.bgElevated],
+                    colors: [
+                      top,
+                      base,
+                      DSColors.bgElevated.withValues(alpha: surfaceOpacity),
+                    ],
                     stops: const [0, 0.24, 1],
                   ),
                 ),
@@ -89,8 +94,17 @@ class LiquidGlass extends StatelessWidget {
               ),
             Padding(padding: padding ?? EdgeInsets.zero, child: child),
           ],
-        ),
+        )),
       ),
     );
   }
+
+  /// Frosts whatever is behind the card when [blurSigma] is set; pair it with
+  /// a [surfaceOpacity] below 1 so the blurred backdrop can show through.
+  Widget _frost(Widget surface) => blurSigma <= 0
+      ? surface
+      : BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: surface,
+        );
 }

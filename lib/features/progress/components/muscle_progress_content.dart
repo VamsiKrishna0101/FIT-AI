@@ -36,7 +36,7 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
         .length;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ProgressSurface(
-          accent: progressCyan,
+          accent: progressMuscle,
           child: Row(children: [
             Expanded(
                 child: Text(fitnessText(context, 'Muscles trained'),
@@ -54,7 +54,7 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
             'assistingSets': 'Assisting sets'
           },
           selected: _metric,
-          color: progressCyan,
+          color: progressMuscle,
           onChanged: (value) => setState(() => _metric = value)),
       const SizedBox(height: 16),
       ProgressSurface(
