@@ -1,4 +1,4 @@
-package com.example.fitai_mobile
+package com.setcraft.app
 
 import android.content.Intent
 import android.content.ClipData
@@ -12,6 +12,7 @@ import android.app.NotificationManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.StepsRecord
@@ -23,6 +24,9 @@ import java.time.Instant
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var phoneSleep: PhoneSleepTracking
+    private var hydrationTilt: HydrationTiltStream? = null
+    private var hydrationEvents: EventChannel? = null
+    private var hydrationControl: MethodChannel? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -33,6 +37,17 @@ class MainActivity : FlutterFragmentActivity() {
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        hydrationTilt?.dispose()
+        val tilt = HydrationTiltStream(this)
+        hydrationTilt = tilt
+        hydrationEvents = EventChannel(flutterEngine.dartExecutor.binaryMessenger, "setcraft/hydration_motion").also {
+            it.setStreamHandler(tilt)
+        }
+        hydrationControl = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "setcraft/hydration_motion_control").also {
+            it.setMethodCallHandler { call, result ->
+                if (call.method == "isAvailable") result.success(tilt.available) else result.notImplemented()
+            }
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "setcraft/credentials")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -103,5 +118,20 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (::phoneSleep.isInitialized) phoneSleep.permissionResult(requestCode)
+    }
+    override fun onResume() {
+        super.onResume()
+        hydrationTilt?.resume()
+    }
+    override fun onPause() {
+        hydrationTilt?.pause()
+        super.onPause()
+    }
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        hydrationTilt?.dispose()
+        hydrationEvents?.setStreamHandler(null)
+        hydrationControl?.setMethodCallHandler(null)
+        hydrationTilt = null
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 }

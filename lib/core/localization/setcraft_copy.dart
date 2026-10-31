@@ -5,14 +5,14 @@ import 'package:flutter/widgets.dart';
 /// User-generated and backend content is deliberately left untouched. Static
 /// interface text is translated here and falls back to English only when a key
 /// has not yet been added to a locale.
-class FitAiCopy {
+class SetcraftCopy {
   final String localeCode;
 
-  const FitAiCopy(this.localeCode);
+  const SetcraftCopy(this.localeCode);
 
-  static FitAiCopy of(BuildContext context) {
+  static SetcraftCopy of(BuildContext context) {
     final locale = Localizations.localeOf(context);
-    return FitAiCopy(locale.toLanguageTag());
+    return SetcraftCopy(locale.toLanguageTag());
   }
 
   String text(String key) {

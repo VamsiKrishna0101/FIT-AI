@@ -1,13 +1,15 @@
 import 'motion.dart';
+import '../theme/ds_motion.dart';
 import '../theme/ds_colors.dart';
 import '../localization/fitness_copy.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Shared satin silver action, sized by content at larger text settings.
 class LiquidChromeButton extends StatefulWidget {
   final String title;
+  final String? loadingTitle;
   final VoidCallback? onPressed;
   final double height;
   final bool isLoading, showArrow, pill, solid;
@@ -15,6 +17,7 @@ class LiquidChromeButton extends StatefulWidget {
       {super.key,
       required this.title,
       required this.onPressed,
+      this.loadingTitle,
       this.height = 54,
       this.isLoading = false,
       this.showArrow = true,
@@ -28,16 +31,24 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null && !widget.isLoading;
+    final title =
+        widget.isLoading ? widget.loadingTitle ?? widget.title : widget.title;
     final radius = BorderRadius.circular(widget.pill ? 40 : 18);
     return Semantics(
       button: true,
       liveRegion: widget.isLoading,
       enabled: enabled,
-      label: fitnessText(context, widget.title),
+      label: fitnessText(context, title),
       child: MotionPress(
           enabled: enabled,
-          child: Opacity(
-            opacity: enabled || widget.isLoading ? 1 : .38,
+          child: AnimatedOpacity(
+            duration: DSMotion.duration(context, DSMotion.selection),
+            curve: DSMotion.effects,
+            opacity: widget.isLoading
+                ? .72
+                : enabled
+                    ? 1
+                    : .38,
             child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -68,30 +79,41 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
                         child: Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 14),
-                            child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                      child: FitnessText(widget.title,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                              color: DSColors.bg,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: -.3))),
-                                  if (widget.showArrow || widget.isLoading)
-                                    SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: widget.isLoading
-                                            ? const CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: DSColors.bg)
-                                            : const Icon(
-                                                Icons.arrow_forward_rounded,
-                                                size: 20,
-                                                color: DSColors.bg)),
-                                ])),
+                            child: SizedBox(
+                                width: double.infinity,
+                                child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 24),
+                                          child: FitnessText(title,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                  color: DSColors.bg,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: -.3))),
+                                      if (widget.showArrow || widget.isLoading)
+                                        Positioned(
+                                            right: 0,
+                                            top: 0,
+                                            bottom: 0,
+                                            child: Center(
+                                                child: SizedBox(
+                                                    width: 20,
+                                                    height: 20,
+                                                    child: widget.isLoading
+                                                        ? const CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                            color: DSColors.bg)
+                                                        : const Icon(
+                                                            Icons
+                                                                .arrow_forward_rounded,
+                                                            size: 20,
+                                                            color:
+                                                                DSColors.bg)))),
+                                    ]))),
                       )),
                 )),
           )),

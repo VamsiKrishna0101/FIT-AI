@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/today/models/readiness_availability.dart';
-import 'package:fitai_mobile/models/home_models.dart';
+import 'package:setcraft/features/today/models/readiness_availability.dart';
+import 'package:setcraft/models/home_models.dart';
 
 void main() {
   test('Saved sleep is acknowledged even when a heart reading is missing', () {

@@ -169,7 +169,7 @@ class _ProgressActivityState extends State<ProgressActivity> {
                                                     ? progressBlue
                                                     : logged
                                                         ? const Color(
-                                                            0xFF73849D)
+                                                            0xFF777777)
                                                         : const Color(
                                                             0xFF303030),
                                             borderRadius:
@@ -240,7 +240,7 @@ class ProgressMuscleBars extends StatelessWidget {
                                                           BorderRadius.circular(
                                                               3),
                                                       gradient: const LinearGradient(
-                                                          colors: [Color(0xFF427FA8), progressCyan])))))))),
+                                                          colors: [Color(0xFF777777), progressCyan])))))))),
                           const SizedBox(width: 12),
                           Text('${row['directSets'] ?? 0}',
                               style: const TextStyle(

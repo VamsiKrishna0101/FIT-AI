@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:fitai_mobile/features/profile/repositories/mcp_repository.dart';
+import 'package:setcraft/features/profile/repositories/mcp_repository.dart';
 
 class FakeMcpRepository extends McpRepository {
   String owner = 'settings-user';

@@ -1,4 +1,4 @@
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

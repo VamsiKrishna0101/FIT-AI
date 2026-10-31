@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
-import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_card.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_entry_view.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_view.dart';
+import 'package:setcraft/features/planner/repositories/weekly_plan_repository.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_card.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/views/body_entry_view.dart';
 
 class _Repository extends WeeklyPlanRepository {
   bool generated = false;
@@ -28,7 +28,8 @@ class _Repository extends WeeklyPlanRepository {
                   'status': 'SAVED',
                   'method': 'photo_review',
                   'metrics': {
-                    'chestCm': {'value': 100, 'source': 'tape'}
+                    'weightKg': {'value': 70, 'source': 'scale'},
+                    'waistCm': {'value': 86, 'source': 'tape'}
                   },
                   'updatedAt': DateTime.now().toIso8601String(),
                 }
@@ -135,13 +136,13 @@ void main() {
     await tester
         .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
     await tester.pumpAndSettle();
-    expect(find.text('Dumbbell floor press'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsOneWidget);
     repository.generated = false;
     await tester
         .widget<RefreshIndicator>(find.byType(RefreshIndicator))
         .onRefresh();
     await tester.pumpAndSettle();
-    expect(find.text('Dumbbell floor press'), findsNothing);
+    expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsNothing);
     expect(find.text('Generate weekly plan'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -151,6 +152,7 @@ void main() {
       () {
     BodyOverview overview(String date, {String source = 'tape'}) =>
         BodyOverview.fromJson({
+          'profile': {'height': 175},
           'records': [
             {
               'id': 'scan',
@@ -158,7 +160,11 @@ void main() {
               'status': 'SAVED',
               'method': 'entered',
               'metrics': {
-                'chestCm': {'value': 100, 'source': source}
+                'weightKg': {
+                  'value': 70,
+                  'source': source == 'photo_estimate' ? source : 'scale'
+                },
+                'waistCm': {'value': 86, 'source': source}
               },
               'updatedAt': '2026-10-12T09:00:00Z',
             }
@@ -188,7 +194,7 @@ void main() {
         'fitai_user_id': 'weekly-plan-test',
       }));
 
-  testWidgets('Missing measurements are optional before generation',
+  testWidgets('Missing measurements are required before generation',
       (tester) async {
     final repository = _Repository()..currentScan = false;
     await tester
@@ -201,16 +207,18 @@ void main() {
     await tester.tap(find.text('Use these dates'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Add measurements'), findsOneWidget);
-    expect(find.text('Add measurements (optional)'), findsOneWidget);
+    expect(find.byType(BodyEntryView), findsOneWidget);
+    expect(find.text('Complete your baseline'), findsOneWidget);
+    expect(find.text('Continue without measurements'), findsNothing);
     expect(repository.generations, 0);
-    await tester.tap(find.text('Continue without measurements'));
+    await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(repository.generations, 1);
+    expect(repository.generations, 0);
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Measurement service failure does not block a training plan',
+  testWidgets(
+      'Measurement service failure blocks plan generation until verified',
       (tester) async {
     final repository = _UnavailableMeasurementsRepository();
     await tester
@@ -222,7 +230,7 @@ void main() {
     await tester.ensureVisible(find.text('Use these dates'));
     await tester.tap(find.text('Use these dates'));
     await tester.pumpAndSettle();
-    expect(repository.generations, 1);
+    expect(repository.generations, 0);
     expect(find.text('Add measurements (optional)'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -241,7 +249,6 @@ void main() {
     await tester.tap(find.text('Use these dates'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('Add measurements'));
     await tester.pumpAndSettle();
     expect(find.byType(BodyEntryView), findsOneWidget);
     expect(repository.generations, 0);
@@ -274,8 +281,15 @@ void main() {
     await tester.ensureVisible(find.text('View weekly plan'));
     await tester.tap(find.text('View weekly plan'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsOneWidget);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('plan-day-2026-10-12')));
+    await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-12')));
+    await tester.pumpAndSettle();
     expect(find.text('Dumbbell floor press'), findsOneWidget);
-    expect(find.text('2 × 10–12 · 12 kg · as logged'), findsOneWidget);
+    await tester.tap(find.text('Dumbbell floor press'));
+    await tester.pumpAndSettle();
+    expect(find.text('12 kg'), findsOneWidget);
     expect(find.text('Use this weekly plan'), findsNothing);
     expect(repository.activations, 0);
     expect(tester.takeException(), isNull);
@@ -293,6 +307,10 @@ void main() {
       data: const MediaQueryData(textScaler: TextScaler.linear(1.8)),
       child: WeeklyPlanView(repository: repository),
     )));
+    await tester.pumpAndSettle();
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('plan-day-2026-10-12')));
+    await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-12')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Food'), 250,
         scrollable: find.byType(Scrollable).first);
@@ -315,8 +333,12 @@ void main() {
 
     expect(find.text('Generate weekly plan'), findsNothing);
     expect(find.text('View weekly plan'), findsNothing);
+    expect(find.textContaining('Next plan available'), findsNothing);
+    await tester.ensureVisible(find.text('Plan options'));
+    await tester.tap(find.text('Plan options'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Next plan available'), findsOneWidget);
-    expect(find.text('Dumbbell floor press'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsOneWidget);
 
     expect(repository.generations, 0);
     expect(tester.takeException(), isNull);
@@ -363,7 +385,7 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    expect(find.text('Generate weekly plan'), findsOneWidget);
+    expect(find.text('View weekly plan'), findsOneWidget);
     expect(find.textContaining('Next plan available'), findsNothing);
     expect(repository.generations, 0);
     await tester.pumpWidget(const SizedBox());

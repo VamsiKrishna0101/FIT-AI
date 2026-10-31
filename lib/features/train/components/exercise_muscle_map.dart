@@ -43,12 +43,15 @@ Set<String> exerciseMuscleIds(Iterable<String> tags) {
 class ExerciseMuscleMap extends StatefulWidget {
   final WorkoutExerciseModel exercise;
   final bool female;
-  final bool anatomyReady;
+  final bool anatomyReady, showHeading;
+  final double diagramHeight;
   const ExerciseMuscleMap(
       {super.key,
       required this.exercise,
       this.female = false,
-      this.anatomyReady = true});
+      this.anatomyReady = true,
+      this.showHeading = true,
+      this.diagramHeight = 320});
 
   @override
   State<ExerciseMuscleMap> createState() => _ExerciseMuscleMapState();
@@ -130,7 +133,7 @@ class _ExerciseMuscleMapState extends State<ExerciseMuscleMap> {
             child: Container(
               key: const ValueKey('exercise-anatomy-map'),
               width: double.infinity,
-              height: 320,
+              height: widget.diagramHeight,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                   color: Colors.black, borderRadius: BorderRadius.circular(20)),
@@ -165,9 +168,10 @@ class _ExerciseMuscleMapState extends State<ExerciseMuscleMap> {
       ],
     );
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(fitnessText(context, 'Target muscles'),
-          style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -.3)),
+      if (widget.showHeading)
+        Text(fitnessText(context, 'Target muscles'),
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -.3)),
       if (knownTargets) ...[
         const SizedBox(height: 14),
         CupertinoSlidingSegmentedControl<bool>(

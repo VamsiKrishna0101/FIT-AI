@@ -1,5 +1,5 @@
 import '../viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -71,7 +71,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
     }
   }
 
-  void _onContinue() async {
+  Future<void> _onContinue() async {
     if (_advancing) return;
     if (_part < 3) {
       FocusScope.of(context).unfocus();
@@ -154,6 +154,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
         if (_part == 2) ...[
           BiometricsHeaderWithUnits(
               title: language.biometricsSectionTitle,
+              showUnitSelector: _selectedMetric != 'age',
               isImperial: _viewModel.isImperial,
               imperialLabel: language.unitImperialLabel,
               metricLabel: language.unitMetricLabel,

@@ -1,6 +1,276 @@
 // Display copy only. Store prices, dates and account data stay untouched.
 const membershipCopyLocales = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const membershipCopy = <String, List<String>>{
+  "Your first 14 days are free": [
+    "Deine ersten 14 Tage sind kostenlos",
+    "Vos 14 premiers jours sont gratuits",
+    "Dina första 14 dagar är gratis",
+    "De første 14 dagene er gratis",
+    "Dine første 14 dage er gratis",
+    "Je eerste 14 dagen zijn gratis",
+    "Tus primeros 14 días son gratis",
+    "I tuoi primi 14 giorni sono gratis"
+  ],
+  "Unlock your full plan": [
+    "Schalte deinen vollständigen Plan frei",
+    "Débloquez votre programme complet",
+    "Lås upp hela din plan",
+    "Lås opp hele planen din",
+    "Lås op for hele din plan",
+    "Ontgrendel je volledige plan",
+    "Desbloquea tu plan completo",
+    "Sblocca il tuo piano completo"
+  ],
+  "Try for {price}": [
+    "Für {price} testen",
+    "Essayer pour {price}",
+    "Prova för {price}",
+    "Prøv for {price}",
+    "Prøv for {price}",
+    "Probeer voor {price}",
+    "Prueba por {price}",
+    "Prova a {price}"
+  ],
+  "14 days free, then {price}. Auto-renews.": [
+    "14 Tage kostenlos, danach {price}. Automatische Verlängerung.",
+    "14 jours gratuits, puis {price}. Renouvellement automatique.",
+    "14 dagar gratis, sedan {price}. Förnyas automatiskt.",
+    "14 dager gratis, deretter {price}. Fornyes automatisk.",
+    "14 dage gratis, derefter {price}. Fornyes automatisk.",
+    "14 dagen gratis, daarna {price}. Wordt automatisch verlengd.",
+    "14 días gratis, después {price}. Renovación automática.",
+    "14 giorni gratis, poi {price}. Rinnovo automatico."
+  ],
+  "Cancel anytime in {store}.": [
+    "Jederzeit im {store} kündbar.",
+    "Annulez à tout moment dans {store}.",
+    "Avsluta när som helst i {store}.",
+    "Avslutt når som helst i {store}.",
+    "Opsig når som helst i {store}.",
+    "Annuleer op elk moment in {store}.",
+    "Cancela cuando quieras en {store}.",
+    "Annulla quando vuoi su {store}."
+  ],
+  "Cancel in {store}.": [
+    "Im {store} kündigen.",
+    "Annulez dans {store}.",
+    "Avsluta i {store}.",
+    "Avslutt i {store}.",
+    "Opsig i {store}.",
+    "Annuleer in {store}.",
+    "Cancela en {store}.",
+    "Annulla su {store}."
+  ],
+  "Start your free trial": [
+    "Starte deine kostenlose Testphase",
+    "Commencez votre essai gratuit",
+    "Starta din gratis provperiod",
+    "Start gratis prøveperiode",
+    "Start din gratis prøveperiode",
+    "Start je gratis proefperiode",
+    "Empieza tu prueba gratis",
+    "Inizia la prova gratuita"
+  ],
+  "Anytime": [
+    "Jederzeit",
+    "À tout moment",
+    "När som helst",
+    "Når som helst",
+    "Når som helst",
+    "Altijd",
+    "Cuando quieras",
+    "Quando vuoi"
+  ],
+  "Day 14": [
+    "Tag 14",
+    "Jour 14",
+    "Dag 14",
+    "Dag 14",
+    "Dag 14",
+    "Dag 14",
+    "Día 14",
+    "Giorno 14"
+  ],
+  "This is included": [
+    "Das ist enthalten",
+    "Ce qui est inclus",
+    "Det här ingår",
+    "Dette er inkludert",
+    "Dette er inkluderet",
+    "Dit is inbegrepen",
+    "Esto está incluido",
+    "Ecco cosa è incluso"
+  ],
+  "Preview": [
+    "Vorschau",
+    "Aperçu",
+    "Förhandsvisning",
+    "Forhåndsvisning",
+    "Forhåndsvisning",
+    "Voorbeeld",
+    "Vista previa",
+    "Anteprima"
+  ],
+  "Premium": [
+    "Premium",
+    "Premium",
+    "Premium",
+    "Premium",
+    "Premium",
+    "Premium",
+    "Premium",
+    "Premium"
+  ],
+  "More options": [
+    "Weitere Optionen",
+    "Plus d’options",
+    "Fler alternativ",
+    "Flere alternativer",
+    "Flere muligheder",
+    "Meer opties",
+    "Más opciones",
+    "Altre opzioni"
+  ],
+  "Opening checkout…": [
+    "Kasse wird geöffnet…",
+    "Ouverture du paiement…",
+    "Öppnar betalning…",
+    "Åpner betaling…",
+    "Åbner betaling…",
+    "Betaling openen…",
+    "Abriendo pago…",
+    "Apertura del pagamento…"
+  ],
+  "Trial active until {date}": [
+    "Testphase aktiv bis {date}",
+    "Essai actif jusqu’au {date}",
+    "Provperiod aktiv till {date}",
+    "Prøveperiode aktiv til {date}",
+    "Prøveperiode aktiv til {date}",
+    "Proefperiode actief tot {date}",
+    "Prueba activa hasta {date}",
+    "Prova attiva fino al {date}"
+  ],
+  "Membership active until {date}": [
+    "Mitgliedschaft aktiv bis {date}",
+    "Abonnement actif jusqu’au {date}",
+    "Medlemskap aktivt till {date}",
+    "Medlemskap aktivt til {date}",
+    "Medlemskab aktivt til {date}",
+    "Lidmaatschap actief tot {date}",
+    "Membresía activa hasta {date}",
+    "Abbonamento attivo fino al {date}"
+  ],
+  "Continue on your phone": [
+    "Auf deinem Handy fortfahren",
+    "Continuez sur votre téléphone",
+    "Fortsätt på din telefon",
+    "Fortsett på telefonen",
+    "Fortsæt på din telefon",
+    "Ga verder op je telefoon",
+    "Continúa en tu teléfono",
+    "Continua sul telefono"
+  ],
+  "Membership opens soon": [
+    "Die Mitgliedschaft ist bald verfügbar",
+    "L’abonnement sera bientôt disponible",
+    "Medlemskap öppnar snart",
+    "Medlemskap åpner snart",
+    "Medlemskab åbner snart",
+    "Lidmaatschap is binnenkort beschikbaar",
+    "La membresía estará disponible pronto",
+    "L’abbonamento sarà disponibile a breve"
+  ],
+  "Connect to {store}": [
+    "Mit {store} verbinden",
+    "Connectez-vous à {store}",
+    "Anslut till {store}",
+    "Koble til {store}",
+    "Opret forbindelse til {store}",
+    "Verbind met {store}",
+    "Conéctate a {store}",
+    "Collegati a {store}"
+  ],
+  "Membership is unavailable right now": [
+    "Die Mitgliedschaft ist gerade nicht verfügbar",
+    "L’abonnement est indisponible pour le moment",
+    "Medlemskap är inte tillgängligt just nu",
+    "Medlemskap er ikke tilgjengelig nå",
+    "Medlemskab er ikke tilgængeligt lige nu",
+    "Lidmaatschap is nu niet beschikbaar",
+    "La membresía no está disponible ahora",
+    "L’abbonamento non è disponibile al momento"
+  ],
+  "Check your connection": [
+    "Prüfe deine Verbindung",
+    "Vérifiez votre connexion",
+    "Kontrollera din anslutning",
+    "Sjekk tilkoblingen",
+    "Tjek din forbindelse",
+    "Controleer je verbinding",
+    "Comprueba tu conexión",
+    "Controlla la connessione"
+  ],
+  "Membership is available in the iOS and Android app.": [
+    "Die Mitgliedschaft ist in der iOS- und Android-App verfügbar.",
+    "L’abonnement est disponible dans l’application iOS et Android.",
+    "Medlemskap finns i iOS- och Android-appen.",
+    "Medlemskap er tilgjengelig i iOS- og Android-appen.",
+    "Medlemskab er tilgængeligt i iOS- og Android-appen.",
+    "Lidmaatschap is beschikbaar in de iOS- en Android-app.",
+    "La membresía está disponible en la app de iOS y Android.",
+    "L’abbonamento è disponibile nell’app iOS e Android."
+  ],
+  "Your plan is saved. Check back shortly.": [
+    "Dein Plan ist gespeichert. Schau bald wieder vorbei.",
+    "Votre programme est enregistré. Revenez bientôt.",
+    "Din plan är sparad. Kom tillbaka snart.",
+    "Planen din er lagret. Kom tilbake snart.",
+    "Din plan er gemt. Kom tilbage snart.",
+    "Je plan is opgeslagen. Kom binnenkort terug.",
+    "Tu plan está guardado. Vuelve pronto.",
+    "Il tuo piano è salvato. Torna a breve."
+  ],
+  "Open {store} and try again.": [
+    "Öffne {store} und versuche es erneut.",
+    "Ouvrez {store} et réessayez.",
+    "Öppna {store} och försök igen.",
+    "Åpne {store} og prøv igjen.",
+    "Åbn {store} og prøv igen.",
+    "Open {store} en probeer opnieuw.",
+    "Abre {store} e inténtalo de nuevo.",
+    "Apri {store} e riprova."
+  ],
+  "Please try again shortly.": [
+    "Bitte versuche es in Kürze erneut.",
+    "Veuillez réessayer dans un instant.",
+    "Försök igen om en stund.",
+    "Prøv igjen om litt.",
+    "Prøv igen om lidt.",
+    "Probeer het zo opnieuw.",
+    "Inténtalo de nuevo en breve.",
+    "Riprova tra poco."
+  ],
+  "Available in the mobile app": [
+    "In der mobilen App verfügbar",
+    "Disponible dans l’application mobile",
+    "Tillgängligt i mobilappen",
+    "Tilgjengelig i mobilappen",
+    "Tilgængeligt i mobilappen",
+    "Beschikbaar in de mobiele app",
+    "Disponible en la app móvil",
+    "Disponibile nell’app mobile"
+  ],
+  "Check availability": [
+    "Verfügbarkeit prüfen",
+    "Vérifier la disponibilité",
+    "Kontrollera tillgänglighet",
+    "Sjekk tilgjengelighet",
+    "Tjek tilgængelighed",
+    "Controleer beschikbaarheid",
+    "Comprobar disponibilidad",
+    "Verifica disponibilità"
+  ],
   'Your first 14 days\nare on us.': [
     'Deine ersten 14 Tage\nsind kostenlos.',
     'Vos 14 premiers jours\nsont offerts.',

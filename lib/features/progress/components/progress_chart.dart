@@ -12,9 +12,15 @@ class ProgressChart extends StatefulWidget {
   final List<ProgressPoint> points;
   final String unit;
   final int digits;
-  final bool bars, daily, average, showReference, compactHeader, showReadings;
+  final bool bars,
+      daily,
+      average,
+      showReference,
+      compactHeader,
+      showReadings,
+      showChange;
   final Color color;
-  final double height;
+  final double height, headlineSize;
   final double? maximum, reference;
   final String referenceLabel;
   final String? summaryLabel;
@@ -29,8 +35,10 @@ class ProgressChart extends StatefulWidget {
     this.showReference = false,
     this.compactHeader = false,
     this.showReadings = false,
+    this.showChange = false,
     this.color = progressBlue,
     this.height = 150,
+    this.headlineSize = 31,
     this.maximum,
     this.reference,
     this.referenceLabel = 'Recorded-day average',
@@ -44,6 +52,20 @@ class ProgressChart extends StatefulWidget {
 class _ProgressChartState extends State<ProgressChart> {
   int? _selected;
   int _readingCount = 7;
+  final _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _selectIndex(int index) {
+    final next = index.clamp(0, widget.points.length - 1);
+    if (_selected == next) return;
+    HapticFeedback.selectionClick();
+    setState(() => _selected = next);
+  }
 
   @override
   void didUpdateWidget(ProgressChart oldWidget) {
@@ -63,22 +85,23 @@ class _ProgressChartState extends State<ProgressChart> {
     final index = (_selected ?? points.length - 1).clamp(0, points.length - 1);
     final selected = points[index];
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final axisWidth =
-        math.max(40.0, MediaQuery.textScalerOf(context).scale(48));
     final average = points.fold<double>(0, (sum, point) => sum + point.value) /
         points.length;
     final reference = widget.showReference ? widget.reference ?? average : null;
-    final low = widget.bars || widget.maximum != null
-        ? 0.0
-        : points.map((point) => point.value).reduce(math.min);
-    final high = widget.maximum ??
-        math.max(points.map((point) => point.value).reduce(math.max),
-            reference ?? low);
-    final pad = widget.bars || widget.maximum != null
-        ? 0.0
-        : math.max(.5, (high - low) * .18);
-    final min = low - pad;
-    final max = math.max(min + 1, high + pad).toDouble();
+    final scale = _ChartScale(points,
+        zero: widget.bars || widget.maximum != null,
+        maximum: widget.maximum,
+        reference: reference,
+        integer: widget.digits == 0);
+    final min = scale.min, max = scale.max;
+    String axisValue(double value) => value.abs() >= 10000
+        ? NumberFormat.compact(locale: locale).format(value)
+        : progressValue(context, value, digits: scale.step % 1 == 0 ? 0 : 1);
+    final axisWidth = math.max(
+        40.0,
+        MediaQuery.textScalerOf(context).scale(12) *
+            scale.ticks.map((v) => axisValue(v).length).reduce(math.max) *
+            .62);
     final headline =
         widget.average && _selected == null ? average : selected.value;
     final headlineLabel = _selected != null
@@ -87,58 +110,59 @@ class _ProgressChartState extends State<ProgressChart> {
             ? 'Recorded-day average'
             : widget.summaryLabel ?? 'Latest reading';
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-            child: widget.compactHeader
-                ? Text(
-                    '${fitnessText(context, headlineLabel)} · ${progressValue(context, headline, unit: widget.unit, digits: widget.digits)}',
-                    style: const TextStyle(fontSize: 12, color: progressMuted))
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        Text(fitnessText(context, headlineLabel),
-                            style: const TextStyle(
-                                fontSize: 12, color: progressMuted)),
-                        const SizedBox(height: 4),
-                        Text.rich(
-                            TextSpan(children: [
-                              TextSpan(
-                                  text: progressValue(context, headline,
-                                      digits: widget.digits)),
-                              if (widget.unit.isNotEmpty)
-                                TextSpan(
-                                    text:
-                                        ' ${fitnessText(context, widget.unit)}',
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        color: progressMuted,
-                                        letterSpacing: 0)),
-                            ]),
-                            style: const TextStyle(
-                                color: progressSilver,
-                                fontSize: 31,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -1.1)),
-                      ])),
-        if (widget.average && _selected == null)
+      if (widget.compactHeader)
+        Text(
+            '${fitnessText(context, headlineLabel)} · ${progressValue(context, headline, unit: widget.unit, digits: widget.digits)}',
+            style: const TextStyle(fontSize: 12, color: progressMuted))
+      else ...[
+        Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            children: [
+              Text.rich(
+                  TextSpan(children: [
+                    TextSpan(
+                        text: progressValue(context, headline,
+                            digits: widget.digits)),
+                    if (widget.unit.isNotEmpty)
+                      TextSpan(
+                          text: ' ${fitnessText(context, widget.unit)}',
+                          style: const TextStyle(
+                              fontSize: 16,
+                              color: progressMuted,
+                              letterSpacing: 0)),
+                  ]),
+                  style: TextStyle(
+                      color: progressSilver,
+                      fontSize: widget.headlineSize,
+                      height: 1.12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -1.1)),
+              if (widget.showChange && points.length > 1 && _selected == null)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Text(
+                        '${points.last.value - points.first.value > 0 ? '+' : ''}${progressValue(context, points.last.value - points.first.value, unit: widget.unit, digits: widget.digits)}',
+                        style: const TextStyle(
+                            fontSize: 14, color: progressMuted))),
+            ]),
+        const SizedBox(height: 8),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: Text(fitnessText(context, headlineLabel),
+                  style: const TextStyle(fontSize: 12, color: progressMuted))),
+          const SizedBox(width: 12),
           Flexible(
-              child: Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Text(
-                      fitnessText(context, '{count} recorded days',
-                          values: {'count': points.length}),
-                      textAlign: TextAlign.end,
-                      style:
-                          const TextStyle(fontSize: 12, color: progressMuted))))
-        else
-          Flexible(
-              child: Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Text(DateFormat.MMMd(locale).format(selected.date),
-                      textAlign: TextAlign.end,
-                      style: const TextStyle(
-                          color: progressMuted, fontSize: 12)))),
-      ]),
+              child: Text(
+                  widget.average && _selected == null
+                      ? fitnessText(context, '{count} recorded days',
+                          values: {'count': points.length})
+                      : DateFormat.MMMd(locale).format(selected.date),
+                  textAlign: TextAlign.end,
+                  style: const TextStyle(fontSize: 12, color: progressMuted))),
+        ]),
+      ],
       SizedBox(height: widget.compactHeader ? 12 : 16),
       if (points.length > 1) ...[
         SizedBox(
@@ -157,37 +181,64 @@ class _ProgressChartState extends State<ProgressChart> {
                       distance = next;
                     }
                   }
-                  if (candidate != _selected) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _selected = candidate);
-                  }
+                  _selectIndex(candidate);
                 }
 
-                return Semantics(
-                    label:
-                        '${progressValue(context, headline, unit: widget.unit)}, ${DateFormat.yMMMd(locale).format(selected.date)}',
-                    child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTapDown: (details) => select(details.localPosition),
-                        onHorizontalDragUpdate: (details) =>
-                            select(details.localPosition),
-                        child: RepaintBoundary(
-                            child: MotionProgress(
-                                dataKey:
-                                    '${widget.bars}:${widget.unit}:${_chartKey(points)}',
-                                builder: (context, progress) => CustomPaint(
-                                    size: Size(
-                                        constraints.maxWidth, widget.height),
-                                    painter: _ChartPainter(
-                                        points: points,
-                                        progress: progress,
-                                        min: min,
-                                        max: max,
-                                        color: widget.color,
-                                        bars: widget.bars,
-                                        daily: widget.daily,
-                                        selected: _selected,
-                                        reference: reference))))));
+                return Focus(
+                    focusNode: _focus,
+                    onKeyEvent: (node, event) {
+                      if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+                        return KeyEventResult.ignored;
+                      }
+                      final key = event.logicalKey;
+                      if (key == LogicalKeyboardKey.arrowLeft ||
+                          key == LogicalKeyboardKey.arrowRight) {
+                        _selectIndex(index +
+                            (key == LogicalKeyboardKey.arrowRight ? 1 : -1));
+                      } else if (key == LogicalKeyboardKey.home) {
+                        _selectIndex(0);
+                      } else if (key == LogicalKeyboardKey.end) {
+                        _selectIndex(points.length - 1);
+                      } else {
+                        return KeyEventResult.ignored;
+                      }
+                      return KeyEventResult.handled;
+                    },
+                    child: Semantics(
+                        label:
+                            '${progressValue(context, headline, unit: widget.unit)}, ${DateFormat.yMMMd(locale).format(selected.date)}',
+                        onIncrease: index < points.length - 1
+                            ? () => _selectIndex(index + 1)
+                            : null,
+                        onDecrease:
+                            index > 0 ? () => _selectIndex(index - 1) : null,
+                        child: GestureDetector(
+                            key: const ValueKey('progress-chart-plot'),
+                            behavior: HitTestBehavior.opaque,
+                            onTapDown: (details) {
+                              _focus.requestFocus();
+                              select(details.localPosition);
+                            },
+                            onHorizontalDragUpdate: (details) =>
+                                select(details.localPosition),
+                            child: RepaintBoundary(
+                                child: MotionProgress(
+                                    dataKey:
+                                        '${widget.bars}:${widget.unit}:${_chartKey(points)}',
+                                    builder: (context, progress) => CustomPaint(
+                                        size: Size(constraints.maxWidth,
+                                            widget.height),
+                                        painter: _ChartPainter(
+                                            points: points,
+                                            progress: progress,
+                                            min: min,
+                                            max: max,
+                                            color: widget.color,
+                                            bars: widget.bars,
+                                            daily: widget.daily,
+                                            selected: _selected,
+                                            reference: reference,
+                                            ticks: scale.ticks)))))));
               })),
               const SizedBox(width: 10),
               SizedBox(
@@ -195,10 +246,8 @@ class _ProgressChartState extends State<ProgressChart> {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [max, (max + min) / 2, min]
-                          .map((value) => Text(
-                              progressValue(context, value,
-                                  digits: max - min < 3 ? 1 : 0),
+                      children: scale.ticks
+                          .map((value) => Text(axisValue(value),
                               style: const TextStyle(
                                   fontSize: 12, color: progressMuted)))
                           .toList())),
@@ -331,7 +380,9 @@ class _ChartGeometry {
   final List<ProgressPoint> points;
   final Size size;
   final double min, max;
-  const _ChartGeometry(this.points, this.size, this.min, this.max);
+  final double inset;
+  const _ChartGeometry(this.points, this.size, this.min, this.max,
+      {this.inset = 12});
 
   double y(double value) =>
       size.height -
@@ -343,8 +394,8 @@ class _ChartGeometry {
         1, points.last.date.difference(points.first.date).inMilliseconds);
     final x = points.length == 1
         ? size.width / 2
-        : 12 +
-            (size.width - 24) *
+        : inset +
+            (size.width - inset * 2) *
                 points[index]
                     .date
                     .difference(points.first.date)
@@ -354,6 +405,98 @@ class _ChartGeometry {
   }
 }
 
+/// Rounded, evenly spaced ticks keep the scale readable without changing data.
+class _ChartScale {
+  late final double min, max, step;
+  late final List<double> ticks;
+  _ChartScale(List<ProgressPoint> points,
+      {required bool zero,
+      bool integer = false,
+      double? maximum,
+      double? reference}) {
+    final low = zero ? 0.0 : points.map((p) => p.value).reduce(math.min);
+    final high =
+        math.max(points.map((p) => p.value).reduce(math.max), reference ?? low);
+    final span = math.max(high - low, integer ? 1.0 : .1);
+    final padding = zero ? span * .06 : span * .12;
+    final lower = zero ? 0.0 : low - padding;
+    final upper = maximum ?? high + padding;
+    final rough = math.max((upper - lower) / 3, .001);
+    final power =
+        math.pow(10, (math.log(rough) / math.ln10).floor()).toDouble();
+    final fraction = rough / power;
+    final nice = fraction <= 1
+        ? 1.0
+        : fraction <= 2
+            ? 2.0
+            : fraction <= 2.5
+                ? 2.5
+                : fraction <= 5
+                    ? 5.0
+                    : 10.0;
+    step = math.max(integer ? 1.0 : .001, nice * power);
+    final lowerTick = zero ? 0.0 : (lower / step).floor() * step;
+    min = low >= 0 ? math.max(0, lowerTick).toDouble() : lowerTick;
+    max = maximum ?? math.max(min + step, (upper / step).ceil() * step);
+    // A fixed bound (for example a score out of 100) stays exact.
+    ticks = maximum != null
+        ? [max, (max + min) / 2, min]
+        : [
+            for (var value = max; value >= min - step * .01; value -= step)
+              value.abs() < step * .001 ? 0 : value
+          ];
+  }
+}
+
+/// Monotone cubic interpolation softens corners while preserving each reading
+/// and keeping the curve within the adjacent points' values.
+Path _trendPath(List<Offset> points) {
+  final path = Path()..moveTo(points.first.dx, points.first.dy);
+  if (points.length == 1) return path;
+  final widths = <double>[], slopes = <double>[];
+  for (var i = 0; i < points.length - 1; i++) {
+    final dx = points[i + 1].dx - points[i].dx;
+    if (dx <= 0) {
+      for (final point in points.skip(1)) {
+        path.lineTo(point.dx, point.dy);
+      }
+      return path;
+    }
+    widths.add(dx);
+    slopes.add((points[i + 1].dy - points[i].dy) / dx);
+  }
+  final tangents = List<double>.filled(points.length, 0);
+  tangents[0] = slopes.first;
+  tangents[points.length - 1] = slopes.last;
+  for (var i = 1; i < points.length - 1; i++) {
+    final a = slopes[i - 1], b = slopes[i];
+    if (a * b > 0) {
+      final w1 = 2 * widths[i] + widths[i - 1];
+      final w2 = widths[i] + 2 * widths[i - 1];
+      tangents[i] = (w1 + w2) / (w1 / a + w2 / b);
+    }
+  }
+  for (var i = 0; i < slopes.length; i++) {
+    final slope = slopes[i];
+    if (slope == 0) {
+      tangents[i] = tangents[i + 1] = 0;
+    } else {
+      final a = tangents[i] / slope, b = tangents[i + 1] / slope;
+      final magnitude = math.sqrt(a * a + b * b);
+      if (magnitude > 3) {
+        tangents[i] = 3 / magnitude * a * slope;
+        tangents[i + 1] = 3 / magnitude * b * slope;
+      }
+    }
+  }
+  for (var i = 0; i < slopes.length; i++) {
+    final p = points[i], q = points[i + 1], dx = widths[i] / 3;
+    path.cubicTo(p.dx + dx, p.dy + tangents[i] * dx, q.dx - dx,
+        q.dy - tangents[i + 1] * dx, q.dx, q.dy);
+  }
+  return path;
+}
+
 class _ChartPainter extends CustomPainter {
   final List<ProgressPoint> points;
   final double min, max, progress;
@@ -361,6 +504,7 @@ class _ChartPainter extends CustomPainter {
   final bool bars, daily, compact;
   final int? selected;
   final double? reference;
+  final List<double>? ticks;
   const _ChartPainter({
     required this.points,
     required this.min,
@@ -372,6 +516,7 @@ class _ChartPainter extends CustomPainter {
     this.compact = false,
     this.selected,
     this.reference,
+    this.ticks,
   });
 
   void _dash(Canvas canvas, Offset from, Offset to, Paint paint) {
@@ -388,18 +533,24 @@ class _ChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty || size.width < 24) return;
-    final geometry = _ChartGeometry(points, size, min, max);
+    final geometry = _ChartGeometry(points, size, min, max,
+        inset: compact
+            ? bars
+                ? math.min(14, size.width / points.length * .4 + 2)
+                : 2
+            : 12);
     if (!compact) {
       final grid = Paint()
-        ..color = const Color(0x14FFFFFF)
-        ..strokeWidth = .6;
-      for (final y in [4.0, size.height / 2, size.height - 4]) {
-        _dash(canvas, Offset(0, y), Offset(size.width, y), grid);
+        ..color = const Color(0x12FFFFFF)
+        ..strokeWidth = .7;
+      for (final value in ticks ?? [max, (max + min) / 2, min]) {
+        final y = geometry.y(value);
+        canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
       }
     }
     final paint = Paint()
       ..color = color
-      ..strokeWidth = compact ? 1.7 : 2.2
+      ..strokeWidth = compact ? 1.8 : 2.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
@@ -408,7 +559,8 @@ class _ChartPainter extends CustomPainter {
           ? math.max(
               1, points.last.date.difference(points.first.date).inDays + 1)
           : points.length;
-      final width = math.min(25.0, (size.width - 24) / slots * .65);
+      final width =
+          math.min(24.0, (size.width - geometry.inset * 2) / slots * .65);
       for (var i = 0; i < points.length; i++) {
         if (points[i].value == 0) continue;
         final p = geometry.position(i);
@@ -424,7 +576,7 @@ class _ChartPainter extends CustomPainter {
           ..shader = LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [color, color.withValues(alpha: .4)]).createShader(rect);
+              colors: [color, color.withValues(alpha: .72)]).createShader(rect);
         if (selected != null && selected != i) {
           bar.shader = null;
           bar.color = color.withValues(alpha: .3);
@@ -442,12 +594,9 @@ class _ChartPainter extends CustomPainter {
             daily &&
             points[i].date.difference(points[i - 1].date).inDays > 1;
         if (i == points.length || gap) {
-          final line = Path()
-            ..moveTo(geometry.position(start).dx, geometry.position(start).dy);
-          for (var j = start + 1; j < i; j++) {
-            final p = geometry.position(j);
-            line.lineTo(p.dx, p.dy);
-          }
+          final line = _trendPath([
+            for (var j = start; j < i; j++) geometry.position(j),
+          ]);
           if (i - start > 1) {
             final fill = Path.from(line)
               ..lineTo(geometry.position(i - 1).dx, size.height - 4)
@@ -460,7 +609,7 @@ class _ChartPainter extends CustomPainter {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        color.withValues(alpha: .14),
+                        color.withValues(alpha: compact ? .07 : .12),
                         color.withValues(alpha: 0)
                       ]).createShader(Offset.zero & size));
             canvas.drawPath(line, paint);
@@ -472,6 +621,12 @@ class _ChartPainter extends CustomPainter {
         }
       }
       if (!compact) {
+        if (points.length <= 12) {
+          for (var i = 0; i < points.length; i++) {
+            canvas.drawCircle(geometry.position(i), 1.8,
+                Paint()..color = color.withValues(alpha: .8));
+          }
+        }
         final last = geometry.position(selected ?? points.length - 1);
         canvas.drawCircle(last, 5, Paint()..color = const Color(0xFF1D1E20));
         canvas.drawCircle(last, 3.5, Paint()..color = color);
@@ -489,12 +644,11 @@ class _ChartPainter extends CustomPainter {
     }
     if (selected != null && !compact) {
       final p = geometry.position(selected!);
-      _dash(
-          canvas,
+      canvas.drawLine(
           Offset(p.dx, 0),
           Offset(p.dx, size.height),
           Paint()
-            ..color = progressSilver.withValues(alpha: .5)
+            ..color = progressSilver.withValues(alpha: .24)
             ..strokeWidth = 1);
     }
   }
@@ -509,6 +663,7 @@ class _ChartPainter extends CustomPainter {
       old.daily != daily ||
       old.compact != compact ||
       old.reference != reference ||
+      old.ticks != ticks ||
       old.min != min ||
       old.max != max;
 }

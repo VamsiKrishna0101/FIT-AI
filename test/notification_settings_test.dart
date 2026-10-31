@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/notifications/repositories/notifications_repository.dart';
-import 'package:fitai_mobile/features/notifications/services/notification_service.dart';
-import 'package:fitai_mobile/features/notifications/views/notification_settings_view.dart';
+import 'package:setcraft/features/notifications/repositories/notifications_repository.dart';
+import 'package:setcraft/features/notifications/services/notification_service.dart';
+import 'package:setcraft/features/notifications/views/notification_settings_view.dart';
 
 class FakeNotifications extends NotificationsRepository {
   bool fail = false;

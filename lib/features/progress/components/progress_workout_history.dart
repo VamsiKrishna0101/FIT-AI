@@ -156,9 +156,9 @@ class ProgressWorkoutRecap extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     return FitnessTheme(
         child: Scaffold(
-        backgroundColor: DSColors.bg,
-            appBar: AppBar(
             backgroundColor: DSColors.bg,
+            appBar: AppBar(
+                backgroundColor: DSColors.bg,
                 surfaceTintColor: Colors.transparent,
                 title: Text(fitnessText(context, 'Workout'),
                     style: const TextStyle(

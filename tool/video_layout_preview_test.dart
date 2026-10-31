@@ -12,9 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-import 'package:fitai_mobile/core/media/video_cache.dart';
-import 'package:fitai_mobile/features/train/models/workout_exercise_models.dart';
-import 'package:fitai_mobile/features/train/views/exercise_detail_view.dart';
+import 'package:setcraft/core/media/video_cache.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
+import 'package:setcraft/features/train/views/exercise_detail_view.dart';
 
 class _FramePlayer extends VideoPlayerPlatform {
   final Uint8List frame;

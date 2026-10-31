@@ -8,8 +8,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/train/components/exercise_thumbnail.dart';
-import 'package:fitai_mobile/features/train/models/workout_exercise_models.dart';
+import 'package:setcraft/features/train/components/exercise_thumbnail.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
 
 class LocalPosterCache implements BaseCacheManager {
   final Map<String, String> paths;

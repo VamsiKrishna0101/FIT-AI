@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/training_session.dart';
+import '../models/workout_exercise_models.dart';
 
 /// Confirmed workout actions waiting for the server. Stored separately from UI
 /// caches so signing out does not lose a workout. Each account has its own key.
@@ -48,6 +49,18 @@ class WorkoutOfflineStore {
     if (json['session'] == null) {
       throw const FormatException('Start your workout first.');
     }
+    void validateLoad(Map item, List<Map> logs) {
+      final bodyweight =
+          TodayPlanItemModel.fromJson(Map<String, dynamic>.from(item))
+              .isBodyweight;
+      if (!bodyweight &&
+          logs.any(
+              (log) => log['weight'] is! num || (log['weight'] as num) <= 0)) {
+        throw const FormatException(
+            'Enter the weight you lifted before saving this set.');
+      }
+    }
+
     for (final action in actions.cast<Map>()) {
       final suffix = action['suffix'] as String;
       final parts = suffix.split('/');
@@ -57,6 +70,15 @@ class WorkoutOfflineStore {
             (item) => !['COMPLETED', 'SKIPPED'].contains(item['status']))) {
           throw const FormatException(
               'Mark each exercise done or skipped before finishing.');
+        }
+        for (final item
+            in items.where((item) => item['status'] == 'COMPLETED')) {
+          final logs = List<Map>.from(item['setLogs'] as List? ?? []);
+          if (logs.isEmpty) {
+            throw const FormatException(
+                'Log at least one set before marking this exercise done.');
+          }
+          validateLoad(item, logs);
         }
         final session = json['session'] as Map;
         session['status'] = 'COMPLETED';
@@ -78,6 +100,12 @@ class WorkoutOfflineStore {
       void upsert(Map set) {
         final number = set['setNumber'], reps = set['reps'];
         final weight = set['weight'], effort = set['rpe'];
+        if (!TodayPlanItemModel.fromJson(Map<String, dynamic>.from(item))
+                .isBodyweight &&
+            (weight == null || weight is num && weight <= 0)) {
+          throw const FormatException(
+              'Enter the weight you lifted before saving this set.');
+        }
         if (number is! int ||
             number < 1 ||
             number > 100 ||
@@ -114,6 +142,7 @@ class WorkoutOfflineStore {
           throw const FormatException(
               'Log at least one set before marking this exercise done.');
         }
+        validateLoad(item, logs);
         item['status'] = 'COMPLETED';
       } else if (parts[3] == 'status') {
         if (!['NOT_STARTED', 'COMPLETED', 'SKIPPED'].contains(data['status'])) {
@@ -123,6 +152,7 @@ class WorkoutOfflineStore {
           throw const FormatException(
               'Log at least one set before marking this exercise done.');
         }
+        if (data['status'] == 'COMPLETED') validateLoad(item, logs);
         item['status'] = data['status'];
       }
       logs.sort(

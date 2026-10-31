@@ -1,5 +1,7 @@
+import '../../../core/components/session_overview_card.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/components/motion.dart';
+import '../../../core/components/content_transition.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,34 +10,30 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/components/liquid_silver_bottom_bar.dart';
-import '../../../core/localization/fitai_copy.dart';
+import '../../../core/localization/setcraft_copy.dart';
 import '../../../models/home_models.dart';
 import '../../history/repositories/history_repository.dart';
-import 'readiness_score_ring.dart';
-import 'readiness_signals.dart';
+import 'readiness_summary.dart';
 import '../views/readiness_detail_view.dart';
 import '../models/session_guidance.dart';
-import '../models/readiness_availability.dart';
-import '../../body_scan/models/training_map_models.dart';
-import 'today_training_preview.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/components/profile_avatar.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
-import '../../wellness/views/sleep_preferences_view.dart';
+import '../../wellness/models/sleep_edit_window.dart';
+import 'weekly_rhythm_calendar.dart';
+import '../../nutrition/components/nutrition_summary_card.dart';
+import '../../nutrition/components/water_intake_card.dart';
 
 const _surface = DSColors.bgCard;
 const _muted = DSColors.muted;
 const _silver = DSColors.silver;
-const _blue = Color(0xFF0A84FF);
 const _line = DSColors.border;
 
 /// Today-specific surfaces and layout. Other dashboard tabs keep their styling.
 class TodayDashboard extends StatelessWidget {
   final HomeData? data;
   final List<RecoveryPoint> recovery;
-  final TrainingMapData? trainingMap;
   final ValueListenable<List<RecoveryPoint>>? recoveryUpdates;
-  final ValueListenable<TrainingMapData?>? trainingUpdates;
   final ScrollController? scrollController;
   final bool loading;
   final bool loadFailed;
@@ -49,16 +47,15 @@ class TodayDashboard extends StatelessWidget {
   final VoidCallback onSession;
   final VoidCallback onTrain;
   final VoidCallback onNutrition;
-  final VoidCallback onBody;
+  final VoidCallback? onAddMeal;
+  final VoidCallback? onWater;
   final VoidCallback? onSleep;
 
   const TodayDashboard({
     super.key,
     required this.data,
     this.recovery = const [],
-    this.trainingMap,
     this.recoveryUpdates,
-    this.trainingUpdates,
     this.scrollController,
     this.loading = false,
     this.loadFailed = false,
@@ -73,7 +70,8 @@ class TodayDashboard extends StatelessWidget {
     required this.onSession,
     required this.onTrain,
     required this.onNutrition,
-    required this.onBody,
+    this.onAddMeal,
+    this.onWater,
   });
 
   @override
@@ -93,7 +91,7 @@ class TodayDashboard extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
-    final copy = FitAiCopy.of(context);
+    final copy = SetcraftCopy.of(context);
     final date = selectedDate ?? now ?? DateTime.now();
     final locale = Localizations.localeOf(context).toLanguageTag();
     final dateLabel = DateFormat('d MMM', locale).format(date);
@@ -116,23 +114,20 @@ class TodayDashboard extends StatelessWidget {
         ? reading
         : null;
     final days = weekDays ?? data?.weeklyStreak ?? const <WeekDay>[];
-    const noWearable = true;
-    final needsCheckIn = noWearable &&
-        data?.sleepLog != null &&
-        (data?.sleepLog?['rested'] == null ||
-            data?.sleepLog?['energy'] == null ||
-            data?.sleepLog?['soreness'] == null);
+    final rhythmDays = days.isEmpty && onDateSelected != null
+        ? List.generate(7, (_) => const WeekDay(day: '', status: 'UNAVAILABLE'))
+        : days;
+    final actualToday = now ?? DateTime.now();
+    final editSleep = canEditSleepDate(date, actualToday) ? onSleep : null;
+    final previousWeek =
+        sleepWeekStart(date).isBefore(sleepWeekStart(actualToday));
     void openReadiness() {
-      if (r == null && onSleep != null) {
-        onSleep!();
-        return;
-      }
       _showReadiness(context, r, copy,
           date: date,
-          onSleep: onSleep,
+          onSleep: editSleep,
           health: health,
           sleepLog: data?.sleepLog,
-          noWearable: noWearable);
+          readOnly: previousWeek);
     }
 
     Widget buildRecovery(List<RecoveryPoint> points) {
@@ -162,7 +157,6 @@ class TodayDashboard extends StatelessWidget {
             restingHr: r.restingHrBpm > 0 ? r.restingHrBpm : null,
             sleepHours: r.sleepMinutes > 0 ? r.sleepMinutes / 60 : null));
       }
-      if (history.isEmpty) return const SizedBox.shrink();
       return Padding(
         padding: const EdgeInsets.only(bottom: 24),
         child: _RecoveryChart(
@@ -234,189 +228,117 @@ class TodayDashboard extends StatelessWidget {
                       ])),
                   const SizedBox(height: 16),
                 ],
-                if (days.isNotEmpty) ...[
-                  _Section(
-                      title: copy.text('weekProgress'),
-                      trailing: !loading && (data?.user.streakDays ?? 0) > 0
-                          ? '${data!.user.streakDays} ${copy.text(data!.user.streakDays == 1 ? 'todayDay' : 'days')}'
-                          : null),
+                if (rhythmDays.isNotEmpty) ...[
+                  Row(children: [
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          Semantics(
+                              header: true,
+                              child: Text(copy.text('weekProgress'),
+                                  style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: -.3))),
+                          if (!loading &&
+                              !previousWeek &&
+                              (data?.user.streakDays ?? 0) > 0) ...[
+                            const SizedBox(height: 5),
+                            Text(
+                                '${data!.user.streakDays} ${copy.text(data!.user.streakDays == 1 ? 'todayDay' : 'days')}',
+                                style: const TextStyle(
+                                    fontSize: 11, height: 1.4, color: _muted)),
+                          ],
+                        ])),
+                    const SizedBox(width: 12),
+                    WeeklyRhythmCalendarButton(
+                        selectedDate: date,
+                        today: actualToday,
+                        onSelected: onDateSelected),
+                  ]),
                   const SizedBox(height: 12),
                   _WeekCard(
-                      days: days,
+                      days: rhythmDays,
                       today: date,
                       locale: locale,
                       copy: copy,
                       onDateSelected: onDateSelected),
                   const SizedBox(height: 24),
                 ],
-                if (loading)
-                  _TodaySurface(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(copy.text('todayLoading'),
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 16)),
+                ContentTransition(
+                    child: Column(
+                        key: ValueKey(
+                            'today-content-${DateFormat('yyyy-MM-dd').format(date)}-${loading ? 'loading' : loadFailed ? 'error' : 'ready'}'),
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                      if (loading)
+                        _TodaySurface(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(copy.text('todayLoading'),
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16)),
+                              const SizedBox(height: 16),
+                              const LinearProgressIndicator(
+                                  color: _silver,
+                                  backgroundColor: _line,
+                                  minHeight: 2),
+                            ]))
+                      else if (!loadFailed) ...[
+                        _Section(
+                            key: const ValueKey('today-section-readiness'),
+                            title: copy.text('recovery'),
+                            onTap: openReadiness),
+                        const SizedBox(height: 12),
+                        _TodaySurface(
+                            key: const ValueKey('today-readiness-card'),
+                            hero: true,
+                            onTap: openReadiness,
+                            child: ReadinessSummary(
+                                readiness: r,
+                                sleepLog: data?.sleepLog,
+                                health: health,
+                                now: actualToday,
+                                date: date,
+                                readOnly: previousWeek)),
+                        const SizedBox(height: 24),
+                        _Section(
+                            title: historical
+                                ? '${copy.text('training')} · $dateLabel'
+                                : copy.text('todaySessionHeading'),
+                            onTap: onSession),
+                        const SizedBox(height: 12),
+                        _SessionCard(
+                            key: const ValueKey('today-session-card'),
+                            workout: data?.todayWorkout,
+                            copy: copy,
+                            onSession: onSession,
+                            onTrain: onTrain),
+                        const SizedBox(height: 24),
+                        ValueListenableBuilder<List<RecoveryPoint>>(
+                            valueListenable: recoveryUpdates ??
+                                AlwaysStoppedAnimation(recovery),
+                            builder: (context, points, _) =>
+                                ContentResize(child: buildRecovery(points))),
+                        _Section(
+                            key: const ValueKey('today-section-nutrition'),
+                            title: copy.text('nutrition'),
+                            onTap: onNutrition),
+                        const SizedBox(height: 12),
+                        _NutritionCard(
+                            nutrition: data?.nutrition,
+                            onAddMeal: onAddMeal,
+                            copy: copy,
+                            onTap: onNutrition),
                         const SizedBox(height: 16),
-                        const LinearProgressIndicator(
-                            color: _silver,
-                            backgroundColor: _line,
-                            minHeight: 2),
-                      ]))
-                else if (!loadFailed) ...[
-                  ValueListenableBuilder<List<RecoveryPoint>>(
-                      valueListenable:
-                          recoveryUpdates ?? AlwaysStoppedAnimation(recovery),
-                      builder: (context, points, _) => buildRecovery(points)),
-                  _Section(title: copy.text('readiness'), onTap: openReadiness),
-                  const SizedBox(height: 12),
-                  _ReadinessCard(
-                      readiness: r,
-                      health: health,
-                      sleepLog: data?.sleepLog,
-                      noWearable: noWearable,
-                      copy: copy,
-                      today: date,
-                      onTap: openReadiness),
-                  if (onSleep != null) ...[
-                    const SizedBox(height: 12),
-                    _TodaySurface(
-                        onTap: onSleep,
-                        child: Row(children: [
-                          const Icon(CupertinoIcons.moon_stars,
-                              color: Color(0xFFA28BFA), size: 22),
-                          const SizedBox(width: 13),
-                          Expanded(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                FitnessText(
-                                    needsCheckIn
-                                        ? 'Complete check-in'
-                                        : data?.sleepLog != null ||
-                                                (health?.sleepMinutes ?? 0) > 0
-                                            ? 'Sleep logged'
-                                            : 'Log sleep & check-in',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 4),
-                                FitnessText(
-                                    needsCheckIn
-                                        ? 'Sleep saved · add how you feel'
-                                        : data?.sleepLog != null
-                                            ? (data?.sleepLog?['source'] ==
-                                                    'phone_estimate_confirmed'
-                                                ? 'Phone estimate · confirmed'
-                                                : 'Self-reported')
-                                            : (health?.sleepMinutes ?? 0) > 0
-                                                ? 'Synced from your health app'
-                                                : 'No device needed',
-                                    style: const TextStyle(
-                                        color: _muted, fontSize: 12)),
-                              ])),
-                          if ((data?.sleepLog?['sleepMinutes'] ??
-                                  health?.sleepMinutes)
-                              case final num minutes)
-                            Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Text(
-                                    '${minutes ~/ 60} h ${minutes.toInt() % 60} m',
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 16))),
-                          Icon(
-                              data?.sleepLog != null ||
-                                      (health?.sleepMinutes ?? 0) > 0
-                                  ? CupertinoIcons.pencil
-                                  : CupertinoIcons.add,
-                              color: _silver,
-                              size: 18),
-                        ])),
-                  ],
-                  const SizedBox(height: 24),
-                  _Section(
-                      title: historical
-                          ? '${copy.text('training')} · $dateLabel'
-                          : copy.text('todaySessionHeading'),
-                      onTap: onSession),
-                  const SizedBox(height: 12),
-                  _SessionCard(
-                      workout: data?.todayWorkout,
-                      copy: copy,
-                      onSession: onSession,
-                      onTrain: onTrain),
-                  const SizedBox(height: 24),
-                  _Section(
-                      title: copy.text('nutrition'),
-                      trailing: '$dateLabel · ${copy.text('viewAll')}',
-                      onTap: onNutrition),
-                  const SizedBox(height: 12),
-                  _NutritionCard(
-                      nutrition: data?.nutrition,
-                      copy: copy,
-                      onTap: onNutrition),
-                  const SizedBox(height: 24),
-                  if (health != null &&
-                      (health.steps != null ||
-                          health.activeCalories != null)) ...[
-                    const SizedBox(height: 12),
-                    _DailyMetrics(
-                        metrics: health, copy: copy, onTap: openReadiness),
-                  ],
-                  ValueListenableBuilder<TrainingMapData?>(
-                      valueListenable: trainingUpdates ??
-                          AlwaysStoppedAnimation(trainingMap),
-                      builder: (context, trainingMap, _) => Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _Section(
-                                  title: copy.text(trainingMap == null
-                                      ? 'bodyScan'
-                                      : 'todayMusclesHeading'),
-                                  trailing: dateLabel,
-                                  onTap: onBody),
-                              const SizedBox(height: 12),
-                              _TodaySurface(
-                                  onTap: onBody,
-                                  child: Row(children: [
-                                    TodayTrainingPreview(data: trainingMap),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                          Text(
-                                              copy.text(trainingMap == null
-                                                  ? 'todayBodyTitle'
-                                                  : 'todayTrainingMapTitle'),
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w500)),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                              copy.text(trainingMap == null
-                                                  ? 'todayBodySubtitle'
-                                                  : trainingMap.regions.any(
-                                                          (r) =>
-                                                              r.completedSets >
-                                                              0)
-                                                      ? 'todayLoggedMuscles'
-                                                      : 'todayNoLoggedMuscles'),
-                                              style: const TextStyle(
-                                                  color: _muted,
-                                                  fontSize: 12,
-                                                  height: 1.4)),
-                                        ])),
-                                    const SizedBox(width: 8),
-                                    const Icon(CupertinoIcons.chevron_right,
-                                        color: _muted, size: 13),
-                                  ])),
-                            ],
-                          )),
-                ],
+                        WaterIntakeCard(
+                            consumedMl: data?.nutrition.water.consumed,
+                            targetMl: data?.nutrition.water.target,
+                            onTap: onWater),
+                      ],
+                    ])),
               ]),
             )
           ],
@@ -431,7 +353,7 @@ class _Header extends StatelessWidget {
   final DateTime date;
   final DateTime clock;
   final String locale;
-  final FitAiCopy copy;
+  final SetcraftCopy copy;
   final VoidCallback onProfile;
   const _Header(
       {required this.name,
@@ -470,7 +392,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _TodaySurface extends StatefulWidget {
+class _TodaySurface extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry padding;
@@ -483,18 +405,6 @@ class _TodaySurface extends StatefulWidget {
       super.key});
 
   @override
-  State<_TodaySurface> createState() => _TodaySurfaceState();
-}
-
-class _TodaySurfaceState extends State<_TodaySurface> {
-  bool _pressed = false;
-
-  void _press(bool pressed) {
-    if (MediaQuery.disableAnimationsOf(context) || _pressed == pressed) return;
-    setState(() => _pressed = pressed);
-  }
-
-  @override
   Widget build(BuildContext context) {
     final surface = Material(
         color: _surface,
@@ -505,31 +415,19 @@ class _TodaySurfaceState extends State<_TodaySurface> {
                 borderRadius: BorderRadius.circular(18),
                 color: DSColors.bgCard,
                 border: Border.all(
-                    color: widget.hero ? DSColors.borderHi : DSColors.border,
+                    color: hero ? DSColors.borderHi : DSColors.border,
                     width: .7)),
             child: InkWell(
-                onTap: widget.onTap,
-                onTapDown: widget.onTap == null ? null : (_) => _press(true),
-                onTapUp: widget.onTap == null ? null : (_) => _press(false),
-                onTapCancel: widget.onTap == null ? null : () => _press(false),
-                child: Padding(padding: widget.padding, child: widget.child))));
+                onTap: onTap, child: Padding(padding: padding, child: child))));
 
-    if (widget.onTap == null || MediaQuery.disableAnimationsOf(context)) {
-      return surface;
-    }
-    return AnimatedScale(
-        scale: _pressed ? .985 : 1,
-        duration: DSMotion.duration(context, DSMotion.press),
-        curve: Curves.easeOutCubic,
-        child: surface);
+    return MotionPress(enabled: onTap != null, child: surface);
   }
 }
 
 class _Section extends StatelessWidget {
   final String title;
-  final String? trailing;
   final VoidCallback? onTap;
-  const _Section({required this.title, this.trailing, this.onTap});
+  const _Section({super.key, required this.title, this.onTap});
   @override
   Widget build(BuildContext context) => Semantics(
       header: true,
@@ -551,14 +449,6 @@ class _Section extends StatelessWidget {
                 const Icon(CupertinoIcons.chevron_right,
                     size: 12, color: _muted)
               ],
-              const Spacer(),
-              if (trailing != null)
-                Flexible(
-                    child: Text(trailing!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(color: _muted, fontSize: 11))),
             ])),
       ));
 }
@@ -566,188 +456,13 @@ class _Section extends StatelessWidget {
 int _readinessScore(HomeReadiness r) =>
     (r.score <= 10 ? r.score * 10 : r.score).clamp(0, 100).round();
 
-class _ReadinessCard extends StatelessWidget {
-  final HomeReadiness? readiness;
-  final HomeHealthMetrics? health;
-  final Map<String, dynamic>? sleepLog;
-  final bool noWearable;
-  final FitAiCopy copy;
-  final DateTime today;
-  final VoidCallback? onTap;
-
-  const _ReadinessCard(
-      {required this.readiness,
-      this.health,
-      this.sleepLog,
-      this.noWearable = false,
-      required this.copy,
-      required this.today,
-      this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final reading = readiness;
-    final score = reading == null ? null : _readinessScore(reading);
-    final availability = ReadinessAvailability.fromMetrics(health,
-        sleepLog: sleepLog, noWearable: noWearable);
-    const checkIn = true;
-
-    final heading = score == null
-        ? 'How are you feeling?'
-        : score >= 67
-            ? 'Ready today'
-            : readinessHeadline(score);
-    final basis =
-        reading == null ? availability.title : readinessBasis(reading);
-
-    return _TodaySurface(
-      key: const ValueKey('today-readiness-card'),
-      hero: true,
-      padding: const EdgeInsets.all(18),
-      onTap: onTap,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        LayoutBuilder(builder: (context, bounds) {
-          final largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
-          final title = FitnessText(heading,
-              key: const ValueKey('today-readiness-heading'),
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  height: 1.2,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -.3));
-          final metadata =
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            FitnessText(basis,
-                style:
-                    const TextStyle(color: _muted, fontSize: 11, height: 1.3)),
-            const SizedBox(height: 6),
-            Text(DateFormat.MMMd(copy.localeCode).format(today),
-                key: const ValueKey('today-readiness-date'),
-                style: const TextStyle(color: _muted, fontSize: 12)),
-          ]);
-          final ring = ReadinessScoreRing(
-              key: const ValueKey('today-readiness-ring'),
-              score: score,
-              color: _silver,
-              size: 92,
-              minimal: true);
-          return largeText
-              ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Expanded(child: metadata),
-                    const SizedBox(width: 12),
-                    ring
-                  ]),
-                  const SizedBox(height: 8),
-                  title,
-                ])
-              : Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        metadata,
-                        const SizedBox(height: 12),
-                        title,
-                      ])),
-                  const SizedBox(width: 12),
-                  ring,
-                ]);
-        }),
-        const SizedBox(height: 10),
-        FitnessText(
-            score == null ? availability.description : readinessMeaning(score),
-            style: const TextStyle(color: _muted, fontSize: 11.5, height: 1.4)),
-        const SizedBox(height: 16),
-        const Divider(height: 1, color: _line),
-        const SizedBox(height: 14),
-        ReadinessSignals(
-            readiness: reading,
-            sleepLog: sleepLog ??
-                (health?.sleepMinutes == null
-                    ? null
-                    : {'sleepMinutes': health!.sleepMinutes}),
-            checkIn: checkIn,
-            compact: true),
-      ]),
-    );
-  }
-}
-
-class _Metric extends StatelessWidget {
-  final String label;
-  final String value;
-  final String unit;
-  const _Metric({required this.label, required this.value, required this.unit});
-  @override
-  Widget build(BuildContext context) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
-            style: const TextStyle(color: _muted, fontSize: 11, height: 1.4)),
-        const SizedBox(height: 6),
-        Text.rich(TextSpan(children: [
-          TextSpan(
-              text: value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -.5)),
-          if (unit.isNotEmpty)
-            TextSpan(
-                text: ' $unit',
-                style: const TextStyle(color: _muted, fontSize: 11)),
-        ])),
-      ]);
-}
-
-class _DailyMetrics extends StatelessWidget {
-  final HomeHealthMetrics metrics;
-  final FitAiCopy copy;
-  final VoidCallback? onTap;
-  const _DailyMetrics({required this.metrics, required this.copy, this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    final r = metrics;
-    final movement = r.steps != null || r.activeCalories != null;
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (movement)
-        Expanded(
-            child: _TodaySurface(
-                onTap: onTap,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(CupertinoIcons.flame,
-                          color: _silver, size: 19),
-                      const SizedBox(height: 8),
-                      _Metric(
-                          label: copy.text(r.steps != null
-                              ? 'todaySteps'
-                              : 'todayActiveEnergy'),
-                          value: NumberFormat.decimalPattern(copy.localeCode)
-                              .format(r.steps ?? r.activeCalories!),
-                          unit: r.steps != null ? '' : 'kcal'),
-                      const SizedBox(height: 8),
-                      Text(
-                          r.steps != null && r.activeCalories != null
-                              ? '${r.activeCalories!.round()} ${copy.text('todayActiveKcal')}'
-                              : copy.text('todayMovement'),
-                          style: const TextStyle(color: _muted, fontSize: 10)),
-                    ]))),
-    ]);
-  }
-}
-
 class _SessionCard extends StatelessWidget {
   final HomeTodayWorkout? workout;
-  final FitAiCopy copy;
-  final VoidCallback onSession;
-  final VoidCallback onTrain;
+  final SetcraftCopy copy;
+  final VoidCallback onSession, onTrain;
   const _SessionCard(
-      {required this.workout,
+      {super.key,
+      required this.workout,
       required this.copy,
       required this.onSession,
       required this.onTrain});
@@ -756,133 +471,59 @@ class _SessionCard extends StatelessWidget {
     final w = workout;
     final complete = w?.status == 'COMPLETED';
     final rest = w == null || w.status == 'REST_DAY';
+    final progress = w?.status == 'IN_PROGRESS';
     final guidance = SessionGuidance.fromNote(w?.aiNote,
         fallback: copy.text('todayAdaptiveEffort'));
     final actionLabel = copy.text(rest
         ? 'openPlan'
         : complete
             ? 'todayReviewSession'
-            : w.status == 'IN_PROGRESS'
+            : progress
                 ? 'todayContinueSession'
                 : 'startSession');
-    return _TodaySurface(
-        onTap: rest ? onTrain : onSession,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Expanded(
-                child: Text(
-                    copy.text(rest
-                        ? 'training'
-                        : complete
-                            ? 'completed'
-                            : w.status == 'IN_PROGRESS'
-                                ? 'todayInProgress'
-                                : 'todayPlanned'),
-                    style: const TextStyle(color: _muted, fontSize: 11))),
-            if (!rest && w.durationMinutes > 0)
-              Text('${w.durationMinutes} ${copy.text('minutes')}',
-                  style: const TextStyle(color: _muted, fontSize: 11)),
-          ]),
-          const SizedBox(height: 12),
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(
-                width: 3,
-                height: 17,
-                margin: const EdgeInsets.only(top: 2),
-                decoration: BoxDecoration(
-                    color: _silver, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(width: 8),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(
-                      rest
-                          ? copy.text('todayNoSession')
-                          : w.sessionTitle ?? w.workoutTitle,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -.25)),
-                  const SizedBox(height: 5),
-                  Wrap(
-                      spacing: 12,
-                      runSpacing: 7,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                            rest
-                                ? copy.text('noWorkout')
-                                : '${w.exerciseCount} ${copy.text('exercises')}',
-                            style: const TextStyle(
-                                color: _muted, fontSize: 12, height: 1.4)),
-                        if (!rest && guidance.effort != null)
-                          Container(
-                              key: const ValueKey('today-effort-pill'),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 9, vertical: 5),
-                              decoration: BoxDecoration(
-                                  color: const Color(0xFF2C2C2C),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: const Color(0x20FFFFFF),
-                                      width: .5)),
-                              child: Text(
-                                  '${copy.text('todayTargetEffort')} · ${NumberFormat('0.#', copy.localeCode).format(guidance.effort)} / 10',
-                                  style: const TextStyle(
-                                      color: _silver,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500))),
-                      ]),
-                ])),
-          ]),
-          if (!rest && guidance.summary.isNotEmpty) ...[
-            const SizedBox(height: 11),
-            Text(guidance.summary,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style:
-                    const TextStyle(color: _muted, fontSize: 12, height: 1.45)),
-          ],
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: _line),
-          CupertinoButton(
-              padding: const EdgeInsets.only(top: 10, bottom: 2),
-              onPressed: rest ? onTrain : onSession,
-              child: Row(children: [
-                Icon(
-                    rest
-                        ? CupertinoIcons.calendar
-                        : complete
-                            ? CupertinoIcons.check_mark_circled
-                            : CupertinoIcons.play_circle,
-                    size: 21,
-                    color: _blue),
-                const SizedBox(width: 9),
-                Expanded(
-                    child: Text(actionLabel,
-                        style: TextStyle(
-                            fontFamily: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.fontFamily,
-                            color: _blue,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500))),
-                const Icon(CupertinoIcons.chevron_right,
-                    size: 12, color: _muted),
-              ])),
-        ]));
+    return SessionOverviewCard(
+      titleFirst: true,
+      status: w == null
+          ? SessionOverviewStatus.unavailable
+          : complete
+              ? SessionOverviewStatus.completed
+              : rest
+                  ? SessionOverviewStatus.restDay
+                  : progress
+                      ? SessionOverviewStatus.inProgress
+                      : SessionOverviewStatus.notStarted,
+      title:
+          rest ? copy.text('todayNoSession') : w.sessionTitle ?? w.workoutTitle,
+      metrics: [
+        if (!rest && w.durationMinutes > 0)
+          '${w.durationMinutes} ${copy.text('minutes')}',
+        if (!rest && w.exerciseCount > 0)
+          '${w.exerciseCount} ${copy.text('exercises')}',
+      ],
+      caption: !rest && guidance.effort != null
+          ? Text(
+              '${copy.text('todayTargetEffort')} · ${NumberFormat('0.#', copy.localeCode).format(guidance.effort)} / 10',
+              key: const ValueKey('today-effort-pill'),
+              style: const TextStyle(color: _muted, fontSize: 11))
+          : null,
+      actionLabel: actionLabel,
+      onAction: rest ? onTrain : onSession,
+      onTap: rest ? onTrain : onSession,
+      primary: !rest,
+    );
   }
 }
 
 class _NutritionCard extends StatelessWidget {
+  final VoidCallback? onAddMeal;
   final HomeNutrition? nutrition;
-  final FitAiCopy copy;
+  final SetcraftCopy copy;
   final VoidCallback onTap;
   const _NutritionCard(
-      {required this.nutrition, required this.copy, required this.onTap});
+      {required this.nutrition,
+      required this.copy,
+      required this.onTap,
+      this.onAddMeal});
   @override
   Widget build(BuildContext context) {
     final n = nutrition;
@@ -892,161 +533,18 @@ class _NutritionCard extends StatelessWidget {
           child: Text(copy.text('todayNutritionEmpty'),
               style: const TextStyle(color: _muted, fontSize: 13)));
     }
-    return _TodaySurface(
-        onTap: onTap,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _CaloriesHeader(calories: n.calories, copy: copy),
-          const SizedBox(height: 16),
-          _Macro(
-              label: copy.text('protein'),
-              target: n.protein,
-              color: const Color(0xFF8BAAFF)),
-          const SizedBox(height: 16),
-          _Macro(
-              label: copy.text('carbohydrates'),
-              target: n.carbs,
-              color: const Color(0xFFB3A1DF)),
-          const SizedBox(height: 16),
-          _Macro(
-              label: copy.text('fat'),
-              target: n.fat,
-              color: const Color(0xFFE1C47E)),
-          const SizedBox(height: 20),
-          const Divider(height: 1, color: _line),
-          const SizedBox(height: 16),
-          Row(children: [
-            const Icon(CupertinoIcons.drop, color: Color(0xFFB0B0B0), size: 18),
-            const SizedBox(width: 9),
-            Expanded(
-                child: Text(copy.text('water'),
-                    style: const TextStyle(color: Colors.white, fontSize: 12))),
-            Flexible(
-                child: Text(
-                    '${(n.water.consumed / 1000).toStringAsFixed(2)}${n.water.target > 0 ? ' / ${(n.water.target / 1000).toStringAsFixed(1)}' : ''} L',
-                    textAlign: TextAlign.end,
-                    style: const TextStyle(
-                        color: Color(0xFFB7B7B7), fontSize: 12))),
-          ]),
-          if (n.water.target > 0) ...[
-            const SizedBox(height: 11),
-            _Progress(
-                value: n.water.progress,
-                color: const Color(0xFFB0B0B0),
-                height: 4)
-          ],
-        ]));
+    return NutritionSummaryCard(
+        calories: n.calories.consumed,
+        calorieTarget: n.calories.target,
+        protein: n.protein.consumed,
+        proteinTarget: n.protein.target,
+        carbs: n.carbs.consumed,
+        carbTarget: n.carbs.target,
+        fat: n.fat.consumed,
+        fatTarget: n.fat.target,
+        onAddMeal: onAddMeal,
+        onTap: onTap);
   }
-}
-
-class _CaloriesHeader extends StatelessWidget {
-  final MacroTarget calories;
-  final FitAiCopy copy;
-  const _CaloriesHeader({required this.calories, required this.copy});
-  @override
-  Widget build(BuildContext context) =>
-      LayoutBuilder(builder: (context, constraints) {
-        final stack = MediaQuery.textScalerOf(context).scale(1) > 1.3;
-        final summary =
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(copy.text('calories'),
-              style: const TextStyle(color: _muted, fontSize: 12)),
-          const SizedBox(height: 8),
-          Text(
-              NumberFormat.decimalPattern(copy.localeCode)
-                  .format(calories.consumed),
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -.5)),
-          const SizedBox(height: 3),
-          Text(calories.target > 0 ? '/ ${calories.target} kcal' : 'kcal',
-              style: const TextStyle(color: _muted, fontSize: 11)),
-        ]);
-        final donut = Semantics(
-            label:
-                '${copy.text('calories')}: ${calories.consumed} / ${calories.target} kcal',
-            excludeSemantics: true,
-            child: SizedBox(
-                width: 66,
-                height: 66,
-                child: Stack(alignment: Alignment.center, children: [
-                  SizedBox.expand(
-                      child: CircularProgressIndicator(
-                          value: calories.progress,
-                          strokeWidth: 3.5,
-                          strokeCap: StrokeCap.round,
-                          backgroundColor: const Color(0xFF383838),
-                          valueColor: const AlwaysStoppedAnimation(_silver))),
-                  Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child:
-                              Column(mainAxisSize: MainAxisSize.min, children: [
-                            Text('${(calories.progress * 100).round()}%',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 3),
-                            Text(copy.text('todayOfGoal'),
-                                style: const TextStyle(
-                                    color: _muted, fontSize: 9)),
-                          ]))),
-                ])));
-        if (calories.target <= 0) return summary;
-        if (stack) {
-          return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [summary, const SizedBox(height: 12), donut]);
-        }
-        return Row(children: [
-          Expanded(child: summary),
-          const SizedBox(width: 14),
-          donut
-        ]);
-      });
-}
-
-class _Macro extends StatelessWidget {
-  final String label;
-  final MacroTarget target;
-  final Color color;
-  const _Macro(
-      {required this.label, required this.target, required this.color});
-  @override
-  Widget build(BuildContext context) => Column(children: [
-        Row(children: [
-          Expanded(
-              child: Text(label,
-                  style:
-                      const TextStyle(color: Color(0xFFC4C4C4), fontSize: 12))),
-          Text(
-              '${target.consumed}${target.target > 0 ? ' / ${target.target}' : ''} g',
-              style: const TextStyle(color: _muted, fontSize: 11)),
-        ]),
-        if (target.target > 0) ...[
-          const SizedBox(height: 8),
-          _Progress(value: target.progress, color: color, height: 3)
-        ],
-      ]);
-}
-
-class _Progress extends StatelessWidget {
-  final double value;
-  final Color color;
-  final double height;
-  const _Progress(
-      {required this.value, required this.color, required this.height});
-  @override
-  Widget build(BuildContext context) => ClipRRect(
-      borderRadius: BorderRadius.circular(5),
-      child: LinearProgressIndicator(
-          value: value.clamp(0, 1),
-          minHeight: height,
-          backgroundColor: const Color(0xFF363636),
-          valueColor: AlwaysStoppedAnimation(color)));
 }
 
 class _WeekCard extends StatelessWidget {
@@ -1054,7 +552,7 @@ class _WeekCard extends StatelessWidget {
   final List<WeekDay> days;
   final DateTime today;
   final String locale;
-  final FitAiCopy copy;
+  final SetcraftCopy copy;
   const _WeekCard(
       {required this.days,
       required this.today,
@@ -1136,7 +634,7 @@ class _RecoveryChart extends StatefulWidget {
   final List<RecoveryPoint> history;
   final DateTime today;
   final String locale;
-  final FitAiCopy copy;
+  final SetcraftCopy copy;
   const _RecoveryChart(
       {super.key,
       required this.history,
@@ -1148,7 +646,9 @@ class _RecoveryChart extends StatefulWidget {
 }
 
 class _RecoveryChartState extends State<_RecoveryChart> {
-  int _sample = 6;
+  static const _dayCount = 6;
+  static const _barHeight = 44.0;
+  int _sample = _dayCount - 1;
 
   void _selectDay(int index) {
     if (_sample == index) return;
@@ -1156,380 +656,201 @@ class _RecoveryChartState extends State<_RecoveryChart> {
     setState(() => _sample = index);
   }
 
-  double? _value(RecoveryPoint p) => p.sleepHours;
   String _display(double value) =>
       '${(value * 60).round() ~/ 60} h ${(value * 60).round() % 60} m';
-  String? _comparison(List<double?> values) {
-    final today = values[6];
-    final previous = values.take(6).whereType<double>().toList();
-    if (_sample != 6 || today == null || previous.length < 3) return null;
-    final difference =
-        today - previous.reduce((a, b) => a + b) / previous.length;
-    final rounded = (difference.abs() * 60).round();
-    if (rounded == 0) return widget.copy.text('todayAtAverage');
-    const unit = 'min';
-    return widget.copy
-        .text(difference > 0 ? 'todayAboveAverage' : 'todayBelowAverage')
-        .replaceAll('{value}', '$rounded $unit');
+
+  Widget _day(int index, DateTime date, double? hours, double scale,
+      Duration duration) {
+    final latest = index == _dayCount - 1;
+    final selected = index == _sample;
+    final color = latest ? const Color(0xFFF2F2F2) : const Color(0xFF797979);
+    return Expanded(
+        child: Semantics(
+            button: true,
+            selected: selected,
+            label:
+                '${DateFormat('EEE d MMM', widget.locale).format(date)}: ${hours == null ? widget.copy.text('todayMissing') : _display(hours)}',
+            excludeSemantics: true,
+            child: InkWell(
+                key: ValueKey('today-chart-day-$index'),
+                onTap: () => _selectDay(index),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Column(children: [
+                      SizedBox(
+                          height: _barHeight,
+                          child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: hours == null
+                                  ? Container(
+                                      key: ValueKey(
+                                          'today-sleep-missing-$index'),
+                                      width: 12,
+                                      height: 2,
+                                      color: latest ? color : _muted)
+                                  : FractionallySizedBox(
+                                      widthFactor: .62,
+                                      child: AnimatedContainer(
+                                          key: ValueKey(
+                                              'today-sleep-bar-$index'),
+                                          duration: duration,
+                                          curve: DSMotion.effects,
+                                          height: (hours / scale * _barHeight)
+                                              .clamp(1.0, _barHeight),
+                                          decoration: BoxDecoration(
+                                              color: color,
+                                              borderRadius:
+                                                  BorderRadius.circular(5),
+                                              border: selected && !latest
+                                                  ? Border.all(color: _silver)
+                                                  : null))))),
+                      const SizedBox(height: 8),
+                      Text(DateFormat('EEEEE', widget.locale).format(date),
+                          maxLines: 1,
+                          style: TextStyle(
+                              color: latest || selected ? _silver : _muted,
+                              fontSize: 10,
+                              height: 1.3)),
+                      const SizedBox(height: 3),
+                      AnimatedContainer(
+                          duration: duration,
+                          padding: const EdgeInsets.only(bottom: 3),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  bottom: BorderSide(
+                                      color: selected
+                                          ? _silver
+                                          : Colors.transparent))),
+                          child: Text('${date.day}',
+                              maxLines: 1,
+                              style: TextStyle(
+                                  color: latest || selected
+                                      ? Colors.white
+                                      : _muted,
+                                  fontSize: 11,
+                                  height: 1.3,
+                                  fontWeight: latest
+                                      ? FontWeight.w600
+                                      : FontWeight.w400))),
+                    ])))));
   }
 
   @override
   Widget build(BuildContext context) {
     final dates = List.generate(
-        7,
-        (i) =>
-            DateUtils.dateOnly(widget.today).subtract(Duration(days: 6 - i)));
+        _dayCount,
+        (i) => DateTime(widget.today.year, widget.today.month,
+            widget.today.day - (_dayCount - 1) + i));
     final values = dates.map((date) {
       final point = widget.history
           .where((p) => DateUtils.isSameDay(date, p.date))
           .firstOrNull;
-      return point == null ? null : _value(point);
+      final hours = point?.sleepHours;
+      return hours != null && hours.isFinite && hours >= 0 && hours <= 24
+          ? hours
+          : null;
     }).toList();
-    final comparison = _comparison(values);
     final hasValues = values.any((value) => value != null);
+    final scale = values
+        .whereType<double>()
+        .fold(8.0, (highest, hours) => hours > highest ? hours : highest)
+        .ceilToDouble();
     final duration = DSMotion.duration(context, DSMotion.selection);
+    final value = Text(
+        values[_sample] == null ? '—' : _display(values[_sample]!),
+        key: const ValueKey('today-chart-value'),
+        style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            height: 1.2,
+            letterSpacing: -.5,
+            fontWeight: FontWeight.w600));
+    final dateLabel = Text(
+        DateFormat('EEE, d MMM', widget.locale).format(dates[_sample]),
+        key: const ValueKey('today-chart-date'),
+        style: const TextStyle(color: _muted, fontSize: 11, height: 1.4));
+    final largeText = MediaQuery.textScalerOf(context).scale(12) > 16;
 
-    return _TodaySurface(
-        key: const ValueKey('today-chart-card'),
-        padding: const EdgeInsets.all(14),
-        child: Column(children: [
-          Row(children: [
-            Expanded(
-                child: Text(
-                    '${widget.copy.text('todaySevenDays')} · ${DateFormat('d MMM', widget.locale).format(dates[_sample])}',
-                    style: const TextStyle(color: _muted, fontSize: 11))),
-            const SizedBox(width: 8),
-            Flexible(
-                child: Text(
-                    values[_sample] == null ? '—' : _display(values[_sample]!),
-                    key: const ValueKey('today-chart-value'),
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500))),
-          ]),
-          const SizedBox(height: 5),
-          const FitnessText('Recorded sleep',
-              style: TextStyle(color: _muted, fontSize: 11)),
-          const SizedBox(height: 6),
-          AnimatedSize(
-              duration: duration,
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: !hasValues
-                  ? const Padding(
-                      key: ValueKey('today-chart-empty'),
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Row(children: [
-                        Icon(CupertinoIcons.chart_bar, size: 18, color: _muted),
-                        SizedBox(width: 10),
-                        Expanded(
-                            child: FitnessText('Your trend builds as you log.',
-                                style: TextStyle(
-                                    color: _muted, fontSize: 12, height: 1.4))),
-                      ]))
-                  : SizedBox(
-                      height: 65,
-                      child: Stack(children: [
-                        Positioned.fill(
-                            bottom: 19,
-                            child: RepaintBoundary(
-                                child: MotionProgress(
-                                    dataKey:
-                                        'sleep:${dates.first.toIso8601String()}:${values.join('|')}',
-                                    builder: (context, progress) => CustomPaint(
-                                        painter: _TrendPainter(
-                                            progress: progress,
-                                            values: values,
-                                            selectedIndex: _sample,
-                                            color: const Color(0xFF8BAAFF),
-                                            bars: true,
-                                            fixedMax: 12))))),
-                        Row(
-                            children: List.generate(
-                                7,
-                                (i) => Expanded(
-                                    child: Semantics(
-                                        button: true,
-                                        selected: i == _sample,
-                                        label:
-                                            '${DateFormat('EEE d MMM', widget.locale).format(dates[i])}: ${values[i] == null ? widget.copy.text('todayMissing') : _display(values[i]!)}',
-                                        excludeSemantics: true,
-                                        child: GestureDetector(
-                                            key: ValueKey('today-chart-day-$i'),
-                                            behavior: HitTestBehavior.opaque,
-                                            onTap: () => _selectDay(i),
-                                            child: Column(children: [
-                                              const Expanded(
-                                                  child: SizedBox.expand()),
-                                              Text(
-                                                  DateFormat('EEEEE',
-                                                          widget.locale)
-                                                      .format(dates[i]),
-                                                  style: TextStyle(
-                                                      color: i == _sample
-                                                          ? Colors.white
-                                                          : _muted,
-                                                      fontSize: 10,
-                                                      fontWeight: i == 6
-                                                          ? FontWeight.w600
-                                                          : FontWeight.w400)),
-                                              const SizedBox(height: 2),
-                                            ])))))),
-                      ]))),
-          if (comparison != null) ...[
-            const SizedBox(height: 8),
-            Align(
-                alignment: Alignment.centerLeft,
-                child: Text(comparison,
-                    key: const ValueKey('today-chart-comparison'),
-                    style: const TextStyle(
-                        color: _muted, fontSize: 11, height: 1.3))),
-          ],
-        ]));
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Semantics(
+          header: true,
+          child: const FitnessText('Recorded sleep',
+              key: ValueKey('today-recorded-sleep-heading'),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -.3))),
+      const SizedBox(height: 5),
+      const FitnessText('Last 6 days',
+          style: TextStyle(color: _muted, fontSize: 11, height: 1.4)),
+      const SizedBox(height: 12),
+      _TodaySurface(
+          key: const ValueKey('today-chart-card'),
+          padding: const EdgeInsets.all(14),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            if (largeText)
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [value, const SizedBox(height: 5), dateLabel])
+            else
+              Row(children: [
+                Expanded(flex: 3, child: value),
+                const SizedBox(width: 12),
+                Flexible(
+                    flex: 2,
+                    child: Align(
+                        alignment: Alignment.centerRight, child: dateLabel)),
+              ]),
+            const SizedBox(height: 14),
+            if (!hasValues)
+              const Padding(
+                  key: ValueKey('today-chart-empty'),
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Row(children: [
+                    Icon(CupertinoIcons.chart_bar, size: 18, color: _muted),
+                    SizedBox(width: 10),
+                    Expanded(
+                        child: FitnessText('Your trend builds as you log.',
+                            style: TextStyle(
+                                color: _muted, fontSize: 12, height: 1.4))),
+                  ]))
+            else
+              Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(_dayCount,
+                      (i) => _day(i, dates[i], values[i], scale, duration))),
+          ])),
+    ]);
   }
 }
 
-class _TrendPainter extends CustomPainter {
-  final List<double?> values;
-  final Color color;
-  final bool bars;
-  final int selectedIndex;
-  final double? fixedMax;
-  final double progress;
-  const _TrendPainter(
-      {required this.values,
-      required this.bars,
-      required this.selectedIndex,
-      required this.color,
-      this.progress = 1,
-      this.fixedMax});
-  @override
-  void paint(Canvas canvas, Size size) {
-    final samples = values.whereType<double>().toList();
-    final low = bars || samples.isEmpty
-        ? 0.0
-        : samples.reduce((a, b) => a < b ? a : b) - 5;
-    final high = fixedMax ??
-        (samples.isEmpty ? 1.0 : samples.reduce((a, b) => a > b ? a : b) + 5);
-    final paint = Paint()
-      ..color = _silver
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    final cell = size.width / 7;
-    Offset? previous;
-    for (var i = 0; i < values.length; i++) {
-      final value = values[i];
-      final x = cell * (i + .5);
-      if (value == null) {
-        canvas.drawLine(
-            Offset(x - 3, size.height - 2),
-            Offset(x + 3, size.height - 2),
-            Paint()
-              ..color = const Color(0xFF444444)
-              ..strokeWidth = 1.5);
-        previous = null;
-        continue;
-      }
-      final fraction = ((value - low) / (high - low)).clamp(0.0, 1.0);
-      final point =
-          Offset(x, size.height - 4 - fraction * progress * (size.height - 9));
-      paint.color = color.withValues(
-          alpha: i == selectedIndex
-              ? 1
-              : i == 6
-                  ? .8
-                  : .4);
-      if (i == selectedIndex) {
-        canvas.drawLine(
-            Offset(x, 1),
-            Offset(x, size.height),
-            Paint()
-              ..color = Colors.white.withValues(alpha: .07)
-              ..strokeWidth = 1);
-      }
-      if (bars) {
-        canvas.drawRRect(
-            RRect.fromRectAndRadius(
-                Rect.fromLTRB(x - 7, point.dy, x + 7, size.height - 1),
-                const Radius.circular(3)),
-            paint);
-      } else {
-        if (previous != null) canvas.drawLine(previous, point, paint);
-        canvas.drawCircle(point, i == selectedIndex ? 3.5 : 2, paint);
-        previous = point;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TrendPainter old) =>
-      old.progress != progress ||
-      old.selectedIndex != selectedIndex ||
-      old.color != color ||
-      old.bars != bars ||
-      old.fixedMax != fixedMax ||
-      !_sameValues(old.values, values);
-  bool _sameValues(List<double?> a, List<double?> b) =>
-      a.length == b.length &&
-      List.generate(a.length, (i) => a[i] == b[i]).every((same) => same);
-}
-
-void _showReadiness(BuildContext context, HomeReadiness? r, FitAiCopy copy,
+void _showReadiness(BuildContext context, HomeReadiness? r, SetcraftCopy copy,
     {DateTime? date,
     VoidCallback? onSleep,
     HomeHealthMetrics? health,
     Map<String, dynamic>? sleepLog,
-    bool noWearable = false}) {
-  if (r == null) {
-    final availability = ReadinessAvailability.fromMetrics(health,
-        sleepLog: sleepLog, noWearable: noWearable);
-    showModalBottomSheet<void>(
-      sheetAnimationStyle: DSMotion.sheetStyle(context),
-      context: context,
-      backgroundColor: _surface,
-      showDragHandle: true,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (sheetContext) => SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(copy.text('readiness'),
-                      style:
-                          const TextStyle(color: Colors.white, fontSize: 24)),
-                  const SizedBox(height: 8),
-                  if (date != null)
-                    Text(DateFormat('EEE, d MMM', copy.localeCode).format(date),
-                        style: const TextStyle(color: _muted, fontSize: 13)),
-                  const SizedBox(height: 24),
-                  FitnessText(availability.title,
-                      style:
-                          const TextStyle(color: Colors.white, fontSize: 18)),
-                  const SizedBox(height: 10),
-                  FitnessText(availability.description,
-                      style: const TextStyle(
-                          color: _muted, fontSize: 14, height: 1.5)),
-                  const SizedBox(height: 12),
-                  _ReadinessInputRow(
-                      label: availability.enteredSleep
-                          ? 'Entered sleep'
-                          : 'Synced sleep',
-                      available: availability.sleep),
-                  if (noWearable) ...[
-                    _ReadinessInputRow(
-                        label: 'Rest', available: sleepLog?['rested'] != null),
-                    _ReadinessInputRow(
-                        label: 'Energy',
-                        available: sleepLog?['energy'] != null),
-                    _ReadinessInputRow(
-                        label: 'Soreness',
-                        available: sleepLog?['soreness'] != null),
-                  ] else ...[
-                    _ReadinessInputRow(
-                        label: 'Synced heart readings',
-                        available: availability.heart),
-                    if (!availability.heart)
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(sheetContext);
-                            Navigator.of(context).push(AppPageRoute<void>(
-                                page: const SleepPreferencesView()));
-                          },
-                          child: const FitnessText('Sleep preferences')),
-                  ],
-                  if (health != null) ...[
-                    const SizedBox(height: 24),
-                    const FitnessText('Recorded readings',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
-                    const SizedBox(height: 14),
-                    Wrap(spacing: 24, runSpacing: 18, children: [
-                      if (health.steps != null)
-                        _Metric(
-                            label: copy.text('todaySteps'),
-                            value: NumberFormat.decimalPattern(copy.localeCode)
-                                .format(health.steps),
-                            unit: ''),
-                      if (health.activeCalories != null)
-                        _Metric(
-                            label: copy.text('todayActiveEnergy'),
-                            value: '${health.activeCalories!.round()}',
-                            unit: 'kcal'),
-                      if (health.sleepMinutes != null)
-                        _Metric(
-                            label: copy.text('todaySleep'),
-                            value: '${health.sleepMinutes!.round() ~/ 60}',
-                            unit: 'h ${health.sleepMinutes!.round() % 60} m'),
-                      if (health.hrv != null)
-                        _Metric(
-                            label: copy.text('hrv'),
-                            value: '${health.hrv!.round()}',
-                            unit: 'ms'),
-                      if (health.restingHR != null)
-                        _Metric(
-                            label: copy.text('restingHeartRate'),
-                            value: '${health.restingHR!.round()}',
-                            unit: 'bpm'),
-                    ]),
-                  ],
-                  if (onSleep != null) ...[
-                    const SizedBox(height: 20),
-                    TextButton.icon(
-                        onPressed: () {
-                          Navigator.of(sheetContext).pop();
-                          onSleep();
-                        },
-                        icon: const Icon(CupertinoIcons.moon_stars),
-                        label: FitnessText(
-                            noWearable && availability.missingAnswers.isNotEmpty
-                                ? 'Complete check-in'
-                                : sleepLog == null
-                                    ? 'Log sleep'
-                                    : 'Edit sleep')),
-                  ],
-                ]),
-          )),
-    );
-    return;
-  }
+    bool readOnly = false}) {
+  var editRequested = false;
   final route = AppPageRoute<bool>(
       page: ReadinessDetailView(
     readiness: r,
+    health: health,
     sleepLog: sleepLog,
-    onEdit: onSleep == null ? null : () => Navigator.of(context).pop(true),
+    date: date,
+    readOnly: readOnly,
+    onEdit: onSleep == null
+        ? null
+        : () {
+            if (editRequested) return;
+            editRequested = true;
+            Navigator.of(context).pop(true);
+          },
   ));
   Navigator.of(context).push(route).then((edit) async {
     await route.completed;
     if (edit == true && context.mounted) onSleep?.call();
   });
-}
-
-class _ReadinessInputRow extends StatelessWidget {
-  final String label;
-  final bool available;
-  const _ReadinessInputRow({required this.label, required this.available});
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(children: [
-        Icon(
-            available
-                ? CupertinoIcons.check_mark_circled
-                : CupertinoIcons.minus_circle,
-            size: 18,
-            color: available ? _silver : _muted),
-        const SizedBox(width: 10),
-        Expanded(
-            child: FitnessText(label,
-                style: const TextStyle(color: _muted, fontSize: 13))),
-        const SizedBox(width: 12),
-        FitnessText(available ? 'Recorded' : 'Missing',
-            style: const TextStyle(color: _silver, fontSize: 12))
-      ]));
 }

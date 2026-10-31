@@ -1,5 +1,5 @@
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -25,7 +25,7 @@ class TodayDietCard extends StatelessWidget {
       onTap: () {
         HapticFeedback.lightImpact();
         Navigator.of(context).push(
-          CupertinoPageRoute(builder: (_) => const TodayDietView()),
+          AppPageRoute(builder: (_) => const TodayDietView()),
         );
       },
       child: Container(

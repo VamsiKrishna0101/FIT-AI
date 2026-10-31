@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import '../theme/ds_motion.dart';
 
 /// Paint-only entry. Stable children do not replay when a form or cache refreshes.
@@ -45,16 +44,13 @@ class _MotionEntranceState extends State<MotionEntrance>
             final progress = _controller.value;
             final value = DSMotion.effects
                 .transform(((progress - start) / (1 - start)).clamp(0.0, 1.0));
-            return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                    offset: Offset(0, (1 - value) * 8), child: child));
+            return Opacity(opacity: value, child: child);
           },
         ),
       );
 }
 
-/// A small interruptible spring follows the press without owning the tap gesture.
+/// A small interruptible press follows the shared easing without owning taps.
 class MotionPress extends StatefulWidget {
   final Widget child;
   final bool enabled;
@@ -70,8 +66,8 @@ class _MotionPressState extends State<MotionPress>
 
   void _press(bool down) {
     if (!widget.enabled || DSMotion.reduced(context)) return;
-    _scale.animateWith(SpringSimulation(
-        DSMotion.pressSpring, _scale.value, down ? .985 : 1, _scale.velocity));
+    _scale.animateTo(down ? .985 : 1,
+        duration: DSMotion.press, curve: DSMotion.effects);
   }
 
   @override
@@ -223,7 +219,7 @@ class MotionFeedback extends StatelessWidget {
   Widget build(BuildContext context) => AnimatedSwitcher(
         duration: DSMotion.duration(context, DSMotion.feedback),
         switchInCurve: DSMotion.effects,
-        switchOutCurve: DSMotion.effects,
+        switchOutCurve: DSMotion.exit,
         transitionBuilder: (child, animation) => FadeTransition(
             opacity: animation,
             child: ScaleTransition(

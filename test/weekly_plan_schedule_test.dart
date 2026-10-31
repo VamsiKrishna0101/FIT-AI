@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/planner/views/widgets/weekly_plan_schedule.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/planner/views/widgets/weekly_plan_schedule.dart';
 
 final _payload = <String, dynamic>{
   'workouts': [
@@ -99,7 +99,7 @@ Widget _app({double scale = 1, bool reduced = false, Key? capture}) =>
                         style: TextStyle(
                             fontSize: 24, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 20),
-                    WeeklyPlanSchedule(payload: _payload),
+                    WeeklyPlanSchedule(payload: _payload, showOverview: false),
                   ]),
             )),
       )),
@@ -139,6 +139,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Brystpres med håndvægte'), findsOneWidget);
     expect(find.text('Dumbbell floor press'), findsNothing);
+    await tester.tap(find.text('Brystpres med håndvægte'));
+    await tester.pumpAndSettle();
     expect(find.text('10 reps · 12 kg per hand'), findsOneWidget);
     expect(exercise['name'], 'Dumbbell floor press');
   });
@@ -161,10 +163,13 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     expect(find.text('Dumbbell floor press'), findsOneWidget);
+    expect(find.text('10 reps · 12 kg per hand'), findsNothing);
+    await tester.tap(find.text('Dumbbell floor press'));
+    await tester.pumpAndSettle();
     expect(find.text('10 reps · 12 kg per hand'), findsOneWidget);
     expect(find.text('10 reps · 14 kg per hand'), findsNWidgets(2));
     expect(find.text('A familiar movement from your previous logs.'),
-        findsNothing);
+        findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-13')));
     await tester.pumpAndSettle();
     expect(find.text('Recovery day'), findsOneWidget);
@@ -190,6 +195,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_app(scale: 1.8));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Dumbbell floor press'));
+    await tester.tap(find.text('Dumbbell floor press'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Why this exercise'), 150,
         scrollable: find.byType(Scrollable).first);

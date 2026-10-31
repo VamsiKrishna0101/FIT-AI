@@ -6,10 +6,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_generation_view.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
-import 'package:fitai_mobile/features/planner/views/widgets/plan_particle_orb.dart';
+import 'package:setcraft/features/planner/repositories/weekly_plan_repository.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_generation_view.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_view.dart';
+import 'package:setcraft/features/planner/views/widgets/plan_particle_orb.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_card.dart';
 
 // Loading feedback deliberately keeps ticking, including with system motion
 // disabled. Advance finite frames instead of waiting for an idle loading view.
@@ -38,15 +39,20 @@ class _ProgressRepository extends WeeklyPlanRepository {
   Future<Map<String, dynamic>> availability() async => {
         'canGenerate': false,
         'cooldownActive': false,
-        'pendingRun': {
-          'id': 'progress-run',
-          'status': current['status'],
-          'weekStart': '2026-10-12'
-        },
+        'pendingRun': ['QUEUED', 'RUNNING'].contains(current['status'])
+            ? {
+                'id': 'progress-run',
+                'status': current['status'],
+                'weekStart': '2026-10-12'
+              }
+            : null,
       };
 
   @override
-  Future<List<Map<String, dynamic>>> plans() async => [];
+  Future<List<Map<String, dynamic>>> plans() async =>
+      current['plan'] is Map && (current['plan'] as Map)['payload'] is Map
+          ? [Map<String, dynamic>.from(current['plan'] as Map)]
+          : [];
 
   @override
   Future<Map<String, dynamic>> run(String id) async {
@@ -168,7 +174,11 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     expect(frames, greaterThan(0));
     expect(find.text('41%'), findsOneWidget);
-    expect(find.text('4 of 7 muscle groups reviewed'), findsOneWidget);
+    expect(find.text('Build workouts'), findsNothing);
+    await tester.ensureVisible(find.text('Planning details'));
+    await tester.tap(find.text('Planning details'));
+    await _advance(tester);
+    expect(find.text('Build workouts'), findsOneWidget);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pump();
     final paused = frames;
@@ -203,6 +213,70 @@ void main() {
     expect(find.text('75%'), findsOneWidget);
     await tester.pump(const Duration(seconds: 10));
     expect(find.text('75%'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Stars visibly move while the confirmed percentage stays unchanged',
+      (tester) async {
+    final capture = GlobalKey();
+    await tester.pumpWidget(MaterialApp(
+        home: Center(
+            child: SizedBox(
+                width: 260,
+                height: 260,
+                child: RepaintBoundary(
+                    key: capture,
+                    child: const PlanParticleOrb(percent: 41))))));
+    await tester.pump(const Duration(milliseconds: 100));
+    Future<List<int>> pixels() => tester.runAsync(() async {
+          final boundary = capture.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
+          final image = await boundary.toImage();
+          final data =
+              await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+          image.dispose();
+          return data!.buffer.asUint8List().toList();
+        }).then((value) => value!);
+    final before = await pixels();
+    await tester.pump(const Duration(milliseconds: 700));
+    final after = await pixels();
+    expect(after, isNot(orderedEquals(before)));
+    expect(find.text('41%'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Automatic retry preserves progress and resumes without duplicate taps',
+      (tester) async {
+    final repository = _ProgressRepository();
+    repository.current = {
+      ...repository.current,
+      'status': 'QUEUED',
+      'stage': 'retrying',
+      'attempts': 1,
+      'canRetry': false
+    };
+    await tester.pumpWidget(_screen(repository, reducedMotion: true));
+    await _advance(tester);
+    expect(
+        find.text('Reconnecting and retrying automatically'), findsOneWidget);
+    expect(find.text('41%'), findsOneWidget);
+    expect(find.text('Retry planning'), findsNothing);
+    repository.current = {
+      ...repository.current,
+      'status': 'RUNNING',
+      'stage': 'nutrition',
+      'progress': {
+        'percent': 75,
+        'completedSteps': ['history', 'workouts']
+      }
+    };
+    await tester.pump(const Duration(seconds: 3));
+    await _advance(tester);
+    expect(find.text('75%'), findsOneWidget);
+    expect(find.text('Reconnecting and retrying automatically'), findsNothing);
+    expect(repository.retries, 0);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -361,6 +435,49 @@ void main() {
       await file.writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();
     });
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets(
+      'Planner card opens running progress directly and then the completed week',
+      (tester) async {
+    final repository = _ProgressRepository();
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: WeeklyPlanCard(repository: repository))));
+    await _advance(tester);
+    await tester.tap(find.text('View plan progress'));
+    await _advance(tester);
+    expect(find.byType(WeeklyPlanGenerationView), findsOneWidget);
+    expect(find.byType(WeeklyPlanView), findsNothing);
+    expect(find.text('41%'), findsOneWidget);
+    repository.current = {
+      ...repository.current,
+      'status': 'COMPLETED',
+      'plan': {
+        'id': 'finished-week',
+        'status': 'ARCHIVED',
+        'weekStart': '2026-10-12',
+        'payload': {
+          'workouts': [
+            {
+              'date': '2026-10-12',
+              'name': 'Chest + Triceps',
+              'restDay': false,
+              'estimatedMinutes': 40,
+              'exercises': []
+            }
+          ],
+        }
+      }
+    };
+    await tester.pump(const Duration(seconds: 3));
+    await _advance(tester);
+    await tester.tap(find.text('View weekly plan'));
+    await _advance(tester);
+    await _advance(tester);
+    expect(find.byType(WeeklyPlanView), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsOneWidget);
+    expect(find.text('Generate weekly plan'), findsNothing);
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
 }

@@ -6,20 +6,20 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_training_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
-import 'package:fitai_mobile/features/onboarding/views/training_preferences_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/onboarding_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/goal_selection_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/about_you_experience_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/schedule_location_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/equipment_selection_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/lifestyle_nutrition_limitations_view.dart';
-import 'package:fitai_mobile/features/auth/views/auth_view.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/onboarding/viewmodels/onboarding_controller.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/features/body_scan/views/body_training_view.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
+import 'package:setcraft/features/onboarding/views/onboarding_view.dart';
+import 'package:setcraft/features/onboarding/views/goal_selection_view.dart';
+import 'package:setcraft/features/onboarding/views/about_you_experience_view.dart';
+import 'package:setcraft/features/onboarding/views/schedule_location_view.dart';
+import 'package:setcraft/features/onboarding/views/equipment_selection_view.dart';
+import 'package:setcraft/features/onboarding/views/lifestyle_nutrition_limitations_view.dart';
+import 'package:setcraft/features/auth/views/auth_view.dart';
 
 final _data = TrainingMapData.fromJson(
     jsonDecode(File('test/fixtures/training_map.json').readAsStringSync())

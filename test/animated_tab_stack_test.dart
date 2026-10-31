@@ -1,4 +1,4 @@
-import 'package:fitai_mobile/core/components/animated_tab_stack.dart';
+import 'package:setcraft/core/components/animated_tab_stack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -81,7 +81,8 @@ void main() {
 
     selected.value = 1;
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 160));
+    // Both screens remain in the crossfade while touch follows the new tab.
+    await tester.pump(const Duration(milliseconds: 70));
     expect(find.text('Tab 0: 1'), findsOneWidget);
     expect(find.text('Tab 1: 0'), findsOneWidget);
     final fades =
@@ -104,6 +105,26 @@ void main() {
     expect(restored.scroll.offset, closeTo(offset, .01));
     expect(find.text('Tab 0: 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Tab changes keep a visible screen throughout the crossfade',
+      (tester) async {
+    final selected = ValueNotifier(0);
+    addTearDown(selected.dispose);
+    await tester.pumpWidget(_app(selected));
+    selected.value = 1;
+    await tester.pump();
+    for (var frame = 0; frame < 18; frame++) {
+      final opacities = tester
+          .widgetList<FadeTransition>(find.byType(FadeTransition))
+          .map((fade) => fade.opacity.value);
+      expect(
+          opacities.reduce((a, b) => a > b ? a : b), greaterThanOrEqualTo(.5),
+          reason: 'A tab must remain visible during every transition frame');
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await tester.pumpAndSettle();
+    expect(find.text('Tab 1: 0'), findsOneWidget);
   });
 
   testWidgets('Rapid taps settle on the latest tab without pending frames',

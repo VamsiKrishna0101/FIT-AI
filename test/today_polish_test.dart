@@ -1,26 +1,22 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/components/liquid_silver_bottom_bar.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/models/home_models.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/features/today/components/readiness_score_ring.dart';
-import 'package:fitai_mobile/features/today/components/today_training_preview.dart';
-import 'package:fitai_mobile/features/today/models/session_guidance.dart';
-import 'package:fitai_mobile/features/history/repositories/history_repository.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:setcraft/core/components/liquid_silver_bottom_bar.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/models/home_models.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/features/today/components/readiness_score_ring.dart';
+import 'package:setcraft/features/today/models/session_guidance.dart';
+import 'package:setcraft/features/today/views/readiness_detail_view.dart';
+import 'package:setcraft/features/history/repositories/history_repository.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
 import '../tool/scroll_benchmark_fixtures.dart';
 
 const _preview = ValueKey('today-polish-preview');
-final _map = TrainingMapData.fromJson(
-    jsonDecode(File('test/fixtures/training_map.json').readAsStringSync())
-        as Map<String, dynamic>);
 final _history = List.generate(
     7,
     (i) => RecoveryPoint(
@@ -35,10 +31,14 @@ Widget _app({
   HomeData? data,
   VoidCallback? onSleep,
   TextScaler textScaler = TextScaler.noScaling,
+  String locale = 'en',
 }) =>
     MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(),
+        locale: Locale(locale),
+        supportedLocales: const [Locale('en'), Locale('de')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         home: Builder(
             builder: (context) => MediaQuery(
                 data: MediaQuery.of(context).copyWith(
@@ -48,29 +48,26 @@ Widget _app({
                     child: FitnessTheme(
                         child: Scaffold(
                             backgroundColor: FitnessTheme.canvas,
-                            extendBody: true,
-                            body: MediaQuery(
-                                data: MediaQuery.of(context).copyWith(
-                                    padding: MediaQuery.paddingOf(context)
-                                        .copyWith(bottom: 0)),
-                                child: SafeArea(
-                                    bottom: false,
-                                    child: TodayDashboard(
-                                        data: data ?? benchmarkHome,
-                                        trainingMap: _map,
-                                        recovery: history ?? _history,
-                                        now: DateTime(2026, 10, 6, 10),
-                                        onRefresh: () async {},
-                                        onSleep: onSleep,
-                                        onProfile: () {},
-                                        onSession: () {},
-                                        onTrain: () {},
-                                        onBody: () {},
-                                        onNutrition: () {}))),
-                            bottomNavigationBar: LiquidSilverBottomBar(
-                                selectedIndex: 0,
-                                labels: const ['Today', 'Train', 'Body', 'Progress'],
-                                onTabSelected: (_) {})))))));
+                            body: Builder(
+                                builder: (bodyContext) => MediaQuery(
+                                    data: MediaQuery.of(bodyContext).copyWith(
+                                        padding:
+                                            MediaQuery.paddingOf(bodyContext)
+                                                .copyWith(bottom: 0)),
+                                    child: SafeArea(
+                                        bottom: false,
+                                        child: TodayDashboard(
+                                            data: data ?? benchmarkHome,
+                                            recovery: history ?? _history,
+                                            now: DateTime(2026, 10, 6, 10),
+                                            onDateSelected: (_) {},
+                                            onRefresh: () async {},
+                                            onSleep: onSleep,
+                                            onProfile: () {},
+                                            onSession: () {},
+                                            onTrain: () {},
+                                            onNutrition: () {})))),
+                            bottomNavigationBar: LiquidSilverBottomBar(selectedIndex: 0, labels: const ['Today', 'Train', 'Body', 'Progress'], onTabSelected: (_) {})))))));
 Future<void> _snapshot(WidgetTester tester, String name) async {
   await tester.pumpAndSettle();
   await tester.runAsync(() async {
@@ -154,17 +151,16 @@ void main() {
         scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(find.byKey(const ValueKey('today-chart-card')));
     await tester.pumpAndSettle();
-    expect(
-        find.byKey(const ValueKey('today-chart-comparison')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today-chart-comparison')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('today-chart-day-0')));
     await tester.pump();
     expect(
         tester
             .widget<Text>(find.byKey(const ValueKey('today-chart-value')))
             .data,
-        '7 h 0 m');
+        '7 h 6 m');
     expect(find.byKey(const ValueKey('today-chart-comparison')), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('today-chart-day-3')));
+    await tester.tap(find.byKey(const ValueKey('today-chart-day-2')));
     await tester.pump();
     expect(
         tester
@@ -174,17 +170,93 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-      'body preview colours only direct logged sets and reuses equivalent paint data',
+      'six sleep blocks preserve duration ratios and keep the latest day brightest',
       (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final history = List.generate(
+        6,
+        (i) => RecoveryPoint(
+            date: DateTime(2026, 10, i + 1),
+            sleepHours: <double?>[3, 4, 5, null, 6, 8][i]));
+    await tester.pumpWidget(_app(history: history));
+    await tester.pumpAndSettle();
+    final chart = find.byKey(const ValueKey('today-chart-card'));
+    await tester.scrollUntilVisible(chart, 100,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(chart);
+    await tester.pumpAndSettle();
+    expect(find.text('Recorded sleep'), findsOneWidget);
+    expect(find.text('Last 6 days'), findsOneWidget);
+    expect(find.textContaining('average'), findsNothing);
+    expect(find.byKey(const ValueKey('today-chart-day-5')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today-chart-day-6')), findsNothing);
+    Finder bar(int index) => find.byKey(ValueKey('today-sleep-bar-$index'));
+    double height(int index) => tester.getSize(bar(index)).height;
+    expect(height(5), lessThanOrEqualTo(44));
+    expect(height(0) / height(5), closeTo(3 / 8, .001));
+    expect(height(1), lessThan(height(2)));
+    expect(height(2), lessThan(height(4)));
+    expect(height(4), lessThan(height(5)));
+    expect(bar(3), findsNothing);
+    expect(find.byKey(const ValueKey('today-sleep-missing-3')), findsOneWidget);
+    Color fill(int index) =>
+        (tester.widget<AnimatedContainer>(bar(index)).decoration
+                as BoxDecoration)
+            .color!;
+    expect(fill(5).computeLuminance(), greaterThan(fill(0).computeLuminance()));
+    final bright = fill(5);
+    final muted = fill(0);
+    await tester.tap(find.byKey(const ValueKey('today-chart-day-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('3 h 0 m'), findsOneWidget);
+    expect(fill(5), bright);
+    expect(fill(0), muted);
+    await tester.tap(find.byKey(const ValueKey('today-chart-day-5')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+        find.byKey(const ValueKey('today-recorded-sleep-heading')));
+    await tester.pumpAndSettle();
+    await _snapshot(tester, 'recorded-sleep-six-days-preview');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sleep labels stay aligned at 320 px with enlarged German text',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
-        MaterialApp(home: Center(child: TodayTrainingPreview(data: _map))));
-    final map = tester
-        .widgetList<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap))
-        .first;
-    for (final region in _map.regions) {
-      expect(map.colors[region.id] == const Color(0xFF555555),
-          region.completedSets == 0);
+        _app(locale: 'de', textScaler: const TextScaler.linear(1.8)));
+    await tester.pumpAndSettle();
+    final chart = find.byKey(const ValueKey('today-chart-card'));
+    await tester.scrollUntilVisible(chart, 80,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(chart);
+    await tester.pumpAndSettle();
+    expect(find.text('Erfasster Schlaf'), findsOneWidget);
+    expect(find.text('Erholung'), findsOneWidget);
+    final value =
+        tester.getRect(find.byKey(const ValueKey('today-chart-value')));
+    final date = tester.getRect(find.byKey(const ValueKey('today-chart-date')));
+    expect(date.top, greaterThan(value.bottom));
+    final last = find.byKey(const ValueKey('today-chart-day-5'));
+    final lastRect = tester.getRect(last);
+    for (var i = 0; i < 5; i++) {
+      final rect = tester.getRect(find.byKey(ValueKey('today-chart-day-$i')));
+      expect(rect.bottom, closeTo(lastRect.bottom, .1));
+      expect(rect.right, lessThanOrEqualTo(lastRect.left));
     }
+    await tester.tap(find.byKey(const ValueKey('today-chart-day-2')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+        find.byKey(const ValueKey('today-recorded-sleep-heading')));
+    await tester.pumpAndSettle();
+    await _snapshot(tester, 'recorded-sleep-large-text-preview');
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('anatomy reuses equivalent paint data', (tester) async {
     Widget anatomy() => MaterialApp(
         home: SizedBox(
             width: 220,
@@ -242,8 +314,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-      'card press responds without delaying save and settles after release',
+  testWidgets('Card press opens Recovery details and settles after returning',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
@@ -251,7 +322,7 @@ void main() {
     var taps = 0;
     await tester.pumpWidget(_app(reduced: false, onSleep: () => taps++));
     await tester.pumpAndSettle();
-    final label = find.text('Log sleep & check-in');
+    final label = find.byKey(const ValueKey('today-readiness-heading'));
     await tester.scrollUntilVisible(label, 120,
         scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(label);
@@ -264,7 +335,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 180));
     expect(tester.getRect(tapArea).width, lessThan(width));
     await gesture.up();
-    expect(taps, 1);
+    expect(taps, 0);
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadinessDetailView), findsOneWidget);
+    await tester.pageBack();
     await tester.pumpAndSettle();
     expect(tester.getRect(tapArea).width, closeTo(width, .01));
     expect(tester.binding.hasScheduledFrame, isFalse);
@@ -303,17 +377,23 @@ void main() {
         find.byKey(const ValueKey('today-effort-pill')), 120,
         scrollable: find.byType(Scrollable).first);
     expect(find.byKey(const ValueKey('today-effort-pill')), findsOneWidget);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('today-session-card')));
+    await tester.pumpAndSettle();
+    await _snapshot(tester, 'today-session-preview');
     await tester.scrollUntilVisible(
         find.byKey(const ValueKey('today-chart-card')), 200,
         scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(find.byKey(const ValueKey('today-chart-card')));
     await tester.pumpAndSettle();
     await _snapshot(tester, 'today-polished-progress-preview');
-    await tester.scrollUntilVisible(find.byType(TodayTrainingPreview), 120,
+    await tester.scrollUntilVisible(find.text('Fat'), 120,
         scrollable: find.byType(Scrollable).first);
-    await tester.ensureVisible(find.byType(TodayTrainingPreview));
+    await tester.ensureVisible(find.text('Fat'));
     await tester.pumpAndSettle();
-    await _snapshot(tester, 'today-polished-body-preview');
+    await _snapshot(tester, 'today-polished-nutrition-preview');
+    expect(find.text('Muscles this week'), findsNothing);
+    expect(find.byType(AnatomicalTrainingMap), findsNothing);
     expect(tester.getRect(find.byKey(const ValueKey('today-fixed-header'))),
         header);
     expect(tester.takeException(), isNull);

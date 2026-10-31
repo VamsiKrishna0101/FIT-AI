@@ -10,16 +10,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health/health.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/components/liquid_chrome_button.dart';
-import 'package:fitai_mobile/core/health/health_models.dart';
-import 'package:fitai_mobile/core/health/health_normalizer.dart';
-import 'package:fitai_mobile/core/health/health_sync_service.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/health/views/health_setup_gate.dart';
-import 'package:fitai_mobile/features/health/views/health_connection_view.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/models/home_models.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/health/health_models.dart';
+import 'package:setcraft/core/health/health_normalizer.dart';
+import 'package:setcraft/core/health/health_sync_service.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/health/views/health_setup_gate.dart';
+import 'package:setcraft/features/health/views/health_connection_view.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/models/home_models.dart';
 
 HealthDataPoint point(HealthDataType type, DateTime from, DateTime to,
         {String id = 'sample',
@@ -563,24 +563,24 @@ void main() {
         theme: ThemeData.dark(),
         home: Scaffold(
             body: TodayDashboard(
-                data: HomeData.fromJson({
-                  'calendarDate': '2026-10-10',
-                  'user': <String, dynamic>{},
-                  'nutrition': <String, dynamic>{},
-                  'weeklyStreak': [],
-                  'healthMetrics': {
-                    'date': '2026-10-10',
-                    'source': 'health_connect',
-                    'steps': 0
-                  }
-                }),
-                now: DateTime(2026, 10, 10),
-                onRefresh: () async {},
-                onProfile: () {},
-                onSession: () {},
-                onTrain: () {},
-                onNutrition: () {},
-                onBody: () {}))));
+          data: HomeData.fromJson({
+            'calendarDate': '2026-10-10',
+            'user': <String, dynamic>{},
+            'nutrition': <String, dynamic>{},
+            'weeklyStreak': [],
+            'healthMetrics': {
+              'date': '2026-10-10',
+              'source': 'health_connect',
+              'steps': 0
+            }
+          }),
+          now: DateTime(2026, 10, 10),
+          onRefresh: () async {},
+          onProfile: () {},
+          onSession: () {},
+          onTrain: () {},
+          onNutrition: () {},
+        ))));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Steps'), 200,
         scrollable: find.byType(Scrollable).first);
@@ -588,14 +588,14 @@ void main() {
     await tester.scrollUntilVisible(
         find.byKey(const ValueKey('today-readiness-card')), -200,
         scrollable: find.byType(Scrollable).first);
-    expect(find.text('Your readiness check-in'), findsOneWidget);
+    expect(find.text('How are you feeling?'), findsOneWidget);
     expect(find.text('Connect your health'), findsNothing);
     expect(find.text('Health connection'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('today-readiness-card')));
     await tester.pumpAndSettle();
-    expect(find.text('Synced sleep'), findsOneWidget);
+    expect(find.text('Sleep'), findsOneWidget);
     expect(find.text('Synced heart readings'), findsNothing);
-    expect(find.text('Missing'), findsNWidgets(4));
+    expect(find.text('Not added'), findsNWidgets(4));
     expect(find.text('Connect your health'), findsNothing);
     expect(find.text('0 / 100'), findsNothing);
     expect(find.text('0'), findsWidgets);

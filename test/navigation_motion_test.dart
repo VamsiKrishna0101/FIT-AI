@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'package:setcraft/main.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/components/content_transition.dart';
-import 'package:fitai_mobile/core/navigation/onboarding_page_route.dart';
-import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
-import 'package:fitai_mobile/features/planner/views/widgets/weekly_plan_schedule.dart';
+import 'package:setcraft/core/components/content_transition.dart';
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
+import 'package:setcraft/features/planner/repositories/weekly_plan_repository.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_view.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_history_view.dart';
+import 'package:setcraft/features/planner/views/widgets/weekly_plan_schedule.dart';
 
 Map<String, dynamic> week(String id, String date) => {
       'id': id,
@@ -80,12 +84,63 @@ void main() {
         'fitai_user_id': 'motion-test',
       }));
 
-  testWidgets('Page navigation slides an opaque screen and supports swipe back',
+  testWidgets('Fades keep an opaque black canvas at every sampled frame',
+      (tester) async {
+    const key = ValueKey('fade-black-canvas');
+    await tester.pumpWidget(const RepaintBoundary(
+        key: key,
+        child: SetcraftApp(
+            initialHome: Scaffold(
+                backgroundColor: Colors.black, body: Text('Original')))));
+    await tester.pumpAndSettle();
+    final navigator = Navigator.of(tester.element(find.text('Original')));
+    Future<void> blackFrame() async {
+      await tester.runAsync(() async {
+        final boundary =
+            tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+        final image = await boundary.toImage(pixelRatio: 1);
+        final bytes =
+            (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+        final x = image.width - 3, y = image.height - 3;
+        final offset = (y * image.width + x) * 4;
+        expect(bytes.getUint8(offset), lessThanOrEqualTo(1));
+        expect(bytes.getUint8(offset + 1), lessThanOrEqualTo(1));
+        expect(bytes.getUint8(offset + 2), lessThanOrEqualTo(1));
+        expect(bytes.getUint8(offset + 3), 255);
+        image.dispose();
+      });
+    }
+
+    navigator.push(AppPageRoute<void>(
+        page: const Center(child: Text('Transparent page'))));
+    await tester.pump();
+    for (final step in [0, 40, 80, 160]) {
+      await tester.pump(Duration(milliseconds: step));
+      await blackFrame();
+    }
+    await tester.pumpAndSettle();
+    await blackFrame();
+    navigator.pop();
+    await tester.pump();
+    for (final step in [0, 70, 70, 140]) {
+      await tester.pump(Duration(milliseconds: step));
+      await blackFrame();
+    }
+    await tester.pumpAndSettle();
+    expect(find.text('Original'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Page navigation fades in place and supports swipe back',
       (tester) async {
     final navigator = GlobalKey<NavigatorState>();
     await tester.pumpWidget(MaterialApp(
       navigatorKey: navigator,
-      theme: ThemeData(platform: TargetPlatform.iOS),
+      theme: ThemeData(
+          platform: TargetPlatform.iOS,
+          pageTransitionsTheme: const PageTransitionsTheme(builders: {
+            TargetPlatform.iOS: OnboardingPageTransitionsBuilder()
+          })),
       home: const Scaffold(body: Text('Previous screen')),
     ));
     navigator.currentState!.push(AppPageRoute<void>(
@@ -93,17 +148,51 @@ void main() {
     ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(tester.getTopLeft(find.text('Next screen')).dx, greaterThan(0));
+    expect(tester.getTopLeft(find.text('Next screen')).dx, 0);
+    expect(tester.getTopLeft(find.text('Previous screen')).dx, 0);
     final fades = tester.widgetList<FadeTransition>(find.ancestor(
       of: find.text('Next screen'),
       matching: find.byType(FadeTransition),
     ));
-    expect(fades.any((fade) => fade.opacity.value < 1), false);
+    expect(
+        fades.any((fade) => fade.opacity.value > 0 && fade.opacity.value < 1),
+        true);
     await tester.pumpAndSettle();
     await tester.dragFrom(const Offset(2, 300), const Offset(700, 0));
     await tester.pumpAndSettle();
     expect(find.text('Previous screen'), findsOneWidget);
     expect(find.text('Next screen'), findsNothing);
+  });
+
+  testWidgets('Default Android routes fade without moving either screen',
+      (tester) async {
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+        navigatorKey: navigator,
+        theme: ThemeData(
+            platform: TargetPlatform.android,
+            pageTransitionsTheme: const PageTransitionsTheme(builders: {
+              TargetPlatform.android: OnboardingPageTransitionsBuilder()
+            })),
+        home: const Scaffold(body: Text('Original page'))));
+    navigator.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('Fading page'))));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getTopLeft(find.text('Original page')).dx, 0);
+    expect(tester.getTopLeft(find.text('Fading page')).dx, 0);
+    final fades = tester.widgetList<FadeTransition>(find.ancestor(
+        of: find.text('Fading page'), matching: find.byType(FadeTransition)));
+    expect(
+        fades.any((fade) => fade.opacity.value > 0 && fade.opacity.value < 1),
+        isTrue);
+    await tester.pumpAndSettle();
+    navigator.currentState!.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getTopLeft(find.text('Fading page')).dx, 0);
+    await tester.pumpAndSettle();
+    expect(find.text('Original page'), findsOneWidget);
   });
 
   testWidgets('Reduced motion opens and closes a page without movement',
@@ -218,13 +307,14 @@ void main() {
     await tester
         .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Plan history'));
+    await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
-    final route = ModalRoute.of(tester.element(find.text('Your saved weeks')))!;
+    final route =
+        ModalRoute.of(tester.element(find.byType(WeeklyPlanHistoryView)))!;
     expect(route, isA<AppPageRoute>());
-    await tester.scrollUntilVisible(find.text('Review week'), 150,
+    await tester.scrollUntilVisible(find.text('Food plan not included'), 150,
         scrollable: find.byType(Scrollable).last);
-    await tester.tap(find.text('Review week'));
+    await tester.tap(find.text('Food plan not included'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 120));
     final oldSchedule = tester.widget<WeeklyPlanSchedule>(

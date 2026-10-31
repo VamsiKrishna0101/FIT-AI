@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'setcraft_geometry.dart';
 
-/// One source for the public identity. Storage and platform IDs stay stable.
+/// Public name and assets. Persistent storage keys are versioned separately.
 abstract final class SetcraftBrand {
   static const name = 'Setcraft';
   static const icon = 'assets/branding/setcraft-icon.png';

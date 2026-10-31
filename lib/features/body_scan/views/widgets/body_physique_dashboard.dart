@@ -1,7 +1,7 @@
 import '../../../../core/theme/ds_motion.dart';
 import '../../../../core/components/motion.dart';
 import '../../../../core/localization/fitness_copy.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

@@ -7,8 +7,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/media/exercise_animation.dart';
-import 'package:fitai_mobile/core/media/video_cache.dart';
+import 'package:setcraft/core/media/exercise_animation.dart';
+import 'package:setcraft/core/media/video_cache.dart';
 
 final _gif = File('test/fixtures/exercise-demo.gif').readAsBytesSync();
 final _still = base64Decode(

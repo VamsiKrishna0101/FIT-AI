@@ -9,14 +9,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/train/components/workout_rest_timer.dart';
-import 'package:fitai_mobile/features/train/components/workout_set_entry.dart';
-import 'package:fitai_mobile/features/train/models/training_session.dart';
-import 'package:fitai_mobile/features/train/repositories/training_repository.dart';
-import 'package:fitai_mobile/features/train/views/workout_session_view.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/train/components/workout_rest_timer.dart';
+import 'package:setcraft/features/train/components/workout_set_entry.dart';
+import 'package:setcraft/features/train/models/training_session.dart';
+import 'package:setcraft/features/train/repositories/training_repository.dart';
+import 'package:setcraft/features/train/views/workout_session_view.dart';
 import 'training_session_test.dart' as session;
 
 class _Adapter implements HttpClientAdapter {
@@ -138,7 +138,7 @@ void main() {
   });
 
   testWidgets(
-      'Saving a new set opens the planned timer; pause, minimize and skip persist',
+      'Saving a new set starts compact rest; expanding, pausing and skipping persist',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
@@ -147,10 +147,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), '20');
     await tester.enterText(find.byType(TextField).at(1), '10');
-    await tester.ensureVisible(find.byTooltip('Save set').first);
-    await tester.tap(find.byTooltip('Save set').first);
+    await tester.tap(find.byKey(const ValueKey('workout-primary-action')));
     await _deliver(tester);
     expect(adapter.saved, 1);
+    expect(find.byKey(const ValueKey('rest-countdown')), findsNothing);
+    expect(find.byKey(const ValueKey('minimized-rest-timer')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('expand-rest-timer')));
+    await _deliver(tester);
     expect(find.byKey(const ValueKey('rest-countdown')), findsOneWidget);
     final timer = tester
         .widgetList<WorkoutRestTimer>(find.byType(WorkoutRestTimer))
@@ -172,7 +175,7 @@ void main() {
     await _deliver(tester);
     final bar = find.byKey(const ValueKey('minimized-rest-timer'));
     expect(bar, findsOneWidget);
-    await tester.tap(bar);
+    await tester.tap(find.byKey(const ValueKey('expand-rest-timer')));
     await _deliver(tester);
     expect(find.text('Resume timer'), findsOneWidget);
     await tester.tap(find.text('Resume timer'));
@@ -229,6 +232,9 @@ void main() {
     adapter.saved = 1;
     await tester.pumpWidget(_app(TrainingDay(adapter.day())));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byType(WorkoutSetEntry).first);
+    await tester.tap(find.byType(WorkoutSetEntry).first);
+    await tester.pump();
     await tester.enterText(find.byType(TextField).first, '22');
     final correction =
         tester.state<WorkoutSetEntryState>(find.byType(WorkoutSetEntry).first);
@@ -290,14 +296,14 @@ void main() {
         .saveRest(CacheScope.todayKey(), rest.toJson()));
     await tester.pumpWidget(_app(TrainingDay(adapter.day()), scale: 1.7));
     await _deliver(tester);
-    await tester.tap(find.byKey(const ValueKey('minimized-rest-timer')));
+    await tester.tap(find.byKey(const ValueKey('expand-rest-timer')));
     await _deliver(tester);
     expect(find.byKey(const ValueKey('rest-countdown')), findsOneWidget);
-    await tester.ensureVisible(find.text('Skip rest'));
+    await tester.ensureVisible(find.text('Skip rest').last);
     await tester.pump(const Duration(milliseconds: 200));
     await _preview(tester, 'rest-timer-large-text');
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Skip rest'));
+    await tester.tap(find.text('Skip rest').last);
     await _deliver(tester);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));

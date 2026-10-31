@@ -1,3 +1,4 @@
+import 'package:setcraft/features/progress/components/progress_training_hero.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -6,17 +7,17 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/progress/components/body_progress_content.dart';
-import 'package:fitai_mobile/features/progress/components/exercise_progress_content.dart';
-import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
-import 'package:fitai_mobile/features/progress/components/progress_activity.dart';
-import 'package:fitai_mobile/features/progress/components/progress_surface.dart';
-import 'package:fitai_mobile/features/progress/components/progress_weekly_bars.dart';
-import 'package:fitai_mobile/features/progress/components/progress_date_filter.dart';
-import 'package:fitai_mobile/features/progress/components/wellness_progress_content.dart';
-import 'package:fitai_mobile/features/progress/models/progress_models.dart';
-import 'package:fitai_mobile/features/progress/views/progress_overview_view.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/progress/components/body_progress_content.dart';
+import 'package:setcraft/features/progress/components/exercise_progress_content.dart';
+import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/components/progress_activity.dart';
+import 'package:setcraft/features/progress/components/progress_surface.dart';
+import 'package:setcraft/features/progress/components/progress_weekly_bars.dart';
+import 'package:setcraft/features/progress/components/progress_date_filter.dart';
+import 'package:setcraft/features/progress/components/wellness_progress_content.dart';
+import 'package:setcraft/features/progress/models/progress_models.dart';
+import 'package:setcraft/features/progress/views/progress_overview_view.dart';
 
 const boundary = ValueKey('progress-preview');
 Widget page(Widget child,
@@ -60,7 +61,7 @@ void main() {
   });
 
   testWidgets(
-      'Sparse training keeps exercises visible and offers compact setup',
+      'Sparse training keeps the exercise visible and activity one tap away',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
@@ -87,17 +88,26 @@ void main() {
     await tester.pumpWidget(page(const ProgressOverviewView(initial: data)));
     await tester.pumpAndSettle();
     expect(tester.getBottomLeft(find.text('Bench press')).dy, lessThan(852));
-    expect(find.text('More workouts will reveal your trend.'), findsOneWidget);
+    expect(find.text('40 kg'), findsOneWidget);
     expect(find.byType(ProgressChart), findsNothing);
     expect(find.byType(ProgressWeeklyBars), findsOneWidget);
+    expect(find.byType(ProgressActivity), findsNothing);
+    await capture(tester, 'progress-sparse-redesign');
+    await tester.tap(find.byKey(const ValueKey('progress-open-activity')));
+    await tester.pumpAndSettle();
     final activity = find.descendant(
         of: find.byType(ProgressActivity),
         matching: find.byType(ExpansionTile));
     expect(tester.widget<ExpansionTile>(activity).initiallyExpanded, isFalse);
-    await capture(tester, 'progress-sparse-redesign');
-    await tester.scrollUntilVisible(find.text('Log your weight'), 200,
-        scrollable: find.byType(Scrollable).first);
-    expect(find.byType(ProgressSetupRow), findsWidgets);
+    expect(find.text('45'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('progress-section-trends')));
+    await tester.pumpAndSettle();
+    expect(find.text('Body changes'), findsOneWidget);
+    expect(find.text('Nutrition'), findsOneWidget);
+    expect(find.text('Recovery'), findsOneWidget);
+    expect(find.byType(ProgressSetupRow), findsNothing);
     expect(find.text('—'), findsNothing);
     await capture(tester, 'progress-setup-redesign');
     expect(tester.takeException(), isNull);
@@ -364,7 +374,8 @@ void main() {
     await capture(tester, 'progress-seeded-preview');
     expect(find.text('Preview data'), findsNothing);
     expect(find.text('Real data'), findsNothing);
-    expect(find.text('${json['summary']['sets']}'), findsOneWidget);
+    expect(find.byType(ProgressTrainingHero), findsOneWidget);
+    expect(find.text('Exercise progress'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.drag(
         find.byType(CustomScrollView).first, const Offset(0, -720));

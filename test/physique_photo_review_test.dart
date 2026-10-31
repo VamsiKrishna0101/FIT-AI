@@ -1,3 +1,6 @@
+import 'fixtures/body_map_fixture.dart';
+import 'package:setcraft/features/body_scan/models/body_map_models.dart';
+import 'package:setcraft/features/body_scan/views/body_view.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -8,17 +11,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/repositories/body_assessment_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_photo_review_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_estimate_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_controls.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/physique_photo_report.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/photo_comparison_studio.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_history_view.dart';
-import 'package:fitai_mobile/features/body_scan/models/physique_dashboard_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/composition_readings_sheet.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
+import 'package:setcraft/features/body_scan/views/body_estimate_view.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_controls.dart';
+import 'package:setcraft/features/body_scan/views/widgets/physique_photo_report.dart';
+import 'package:setcraft/features/body_scan/views/widgets/photo_comparison_studio.dart';
+import 'package:setcraft/features/body_scan/views/body_history_view.dart';
+import 'package:setcraft/features/body_scan/models/physique_dashboard_models.dart';
+import 'package:setcraft/features/body_scan/views/widgets/composition_readings_sheet.dart';
 
 BodyAssessment scan(String id,
         {String date = '2026-10-20',
@@ -108,6 +110,11 @@ BodyAssessment scan(String id,
     });
 
 class _Repository extends BodyAssessmentRepository {
+  @override
+  Future<BodyMapData> bodyMap(
+          {DateTime? date, BodyDateSelection? selection}) async =>
+      emptyBodyMap(date);
+
   final Completer<BodyAssessment> result = Completer();
   Map<String, dynamic>? payload;
   List<BodyAssessment> records = [];
@@ -254,59 +261,20 @@ void main() {
     expect(
         current.canComparePhotosWith(scan('later', date: '2026-10-21')), false);
   });
-  testWidgets(
-      'one front photo and consent start review without weight or photo retention',
+  testWidgets('Body no longer exposes photo creation or visual review actions',
       (tester) async {
     await size(tester);
     final repo = _Repository();
-    await tester.pumpWidget(app(
-        BodyPhotoReviewView(repository: repo, pickPhoto: (_) async => photo)));
-    await tester.tap(find.byKey(const ValueKey('pick-review-photo')));
+    await tester.pumpWidget(app(BodyView(repository: repo, onTrain: () {})));
     await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Measurements'), findsOneWidget);
+    expect(find.byKey(const ValueKey('pick-review-photo')), findsNothing);
+    expect(find.text('Review my physique'), findsNothing);
+    expect(find.text('Photo review'), findsNothing);
     expect(repo.payload, isNull);
-    await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('photo-analysis-consent')), 160);
-    expect(
-        tester
-            .widget<SwitchListTile>(
-                find.byKey(const ValueKey('save-scan-photos')))
-            .value,
-        false);
-    await tester.tap(find.byKey(const ValueKey('photo-analysis-consent')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Review my physique'));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
-    expect(repo.payload!['weightKg'], isNull);
-    expect(repo.payload!['savePhotos'], false);
-    expect((repo.payload!['photos'] as List).length, 1);
-    expect(find.byKey(const ValueKey('physique-scan-line')), findsOneWidget);
-    final scanProgress = (tester
-            .widget<CustomPaint>(
-                find.byKey(const ValueKey('physique-scan-line')))
-            .painter as dynamic)
-        .progress as double;
-    await tester.pump(const Duration(milliseconds: 500));
-    final nextProgress = (tester
-            .widget<CustomPaint>(
-                find.byKey(const ValueKey('physique-scan-line')))
-            .painter as dynamic)
-        .progress as double;
-    expect(nextProgress, greaterThan(scanProgress),
-        reason: 'The scan line must actually travel down the photo.');
-    await snapshot(tester, 'physique-scan-preview');
-    repo.result.complete(scan('current', saved: false, scored: true));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('physique-scan-line')), findsNothing);
-    expect(find.byKey(const ValueKey('compare-saved-scans')), findsNothing);
-    expect(find.byType(PhysiquePhotoReport), findsOneWidget);
-    expect(find.text('94'), findsOneWidget);
-    expect(find.text('BODY FAT'), findsOneWidget);
-    expect(find.text('MUSCLE MASS'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await snapshot(tester, 'physique-photo-result-preview');
   });
+
   testWidgets(
       'compare appears only after the second scan with saved matching photos',
       (tester) async {
@@ -477,14 +445,15 @@ void main() {
     expect(result?['source'], 'smart_scale');
     expect(result?.containsKey('muscleMassKg'), false);
   });
-  testWidgets('history empty state has one compact date filter and no compare',
+  testWidgets(
+      'Measurement history empty state has no scan filters or comparison',
       (tester) async {
     await size(tester);
     await tester.pumpWidget(
         app(BodyHistoryView(repository: _Repository(), onRecord: (_) {})));
     await tester.pumpAndSettle();
-    expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+    expect(find.byType(PopupMenuButton<String>), findsNothing);
     expect(find.text('Compare'), findsNothing);
-    expect(find.text('No saved scans yet.'), findsOneWidget);
+    expect(find.text('No measurements yet'), findsOneWidget);
   });
 }

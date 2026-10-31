@@ -61,17 +61,20 @@ class HistoryRepository {
 
   Future<List<RecoveryPoint>> getRecovery({
     int days = 30,
+    DateTime? date,
     bool forceRefresh = false,
   }) async {
     final owner = await CacheScope.userId();
     if (owner == 'anonymous') return const <RecoveryPoint>[];
-    final key = await CacheScope.userDayKey('history_recovery_v4_$days');
+    final endDate = CacheScope.todayKey(date);
+    final key =
+        await CacheScope.userKey('history_recovery_v5_${days}_$endDate');
 
     if (!forceRefresh) {
       final mem = _recoveryMem[key];
       if (mem != null) {
         if (DateTime.now().difference(_recoveryUpdated[key]!) > _ttl) {
-          unawaited(_fetchRecovery(days, key, owner));
+          unawaited(_fetchRecovery(days, key, owner, endDate));
         }
         return mem;
       }
@@ -81,21 +84,23 @@ class HistoryRepository {
         final list = _parse(entry.$1 as List);
         _recoveryMem[key] = list;
         _recoveryUpdated[key] = DateTime.now().subtract(entry.$2);
-        if (entry.$2 > _ttl) unawaited(_fetchRecovery(days, key, owner));
+        if (entry.$2 > _ttl) {
+          unawaited(_fetchRecovery(days, key, owner, endDate));
+        }
         return list;
       }
     }
-    return _fetchRecovery(days, key, owner);
+    return _fetchRecovery(days, key, owner, endDate);
   }
 
   Future<List<RecoveryPoint>> _fetchRecovery(
-      int days, String key, String owner) {
+      int days, String key, String owner, String endDate) {
     final revision = _revision;
     return _inFlight[key] ??= () async {
       try {
         final res = await ApiClient.shared.get<Map<String, dynamic>>(
           Endpoints.recoveryHistory,
-          queryParameters: {'days': days},
+          queryParameters: {'days': days, 'date': endDate},
         );
         final raw = res.data?['data'];
         if (res.statusCode == 200 && raw is List) {

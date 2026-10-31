@@ -1,3 +1,4 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import 'dart:async';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/localization/language_manager.dart';
@@ -8,29 +9,32 @@ import '../../../core/theme/ds_colors.dart';
 import '../../history/repositories/history_repository.dart';
 import '../../../models/home_models.dart';
 import '../../nutrition/views/nutrition_view.dart';
+import '../../nutrition/views/food_library_view.dart';
+import '../../nutrition/views/hydration_view.dart';
 import '../../train/views/train_view.dart';
-import '../../train/repositories/training_repository.dart';
-import '../../train/models/training_session.dart';
 import '../components/today_dashboard.dart';
 import '../repositories/today_repository.dart';
-import '../../body_scan/models/training_map_models.dart';
-import '../../body_scan/repositories/body_assessment_repository.dart';
 import '../../wellness/views/daily_check_in_sheet.dart';
 import '../models/daily_check_in_prompt.dart';
 import '../../../core/cache/app_data_mode.dart';
 import '../../../core/health/health_sync_service.dart';
 import '../../../core/health/health_models.dart';
+import '../../wellness/models/sleep_edit_window.dart';
+import '../../wellness/models/check_in_state.dart';
+import '../../../core/localization/fitness_text.dart';
 
 class TodayHomeView extends StatefulWidget {
   final ValueChanged<int> onSelectTab;
   final VoidCallback onOpenProfile;
   final bool isActive;
+  final DateTime Function()? clock;
 
   const TodayHomeView({
     super.key,
     required this.onSelectTab,
     required this.onOpenProfile,
     this.isActive = true,
+    this.clock,
   });
 
   @override
@@ -42,15 +46,14 @@ class _TodayHomeViewState extends State<TodayHomeView>
   HomeData? _homeData;
   final _recovery = ValueNotifier<List<RecoveryPoint>>(const []);
   StreamSubscription<HomeData>? _subscription;
-  StreamSubscription<TrainingDay>? _trainingUpdates;
   StreamSubscription<HealthSnapshotPayload>? _healthUpdates;
   bool _loading = true;
   bool _loadFailed = false;
   bool _refreshFailed = false;
-  final _trainingMap = ValueNotifier<TrainingMapData?>(null);
-  DateTime _selectedDate = DateUtils.dateOnly(DateTime.now());
+  DateTime get _now => widget.clock?.call() ?? DateTime.now();
+  late DateTime _selectedDate;
   List<WeekDay> _weekDays = const [];
-  int _request = 0, _mapRequest = 0;
+  int _request = 0;
   String _locale = '';
   bool _checkingPrompt = false, _checkInOpen = false;
 
@@ -58,6 +61,7 @@ class _TodayHomeViewState extends State<TodayHomeView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _selectedDate = DateUtils.dateOnly(_now);
     _locale = LanguageManager.shared.currentLanguage.code;
     LanguageManager.shared.addListener(_languageChanged);
     _homeData = TodayRepository.shared.current;
@@ -75,13 +79,6 @@ class _TodayHomeViewState extends State<TodayHomeView>
           _loading = false;
         });
         _schedulePrompt();
-      }
-    });
-    _trainingUpdates = TrainingRepository.shared.changes.stream.listen((day) {
-      if (mounted &&
-          widget.isActive &&
-          day.date == CacheScope.todayKey(_selectedDate)) {
-        unawaited(_loadTrainingPreview());
       }
     });
     unawaited(_loadHome());
@@ -112,7 +109,7 @@ class _TodayHomeViewState extends State<TodayHomeView>
         !_refreshFailed &&
         !_checkInOpen &&
         !AppDataMode.shared.preview &&
-        DateUtils.isSameDay(_selectedDate, DateTime.now()) &&
+        DateUtils.isSameDay(_selectedDate, _now) &&
         data?.calendarDate == date &&
         ModalRoute.of(context)?.isCurrent == true &&
         data?.sleepLog?['sleepMinutes'] is! num &&
@@ -149,12 +146,17 @@ class _TodayHomeViewState extends State<TodayHomeView>
   }
 
   Future<void> _openCheckIn() async {
-    if (_checkInOpen || AppDataMode.shared.preview) return;
+    if (_checkInOpen ||
+        AppDataMode.shared.preview ||
+        !canEditSleepDate(_selectedDate, _now)) {
+      return;
+    }
     final date = _selectedDate;
     _checkInOpen = true;
     try {
       final entry = await showDailyCheckInSheet(context,
           date: date,
+          clock: widget.clock,
           entry: _homeData?.sleepLog,
           syncedSleepMinutes:
               _homeData?.healthMetrics?.date == CacheScope.todayKey(date)
@@ -172,6 +174,14 @@ class _TodayHomeViewState extends State<TodayHomeView>
               if (entry.containsKey('wearableUsage'))
                 'wearableUsage': entry['wearableUsage']
             }));
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+              backgroundColor: DSColors.bgRaised,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+              content: FitnessText(savedCheckInLabel(entry),
+                  style: const TextStyle(color: Colors.white))));
         await _loadHome(refresh: true);
       }
     } finally {
@@ -198,29 +208,6 @@ class _TodayHomeViewState extends State<TodayHomeView>
     }
   }
 
-  Future<void> _loadTrainingPreview() async {
-    final request = ++_mapRequest;
-    final date = _selectedDate;
-    final locale = LanguageManager.shared.currentLanguage.code;
-    try {
-      final owner = await CacheScope.userId();
-      if (!mounted || owner == 'anonymous') return;
-      final map = await BodyAssessmentRepository.shared
-          .trainingMap(date: date, daily: true);
-      final currentOwner = await CacheScope.userId();
-      if (mounted &&
-          request == _mapRequest &&
-          DateUtils.isSameDay(date, _selectedDate) &&
-          locale == LanguageManager.shared.currentLanguage.code &&
-          owner == currentOwner &&
-          map.date == CacheScope.todayKey(date)) {
-        _trainingMap.value = map;
-      }
-    } catch (_) {
-      // Optional preview: retain the Body shortcut when unavailable.
-    }
-  }
-
   Future<void> _loadHome({bool refresh = false}) async {
     final request = ++_request;
     final date = _selectedDate;
@@ -235,9 +222,8 @@ class _TodayHomeViewState extends State<TodayHomeView>
       });
     }
 
-    // These sections are independent. Neither blocks the main cards.
-    final recovery = _loadRecovery(request, owner, locale, refresh);
-    final preview = _loadTrainingPreview();
+    // Recovery history loads independently of the main cards.
+    final recovery = _loadRecovery(request, owner, locale, refresh, date);
     HomeData? fresh;
     try {
       fresh =
@@ -269,14 +255,14 @@ class _TodayHomeViewState extends State<TodayHomeView>
       });
     }
     _schedulePrompt();
-    await Future.wait([recovery, preview]);
+    await recovery;
   }
 
-  Future<void> _loadRecovery(
-      int request, String owner, String locale, bool refresh) async {
+  Future<void> _loadRecovery(int request, String owner, String locale,
+      bool refresh, DateTime date) async {
     try {
       final recovery = await HistoryRepository.shared
-          .getRecovery(days: 14, forceRefresh: refresh);
+          .getRecovery(days: 14, date: date, forceRefresh: refresh);
       final currentOwner = await CacheScope.userId();
       if (mounted &&
           request == _request &&
@@ -293,11 +279,13 @@ class _TodayHomeViewState extends State<TodayHomeView>
     if (DateUtils.isSameDay(date, _selectedDate) && !_loadFailed) return;
     final retry = _loadFailed;
     setState(() {
+      if (!DateUtils.isSameDay(
+          sleepWeekStart(date), sleepWeekStart(_selectedDate))) {
+        _weekDays = const [];
+      }
       _selectedDate = DateUtils.dateOnly(date);
-      _trainingMap.value = null;
       _loading = true;
     });
-    _mapRequest++;
     unawaited(_loadHome(refresh: retry));
   }
 
@@ -306,15 +294,13 @@ class _TodayHomeViewState extends State<TodayHomeView>
     WidgetsBinding.instance.removeObserver(this);
     LanguageManager.shared.removeListener(_languageChanged);
     _subscription?.cancel();
-    _trainingUpdates?.cancel();
     _healthUpdates?.cancel();
     _recovery.dispose();
-    _trainingMap.dispose();
     super.dispose();
   }
 
   void _open(Widget page) => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => page),
+        AppPageRoute<void>(builder: (_) => page),
       );
 
   @override
@@ -323,12 +309,12 @@ class _TodayHomeViewState extends State<TodayHomeView>
         body: SafeArea(
           bottom: false,
           child: TodayDashboard(
+            now: _now,
             selectedDate: _selectedDate,
             onDateSelected: _selectDate,
             weekDays: _weekDays,
             data: _homeData,
             recoveryUpdates: _recovery,
-            trainingUpdates: _trainingMap,
             loading: _loading,
             loadFailed: _loadFailed,
             refreshFailed: _refreshFailed,
@@ -337,16 +323,23 @@ class _TodayHomeViewState extends State<TodayHomeView>
             onSession: () => _open(TrainView(
                 standalone: true,
                 initialDate: CacheScope.todayKey(_selectedDate))),
-            onTrain: () => DateUtils.isSameDay(_selectedDate, DateTime.now())
+            onTrain: () => DateUtils.isSameDay(_selectedDate, _now)
                 ? widget.onSelectTab(1)
                 : _open(TrainView(
                     standalone: true,
                     initialDate: CacheScope.todayKey(_selectedDate))),
             onNutrition: () => _open(NutritionView(date: _selectedDate)),
-            onBody: () => widget.onSelectTab(2),
-            onSleep: _selectedDate.isAfter(DateUtils.dateOnly(DateTime.now()))
-                ? null
-                : _openCheckIn,
+            onWater: () => _open(HydrationView(
+                date: _selectedDate,
+                initialConsumedMl: _homeData?.nutrition.water.consumed,
+                initialTargetMl: _homeData?.nutrition.water.target)),
+            onAddMeal: DateUtils.isSameDay(_selectedDate, _now)
+                ? () => _open(FoodLibraryView(onMealAdded: () {
+                      if (mounted) unawaited(_loadHome(refresh: true));
+                    }))
+                : null,
+            onSleep:
+                canEditSleepDate(_selectedDate, _now) ? _openCheckIn : null,
           ),
         ),
       );

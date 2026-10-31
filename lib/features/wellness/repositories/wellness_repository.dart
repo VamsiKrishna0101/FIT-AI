@@ -7,8 +7,11 @@ import '../../progress/repositories/progress_repository.dart';
 import '../../today/repositories/today_repository.dart';
 import '../../history/repositories/history_repository.dart';
 import '../../../core/health/phone_sleep_service.dart';
+import '../models/sleep_edit_window.dart';
 
 class WellnessRepository {
+  final DateTime Function()? clock;
+  WellnessRepository({this.clock});
   static final shared = WellnessRepository();
   Future<String> wearableUsage() async {
     final owner = await CacheScope.userId();
@@ -87,6 +90,13 @@ class WellnessRepository {
 
   Future<Map<String, dynamic>> save(String date, int minutes, int? energy,
       {int? rested, int? soreness, PhoneSleepEstimate? estimate}) async {
+    final now = clock?.call() ?? DateTime.now();
+    final selected = DateTime.tryParse(date);
+    if (selected == null || !canEditSleepDate(selected, now)) {
+      throw FormatException(selected != null && selected.isAfter(now)
+          ? futureSleepReadOnly
+          : pastSleepReadOnly);
+    }
     final owner = await CacheScope.userId();
     final key = await CacheScope.userKey('wellness_v2_$date');
     if (!key.startsWith('${CacheScope.userPrefix}${owner}_')) {
@@ -101,7 +111,7 @@ class WellnessRepository {
       'source': estimate == null ? 'self_report' : 'phone_estimate_confirmed',
       'sleepStartedAt': estimate?.start.toUtc().toIso8601String(),
       'sleepEndedAt': estimate?.end.toUtc().toIso8601String(),
-      'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
+      'utcOffsetMinutes': now.timeZoneOffset.inMinutes,
     });
     if (owner != await CacheScope.userId()) throw StateError('Session changed');
     final entry = (response.data?['data'] as Map?)?.cast<String, dynamic>();

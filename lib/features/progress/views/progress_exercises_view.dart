@@ -1,3 +1,4 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -224,14 +225,14 @@ class _ProgressExercisesViewState extends State<ProgressExercisesView> {
                     final row = _items[index];
                     return ExerciseProgressListRow(
                         exercise: row,
-                        onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => ProgressDetailView(
-                                    title: row['name'] as String,
-                                    path: '/exercises/${row['id']}',
-                                    period: widget.period,
-                                    kind: 'exercise',
-                                    query: widget.query))));
+                        onTap: () => Navigator.of(context).push(AppPageRoute(
+                            builder: (_) => ProgressDetailView(
+                                repository: _repo,
+                                title: row['name'] as String,
+                                path: '/exercises/${row['id']}',
+                                period: widget.period,
+                                kind: 'exercise',
+                                query: widget.query))));
                   },
                 ))),
       ]),

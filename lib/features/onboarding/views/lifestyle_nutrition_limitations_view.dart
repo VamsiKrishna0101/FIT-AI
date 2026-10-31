@@ -67,7 +67,7 @@ class _LifestyleNutritionLimitationsViewState
     }
   }
 
-  void _onContinue() async {
+  Future<void> _onContinue() async {
     if (_advancing) return;
     if (_part < 2) {
       FocusScope.of(context).unfocus();

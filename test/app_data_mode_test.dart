@@ -5,10 +5,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/app_data_mode.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
+import 'package:setcraft/core/cache/app_data_mode.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
 
 String token(String owner) =>
     '${base64Url.encode(utf8.encode('{}'))}.${base64Url.encode(utf8.encode(jsonEncode({

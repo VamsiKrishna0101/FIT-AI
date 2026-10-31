@@ -1,18 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/app_data_mode.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/database/cache_manager.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/local_cache.dart';
-import 'package:fitai_mobile/features/today/repositories/today_repository.dart';
-import 'package:fitai_mobile/features/wellness/repositories/wellness_repository.dart';
+import 'package:setcraft/core/cache/app_data_mode.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/database/cache_manager.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/local_cache.dart';
+import 'package:setcraft/features/today/repositories/today_repository.dart';
+import 'package:setcraft/features/wellness/repositories/wellness_repository.dart';
+import 'package:setcraft/features/today/views/today_home_view.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/features/wellness/views/daily_check_in_sheet.dart';
 
 class _Adapter implements HttpClientAdapter {
   Map<String, dynamic> home = {};
@@ -118,6 +122,75 @@ void main() {
           'sleepMinutes': 480
         },
       };
+
+  testWidgets(
+      'Saving a complete check-in updates Today and survives stale refresh',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    adapter.saveResponse = {
+      ...entry(),
+      'rested': 5,
+      'energy': 5,
+      'soreness': 1,
+      'readiness': {...(entry()['readiness'] as Map), 'score': 10},
+    };
+    await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(),
+        home: TodayHomeView(onSelectTab: (_) {}, onOpenProfile: () {})));
+    await tester.pumpAndSettle();
+    if (find.byType(DailyCheckInSheet).evaluate().isEmpty) {
+      final action = find.byKey(const ValueKey('today-readiness-card'));
+      await tester.ensureVisible(action);
+      await tester.pumpAndSettle();
+      await tester.tap(action);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('readiness-detail-update')));
+      await tester.pumpAndSettle();
+    }
+    await tester.enterText(find.byType(TextField).first, '8');
+    await tester.enterText(find.byType(TextField).at(1), '0');
+    for (final key in [
+      'check-in-rest-5',
+      'check-in-energy-5',
+      'check-in-soreness-1',
+      'daily-check-in-save'
+    ]) {
+      final target = find.byKey(ValueKey(key));
+      await tester.ensureVisible(target);
+      await tester.pumpAndSettle();
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+    }
+    await tester.runAsync(
+        () async => Future<void>.delayed(const Duration(milliseconds: 60)));
+    await tester.pumpAndSettle();
+    expect(find.byType(DailyCheckInSheet), findsNothing);
+    final card = find.byKey(const ValueKey('today-readiness-card'));
+    expect(find.descendant(of: card, matching: find.text('Check-in saved')),
+        findsNothing);
+    expect(
+        find.descendant(of: card, matching: find.text('100')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Energized')),
+        findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Well rested')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('readiness-complete-check-in')),
+        findsNothing);
+    expect(
+        find.byKey(const ValueKey('readiness-update-check-in')), findsNothing);
+    adapter.offline = true;
+    await tester.runAsync(() =>
+        tester.widget<TodayDashboard>(find.byType(TodayDashboard)).onRefresh());
+    await tester.pumpAndSettle();
+    expect(
+        find.descendant(of: card, matching: find.text('100')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Check-in saved')),
+        findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   test('Malformed success responses never become confirmed sleep', () async {
     adapter.saveResponse = {'message': 'ok'};

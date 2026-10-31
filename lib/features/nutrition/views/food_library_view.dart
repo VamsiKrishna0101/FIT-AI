@@ -1,15 +1,20 @@
+import 'package:setcraft/core/theme/ds_motion.dart';
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/fitness_theme.dart';
-import '../components/food_art.dart';
+import '../components/food_library_card.dart';
+import '../components/food_library_filters.dart';
 import '../models/food_catalog_page.dart';
 import '../models/nutrition_diet_models.dart';
 import '../repositories/nutrition_repository.dart';
-import 'food_preferences_view.dart';
+import '../../../core/components/library_new_button.dart';
+import '../components/new_food_sheet.dart';
 import 'meal_portion_view.dart';
+import 'saved_meal_editor_view.dart';
 
 typedef FoodPageLoader = Future<FoodCatalogPage> Function(int page,
     String search, String? category, String focus, String sort, String source);
@@ -20,13 +25,15 @@ class FoodLibraryView extends StatefulWidget {
   final List<NutritionFoodItemModel>? initialFoods;
   final FoodPageLoader? pageLoader;
   final Future<bool> Function(Map<String, dynamic>)? saveMeal;
+  final ValueChanged<NutritionFoodItemModel>? onFoodSelected;
   const FoodLibraryView(
       {super.key,
       required this.onMealAdded,
       this.initialMealType = 'LUNCH',
       this.initialFoods,
       this.pageLoader,
-      this.saveMeal});
+      this.saveMeal,
+      this.onFoodSelected});
   @override
   State<FoodLibraryView> createState() => _FoodLibraryViewState();
 }
@@ -36,10 +43,10 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
   Timer? _debounce;
   List<NutritionFoodItemModel> _foods = [];
   String? _category, _error;
-  String _focus = 'ALL', _sort = 'NAME', _source = 'LIBRARY';
-  late String _slot;
+  String _focus = 'ALL', _sort = 'NAME', _source = 'LIBRARY', _lastSearch = '';
+  late final String _slot;
   int _page = 1, _total = 0, _pages = 0, _request = 0;
-  bool _loading = true;
+  bool _loading = true, _opening = false;
   static const _size = 24;
   @override
   void initState() {
@@ -53,6 +60,9 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
   }
 
   void _searchChanged() {
+    final query = _search.text.trim();
+    if (query == _lastSearch) return;
+    _lastSearch = query;
     _debounce?.cancel();
     ++_request;
     setState(() {
@@ -61,7 +71,7 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
       _error = null;
     });
     _debounce =
-        Timer(const Duration(milliseconds: 300), () => unawaited(_load()));
+        Timer(const Duration(milliseconds: 220), () => unawaited(_load()));
   }
 
   void _filter(VoidCallback change) {
@@ -74,6 +84,7 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
   }
 
   Future<void> _load() async {
+    _debounce?.cancel();
     final request = ++_request;
     setState(() {
       _loading = true;
@@ -157,13 +168,69 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
   }
 
   Future<void> _portion([NutritionFoodItemModel? food]) async {
+    if (_opening) return;
+    setState(() => _opening = true);
+    if (widget.onFoodSelected != null) {
+      if (food != null) {
+        widget.onFoodSelected!(food);
+        Navigator.of(context).pop();
+      }
+      return;
+    }
     FocusScope.of(context).unfocus();
-    final saved = await Navigator.of(context).push<bool>(CupertinoPageRoute(
+    final route = AppPageRoute<bool>(
         builder: (_) => MealPortionView(
-            food: food, initialMealType: _slot, saveMeal: widget.saveMeal)));
-    if (!mounted || saved != true) return;
+            food: food, initialMealType: _slot, saveMeal: widget.saveMeal));
+    final saved = await Navigator.of(context).push(route);
+    await route.completed;
+    if (!mounted) return;
+    setState(() => _opening = false);
+    if (saved != true) return;
     widget.onMealAdded();
     Navigator.of(context).pop(true);
+  }
+
+  Future<void> _newEntry() async {
+    if (_opening) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _opening = true);
+    final route = ModalBottomSheetRoute<NewFoodAction>(
+        builder: (_) => const NewFoodSheet(),
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        backgroundColor: FitnessTheme.canvas,
+        modalBarrierColor: Colors.black54,
+        barrierLabel:
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            side: BorderSide(color: FitnessTheme.line)));
+    final action = await Navigator.of(context).push(route);
+    await route.completed;
+    if (!mounted) return;
+    setState(() => _opening = false);
+    switch (action) {
+      case NewFoodAction.enterNutrition:
+        await _portion();
+      case NewFoodAction.combineFoods:
+        await _createMeal();
+      case null:
+        break;
+    }
+  }
+
+  Future<void> _createMeal() async {
+    if (_opening) return;
+    setState(() => _opening = true);
+    final route =
+        AppPageRoute<NutritionFoodItemModel>(page: const SavedMealEditorView());
+    final food = await Navigator.of(context).push(route);
+    await route.completed;
+    if (!mounted) return;
+    setState(() => _opening = false);
+    if (mounted && food != null) await _portion(food);
   }
 
   void _move(int page) {
@@ -179,435 +246,263 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) => FitnessTheme(
-      child: Scaffold(
-          appBar: AppBar(
-              backgroundColor: FitnessTheme.canvas,
-              surfaceTintColor: Colors.transparent,
-              title: const FitnessText('Add meal',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
-              actions: [
-                TextButton.icon(
-                    onPressed: () => Navigator.of(context).push(
-                        CupertinoPageRoute(
-                            builder: (_) => const FoodPreferencesView())),
-                    icon: const Icon(CupertinoIcons.slider_horizontal_3,
-                        size: 17),
-                    label: const FitnessText('Preferences',
-                        style: TextStyle(fontSize: 12))),
-                const SizedBox(width: 8)
-              ]),
-          bottomNavigationBar: SafeArea(
-              top: false,
-              child: Container(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
-                  decoration: const BoxDecoration(
-                      border:
-                          Border(top: BorderSide(color: FitnessTheme.line))),
-                  child: Row(children: [
-                    IconButton(
-                        tooltip: fitnessText(context, 'Previous page'),
-                        onPressed: !_loading && _error == null && _page > 1
-                            ? () => _move(_page - 1)
-                            : null,
-                        icon:
-                            const Icon(CupertinoIcons.chevron_left, size: 18)),
-                    Expanded(
-                        child:
-                            Column(mainAxisSize: MainAxisSize.min, children: [
-                      FitnessText('Page {page} of {pages}',
-                          values: {
-                            'page': _pages == 0 ? 0 : _page,
-                            'pages': _pages
-                          },
-                          style: const TextStyle(fontSize: 12)),
-                      const SizedBox(height: 3),
-                      const FitnessText('24 foods per page',
-                          style: TextStyle(
-                              fontSize: 10, color: FitnessTheme.muted)),
-                    ])),
-                    IconButton(
-                        tooltip: fitnessText(context, 'Next page'),
-                        onPressed: !_loading && _error == null && _page < _pages
-                            ? () => _move(_page + 1)
-                            : null,
-                        icon:
-                            const Icon(CupertinoIcons.chevron_right, size: 18))
-                  ]))),
-          body: RefreshIndicator(
-              onRefresh: _load,
-              color: FitnessTheme.silver,
-              child: CustomScrollView(
-                  controller: _scroll,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
-                        sliver: SliverToBoxAdapter(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                              const FitnessText('Everyday food.\nMade simple.',
-                                  style: TextStyle(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.1,
-                                      letterSpacing: -.9)),
-                              const SizedBox(height: 10),
-                              const FitnessText(
-                                  'Eggs, milk, oats and the foods you eat every day.',
-                                  style: TextStyle(
-                                      fontSize: 13, color: FitnessTheme.muted)),
-                              const SizedBox(height: 20),
-                              Wrap(spacing: 5, runSpacing: 5, children: [
-                                for (final s in [
-                                  'BREAKFAST',
-                                  'LUNCH',
-                                  'DINNER',
-                                  'SNACK'
-                                ])
-                                  ChoiceChip(
-                                      labelPadding: const EdgeInsets.symmetric(
-                                          horizontal: 2),
-                                      visualDensity: VisualDensity.compact,
-                                      label: FitnessText(mealSlotLabel(s),
-                                          style: TextStyle(
-                                              fontSize: 11,
-                                              color: _slot == s
-                                                  ? Colors.white
-                                                  : FitnessTheme.muted)),
-                                      selected: _slot == s,
-                                      showCheckmark: false,
-                                      selectedColor: const Color(0xFF3B3B3B),
-                                      side: BorderSide(
-                                          color: _slot == s
-                                              ? Colors.white30
-                                              : FitnessTheme.line),
-                                      onSelected: (_) =>
-                                          setState(() => _slot = s))
-                              ]),
-                              const SizedBox(height: 16),
-                              TextField(
-                                  controller: _search,
-                                  style: const TextStyle(fontSize: 14),
-                                  decoration: InputDecoration(
-                                      hintText:
-                                          fitnessText(context, 'Search foods'),
-                                      prefixIcon: const Icon(
-                                          CupertinoIcons.search,
-                                          size: 19),
-                                      suffixIcon: _search.text.isEmpty
-                                          ? null
-                                          : IconButton(
-                                              tooltip: fitnessText(
-                                                  context, 'Clear search'),
-                                              onPressed: _search.clear,
-                                              icon: const Icon(
-                                                  CupertinoIcons
-                                                      .xmark_circle_fill,
-                                                  size: 18)))),
-                              const SizedBox(height: 12),
-                              SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(children: [
-                                    for (final entry in const {
-                                      'LIBRARY': 'Everyday',
-                                      'RECENT': 'Recent',
-                                      'MY_FOODS': 'My foods',
-                                      'MY_MEALS': 'My meals',
-                                    }.entries)
-                                      Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 8),
-                                          child: ChoiceChip(
-                                              selectedColor:
-                                                  const Color(0xFF3B3B3B),
-                                              side: BorderSide(
-                                                  color: _source == entry.key
-                                                      ? Colors.white30
-                                                      : FitnessTheme.line),
-                                              labelPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 2),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              label: FitnessText(entry.value,
-                                                  style: TextStyle(
-                                                      fontSize: 12,
-                                                      color:
-                                                          _source == entry.key
-                                                              ? Colors.white
-                                                              : FitnessTheme
-                                                                  .muted)),
-                                              selected: _source == entry.key,
-                                              showCheckmark: false,
-                                              onSelected: (_) => _filter(() {
-                                                    _source = entry.key;
-                                                    _category = null;
-                                                  }))),
-                                  ])),
-                              const SizedBox(height: 12),
-                              const SizedBox(height: 18),
-                              Row(children: [
-                                Expanded(
-                                    child: FitnessText('{count} foods',
-                                        values: {'count': _total},
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: FitnessTheme.muted))),
-                                IconButton(
-                                    tooltip: fitnessText(context, 'Filters'),
-                                    onPressed: _showFilters,
-                                    icon: const Icon(
-                                        CupertinoIcons.slider_horizontal_3,
-                                        size: 19)),
-                                TextButton.icon(
-                                    onPressed: () => _portion(),
-                                    icon: const Icon(CupertinoIcons.plus,
-                                        size: 15),
-                                    label: const FitnessText('Create food',
-                                        style: TextStyle(fontSize: 12)))
-                              ]),
-                            ]))),
-                    if (_loading)
-                      const SliverToBoxAdapter(
-                          child: Padding(
-                              padding: EdgeInsets.all(40),
-                              child:
-                                  Center(child: CupertinoActivityIndicator())))
-                    else if (_error != null)
-                      SliverToBoxAdapter(
-                          child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(children: [
-                                FitnessText(_error!,
-                                    style: const TextStyle(
-                                        color: FitnessTheme.muted,
-                                        fontSize: 13)),
-                                TextButton(
-                                    onPressed: _load,
-                                    child: const FitnessText('Retry'))
-                              ])))
-                    else if (_foods.isEmpty)
-                      SliverToBoxAdapter(
-                          child: Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 24, 20, 40),
-                              child: Column(children: [
-                                const Icon(CupertinoIcons.search,
-                                    size: 30, color: FitnessTheme.muted),
-                                const SizedBox(height: 16),
-                                const FitnessText('No foods found',
-                                    style: TextStyle(fontSize: 18)),
-                                const SizedBox(height: 8),
-                                FitnessText(
-                                    switch (_source) {
-                                      'MY_FOODS' =>
-                                        'Create a food once, then reuse it here.',
-                                      'MY_MEALS' =>
-                                        'Save a custom entry as a meal to reuse it here.',
-                                      'RECENT' =>
-                                        'Foods you have logged will appear here.',
-                                      _ =>
-                                        'Try another search or clear your filters.',
-                                    },
-                                    style: const TextStyle(
-                                        fontSize: 12,
-                                        color: FitnessTheme.muted)),
-                                TextButton(
-                                    onPressed: () {
-                                      _search.clear();
-                                      _filter(() {
-                                        _category = null;
-                                        _focus = 'ALL';
-                                      });
-                                    },
-                                    child: const FitnessText('Clear filters')),
-                              ])))
-                    else
-                      SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-                          sliver: SliverList.builder(
-                              itemCount: _foods.length,
-                              itemBuilder: (context, index) {
-                                final food = _foods[index];
-                                return Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: Material(
-                                        color: FitnessTheme.surface,
-                                        borderRadius: BorderRadius.circular(22),
-                                        clipBehavior: Clip.antiAlias,
-                                        child: InkWell(
-                                            onTap: () => _portion(food),
-                                            child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(12),
-                                                child: Row(children: [
-                                                  FoodArt(food: food, size: 52),
-                                                  const SizedBox(width: 13),
-                                                  Expanded(
-                                                      child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                        Text(food.name,
-                                                            maxLines: 2,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style: const TextStyle(
-                                                                fontSize: 14,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                                height: 1.35)),
-                                                        const SizedBox(
-                                                            height: 6),
-                                                        Text(
-                                                            '${foodPortionLabel(context, food)} · ${(food.caloriesPerServing * food.previewFactor).round()} kcal',
-                                                            style: const TextStyle(
-                                                                fontSize: 11,
-                                                                color:
-                                                                    FitnessTheme
-                                                                        .muted)),
-                                                        const SizedBox(
-                                                            height: 4),
-                                                        FitnessText(
-                                                            '{amount} g protein',
-                                                            values: {
-                                                              'amount': (food
-                                                                          .proteinPerServing *
-                                                                      food
-                                                                          .previewFactor)
-                                                                  .toStringAsFixed(
-                                                                      1)
-                                                            },
-                                                            style: const TextStyle(
-                                                                fontSize: 11,
-                                                                color: Color(
-                                                                    0xFFC4B7A8))),
-                                                      ])),
-                                                  const SizedBox(width: 8),
-                                                  const Icon(
-                                                      CupertinoIcons
-                                                          .chevron_right,
-                                                      size: 13,
-                                                      color: FitnessTheme.muted)
-                                                ])))));
-                              })),
-                  ]))));
+  bool get _filtered =>
+      _category != null ||
+      _focus != 'ALL' ||
+      _sort != 'NAME' ||
+      _source != 'LIBRARY';
+
   Future<void> _showFilters() async {
-    var category = _category;
-    var focus = _focus;
-    var sort = _sort;
-    final apply = await showModalBottomSheet<bool>(
+    FocusScope.of(context).unfocus();
+    final selection = await showModalBottomSheet<FoodFilterSelection>(
         context: context,
-        backgroundColor: FitnessTheme.surface,
         isScrollControlled: true,
+        useSafeArea: true,
         showDragHandle: true,
-        builder: (context) => StatefulBuilder(
-            builder: (context, change) => SafeArea(
-                top: false,
-                child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                    child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const FitnessText('Find your food',
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 24),
-                          _dropdown(
-                              'Food type',
-                              category ?? 'ALL',
-                              {'ALL': 'All foods', ...foodCategories},
-                              (value) => change(() =>
-                                  category = value == 'ALL' ? null : value)),
-                          const SizedBox(height: 16),
-                          _dropdown(
-                              'Nutrition focus',
-                              focus,
-                              const {
-                                'ALL': 'Any nutrition',
-                                'PROTEIN': 'Higher protein',
-                                'FIBRE': 'More fibre',
-                                'LIGHTER': 'Lighter foods'
-                              },
-                              (value) => change(() => focus = value)),
-                          const SizedBox(height: 16),
-                          _dropdown(
-                              'Sort by',
-                              sort,
-                              const {
-                                'NAME': 'Name A–Z',
-                                'PROTEIN': 'Most protein',
-                                'CALORIES': 'Fewest calories'
-                              },
-                              (value) => change(() => sort = value)),
-                          if (focus != 'ALL')
-                            Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: FitnessText(
-                                    switch (focus) {
-                                      'PROTEIN' =>
-                                        'At least 15 g protein per 100 g.',
-                                      'FIBRE' =>
-                                        'At least 3 g fibre per 100 g.',
-                                      _ => 'Up to 100 kcal per 100 g.',
-                                    },
-                                    style: const TextStyle(
-                                        fontSize: 12,
-                                        color: FitnessTheme.muted))),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const FitnessText('Apply filters'))),
-                          Center(
-                              child: TextButton(
-                                  onPressed: () => change(() {
-                                        category = null;
-                                        focus = 'ALL';
-                                        sort = 'NAME';
-                                      }),
-                                  child: const FitnessText('Clear filters'))),
-                        ])))));
-    if (apply == true && mounted) {
-      _filter(() {
-        _category = category;
-        _focus = focus;
-        _sort = sort;
-      });
-    }
+        backgroundColor: FitnessTheme.canvas,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            side: BorderSide(color: FitnessTheme.line)),
+        builder: (_) => FoodLibraryFilters(
+            initial: FoodFilterSelection(_category, _focus, _sort,
+                source: _source)));
+    if (!mounted || selection == null) return;
+    _filter(() {
+      _category = selection.category;
+      _focus = selection.focus;
+      _sort = selection.sort;
+      _source = selection.source;
+    });
   }
 
-  Widget _dropdown(String label, String value, Map<String, String> options,
-          ValueChanged<String> changed) =>
-      DropdownButtonFormField<String>(
-          key: ValueKey('$label:$value'),
-          initialValue: value,
-          isExpanded: true,
-          decoration: InputDecoration(
-              labelText: fitnessText(context, label),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              labelStyle: const TextStyle(fontSize: 11)),
-          dropdownColor: FitnessTheme.surface,
-          items: options.entries
-              .map((e) => DropdownMenuItem(
-                  value: e.key,
-                  child: FitnessText(e.value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12))))
-              .toList(),
-          onChanged: (v) {
-            if (v != null) changed(v);
-          });
+  Widget _toolbar() => Padding(
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+      child: TextField(
+        key: const ValueKey('food-search'),
+        controller: _search,
+        enabled: !_opening,
+        textInputAction: TextInputAction.search,
+        style: const TextStyle(fontSize: 14),
+        onSubmitted: (_) {
+          FocusScope.of(context).unfocus();
+          unawaited(_load());
+        },
+        decoration: InputDecoration(
+          hintText: fitnessText(context, 'Search foods'),
+          hintStyle: const TextStyle(fontSize: 13, color: FitnessTheme.muted),
+          filled: true,
+          fillColor: const Color(0xFF0D0D0D),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          prefixIcon: const Icon(CupertinoIcons.search,
+              size: 18, color: FitnessTheme.muted),
+          suffixIcon: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (_search.text.isNotEmpty)
+              IconButton(
+                  tooltip: fitnessText(context, 'Clear search'),
+                  onPressed: _search.clear,
+                  icon: const Icon(CupertinoIcons.xmark_circle_fill,
+                      size: 17, color: FitnessTheme.muted)),
+            IconButton(
+                key: const ValueKey('food-filters'),
+                tooltip: fitnessText(context, 'Filters'),
+                onPressed: _opening ? null : _showFilters,
+                icon: Stack(clipBehavior: Clip.none, children: [
+                  const Icon(CupertinoIcons.slider_horizontal_3,
+                      size: 19, color: FitnessTheme.silver),
+                  if (_filtered)
+                    const Positioned(
+                        right: -3,
+                        top: -3,
+                        child: DecoratedBox(
+                            decoration: BoxDecoration(
+                                color: FitnessTheme.silver,
+                                shape: BoxShape.circle),
+                            child: SizedBox(width: 5, height: 5))),
+                ])),
+          ]),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide:
+                  const BorderSide(color: FitnessTheme.line, width: .7)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide:
+                  const BorderSide(color: FitnessTheme.line, width: .7)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: FitnessTheme.muted)),
+        ),
+      ));
+
+  Widget _pager() => DecoratedBox(
+        decoration: const BoxDecoration(
+            color: FitnessTheme.canvas,
+            border:
+                Border(top: BorderSide(color: FitnessTheme.line, width: .7))),
+        child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 6, 18, 8),
+              child: Row(children: [
+                IconButton(
+                    tooltip: fitnessText(context, 'Previous page'),
+                    onPressed: !_loading && _error == null && _page > 1
+                        ? () => _move(_page - 1)
+                        : null,
+                    icon: const Icon(CupertinoIcons.chevron_left, size: 17)),
+                Expanded(
+                    child: Center(
+                        heightFactor: 1,
+                        child: Semantics(
+                          label:
+                              '${fitnessText(context, 'Page {page} of {pages}', values: {
+                                'page': _page,
+                                'pages': _pages
+                              })}, ${fitnessText(context, '{count} foods', values: {
+                                'count': _total
+                              })}',
+                          child: DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                            key: const ValueKey('food-page-selector'),
+                            value: _page,
+                            dropdownColor: FitnessTheme.surface,
+                            borderRadius: BorderRadius.circular(14),
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: FitnessTheme.silver,
+                                fontFamily: Theme.of(context).platform ==
+                                        TargetPlatform.iOS
+                                    ? 'CupertinoSystemText'
+                                    : 'Inter'),
+                            icon: const Padding(
+                                padding: EdgeInsetsDirectional.only(start: 8),
+                                child: Icon(CupertinoIcons.chevron_down,
+                                    size: 10, color: FitnessTheme.muted)),
+                            items: [
+                              for (var page = 1; page <= _pages; page++)
+                                DropdownMenuItem(
+                                    value: page, child: Text('$page / $_pages'))
+                            ],
+                            onChanged: _loading || _error != null
+                                ? null
+                                : (page) {
+                                    if (page != null && page != _page) {
+                                      _move(page);
+                                    }
+                                  },
+                          )),
+                        ))),
+                IconButton(
+                    tooltip: fitnessText(context, 'Next page'),
+                    onPressed: !_loading && _error == null && _page < _pages
+                        ? () => _move(_page + 1)
+                        : null,
+                    icon: const Icon(CupertinoIcons.chevron_right, size: 17)),
+              ]),
+            )),
+      );
+
+  Widget _empty() => Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FitnessText(
+                _error == null ? 'No foods found' : 'Could not load foods.',
+                textAlign: TextAlign.center,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              TextButton(onPressed: _load, child: const FitnessText('Retry')),
+            ] else if (_filtered || _search.text.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                  onPressed: () {
+                    _search.clear();
+                    _filter(() {
+                      _category = null;
+                      _focus = 'ALL';
+                      _sort = 'NAME';
+                      _source = 'LIBRARY';
+                    });
+                  },
+                  child: const FitnessText('Clear filters')),
+            ],
+          ]));
+
+  @override
+  Widget build(BuildContext context) => FitnessTheme(
+          child: Scaffold(
+        backgroundColor: FitnessTheme.canvas,
+        appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: FitnessTheme.canvas,
+            surfaceTintColor: Colors.transparent,
+            title: FitnessText(
+                widget.onFoodSelected == null ? 'Add meal' : 'Choose food',
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+            actions: [
+              if (widget.onFoodSelected == null)
+                LibraryNewButton(
+                    key: const ValueKey('new-food-menu'),
+                    label: fitnessText(context, 'New'),
+                    onPressed: _opening ? null : _newEntry),
+            ]),
+        bottomNavigationBar:
+            _pages > 1 && MediaQuery.viewInsetsOf(context).bottom == 0
+                ? _pager()
+                : null,
+        body: SafeArea(
+            top: false,
+            bottom: _pages <= 1,
+            child: Column(children: [
+              _toolbar(),
+              SizedBox(
+                  height: 1,
+                  child: _loading && _foods.isNotEmpty
+                      ? const LinearProgressIndicator(
+                          minHeight: 1,
+                          color: FitnessTheme.silver,
+                          backgroundColor: FitnessTheme.line)
+                      : const ColoredBox(color: FitnessTheme.line)),
+              Expanded(
+                  child: RefreshIndicator(
+                onRefresh: _load,
+                color: FitnessTheme.silver,
+                child: CustomScrollView(
+                    key: const ValueKey('food-scroll'),
+                    controller: _scroll,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics()),
+                    slivers: [
+                      if (_loading && _foods.isEmpty)
+                        const SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(child: CupertinoActivityIndicator()))
+                      else if (_error != null || _foods.isEmpty)
+                        SliverFillRemaining(
+                            hasScrollBody: false, child: _empty())
+                      else
+                        SliverPadding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 16),
+                            sliver: SliverList.builder(
+                                itemCount: _foods.length,
+                                itemBuilder: (_, index) => FoodLibraryCard(
+                                    key: ValueKey(
+                                        'food-row-${_foods[index].id}'),
+                                    food: _foods[index],
+                                    onTap: _loading || _opening
+                                        ? null
+                                        : () => _portion(_foods[index])))),
+                    ]),
+              )),
+            ])),
+      ));
 }

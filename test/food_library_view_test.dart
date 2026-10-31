@@ -1,13 +1,33 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/nutrition/views/food_library_view.dart';
-import 'package:fitai_mobile/features/nutrition/views/meal_portion_view.dart';
-import 'package:fitai_mobile/features/nutrition/models/food_catalog_page.dart';
-import 'package:fitai_mobile/features/nutrition/models/nutrition_diet_models.dart';
-import 'nutrition_view_test.dart' show app, capture;
+import 'package:setcraft/features/nutrition/views/food_library_view.dart';
+import 'package:setcraft/features/nutrition/views/meal_portion_view.dart';
+import 'package:setcraft/features/nutrition/views/saved_meal_editor_view.dart';
+import 'package:setcraft/features/nutrition/models/food_catalog_page.dart';
+import 'package:setcraft/features/nutrition/models/nutrition_diet_models.dart';
+import 'nutrition_view_test.dart' as nutrition show app;
+
+Widget app(Widget child, {String locale = 'en', double scale = 1}) =>
+    RepaintBoundary(
+        key: const ValueKey('food-window-capture'),
+        child: nutrition.app(child, locale: locale, scale: scale));
+
+Future<void> capture(WidgetTester tester, String path) =>
+    tester.runAsync(() async {
+      final image = await tester
+          .renderObject<RenderRepaintBoundary>(
+              find.byKey(const ValueKey('food-window-capture')))
+          .toImage(pixelRatio: 2);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File(path).writeAsBytes(bytes!.buffer.asUint8List());
+      image.dispose();
+    });
 
 NutritionFoodItemModel food(int n, {String? name}) => NutritionFoodItemModel(
     id: 'food-$n',
@@ -46,21 +66,36 @@ void main() {
     await tester.pumpWidget(app(FoodLibraryView(
         initialFoods: List.generate(60, food), onMealAdded: () {})));
     await tester.pumpAndSettle();
-    expect(find.text('Page 1 of 3'), findsOneWidget);
+    expect(find.text('1 / 3'), findsOneWidget);
+    expect(find.text('Everyday food.\nMade simple.'), findsNothing);
+    expect(find.text('24 foods per page'), findsNothing);
+    expect(find.byType(ChoiceChip), findsNothing);
+    expect(find.byKey(const ValueKey('food-source-filter')), findsNothing);
+    expect(find.byKey(const ValueKey('food-category-filter')), findsNothing);
     await capture(tester, 'build/food-library-preview.png');
     await tester.tap(find.byTooltip('Next page'));
     await tester.pumpAndSettle();
-    expect(find.text('Page 2 of 3'), findsOneWidget);
+    expect(find.text('2 / 3'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('food-page-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('3 / 3').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Food 048'), findsOneWidget);
+    await tester.tap(find.byTooltip('Previous page'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 3'), findsOneWidget);
     await tester.tap(find.byTooltip('Filters'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    expect(find.text('Preferences'), findsNothing);
+    await capture(tester, 'build/food-filter-sheet-preview.png');
+    await tester.tap(find.byKey(const ValueKey('food-filter-Food type-ALL')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Dairy').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Apply filters'));
     await tester.pumpAndSettle();
-    expect(find.text('Page 1 of 2'), findsOneWidget);
-    expect(find.text('30 foods'), findsOneWidget);
+    expect(find.text('1 / 2'), findsOneWidget);
+    expect(find.text('30 foods'), findsNothing);
     expect(tester.takeException(), isNull);
   });
   testWidgets('Successful save returns to nutrition and refreshes once',
@@ -97,12 +132,23 @@ void main() {
         onMealAdded: () {},
         pageLoader: (_, __, ___, ____, _____, ______) => pending.future)));
     await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(find.text('Create food'));
+    await tester.tap(find.byKey(const ValueKey('new-food-menu')));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Create food'), findsNothing);
+    expect(find.text('Create meal'), findsNothing);
+    await capture(tester, 'build/new-food-choices-preview.png');
+    await tester.tap(find.text('Enter nutrition'));
+    for (var frame = 0;
+        frame < 12 && find.byType(MealPortionView).evaluate().isEmpty;
+        frame++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(MealPortionView), findsOneWidget);
-    expect(find.text('Food name'), findsOneWidget);
+    expect(find.text('Food or meal name'), findsOneWidget);
     expect(find.text('Log meal'), findsOneWidget);
+    await capture(tester, 'build/quick-entry-preview.png');
     pending.complete(
         const FoodCatalogPage(foods: [], page: 1, total: 0, totalPages: 0));
     await tester.pumpAndSettle();
@@ -114,6 +160,27 @@ void main() {
     }
     expect(error, isNull);
   });
+  testWidgets('Combine foods opens the meal builder without logging on cancel',
+      (tester) async {
+    phone(tester);
+    var logged = 0;
+    await tester.pumpWidget(app(
+        FoodLibraryView(initialFoods: [food(0)], onMealAdded: () => logged++)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('new-food-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Combine foods'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SavedMealEditorView), findsOneWidget);
+    expect(find.text('New meal'), findsOneWidget);
+    expect(find.text('Add food'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Food 000'), findsOneWidget);
+    expect(logged, 0);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Old search response cannot replace a newer search',
       (tester) async {
     phone(tester);
@@ -148,17 +215,28 @@ void main() {
     expect(find.text('Old result'), findsNothing);
   });
   testWidgets('Narrow library handles larger text', (tester) async {
-    phone(tester, width: 360);
+    phone(tester, width: 320);
     await tester.pumpWidget(app(
         FoodLibraryView(initialFoods: [
           food(0,
               name: 'Greek yoghurt, plain, whole milk, traditional preparation')
         ], onMealAdded: () {}),
         locale: 'de',
-        scale: 1.3));
+        scale: 1.6));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await capture(tester, 'build/food-library-small-preview.png');
+    await tester.tap(find.byKey(const ValueKey('food-filters')));
+    await tester.pumpAndSettle();
+    await capture(tester, 'build/food-filters-large-preview.png');
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('food-search')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
   testWidgets('Grams save the correct multiplier and disable duplicate submits',
       (tester) async {

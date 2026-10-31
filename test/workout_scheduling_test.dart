@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/planner/views/widgets/plan_schedule_sheet.dart';
-import 'package:fitai_mobile/features/train/components/reschedule_workout_sheet.dart';
-import 'package:fitai_mobile/features/train/repositories/workout_schedule_repository.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/planner/views/widgets/plan_schedule_sheet.dart';
+import 'package:setcraft/features/train/components/reschedule_workout_sheet.dart';
+import 'package:setcraft/features/train/repositories/workout_schedule_repository.dart';
 
 class _ScheduleRepository extends WorkoutScheduleRepository {
   int applications = 0;

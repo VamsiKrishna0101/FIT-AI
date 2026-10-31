@@ -124,58 +124,57 @@ class WorkoutRestTimer extends StatelessWidget {
         );
 
     if (compact) {
-      return Row(children: [
-        ring(
-            42,
-            Icon(
-                ready
-                    ? CupertinoIcons.checkmark
-                    : rest.isPaused
-                        ? CupertinoIcons.pause_fill
-                        : CupertinoIcons.timer,
-                size: 18,
-                color: DSColors.silver)),
-        const SizedBox(width: 12),
-        Expanded(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-              Text(
-                  ready
-                      ? copy('Ready for your next set')
-                      : '${copy(rest.isPaused ? 'Paused' : 'Rest')} · $time',
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      fontFeatures: [FontFeature.tabularFigures()])),
-              if (rest.exercise.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                Text(rest.exercise,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(fontSize: 11, color: DSColors.muted)),
-              ],
-            ])),
+      final title = InkWell(
+          key: const ValueKey('expand-rest-timer'),
+          onTap: onMinimize,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                ring(
+                    32,
+                    Icon(
+                        ready
+                            ? CupertinoIcons.checkmark
+                            : rest.isPaused
+                                ? CupertinoIcons.pause_fill
+                                : CupertinoIcons.timer,
+                        size: 14,
+                        color: DSColors.silver)),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: Text(
+                        ready
+                            ? copy('Ready for your next set')
+                            : '${copy(rest.isPaused ? 'Paused' : 'Rest')} · $time',
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            fontFeatures: [FontFeature.tabularFigures()]))),
+                const SizedBox(width: 6),
+                const Icon(CupertinoIcons.chevron_up,
+                    size: 10, color: DSColors.muted),
+              ])));
+      final actions = Wrap(alignment: WrapAlignment.end, spacing: 4, children: [
         if (!ready)
-          IconButton(
-              tooltip: copy(rest.isPaused ? 'Resume timer' : 'Pause timer'),
-              onPressed: onTogglePause,
-              icon: Icon(
-                  rest.isPaused
-                      ? CupertinoIcons.play_fill
-                      : CupertinoIcons.pause_fill,
-                  size: 17,
-                  color: DSColors.silver)),
-        IconButton(
-            tooltip: copy(ready ? 'Continue workout' : 'Skip rest'),
+          TextButton(
+              onPressed: onAdd,
+              child: Text('+ ${copy('30 s')}',
+                  style:
+                      const TextStyle(fontSize: 12, color: DSColors.silver))),
+        TextButton(
             onPressed: onSkip,
-            icon: Icon(
-                ready ? CupertinoIcons.checkmark : CupertinoIcons.forward_end,
-                size: 17,
-                color: DSColors.silver)),
+            child: Text(copy(ready ? 'Continue workout' : 'Skip rest'),
+                style: const TextStyle(fontSize: 12, color: DSColors.silver))),
       ]);
+      return LayoutBuilder(
+          builder: (context, box) => box.maxWidth < 300 ||
+                  MediaQuery.textScalerOf(context).scale(13) > 18
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [title, actions])
+              : Row(children: [Expanded(child: title), actions]));
     }
 
     return Padding(

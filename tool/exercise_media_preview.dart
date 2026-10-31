@@ -1,17 +1,17 @@
 // Read-only device preview. It does not sign in or change a workout/account.
 // Pass a public GIF URL as EXERCISE_PROBE_GIF with --dart-define-from-file.
 import 'package:flutter/material.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/features/train/models/workout_exercise_models.dart';
-import 'package:fitai_mobile/features/train/views/exercise_detail_view.dart';
-import 'package:fitai_mobile/main.dart' as app;
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
+import 'package:setcraft/features/train/views/exercise_detail_view.dart';
+import 'package:setcraft/main.dart' as app;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LanguageManager.shared.init();
   const url = String.fromEnvironment('EXERCISE_PROBE_GIF');
   if (!url.startsWith('https://')) throw StateError('Provide a public GIF URL');
-  runApp(const app.FitAIApp(
+  runApp(const app.SetcraftApp(
       initialHome: ExerciseDetailView(
           loadDetail: false,
           exercise: WorkoutExerciseModel(

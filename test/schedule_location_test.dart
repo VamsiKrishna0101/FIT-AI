@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/onboarding/models/training_schedule_models.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/onboarding/models/training_schedule_models.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

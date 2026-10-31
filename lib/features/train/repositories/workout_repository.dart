@@ -42,7 +42,7 @@ class WorkoutRepository {
           : null;
   final _catalogRequests = <String, Future<List<WorkoutExerciseModel>>>{};
   static Future<String> _catalogKey(String locale) =>
-      CacheScope.userKey('exercise_catalog_v5_$locale');
+      CacheScope.userKey('exercise_catalog_v7_$locale');
 
   Future<String> _ensureCatalogOwner() async {
     final owner = await CacheScope.userId();
@@ -65,8 +65,10 @@ class WorkoutRepository {
     await UserDataCache.shared.invalidate('exercise_detail');
     final owner = await CacheScope.userId();
     try {
-      await LocalCache.shared.removeByPrefix(
-          '${CacheScope.userPrefix}${owner}_exercise_catalog_v5_');
+      await LocalCache.shared
+          .removeByPrefix('${CacheScope.userPrefix}${owner}_exercise_catalog_');
+      await LocalCache.shared
+          .removeByPrefix('${CacheScope.userPrefix}${owner}_exercise_detail_');
     } catch (_) {/* Optional cache cleanup must not hide a saved profile. */}
   }
 
@@ -564,15 +566,16 @@ class WorkoutRepository {
   Future<WorkoutExerciseModel?> getExerciseDetail(String id,
       {String? mediaGender}) async {
     final owner = await CacheScope.userId();
+    final revision = _catalogRevision;
     final locale = LanguageManager.shared.currentLanguage.code;
     final variantKey = mediaGender == null ? id : '$id:$mediaGender';
     final key =
-        await CacheScope.userKey('exercise_detail_v5_${locale}_$variantKey');
+        await CacheScope.userKey('exercise_detail_v6_${locale}_$variantKey');
     try {
       // Revalidate form guides on open so media replacements are visible now;
       // the saved guide below remains the offline fallback.
       final data = await UserDataCache.shared
-          .load('exercise_detail', variantKey, () async {
+          .load('exercise_detail', 'v6_$variantKey', () async {
         final response = await ApiClient.shared.get<Map<String, dynamic>>(
             Endpoints.workoutExerciseDetail(id),
             queryParameters: {
@@ -580,18 +583,22 @@ class WorkoutRepository {
             });
         return Map<String, dynamic>.from(response.data!['data'] as Map);
       }, ttl: const Duration(days: 1), refresh: true);
-      if (await CacheScope.userId() != owner ||
+      if (revision != _catalogRevision ||
+          await CacheScope.userId() != owner ||
           LanguageManager.shared.currentLanguage.code != locale) {
         return null;
       }
       await LocalCache.shared.saveJson(key, data);
-      return WorkoutExerciseModel.fromJson(data);
+      final exercise = WorkoutExerciseModel.fromJson(data);
+      return mediaGender == null ? exercise : exercise.withDemo(mediaGender);
     } catch (_) {/* A downloaded form guide remains available offline. */}
     final data = await LocalCache.shared.getJson(key);
-    if (data != null &&
+    if (revision == _catalogRevision &&
+        data != null &&
         await CacheScope.userId() == owner &&
         LanguageManager.shared.currentLanguage.code == locale) {
-      return WorkoutExerciseModel.fromJson(data);
+      final exercise = WorkoutExerciseModel.fromJson(data);
+      return mediaGender == null ? exercise : exercise.withDemo(mediaGender);
     }
     return null;
   }

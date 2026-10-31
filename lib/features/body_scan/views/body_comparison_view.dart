@@ -1,7 +1,8 @@
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
-import 'package:fitai_mobile/core/theme/ds_colors.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
+import 'package:setcraft/core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/theme/ds_motion.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../models/body_assessment_models.dart';
@@ -149,7 +150,8 @@ class _BodyComparisonViewState extends State<BodyComparisonView> {
                     }
                   },
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
+                    duration: DSMotion.duration(context, DSMotion.selection),
+                    curve: DSMotion.effects,
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(

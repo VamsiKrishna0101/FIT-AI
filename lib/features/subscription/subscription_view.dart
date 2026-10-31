@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../core/branding/setcraft_brand.dart';
 import '../../core/components/liquid_chrome_button.dart';
-import '../../core/localization/fitness_text.dart';
 import '../../core/localization/fitness_copy.dart';
+import '../../core/localization/fitness_text.dart';
 import '../../core/navigation/onboarding_page_route.dart';
+import '../../core/theme/ds_motion.dart';
 import '../../core/theme/fitness_theme.dart';
 import '../auth/views/auth_view.dart';
 import '../onboarding/components/training_hero.dart';
@@ -12,7 +12,7 @@ import '../profile/repositories/settings_repository.dart';
 import '../profile/views/privacy_settings_view.dart';
 import 'subscription_service.dart';
 
-/// One membership decision, with the real store offer and price on the page.
+/// One store-backed decision, with a fixed action and a short trial timeline.
 class SubscriptionView extends StatefulWidget {
   final SubscriptionService? service;
   final VoidCallback? onContinue;
@@ -32,17 +32,25 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   late final service = widget.service ?? SubscriptionService.shared;
   String _interval = 'annual';
   String? _loadError;
-  bool _refreshing = false, _leaving = false;
+  bool _refreshing = false, _purchasing = false, _leaving = false;
+  bool _awaitingUnlock = false, _continuing = false;
+
   @override
   void initState() {
     super.initState();
+    service.addListener(_verified);
     final prepared = widget.preparation;
     if (prepared == null ||
         !identical(prepared.service, service) ||
         !prepared.isCurrent) {
       _refresh();
-    } else if (!service.offers.containsKey(_interval) &&
-        service.offers.isNotEmpty) {
+    } else {
+      _selectAvailableOffer();
+    }
+  }
+
+  void _selectAvailableOffer() {
+    if (!service.offers.containsKey(_interval) && service.offers.isNotEmpty) {
       _interval = service.offers.keys.first;
     }
   }
@@ -55,14 +63,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     });
     try {
       await service.initialize();
-      if (mounted) {
-        setState(() {
-          if (!service.offers.containsKey(_interval) &&
-              service.offers.isNotEmpty) {
-            _interval = service.offers.keys.first;
-          }
-        });
-      }
+      if (mounted) setState(_selectAvailableOffer);
     } catch (failure) {
       if (mounted) {
         setState(() => _loadError = SubscriptionService.message(failure));
@@ -72,8 +73,18 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
   }
 
+  void _verified() {
+    if (!_awaitingUnlock || service.access?.hasAccess != true) return;
+    _awaitingUnlock = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && service.access?.hasAccess == true) _continue();
+    });
+  }
+
   void _continue() {
-    if (service.access?.hasAccess != true) return;
+    if (_continuing || service.access?.hasAccess != true) return;
+    _continuing = true;
+    _awaitingUnlock = false;
     if (widget.onContinue != null) {
       widget.onContinue!();
     } else {
@@ -82,41 +93,46 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future<void> _purchase() async {
-    await service.purchase(_interval);
-    if (mounted && service.access?.hasAccess == true) _continue();
+    if (_purchasing ||
+        service.busy ||
+        service.awaitingConfirmation ||
+        !service.plansAvailable) {
+      return;
+    }
+    setState(() => _purchasing = true);
+    _awaitingUnlock = true;
+    try {
+      await service.purchase(_interval);
+      _verified();
+    } finally {
+      if (mounted) setState(() => _purchasing = false);
+    }
   }
 
-  String _date(DateTime value) =>
-      DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
-          .format(value.toLocal());
-  Future<void> _account() async {
+  Future<void> _restore() async {
+    if (service.busy) return;
+    _awaitingUnlock = true;
+    await service.restore();
+    _verified();
+  }
+
+  Future<void> _more() async {
     final action = await showModalBottomSheet<String>(
         context: context,
-        backgroundColor: const Color(0xFF171717),
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        backgroundColor: FitnessTheme.surface,
         showDragHandle: true,
         builder: (context) => SafeArea(
             child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const FitnessText('Your account',
-                          style: TextStyle(
-                              fontSize: 23, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 10),
-                      const FitnessText(
-                          'Your answers and saved progress stay with your account.',
-                          style: TextStyle(
-                              color: FitnessTheme.muted, height: 1.5)),
-                      const SizedBox(height: 14),
-                      TextButton(
-                          onPressed: () => Navigator.pop(context, 'privacy'),
-                          child: const FitnessText('Privacy & data')),
-                      TextButton(
-                          onPressed: () => Navigator.pop(context, 'signout'),
-                          child: const FitnessText('Sign out')),
-                    ]))));
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  ListTile(
+                      title: const FitnessText('Privacy & data'),
+                      onTap: () => Navigator.pop(context, 'privacy')),
+                  ListTile(
+                      title: const FitnessText('Sign out'),
+                      onTap: () => Navigator.pop(context, 'signout')),
+                ]))));
     if (!mounted) return;
     if (action == 'privacy') {
       await Navigator.push(
@@ -141,6 +157,35 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
   }
 
+  SubscriptionCatalogIssue? get _issue {
+    if (_loadError != null) return SubscriptionCatalogIssue.connection;
+    if (service.catalogIssue != null) return service.catalogIssue;
+    if (!service.android && !service.ios) {
+      return SubscriptionCatalogIssue.mobileOnly;
+    }
+    if (service.access?.billingReady == false) {
+      return SubscriptionCatalogIssue.setupPending;
+    }
+    if (service.offers.isEmpty) {
+      return service.storeReady
+          ? SubscriptionCatalogIssue.productsMissing
+          : SubscriptionCatalogIssue.storeUnavailable;
+    }
+    return null;
+  }
+
+  String _money(MembershipOffer offer, double amount) =>
+      NumberFormat.simpleCurrency(
+              name: offer.currencyCode,
+              locale: Localizations.localeOf(context).toLanguageTag())
+          .format(amount);
+
+  @override
+  void dispose() {
+    service.removeListener(_verified);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => FitnessTheme(
       child: AnimatedBuilder(
@@ -149,297 +194,328 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             final access = service.access;
             final unlocked = access?.hasAccess == true;
             final offer = service.offers[_interval];
-            final trial = !unlocked && offer?.hasTrial == true;
+            final issue = _issue;
+            final trial = !unlocked && issue == null && offer?.hasTrial == true;
             final period =
                 fitnessText(context, _interval == 'annual' ? 'year' : 'month');
-            final compact = MediaQuery.sizeOf(context).height < 740;
-            final pending = service.awaitingConfirmation;
-            final canBuy = !_refreshing &&
-                !service.busy &&
-                !pending &&
-                service.plansAvailable &&
-                offer != null;
-            final message = _loadError ?? service.error ?? service.notice;
             final renewal = offer == null ? null : '${offer.price}/$period';
+            final pending = service.awaitingConfirmation;
+            final busy = _refreshing || _purchasing || service.busy || _leaving;
+            final canBuy =
+                !busy && !pending && issue == null && service.plansAvailable;
+            final compact = MediaQuery.sizeOf(context).height < 740;
+            final message = service.error ?? service.notice;
+            final action = unlocked
+                ? 'Continue to my plan'
+                : _refreshing
+                    ? 'Loading plans'
+                    : pending
+                        ? 'Waiting for confirmation'
+                        : issue != null
+                            ? (issue == SubscriptionCatalogIssue.mobileOnly
+                                ? 'Available in the mobile app'
+                                : issue == SubscriptionCatalogIssue.setupPending
+                                    ? 'Check availability'
+                                    : 'Try again')
+                            : trial
+                                ? fitnessText(context, 'Try for {price}',
+                                    values: {'price': _money(offer!, 0)})
+                                : 'Subscribe & continue';
             return PopScope(
                 canPop: !widget.blocking,
                 child: Scaffold(
-                  backgroundColor: Colors.black,
-                  body: SafeArea(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                        Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                            child: Row(children: [
-                              if (!widget.blocking && Navigator.canPop(context))
-                                IconButton(
-                                    tooltip: 'Back',
-                                    onPressed: service.busy
-                                        ? null
-                                        : () => Navigator.maybePop(context),
-                                    icon:
-                                        const Icon(Icons.arrow_back, size: 22))
-                              else
-                                const SizedBox(width: 12),
-                              const SetcraftMark(size: 28),
-                              const SizedBox(width: 8),
-                              const Text('SETCRAFT',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 2.4)),
-                              const Spacer(),
-                              TextButton(
-                                  onPressed: _leaving ? null : _account,
-                                  child: const FitnessText('Account',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: FitnessTheme.muted))),
-                            ])),
-                        Expanded(
-                            child: ListView(
-                                key: const ValueKey('membership-scroll'),
-                                padding: EdgeInsets.zero,
-                                children: [
-                              TrainingHero(height: compact ? 155 : 200),
-                              Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 4, 24, 24),
-                                  child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        const FitnessText(
-                                            'YOUR PLAN. YOUR PROGRESS.',
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                letterSpacing: 1.7,
-                                                color: FitnessTheme.muted,
-                                                fontWeight: FontWeight.w600)),
-                                        const SizedBox(height: 13),
-                                        FitnessText(
-                                            unlocked
-                                                ? 'You’re ready to train.'
-                                                : trial
-                                                    ? 'Your first 14 days\nare on us.'
-                                                    : 'Make every\nworkout count.',
+                    backgroundColor: Colors.black,
+                    body: SafeArea(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                          Expanded(
+                              child: ListView(
+                                  key: const ValueKey('membership-scroll'),
+                                  padding: EdgeInsets.zero,
+                                  children: [
+                                Stack(children: [
+                                  TrainingHero(
+                                      height: compact
+                                          ? 165
+                                          : (MediaQuery.sizeOf(context).width *
+                                                  .58)
+                                              .clamp(195, 270)),
+                                  if (!widget.blocking &&
+                                      Navigator.canPop(context))
+                                    Positioned(
+                                        top: 12,
+                                        left: 16,
+                                        child: IconButton.filled(
                                             key: const ValueKey(
-                                                'membership-headline'),
-                                            style: TextStyle(
-                                                fontSize: compact ? 32 : 36,
-                                                fontWeight: FontWeight.w700,
-                                                height: 1.08,
-                                                letterSpacing: -1.2)),
-                                        const SizedBox(height: 12),
-                                        FitnessText(
-                                            unlocked
-                                                ? _accessSummary(access!)
-                                                : trial
-                                                    ? fitnessText(context,
-                                                        'Try your complete training and nutrition plan. Then {price}, unless you cancel.',
-                                                        values: {
-                                                            'price': renewal!
-                                                          })
-                                                    : 'A plan built for your body, your equipment and the time you have.',
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                height: 1.5,
-                                                color: FitnessTheme.muted)),
-                                        const SizedBox(height: 24),
-                                        if (!unlocked) ...[
-                                          if (service.offers.isNotEmpty) ...[
-                                            for (final interval in [
-                                              'annual',
-                                              'monthly'
-                                            ])
-                                              if (service.offers[interval]
-                                                  case final candidate?)
-                                                Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            bottom: 10),
-                                                    child: _PlanChoice(
-                                                        key: ValueKey(
-                                                            'membership-$interval'),
-                                                        interval: interval,
-                                                        offer: candidate,
-                                                        selected: _interval ==
-                                                            interval,
-                                                        savings: interval ==
-                                                                'annual'
-                                                            ? service
-                                                                .annualSavings
-                                                            : null,
-                                                        onTap: service.busy ||
-                                                                pending
-                                                            ? null
-                                                            : () => setState(
-                                                                () => _interval =
-                                                                    interval))),
-                                            const SizedBox(height: 18),
-                                          ] else if (_refreshing) ...[
-                                            const Center(
-                                                child: Padding(
-                                                    padding: EdgeInsets.all(20),
+                                                'membership-close'),
+                                            tooltip: MaterialLocalizations.of(
+                                                    context)
+                                                .closeButtonTooltip,
+                                            style: IconButton.styleFrom(
+                                                foregroundColor: Colors.white,
+                                                backgroundColor:
+                                                    const Color(0x99000000)),
+                                            onPressed: _purchasing ||
+                                                    service.busy ||
+                                                    _leaving
+                                                ? null
+                                                : () =>
+                                                    Navigator.maybePop(context),
+                                            icon: const Icon(
+                                                Icons.close_rounded,
+                                                size: 28))),
+                                ]),
+                                Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        22, 10, 22, 22),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          FitnessText(
+                                              unlocked
+                                                  ? 'You’re ready to train.'
+                                                  : trial
+                                                      ? 'Your first 14 days are free'
+                                                      : 'Unlock your full plan',
+                                              key: const ValueKey(
+                                                  'membership-headline'),
+                                              style: TextStyle(
+                                                  fontSize: compact ? 27 : 28,
+                                                  height: 1.12,
+                                                  letterSpacing: -.9,
+                                                  fontWeight: FontWeight.w700)),
+                                          const SizedBox(height: 12),
+                                          if (unlocked)
+                                            FitnessText(_accessSummary(access!),
+                                                style: const TextStyle(
+                                                    color: FitnessTheme.muted,
+                                                    fontSize: 13,
+                                                    height: 1.5))
+                                          else if (offer != null) ...[
+                                            FitnessText(
+                                                trial
+                                                    ? '14 days free, then {price}'
+                                                    : '{price} · auto-renewing',
+                                                values: {'price': renewal!},
+                                                style: const TextStyle(
+                                                    fontSize: 16,
+                                                    height: 1.45)),
+                                            if (_interval == 'annual')
+                                              Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 4),
+                                                  child: FitnessText(
+                                                      '{price}/month, billed yearly',
+                                                      values: {
+                                                        'price': _money(offer,
+                                                            offer.amount / 12)
+                                                      },
+                                                      style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: FitnessTheme
+                                                              .muted))),
+                                          ],
+                                          if (!unlocked &&
+                                              _refreshing &&
+                                              offer == null)
+                                            const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    vertical: 24),
+                                                child: Center(
                                                     child:
                                                         CircularProgressIndicator(
                                                             strokeWidth: 2,
                                                             color:
-                                                                Colors.white))),
-                                            const FitnessText(
-                                                'Loading your store prices…',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                    color: FitnessTheme.muted,
-                                                    fontSize: 13)),
-                                            const SizedBox(height: 20),
-                                          ] else ...[
-                                            const _AvailabilityNotice(),
-                                            const SizedBox(height: 24),
+                                                                Colors.white)))
+                                          else if (!unlocked &&
+                                              issue != null) ...[
+                                            const SizedBox(height: 22),
+                                            _AvailabilityNotice(
+                                                issue: issue,
+                                                store: service.storeName,
+                                                detail: _loadError ??
+                                                    service.catalogError),
                                           ],
-                                          if (trial)
+                                          if (trial) ...[
+                                            const SizedBox(height: 26),
                                             _TrialTimeline(
                                                 price: renewal!,
                                                 storeName: service.storeName),
-                                          if (trial) const SizedBox(height: 28),
-                                        ],
-                                        const _IncludedFeatures(),
-                                        const SizedBox(height: 20),
-                                        const FitnessText(
-                                            'Built around your experience, goals and schedule. Your progress helps shape what comes next.',
-                                            style: TextStyle(
-                                                color: FitnessTheme.muted,
-                                                fontSize: 12,
-                                                height: 1.5)),
-                                        if (unlocked) ...[
-                                          const SizedBox(height: 16),
-                                          if (access!.state == 'active' ||
-                                              !access.legacyTrial)
-                                            OutlinedButton(
-                                                onPressed: service.busy
+                                          ],
+                                          if (!unlocked &&
+                                              service.offers.isNotEmpty) ...[
+                                            const SizedBox(height: 24),
+                                            Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  for (final interval in [
+                                                    'annual',
+                                                    'monthly'
+                                                  ])
+                                                    if (service.offers[interval]
+                                                        case final candidate?)
+                                                      Expanded(
+                                                          child: Padding(
+                                                              padding: EdgeInsets.only(
+                                                                  right: interval == 'annual' &&
+                                                                          service.offers.length >
+                                                                              1
+                                                                      ? 10
+                                                                      : 0),
+                                                              child: _PlanChoice(
+                                                                  key: ValueKey(
+                                                                      'membership-$interval'),
+                                                                  interval:
+                                                                      interval,
+                                                                  offer:
+                                                                      candidate,
+                                                                  selected:
+                                                                      interval ==
+                                                                          _interval,
+                                                                  onTap: busy ||
+                                                                          pending
+                                                                      ? null
+                                                                      : () =>
+                                                                          setState(() => _interval = interval)))),
+                                                ]),
+                                          ],
+                                          const SizedBox(height: 20),
+                                          const _IncludedFeatures(),
+                                          if (unlocked &&
+                                              (access!.state == 'active' ||
+                                                  !access.legacyTrial))
+                                            TextButton(
+                                                onPressed: busy
                                                     ? null
                                                     : service.manage,
                                                 child: const FitnessText(
                                                     'Manage subscription')),
-                                        ],
-                                      ])),
-                            ])),
-                        Container(
-                            key: const ValueKey('membership-footer'),
-                            padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-                            decoration: const BoxDecoration(
-                                color: Colors.black,
-                                border: Border(
-                                    top: BorderSide(color: Color(0xFF242424)))),
-                            child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (message != null)
-                                    Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 10),
-                                        child: Semantics(
-                                            liveRegion: true,
-                                            child: FitnessText(message,
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Color(0xFFD0D0D0),
-                                                    height: 1.35)))),
-                                  if (!unlocked && offer != null) ...[
-                                    FitnessText(
-                                        trial
-                                            ? '14 days free, then {price}'
-                                            : '{price} · auto-renewing',
-                                        values: {'price': renewal!},
+                                        ])),
+                              ])),
+                          Container(
+                              key: const ValueKey('membership-footer'),
+                              color: Colors.black,
+                              padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+                              child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (message != null)
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 8),
+                                          child: Semantics(
+                                              liveRegion: true,
+                                              child: FitnessText(message,
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: FitnessTheme
+                                                          .muted)))),
+                                    if (!unlocked && renewal != null) ...[
+                                      FitnessText(
+                                          trial
+                                              ? '14 days free, then {price}. Auto-renews.'
+                                              : '{price} · auto-renewing',
+                                          values: {'price': renewal},
+                                          key: const ValueKey(
+                                              'membership-renewal-price'),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              height: 1.4,
+                                              color: FitnessTheme.muted)),
+                                      const SizedBox(height: 8),
+                                    ],
+                                    LiquidChromeButton(
                                         key: const ValueKey(
-                                            'membership-renewal-price'),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 10),
-                                  ],
-                                  LiquidChromeButton(
-                                      pill: true,
-                                      solid: true,
-                                      showArrow: false,
-                                      title: unlocked
-                                          ? 'Continue to my plan'
-                                          : _refreshing
-                                              ? 'Loading plans'
-                                              : pending
-                                                  ? 'Waiting for confirmation'
-                                                  : offer == null
-                                                      ? 'Retry loading plans'
-                                                      : trial
-                                                          ? 'Start my 14-day free trial'
-                                                          : 'Subscribe & continue',
-                                      isLoading: service.busy || _refreshing,
-                                      onPressed: unlocked
-                                          ? _continue
-                                          : offer == null && !_refreshing
-                                              ? _refresh
-                                              : canBuy
-                                                  ? _purchase
-                                                  : null),
-                                  if (!unlocked && offer != null)
-                                    Padding(
-                                        padding: const EdgeInsets.only(top: 9),
-                                        child: FitnessText(
-                                            trial
-                                                ? 'No charge today. Cancel in {store} before your trial ends to avoid payment.'
-                                                : 'Cancel in {store}. Access continues until the end of your billing period.',
-                                            values: {
-                                              'store': service.storeName
-                                            },
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                fontSize: 10,
-                                                color: FitnessTheme.muted,
-                                                height: 1.4))),
-                                  Wrap(
-                                      alignment: WrapAlignment.center,
-                                      spacing: 12,
-                                      children: [
-                                        _legal('Restore purchases', () async {
-                                          await service.restore();
-                                          if (mounted &&
-                                              service.access?.hasAccess ==
-                                                  true) {
-                                            _continue();
-                                          }
-                                        }),
-                                        _legal(
-                                            'Terms',
-                                            () =>
-                                                service.openLegal('termsUrl')),
-                                        _legal(
-                                            'Privacy',
-                                            () => service
-                                                .openLegal('privacyUrl')),
-                                      ]),
-                                ])),
-                      ])),
-                ));
+                                            'membership-primary-action'),
+                                        title: action,
+                                        loadingTitle: _refreshing
+                                            ? 'Loading plans'
+                                            : 'Opening checkout…',
+                                        pill: true,
+                                        solid: true,
+                                        showArrow: false,
+                                        isLoading: busy,
+                                        onPressed: busy || pending
+                                            ? null
+                                            : unlocked
+                                                ? _continue
+                                                : issue ==
+                                                        SubscriptionCatalogIssue
+                                                            .mobileOnly
+                                                    ? null
+                                                    : issue != null
+                                                        ? _refresh
+                                                        : canBuy
+                                                            ? _purchase
+                                                            : null),
+                                    if (!unlocked && offer != null)
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 8),
+                                          child: FitnessText(
+                                              'Cancel anytime in {store}.',
+                                              values: {
+                                                'store': service.storeName
+                                              },
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: FitnessTheme.muted))),
+                                    Wrap(
+                                        alignment: WrapAlignment.center,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 12,
+                                        children: [
+                                          _legal('Restore purchases', _restore),
+                                          _legal(
+                                              'Terms',
+                                              () => service
+                                                  .openLegal('termsUrl')),
+                                          _legal(
+                                              'Privacy',
+                                              () => service
+                                                  .openLegal('privacyUrl')),
+                                          IconButton(
+                                              tooltip: fitnessText(
+                                                  context, 'More options'),
+                                              onPressed: busy || pending
+                                                  ? null
+                                                  : _more,
+                                              icon: const Icon(Icons.more_horiz,
+                                                  size: 20,
+                                                  color: FitnessTheme.muted)),
+                                        ]),
+                                  ])),
+                        ]))));
           }));
+
   Widget _legal(String label, VoidCallback action) => TextButton(
       style: TextButton.styleFrom(
           foregroundColor: FitnessTheme.muted,
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          minimumSize: const Size(44, 44)),
-      onPressed: service.busy ? null : action,
+          padding: const EdgeInsets.symmetric(horizontal: 1),
+          minimumSize: const Size(40, 44)),
+      onPressed: service.busy || _refreshing || _purchasing ? null : action,
       child: FitnessText(label, style: const TextStyle(fontSize: 10)));
+
   String _accessSummary(SubscriptionAccess access) {
-    if (access.state == 'trial') {
-      return access.legacyTrial
-          ? 'Your trial runs until ${_date(access.trialEnd!)}. No automatic charge applies to this existing trial.'
-          : 'Your trial runs until ${_date(access.trialEnd!)}. Manage renewal in ${service.storeName}.';
-    }
-    return access.data['cancelAtPeriodEnd'] == true
-        ? 'Your membership stays active until ${_date(access.paidEnd!)}.'
-        : 'Your membership is active. Your next renewal is ${_date(access.paidEnd!)}.';
+    final end = access.state == 'trial' ? access.trialEnd : access.paidEnd;
+    final date = end == null
+        ? ''
+        : DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
+            .format(end.toLocal());
+    return fitnessText(
+        context,
+        access.state == 'trial'
+            ? 'Trial active until {date}'
+            : 'Membership active until {date}',
+        values: {'date': date});
   }
 }
 
@@ -447,301 +523,195 @@ class _PlanChoice extends StatelessWidget {
   final String interval;
   final MembershipOffer offer;
   final bool selected;
-  final int? savings;
   final VoidCallback? onTap;
   const _PlanChoice(
       {super.key,
       required this.interval,
       required this.offer,
       required this.selected,
-      this.savings,
       this.onTap});
   @override
-  Widget build(BuildContext context) {
-    final annual = interval == 'annual';
-    final equivalent = NumberFormat.simpleCurrency(
-            name: offer.currencyCode,
-            locale: Localizations.localeOf(context).toLanguageTag())
-        .format(offer.amount / 12);
-    return Semantics(
-        button: true,
-        selected: selected,
-        child: Material(
-            color: selected ? const Color(0xFF242424) : const Color(0xFF151515),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: BorderSide(
-                    color: selected
-                        ? const Color(0xFFE2E2E2)
-                        : const Color(0xFF303030),
-                    width: selected ? 1.3 : 1)),
-            child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(18),
-                child: Padding(
-                    padding: const EdgeInsets.all(17),
-                    child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                              width: 19,
-                              height: 19,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: selected
-                                          ? Colors.white
-                                          : const Color(0xFF707070),
-                                      width: selected ? 5 : 1))),
-                          const SizedBox(width: 13),
+  Widget build(BuildContext context) => Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+          color: selected ? const Color(0xFF232323) : Colors.black,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(
+                  color: selected ? Colors.white : FitnessTheme.line)),
+          child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
                           Expanded(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                Wrap(
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    spacing: 8,
-                                    runSpacing: 5,
-                                    children: [
-                                      FitnessText(annual ? 'Yearly' : 'Monthly',
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600)),
-                                      if (savings != null)
-                                        Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 7, vertical: 3),
-                                            decoration: BoxDecoration(
-                                                color: const Color(0xFFE2E2E2),
-                                                borderRadius:
-                                                    BorderRadius.circular(5)),
-                                            child: FitnessText(
-                                                'Save {percent}%',
-                                                values: {'percent': savings!},
-                                                style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 10,
-                                                    fontWeight:
-                                                        FontWeight.w700))),
-                                    ]),
-                                const SizedBox(height: 6),
-                                FitnessText(
-                                    '${offer.price}/${fitnessText(context, annual ? 'year' : 'month')}',
-                                    style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 4),
-                                FitnessText(
-                                    annual
-                                        ? fitnessText(
-                                            context,
-                                            offer.hasTrial
-                                                ? '{price}/month, billed yearly after your trial'
-                                                : '{price}/month, billed yearly',
-                                            values: {
-                                                'price': equivalent
-                                              })
-                                        : offer.hasTrial
-                                            ? '14 days free, then billed monthly'
-                                            : 'Billed monthly',
-                                    style: const TextStyle(
-                                        color: FitnessTheme.muted,
-                                        fontSize: 11,
-                                        height: 1.4)),
-                              ])),
-                        ])))));
-  }
+                              child: FitnessText(
+                                  interval == 'annual' ? 'Yearly' : 'Monthly',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600))),
+                          Icon(
+                              selected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                              size: 17,
+                              color:
+                                  selected ? Colors.white : FitnessTheme.muted)
+                        ]),
+                        const SizedBox(height: 5),
+                        Text(offer.price,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600)),
+                      ])))));
 }
 
 class _TrialTimeline extends StatelessWidget {
   final String price, storeName;
   const _TrialTimeline({required this.price, required this.storeName});
   @override
-  Widget build(BuildContext context) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const FitnessText('How your trial works',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 20),
-        _step(
-            '01', 'Today', 'Unlock your full plan and every included feature.'),
-        _step(
-            '02',
-            'You’re in control',
-            fitnessText(context, 'Manage or cancel anytime in {store}.',
-                values: {'store': storeName})),
-        _step(
-            '03',
-            'After 14 days',
-            fitnessText(
-                context, '{price}. Renews automatically unless canceled.',
-                values: {'price': price}),
-            last: true),
-      ]);
-  Widget _step(String number, String title, String detail,
-          {bool last = false}) =>
-      IntrinsicHeight(
+  Widget build(BuildContext context) => IntrinsicHeight(
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        SizedBox(
-            width: 27,
-            child: Column(children: [
-              Text(number,
-                  style: const TextStyle(
-                      color: Color(0xFFD5D5D5),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600)),
-              if (!last)
-                Expanded(
-                    child: Container(
-                        width: 1,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        color: const Color(0xFF383838))),
-            ])),
-        const SizedBox(width: 16),
+        Container(
+            width: 32,
+            decoration: BoxDecoration(
+                color: const Color(0xFF209FE5),
+                borderRadius: BorderRadius.circular(22)),
+            child: const Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Icon(Icons.lock_open_rounded, size: 19)),
+                  Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Icon(Icons.tune_rounded, size: 19)),
+                  Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Icon(Icons.star_rounded, size: 20)),
+                ])),
+        const SizedBox(width: 15),
         Expanded(
-            child: Padding(
-                padding: EdgeInsets.only(bottom: last ? 0 : 22),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FitnessText(title,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 5),
-                      FitnessText(detail,
-                          style: const TextStyle(
-                              color: FitnessTheme.muted,
-                              fontSize: 12,
-                              height: 1.5)),
-                    ]))),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _step(context, 'Today', 'Start your free trial'),
+          _step(
+              context,
+              'Anytime',
+              fitnessText(context, 'Cancel in {store}.',
+                  values: {'store': storeName})),
+          _step(context, 'Day 14', price, last: true),
+        ])),
       ]));
+  Widget _step(BuildContext context, String title, String detail,
+          {bool last = false}) =>
+      Padding(
+          padding: EdgeInsets.only(top: 8, bottom: last ? 8 : 22),
+          child: Wrap(
+              spacing: 6,
+              runSpacing: 3,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                FitnessText('${fitnessText(context, title)}:',
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w700)),
+                FitnessText(detail,
+                    style: const TextStyle(fontSize: 14, height: 1.4)),
+              ]));
 }
 
 class _IncludedFeatures extends StatelessWidget {
   const _IncludedFeatures();
   @override
-  Widget build(BuildContext context) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const FitnessText('See what’s included.',
-            style: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -.5)),
-        const SizedBox(height: 9),
-        const FitnessText(
-            'Every feature below is included in your trial and paid membership.',
-            style: TextStyle(
-                color: FitnessTheme.muted, fontSize: 12, height: 1.5)),
-        const SizedBox(height: 20),
-        ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: DecoratedBox(
-                decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFF303030)),
-                    borderRadius: BorderRadius.circular(18)),
-                child: Column(children: [
-                  _comparisonRow(
-                      context,
-                      const FitnessText('Your membership',
-                          style: TextStyle(
-                              fontSize: 12, color: FitnessTheme.muted)),
-                      header: true),
-                  _comparisonRow(
-                      context,
-                      const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            FitnessText('Personalized weekly workouts',
-                                style: TextStyle(fontSize: 13, height: 1.45)),
-                            SizedBox(height: 5),
-                            FitnessText('Sets, reps & weight guidance',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    height: 1.45,
-                                    color: FitnessTheme.muted)),
-                          ])),
-                  for (final feature in const [
-                    'Warm-ups for your workout',
-                    'Exercise videos & instructions',
-                    'Saved routines & custom exercises',
-                    'Workout logging & history',
-                    'Muscle maps & strength trends',
-                    'Personal records & exercise progress',
-                    'Nutrition around your goals',
-                    'Calories, macros & water logging',
-                    'Training readiness & sleep check-ins',
-                    'Body measurements & progress',
-                    'Progress photos & comparisons',
-                  ])
-                    _comparisonRow(
-                        context,
-                        FitnessText(feature,
-                            style:
-                                const TextStyle(fontSize: 13, height: 1.45))),
-                ]))),
-      ]);
-  Widget _comparisonRow(BuildContext context, Widget label,
-          {bool header = false}) =>
-      IntrinsicHeight(
-          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Expanded(
-            child: Container(
-                padding: const EdgeInsets.fromLTRB(15, 18, 10, 18),
-                decoration: const BoxDecoration(
-                    border:
-                        Border(bottom: BorderSide(color: Color(0xFF292929)))),
-                alignment: Alignment.centerLeft,
-                child: label)),
-        _comparisonCell(context, header: header, included: false),
-        _comparisonCell(context, header: header, included: true),
-      ]));
-  Widget _comparisonCell(BuildContext context,
-          {required bool header, required bool included}) =>
+  Widget build(BuildContext context) => Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+          key: const ValueKey('membership-included'),
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 12),
+          title: const FitnessText('This is included',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          children: [
+            Row(children: [
+              const Expanded(child: SizedBox()),
+              _cell(context, label: 'Preview'),
+              _cell(context, label: 'Premium', included: true)
+            ]),
+            for (final feature in const [
+              'Personalized weekly workouts',
+              'Exercise videos & instructions',
+              'Nutrition around your goals',
+              'Workout logging & history'
+            ])
+              Row(children: [
+                Expanded(
+                    child: FitnessText(feature,
+                        style: const TextStyle(fontSize: 13, height: 1.4))),
+                _cell(context),
+                _cell(context, included: true)
+              ]),
+          ]));
+  Widget _cell(BuildContext context, {String? label, bool included = false}) =>
       Container(
-          width: MediaQuery.sizeOf(context).width < 350 ? 59 : 68,
+          width: MediaQuery.sizeOf(context).width < 350 ? 62 : 76,
+          constraints: const BoxConstraints(minHeight: 46),
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 16),
-          decoration: BoxDecoration(
-              color:
-                  included ? const Color(0xFF232323) : const Color(0xFF101010),
-              border:
-                  const Border(bottom: BorderSide(color: Color(0xFF303030)))),
-          child: header
-              ? FitnessText(included ? 'With\nSetcraft' : 'Without\nSetcraft',
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          color: included ? const Color(0xFF17251A) : null,
+          child: label != null
+              ? FitnessText(label,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 10,
-                      height: 1.4,
-                      fontWeight: FontWeight.w600,
-                      color: included ? Colors.white : FitnessTheme.muted))
-              : Semantics(
-                  label: included
-                      ? 'Included with Setcraft'
-                      : 'Membership required',
-                  child: ExcludeSemantics(
-                      child: Icon(
-                          included ? Icons.check_rounded : Icons.close_rounded,
-                          size: included ? 24 : 19,
-                          color: included
-                              ? const Color(0xFFE4E4E4)
-                              : const Color(0xFF626262)))));
+                  style:
+                      const TextStyle(fontSize: 11, color: FitnessTheme.muted))
+              : Icon(included ? Icons.check_rounded : Icons.remove_rounded,
+                  size: 20,
+                  color: included ? Colors.white : FitnessTheme.muted));
 }
 
 class _AvailabilityNotice extends StatelessWidget {
-  const _AvailabilityNotice();
+  final SubscriptionCatalogIssue issue;
+  final String store;
+  final String? detail;
+  const _AvailabilityNotice(
+      {required this.issue, required this.store, this.detail});
   @override
-  Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-          color: const Color(0xFF171717),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFF303030))),
-      child:
-          const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        FitnessText('We couldn’t load your plans.',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-        SizedBox(height: 7),
-        FitnessText(
-            'Check your connection and try again. Your answers are saved. You won’t be charged without confirming in the store.',
-            style: TextStyle(
-                color: FitnessTheme.muted, fontSize: 12, height: 1.5)),
-      ]));
+  Widget build(BuildContext context) {
+    final title = switch (issue) {
+      SubscriptionCatalogIssue.mobileOnly => 'Continue on your phone',
+      SubscriptionCatalogIssue.setupPending => 'Membership opens soon',
+      SubscriptionCatalogIssue.storeUnavailable => 'Connect to {store}',
+      SubscriptionCatalogIssue.productsMissing =>
+        'Membership is unavailable right now',
+      SubscriptionCatalogIssue.connection => 'Check your connection',
+    };
+    final text = switch (issue) {
+      SubscriptionCatalogIssue.mobileOnly =>
+        'Membership is available in the iOS and Android app.',
+      SubscriptionCatalogIssue.setupPending =>
+        'Your plan is saved. Check back shortly.',
+      SubscriptionCatalogIssue.storeUnavailable =>
+        'Open {store} and try again.',
+      SubscriptionCatalogIssue.productsMissing => 'Please try again shortly.',
+      SubscriptionCatalogIssue.connection =>
+        detail ?? 'Please try again shortly.',
+    };
+    return Semantics(
+        liveRegion: true,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          FitnessText(title,
+              values: {'store': store},
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          FitnessText(text,
+              values: {'store': store},
+              style: const TextStyle(
+                  fontSize: 12, height: 1.4, color: FitnessTheme.muted)),
+        ]));
+  }
 }

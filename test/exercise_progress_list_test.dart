@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/progress/components/exercise_overview_control.dart';
-import 'package:fitai_mobile/features/progress/repositories/progress_repository.dart';
-import 'package:fitai_mobile/features/progress/views/progress_exercises_view.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/progress/components/exercise_overview_control.dart';
+import 'package:setcraft/features/progress/repositories/progress_repository.dart';
+import 'package:setcraft/features/progress/views/progress_exercises_view.dart';
 
 class _Repository extends ProgressRepository {
   final queries = <Map<String, dynamic>>[];

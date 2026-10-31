@@ -8,6 +8,7 @@ class ProgressDateFilter extends StatelessWidget {
   final DateTimeRange? custom;
   final String? rangeLabel;
   final bool compact;
+  final double? controlWidth;
   final void Function(String, DateTimeRange?) onChanged;
   const ProgressDateFilter(
       {super.key,
@@ -15,13 +16,14 @@ class ProgressDateFilter extends StatelessWidget {
       this.custom,
       this.rangeLabel,
       this.compact = false,
+      this.controlWidth,
       required this.onChanged});
 
   @override
   Widget build(BuildContext context) =>
       Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         SizedBox(
-            width: compact ? 104 : 136,
+            width: controlWidth ?? (compact ? 104 : 136),
             child: Container(
                 constraints: const BoxConstraints(minHeight: 44),
                 alignment: Alignment.center,

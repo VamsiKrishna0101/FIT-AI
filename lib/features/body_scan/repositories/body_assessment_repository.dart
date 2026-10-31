@@ -1,3 +1,4 @@
+import '../models/body_map_models.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
@@ -13,28 +14,44 @@ class BodyAssessmentRepository {
   static final shared = BodyAssessmentRepository();
   Future<Map<String, dynamic>> _read(String path,
           {String bucket = 'body', Map<String, dynamic>? query}) =>
-      UserDataCache.shared.load(bucket,
-          '${bucket == 'training_map' ? 'v3' : 'v2'}:$path:${query.toString()}',
+      UserDataCache.shared.load(
+          bucket,
+          '${bucket == 'training_map' ? 'v3' : bucket == 'body_map' ? 'v3:${CacheScope.todayKey()}' : 'v2'}:$path:${query.toString()}',
           () async {
         await _requireSession();
         final response = await ApiClient.shared
             .get<Map<String, dynamic>>(path, queryParameters: query);
         return response.data!;
       },
-          ttl: bucket == 'training_map'
-              ? const Duration(seconds: 30)
-              : const Duration(minutes: 5));
+          ttl: bucket == 'body_map'
+              ? const Duration(minutes: 2)
+              : bucket == 'training_map'
+                  ? const Duration(seconds: 30)
+                  : const Duration(minutes: 5));
 
   Future<void> invalidate() async {
     await UserDataCache.shared.invalidate('body');
     await UserDataCache.shared.invalidate('body_real');
+    await invalidateMaps();
   }
+
+  Future<void> invalidateMaps() => UserDataCache.shared.invalidate('body_map');
 
   Future<void> _requireSession() async {
     final token = await SecureSessionStore.shared.accessToken;
     if (token == null || token.isEmpty) {
       throw StateError('Sign in to see your body assessments.');
     }
+  }
+
+  Future<BodyMapData> bodyMap(
+      {DateTime? date, BodyDateSelection? selection}) async {
+    final data = await _read('/api/heatmap/body', bucket: 'body_map', query: {
+      'date': CacheScope.todayKey(date ?? DateTime.now()),
+      'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
+      ...?selection?.query,
+    });
+    return BodyMapData.fromJson(data);
   }
 
   Future<TrainingMapData> trainingMap(

@@ -4,10 +4,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/components/motion.dart';
-import 'package:fitai_mobile/core/theme/ds_motion.dart';
-import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
-import 'package:fitai_mobile/features/progress/models/progress_models.dart';
+import 'package:setcraft/core/components/motion.dart';
+import 'package:setcraft/core/theme/ds_motion.dart';
+import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/models/progress_models.dart';
 
 Widget app(Widget child, {bool reduced = false}) => MaterialApp(
       home: MediaQuery(
@@ -33,7 +33,7 @@ void main() {
     }
   });
 
-  testWidgets('spring press gives feedback without delaying or repeating a tap',
+  testWidgets('press gives feedback without delaying or repeating a tap',
       (tester) async {
     var taps = 0;
     await tester.pumpWidget(app(MotionPress(

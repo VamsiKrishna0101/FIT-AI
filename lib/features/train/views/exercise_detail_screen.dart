@@ -1,5 +1,7 @@
 import '../../../core/theme/ds_colors.dart';
 import '../../../core/theme/ds_motion.dart';
+import '../../../core/theme/fitness_theme.dart';
+import '../../../core/components/content_transition.dart';
 import '../components/exercise_muscle_map.dart';
 import '../components/exercise_insights.dart';
 import 'dart:async';
@@ -50,15 +52,27 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   String _locale = '';
   int _request = 0;
   int _tab = 0;
+  bool _visitedProgress = false;
   bool? _female;
+  String? _demoGender;
+  bool _loadingBodyStyle = false;
   TodayPlanItemModel? _planItem;
   StreamSubscription<TodayPlanModel?>? _planSubscription;
   @override
   void initState() {
     super.initState();
-    _exercise = widget.exercise;
-    _female = widget.female;
-    if (_female == null) unawaited(_loadBodyStyle());
+    _demoGender = widget.mediaGender ??
+        (widget.female == null
+            ? null
+            : widget.female!
+                ? 'female'
+                : 'male');
+    _exercise = _demoGender == null
+        ? widget.exercise
+        : widget.exercise.withDemo(_demoGender!);
+    _female = _demoGender == null ? null : _demoGender == 'female';
+    _loadingBodyStyle = _female == null;
+    if (_loadingBodyStyle) unawaited(_loadBodyStyle());
     _locale = LanguageManager.shared.currentLanguage.code;
     final item = widget.planItem;
     _planItem = item;
@@ -89,10 +103,28 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           ? await widget.profileGenderLoader!()
           : (await SettingsRepository().profile())['gender'] as String?;
       if (!mounted || owner != await CacheScope.userId()) return;
-      setState(() => _female = gender?.toUpperCase() == 'FEMALE');
+      final selected = gender?.toUpperCase();
+      setState(() {
+        _female = selected == 'FEMALE';
+        _loadingBodyStyle = false;
+        if (selected == 'MALE' || selected == 'FEMALE') {
+          _demoGender = selected!.toLowerCase();
+          _exercise = _exercise.withDemo(_demoGender!);
+        }
+      });
+      if (widget.loadDetail && _demoGender != null) unawaited(_load());
     } catch (_) {
       if (mounted && owner == await CacheScope.userId()) {
-        setState(() => _female = false);
+        setState(() {
+          _female = false;
+          _loadingBodyStyle = false;
+          // An unavailable profile cannot validate the cached demonstrator.
+          _exercise = WorkoutExerciseModel.fromJson({
+            ..._exercise.toJson(),
+            'url': null,
+            'thumbnailUrl': null,
+          });
+        });
       }
     }
   }
@@ -104,7 +136,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
       _detailFailed = false;
     });
     final exercise = await WorkoutRepository.shared
-        .getExerciseDetail(widget.exercise.id, mediaGender: widget.mediaGender);
+        .getExerciseDetail(widget.exercise.id, mediaGender: _demoGender);
     if (mounted && request == _request) {
       setState(() {
         if (exercise != null) _exercise = exercise;
@@ -145,6 +177,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   }
 
   Future<void> _save() async {
+    if (_busy) return;
     final sets = int.tryParse(_sets.text),
         weight = double.tryParse(_weight.text.replaceAll(',', '.')),
         rest = int.tryParse(_rest.text);
@@ -163,12 +196,15 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
       return;
     }
     setState(() => _busy = true);
-    final success = await WorkoutRepository.shared.updateWorkoutItem(
-        widget.planItem!.id,
-        targetSets: sets,
-        targetReps: _reps.text.trim(),
-        targetWeight: weight,
-        restSeconds: rest);
+    var success = false;
+    try {
+      success = await WorkoutRepository.shared.updateWorkoutItem(
+          widget.planItem!.id,
+          targetSets: sets,
+          targetReps: _reps.text.trim(),
+          targetWeight: weight,
+          restSeconds: rest);
+    } catch (_) {/* Keep targets available for retry. */}
     if (!mounted) return;
     setState(() => _busy = false);
     if (success) {
@@ -180,84 +216,112 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     }
   }
 
-  Widget _field(String label, TextEditingController controller) => TextField(
-      controller: controller,
-      enabled: !_busy,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-          labelText: fitnessText(context, label),
-          filled: true,
-          fillColor: const Color(0xFF2B2B2B),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none)));
-  Widget _demo() => ClipRRect(
-        key: const ValueKey('exercise-demo-stage'),
-        borderRadius: BorderRadius.circular(20),
-        child: AspectRatio(
-          aspectRatio: _exercise.demoAspectRatio,
-          child: RepaintBoundary(
-            child: FitVideoSurface(
-              url: _exercise.url,
-              fit: BoxFit.contain,
-              backgroundColor: Colors.white,
-              neutralBackground: true,
-              tapToToggle: false,
-              placeholder: _exercise.thumbnailUrl?.isNotEmpty == true
-                  ? CachedNetworkImage(
-                      imageUrl: _exercise.thumbnailUrl!,
-                      fit: BoxFit.contain,
-                      errorWidget: (_, __, ___) => const Center(
-                          child: Icon(CupertinoIcons.person,
-                              size: 36, color: DSColors.muted)))
-                  : const Center(
-                      child: Icon(CupertinoIcons.person,
-                          size: 36, color: DSColors.muted)),
-            ),
-          ),
-        ),
-      );
+  Widget _field(String label, TextEditingController controller) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(fitnessText(context, label),
+            style: const TextStyle(fontSize: 11, color: DSColors.muted)),
+        const SizedBox(height: 8),
+        TextField(
+            controller: controller,
+            enabled: !_busy,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontSize: 14, color: DSColors.silver),
+            decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFF0D0D0D),
+                contentPadding: const EdgeInsets.all(14),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: DSColors.border, width: .7)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: DSColors.border, width: .7)))),
+      ]);
+
+  Widget _demo() {
+    final available = !_loadingBodyStyle &&
+        (_exercise.url?.isNotEmpty == true ||
+            _exercise.thumbnailUrl?.isNotEmpty == true);
+    Widget unavailable() => Center(
+        child: _loadingBodyStyle
+            ? const CupertinoActivityIndicator()
+            : Text(fitnessText(context, 'Demo unavailable'),
+                style: const TextStyle(fontSize: 13, color: DSColors.muted)));
+    final surface = RepaintBoundary(
+        child: FitVideoSurface(
+            url: _loadingBodyStyle ? null : _exercise.url,
+            fit: BoxFit.contain,
+            backgroundColor: available ? Colors.white : DSColors.bgCard,
+            neutralBackground: true,
+            tapToToggle: false,
+            placeholder: available && _exercise.thumbnailUrl?.isNotEmpty == true
+                ? CachedNetworkImage(
+                    imageUrl: _exercise.thumbnailUrl!,
+                    fit: BoxFit.contain,
+                    errorWidget: (_, __, ___) => unavailable())
+                : unavailable()));
+    return ContentResize(
+        child: ClipRRect(
+            key: const ValueKey('exercise-demo-stage'),
+            borderRadius: BorderRadius.circular(18),
+            child: available
+                ? AspectRatio(
+                    aspectRatio: _exercise.demoAspectRatio, child: surface)
+                : SizedBox(
+                    width: double.infinity, height: 88, child: surface)));
+  }
+
+  Widget _targetFields() => LayoutBuilder(builder: (context, box) {
+        final fields = [
+          _field('Sets', _sets),
+          _field('Reps', _reps),
+          _field('Load (kg)', _weight),
+          _field('Rest (seconds)', _rest)
+        ];
+        final twoColumns = box.maxWidth >= 280 &&
+            MediaQuery.textScalerOf(context).scale(14) <= 20;
+        final width = twoColumns ? (box.maxWidth - 12) / 2 : box.maxWidth;
+        return Wrap(spacing: 12, runSpacing: 16, children: [
+          for (final field in fields) SizedBox(width: width, child: field),
+        ]);
+      });
 
   Widget _targets(TodayPlanItemModel item) => PremiumSurface(
+        radius: 18,
         padding: EdgeInsets.zero,
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            tilePadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-            childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-            title: Text(fitnessText(context, 'Your targets'),
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: Text('${item.targetSets} × ${item.targetReps}',
-                  style: const TextStyle(fontSize: 12, color: DSColors.muted)),
-            ),
-            children: [
-              Row(children: [
-                Expanded(child: _field('Sets', _sets)),
-                const SizedBox(width: 10),
-                Expanded(child: _field('Reps', _reps)),
-              ]),
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(child: _field('Load (kg)', _weight)),
-                const SizedBox(width: 10),
-                Expanded(child: _field('Rest (seconds)', _rest)),
-              ]),
-              const SizedBox(height: 8),
-              TextButton(
-                  onPressed: _busy ? null : _save,
-                  child: Text(fitnessText(context, 'Save targets'))),
-            ],
+        child: ExpansionTile(
+          key: PageStorageKey('exercise-targets-${_exercise.id}'),
+          iconColor: DSColors.muted,
+          collapsedIconColor: DSColors.muted,
+          textColor: DSColors.silver,
+          collapsedTextColor: DSColors.silver,
+          shape: const Border(),
+          collapsedShape: const Border(),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+          title: Text(fitnessText(context, 'Your targets'),
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text('${item.targetSets} × ${item.targetReps}',
+                style: const TextStyle(fontSize: 12, color: DSColors.muted)),
           ),
+          children: [
+            _targetFields(),
+            const SizedBox(height: 8),
+            TextButton(
+                onPressed: _busy ? null : _save,
+                child: Text(fitnessText(context, 'Save targets'))),
+          ],
         ),
       );
 
   Widget _guide(List<String> steps) {
     String copy(String text) => fitnessText(context, text);
-    if (_loading) {
+    if (_loading && steps.isEmpty) {
       return const Padding(
           padding: EdgeInsets.all(24),
           child: Center(child: CupertinoActivityIndicator()));
@@ -271,6 +335,8 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     }
     if (steps.isEmpty) return const SizedBox.shrink();
     return PremiumSurface(
+      key: const ValueKey('exercise-instructions'),
+      radius: 18,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(copy('How to perform'),
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
@@ -278,7 +344,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
         for (var index = 0; index < steps.length; index++) ...[
           if (index > 0)
             const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 12),
                 child: Divider(height: 1, color: DSColors.border)),
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             SizedBox(
@@ -305,35 +371,66 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     );
   }
 
+  Widget _muscles() => PremiumSurface(
+      radius: 18,
+      padding: EdgeInsets.zero,
+      child: ExpansionTile(
+          key: PageStorageKey('exercise-muscles-${_exercise.id}'),
+          initiallyExpanded: true,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+          iconColor: DSColors.muted,
+          collapsedIconColor: DSColors.muted,
+          textColor: DSColors.silver,
+          collapsedTextColor: DSColors.silver,
+          shape: const Border(),
+          collapsedShape: const Border(),
+          title: Text(fitnessText(context, 'Target muscles'),
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          subtitle: Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(
+                  _exercise.targetLabel ??
+                      fitnessText(context, _exercise.target),
+                  style: const TextStyle(fontSize: 12, color: DSColors.muted))),
+          children: [
+            ExerciseMuscleMap(
+                exercise: _exercise,
+                female: _female ?? false,
+                anatomyReady: _female != null,
+                showHeading: false,
+                diagramHeight: 240)
+          ]));
+
   Widget _info(TodayPlanItemModel? item, List<String> steps) => ListView(
-        key: PageStorageKey('exercise-info-${_exercise.id}'),
-        padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          _demo(),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: PremiumSurface(
-                child: ExerciseMuscleMap(
-                    exercise: _exercise,
-                    female: _female ?? false,
-                    anatomyReady: _female != null)),
-          ),
-          if (item != null) ...[
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _targets(item),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _guide(steps),
-          ),
-        ],
-      );
+          key: PageStorageKey('exercise-info-${_exercise.id}'),
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+          physics: const BouncingScrollPhysics(),
+          children: [
+            _demo(),
+            const SizedBox(height: 12),
+            _muscles(),
+            const SizedBox(height: 12),
+            _guide(steps),
+            if (item != null) ...[
+              const SizedBox(height: 12),
+              _targets(item),
+            ],
+          ]);
+
+  Widget _pane(int index, Widget child) {
+    final active = _tab == index;
+    return IgnorePointer(
+        ignoring: !active,
+        child: ExcludeSemantics(
+            excluding: !active,
+            child: AnimatedOpacity(
+                opacity: active ? 1 : 0,
+                duration: DSMotion.duration(context, DSMotion.regular),
+                curve: DSMotion.contentIn,
+                child: TickerMode(enabled: active, child: child))));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -346,21 +443,18 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     final steps = exercise.localizedInstructionSteps(
         Localizations.localeOf(context).toLanguageTag());
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: Theme.of(context)
-            .colorScheme
-            .copyWith(primary: DSColors.silver, secondary: DSColors.silver),
-      ),
+    return FitnessTheme(
+        child: PopScope(
+      canPop: !_busy,
       child: Scaffold(
         backgroundColor: DSColors.bg,
         appBar: AppBar(
           backgroundColor: DSColors.bg,
           surfaceTintColor: Colors.transparent,
-          toolbarHeight: (MediaQuery.textScalerOf(context).scale(18) * 2.4 +
+          toolbarHeight: (MediaQuery.textScalerOf(context).scale(17) * 2.4 +
                   MediaQuery.textScalerOf(context).scale(11) * 1.4 +
                   12)
-              .clamp(72.0, 180.0),
+              .clamp(68.0, 160.0),
           leadingWidth: 44,
           titleSpacing: 0,
           title: Padding(
@@ -373,8 +467,8 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
                         height: 1.2,
                         letterSpacing: -.4)),
                 const SizedBox(height: 4),
@@ -393,62 +487,68 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           leading: IconButton(
               tooltip: copy('Back'),
               icon: const Icon(CupertinoIcons.chevron_left, size: 21),
-              onPressed: () => Navigator.of(context).maybePop()),
+              onPressed: _busy ? null : () => Navigator.of(context).maybePop()),
         ),
-        body: DefaultTabController(
-          length: 3,
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TabBar(
-                isScrollable: MediaQuery.textScalerOf(context).scale(13) > 17,
-                tabAlignment: MediaQuery.textScalerOf(context).scale(13) > 17
-                    ? TabAlignment.center
-                    : TabAlignment.fill,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-                onTap: (tab) {
-                  FocusScope.of(context).unfocus();
-                  setState(() => _tab = tab);
-                },
-                labelColor: DSColors.silver,
-                unselectedLabelColor: DSColors.muted,
-                dividerColor: DSColors.border,
-                dividerHeight: .7,
-                indicatorColor: DSColors.silver,
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorWeight: 2,
-                labelStyle:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                tabs: [
-                  Tab(height: 38, text: copy('Info')),
-                  Tab(height: 38, text: copy('Progress')),
-                  Tab(height: 38, text: copy('Rank'))
-                ],
-              ),
-            ),
-            Expanded(
-                child: AnimatedSwitcher(
-              duration: DSMotion.duration(context, DSMotion.selection),
-              switchInCurve: DSMotion.effects,
-              switchOutCurve: Curves.easeIn,
-              child: _tab == 0
-                  ? _info(item, steps)
-                  : ExerciseInsights(
+        body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+              padding: const EdgeInsets.fromLTRB(18, 4, 18, 0),
+              child: SegmentedButton<int>(
+                  key: const ValueKey('exercise-detail-tabs'),
+                  showSelectedIcon: false,
+                  style: ButtonStyle(
+                      padding: const WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 13)),
+                      backgroundColor: WidgetStateProperty.resolveWith(
+                          (states) => states.contains(WidgetState.selected)
+                              ? DSColors.bgRaised
+                              : const Color(0xFF0D0D0D)),
+                      foregroundColor: WidgetStateProperty.resolveWith(
+                          (states) => states.contains(WidgetState.selected)
+                              ? DSColors.silver
+                              : DSColors.muted),
+                      side: const WidgetStatePropertyAll(
+                          BorderSide(color: DSColors.border, width: .7)),
+                      shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)))),
+                  segments: [
+                    ButtonSegment(
+                        value: 0,
+                        label: Text(copy('Info'),
+                            style: const TextStyle(fontSize: 13))),
+                    ButtonSegment(
+                        value: 1,
+                        label: Text(copy('Progress'),
+                            style: const TextStyle(fontSize: 13))),
+                  ],
+                  selected: {_tab},
+                  onSelectionChanged: _busy
+                      ? null
+                      : (selection) {
+                          FocusScope.of(context).unfocus();
+                          setState(() {
+                            _tab = selection.first;
+                            _visitedProgress |= _tab == 1;
+                          });
+                        })),
+          Expanded(
+              child: Stack(fit: StackFit.expand, children: [
+            _pane(0, _info(item, steps)),
+            if (_visitedProgress)
+              _pane(
+                  1,
+                  ExerciseInsights(
                       key: ValueKey(exercise.id),
                       exerciseId: exercise.id,
-                      rank: _tab == 2,
-                      loader: widget.historyLoader,
-                    ),
-            )),
-          ]),
-        ),
-        bottomNavigationBar: item != null ||
-                (widget.onAddToPlan != null && exercise.supportsRepLogging)
+                      loader: widget.historyLoader)),
+          ])),
+        ]),
+        bottomNavigationBar: _tab == 0 &&
+                (item != null ||
+                    (widget.onAddToPlan != null && exercise.supportsRepLogging))
             ? SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
                   child: item != null
                       ? WorkoutItemActions(
                           item: item,
@@ -483,6 +583,6 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                 ))
             : null,
       ),
-    );
+    ));
   }
 }

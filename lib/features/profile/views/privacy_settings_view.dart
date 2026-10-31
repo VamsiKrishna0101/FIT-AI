@@ -85,7 +85,7 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
     final confirmed = await confirmSettingsAction(context,
         title: 'Delete saved photos?',
         message:
-            'Remove the saved photos shown here. Your scan results and entered measurements stay in your account.',
+            'Remove the saved photos shown here. Your entered measurements stay in your account.',
         action: 'Delete photos',
         destructive: true);
     if (!confirmed || !mounted) return;
@@ -136,7 +136,7 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
 
   @override
   Widget build(BuildContext context) => SettingsPage(
-        title: 'Photos & privacy',
+        title: 'Privacy',
         subtitle: 'Your data. Your choice.',
         children: [
           if (_busy)
@@ -144,31 +144,28 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
                 padding: EdgeInsets.only(bottom: 20),
                 child: LinearProgressIndicator()),
           if (_message != null) SettingsNotice(_message!),
-          SettingsGroup(title: 'Body photos', children: [
-            const SettingsRow(
-                icon: CupertinoIcons.camera,
-                title: 'Photo saving',
-                subtitle:
-                    'Off by default. Choose Save photos during each scan.'),
-            SettingsRow(
-                icon: CupertinoIcons.photo_on_rectangle,
-                title: 'Saved photos',
-                value: _loading
-                    ? 'Loading…'
-                    : _photoLoadFailed
-                        ? 'Unavailable'
-                        : '$_photoCount'),
-            SettingsRow(
-                icon: CupertinoIcons.trash,
-                title: 'Delete saved photos',
-                subtitle: _photoCount == 0
-                    ? 'No saved photos to delete'
-                    : 'Remove photos from your recent saved scans',
-                destructive: true,
-                onTap: _busy || _loading || _photoLoadFailed || _photoCount == 0
-                    ? null
-                    : _removePhotos),
-          ]),
+          if (_photoCount > 0 || _photoLoadFailed)
+            SettingsGroup(title: 'Saved photos', children: [
+              SettingsRow(
+                  icon: CupertinoIcons.photo_on_rectangle,
+                  title: 'Saved photos',
+                  value: _loading
+                      ? 'Loading…'
+                      : _photoLoadFailed
+                          ? 'Unavailable'
+                          : '$_photoCount'),
+              SettingsRow(
+                  icon: CupertinoIcons.trash,
+                  title: 'Delete saved photos',
+                  subtitle: _photoCount == 0
+                      ? 'No saved photos to delete'
+                      : 'Remove previously saved photos',
+                  destructive: true,
+                  onTap:
+                      _busy || _loading || _photoLoadFailed || _photoCount == 0
+                          ? null
+                          : _removePhotos),
+            ]),
           if (!_loading && _photoLoadFailed)
             TextButton(
                 onPressed: _load, child: const FitnessText('Retry loading')),
@@ -186,7 +183,7 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
                 onTap: _busy || _owner == null ? null : _deleteAccount),
           ]),
           const SettingsNotice(
-              'Deleting saved photos keeps your scan results. Delete account removes the account and its associated records.'),
+              'Delete account removes your account and its associated records.'),
         ],
       );
 }

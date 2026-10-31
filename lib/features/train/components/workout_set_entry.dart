@@ -1,4 +1,3 @@
-import '../../../core/components/motion.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +5,10 @@ import 'package:flutter/services.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/storage/local_cache.dart';
-import 'training_widgets.dart';
+import 'workout_set_details.dart';
+import '../../../core/theme/ds_colors.dart';
+import '../../../core/theme/ds_motion.dart';
+import 'package:intl/intl.dart';
 
 class WorkoutSetEntry extends StatefulWidget {
   final String date, itemId;
@@ -17,6 +19,8 @@ class WorkoutSetEntry extends StatefulWidget {
   final double? suggestedWeight;
   final Future<Map<String, dynamic>>? previous;
   final bool disabled;
+  final bool bodyweight, compact, active, showSaveAction, showDetailsAction;
+  final VoidCallback? onActivate;
   final Future<void> Function(int reps, double? weight, double? effort) onSave;
   final Future<void> Function() onDelete;
   const WorkoutSetEntry(
@@ -29,6 +33,12 @@ class WorkoutSetEntry extends StatefulWidget {
       this.suggestedReps,
       this.suggestedWeight,
       this.previous,
+      this.bodyweight = false,
+      this.compact = false,
+      this.active = true,
+      this.showSaveAction = true,
+      this.showDetailsAction = true,
+      this.onActivate,
       required this.disabled,
       required this.onSave,
       required this.onDelete});
@@ -45,6 +55,10 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   bool _touched = false;
   double? _effort;
   Future<void>? _pendingSave;
+  final _weightFocus = FocusNode(), _repsFocus = FocusNode();
+  bool _detailsOpen = false, _addedLoad = false;
+  String? _validation;
+  bool get _showWeight => !widget.bodyweight || _addedLoad;
   @override
   void initState() {
     super.initState();
@@ -53,6 +67,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
         '';
     // A target is guidance, never a recorded load.
     final weight = widget.log?['weight'];
+    _addedLoad = weight is num && weight > 0;
     _weight.text = weight == null ? '' : '$weight';
     _effort = (widget.log?['rpe'] as num?)?.toDouble();
     _restore();
@@ -74,12 +89,17 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
           double.tryParse(draftWeight.replaceAll(',', '.')) ==
               widget.suggestedWeight;
       _weight.text = legacyTarget ? '' : draftWeight;
+      if (widget.bodyweight) {
+        _addedLoad =
+            (double.tryParse(_weight.text.replaceAll(',', '.')) ?? 0) > 0;
+      }
       _effort = (draft['rpe'] as num?)?.toDouble() ?? _effort;
     }
     setState(() {});
   }
 
   void _changed(String _) {
+    _validation = null;
     _confirmed = false;
     _touched = true;
     setState(() {});
@@ -105,10 +125,13 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     if (hasPendingValues) _persist();
     _reps.dispose();
     _weight.dispose();
+    _weightFocus.dispose();
+    _repsFocus.dispose();
     super.dispose();
   }
 
-  double? get _load => double.tryParse(_weight.text.replaceAll(',', '.'));
+  double? get _load =>
+      _showWeight ? double.tryParse(_weight.text.replaceAll(',', '.')) : null;
   bool get _dirty =>
       int.tryParse(_reps.text) != widget.log?['reps'] ||
       _load != widget.log?['weight'] ||
@@ -124,7 +147,13 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
       await _pendingSave;
       return;
     }
-    if (confirmSuggestion) _touched = true;
+    if (confirmSuggestion) {
+      _touched = true;
+      if (!widget.bodyweight && (_load == null || _load! <= 0)) {
+        _invalid('Enter the weight you lifted before saving this set.',
+            weight: true);
+      }
+    }
     if (!hasPendingValues) return;
     final future = _commit();
     _pendingSave = future;
@@ -143,12 +172,16 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     if (!hasPendingValues) return null;
     final reps = int.tryParse(_reps.text);
     final load = _load;
+    if (!widget.bodyweight && (load == null || load <= 0)) {
+      _invalid('Enter the weight you lifted before saving this set.',
+          weight: true);
+    }
     if (reps == null ||
         reps < 1 ||
         reps > 1000 ||
         (_weight.text.isNotEmpty &&
             (load == null || load < 0 || load > 1000))) {
-      throw const FormatException('Enter valid reps and load.');
+      _invalid('Enter valid reps and load.');
     }
     return {
       'setNumber': widget.number,
@@ -156,6 +189,16 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
       'weight': load,
       'rpe': _effort
     };
+  }
+
+  Never _invalid(String message, {bool weight = false}) {
+    if (mounted) {
+      setState(() => _validation = message);
+      if (weight) _weightFocus.requestFocus();
+      unawaited(Scrollable.ensureVisible(context,
+          alignment: .35, duration: const Duration(milliseconds: 200)));
+    }
+    throw FormatException(message);
   }
 
   void confirmSaved() {
@@ -193,7 +236,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
             content: Text(fitnessText(
                 context,
                 error is FormatException
-                    ? 'Enter valid reps and load.'
+                    ? error.message
                     : 'Not saved yet. Tap save to retry.'))));
       }
     }
@@ -221,143 +264,258 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final saved = widget.log != null && !_dirty;
-    return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (widget.targetLabel != null) ...[
-            Text('${fitnessText(context, 'Target')} · ${widget.targetLabel}',
-                style: const TextStyle(color: trainingSilver, fontSize: 12)),
-            const SizedBox(height: 8),
-          ],
-          if (widget.previous != null)
-            FutureBuilder<Map<String, dynamic>>(
-              future: widget.previous,
-              builder: (context, snapshot) {
-                final sets = snapshot.data?['sets'] as List? ?? [];
-                final previous = sets
-                    .whereType<Map>()
-                    .where((set) => set['setNumber'] == widget.number)
-                    .firstOrNull;
-                if (previous == null) return const SizedBox.shrink();
-                final weight = previous['weight'];
-                final performance = weight == null
-                    ? fitnessText(context, '{count} reps',
-                        values: {'count': previous['reps']})
-                    : '$weight kg × ${previous['reps']}';
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                      fitnessText(context, 'Last: {performance}',
-                          values: {'performance': performance}),
-                      style:
-                          const TextStyle(fontSize: 11, color: trainingMuted)),
-                );
-              },
-            ),
-          Row(children: [
-            SizedBox(
-                width: 28,
-                child: Text('${widget.number}',
-                    style:
-                        const TextStyle(color: trainingMuted, fontSize: 13))),
-            Expanded(
-                child: TextField(
-                    controller: _weight,
-                    enabled: !widget.disabled && !_busy,
-                    textAlign: TextAlign.center,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
-                    ],
-                    onChanged: _changed,
-                    decoration: _decoration('kg', context))),
-            const SizedBox(width: 8),
-            Expanded(
-                child: TextField(
-                    controller: _reps,
-                    enabled: !widget.disabled && !_busy,
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: _changed,
-                    decoration: _decoration('Reps', context))),
-            const SizedBox(width: 6),
-            IconButton(
-                tooltip: fitnessText(
-                    context,
-                    saved
-                        ? (widget.log?['pendingSync'] == true
-                            ? 'Saved on this phone'
-                            : 'Saved')
-                        : 'Save set'),
-                onPressed: widget.disabled || _busy || saved ? null : _save,
-                style: IconButton.styleFrom(
-                    backgroundColor: saved
-                        ? const Color(0xFF414141)
-                        : const Color(0xFF303030)),
-                icon: MotionFeedback(
-                    child: _busy
-                        ? const CupertinoActivityIndicator(
-                            key: ValueKey('saving'))
-                        : Icon(
-                            saved
-                                ? CupertinoIcons.checkmark
-                                : CupertinoIcons.plus,
-                            size: 17,
-                            key: ValueKey(saved),
-                            color: trainingSilver))),
-            SizedBox(
-                width: 36,
-                child: widget.log == null
-                    ? null
-                    : IconButton(
-                        tooltip: fitnessText(context, 'Delete set'),
-                        onPressed: widget.disabled || _busy ? null : _delete,
-                        icon: const Icon(CupertinoIcons.minus_circle,
-                            size: 17, color: trainingMuted))),
-          ]),
-          DropdownButton<double>(
-            isExpanded: true,
-            value: _effort,
-            hint: Text(fitnessText(context, 'Effort (optional)'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, color: trainingMuted)),
-            isDense: true,
-            underline: const SizedBox(),
-            dropdownColor: const Color(0xFF292929),
-            style: const TextStyle(fontSize: 12, color: trainingSilver),
-            items: [
-              for (final effort in [
-                for (int value = 2; value <= 20; value++) value / 2
-              ])
-                DropdownMenuItem(value: effort, child: Text('$effort/10'))
-            ],
-            onChanged: widget.disabled || _busy
-                ? null
-                : (value) {
-                    _effort = value;
-                    _changed('');
-                  },
-          ),
-          const SizedBox(height: 8),
-        ]));
+  void focusEditor() {
+    if (!mounted || !widget.active) return;
+    if (widget.bodyweight) {
+      _repsFocus.requestFocus();
+    } else {
+      _weightFocus.requestFocus();
+    }
   }
 
-  InputDecoration _decoration(String hint, BuildContext context) =>
-      InputDecoration(
-        hintText: fitnessText(context, hint),
-        labelText: fitnessText(context, hint),
-        filled: true,
-        fillColor: const Color(0xFF292929),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(11),
-            borderSide: BorderSide.none),
-      );
+  Future<void> showDetails() async {
+    if (widget.disabled || _busy || _detailsOpen) return;
+    FocusScope.of(context).unfocus();
+    _detailsOpen = true;
+    final details = await showModalBottomSheet<WorkoutSetDetails>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        backgroundColor: DSColors.bg,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            side: BorderSide(color: DSColors.border)),
+        builder: (_) => WorkoutSetDetailsSheet(
+            number: widget.number,
+            bodyweight: widget.bodyweight,
+            canDelete: widget.log != null,
+            effort: _effort,
+            weight: _weight.text));
+    _detailsOpen = false;
+    if (!mounted || details == null) return;
+    if (details.delete) {
+      await _delete();
+      return;
+    }
+    _effort = details.effort;
+    if (widget.bodyweight) {
+      _weight.text = details.weight;
+      _addedLoad = details.weight.isNotEmpty;
+    }
+    _changed('');
+  }
+
+  String _number(num value) => (NumberFormat.decimalPattern(
+          Localizations.localeOf(context).toLanguageTag())
+        ..maximumFractionDigits = 1)
+      .format(value);
+
+  Widget _previousValue() => FutureBuilder<Map<String, dynamic>>(
+      future: widget.previous,
+      builder: (context, snapshot) {
+        final row = (snapshot.data?['sets'] as List? ?? [])
+            .whereType<Map>()
+            .where((row) => row['setNumber'] == widget.number)
+            .firstOrNull;
+        final weight = row?['weight'];
+        final reps = row?['reps'];
+        final value = row == null
+            ? '—'
+            : weight is num && weight > 0
+                ? '${_number(weight)} × ${reps ?? '—'}'
+                : reps == null
+                    ? '—'
+                    : '$reps ${fitnessText(context, 'reps')}';
+        return Text(value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontSize: 11, height: 1.4, color: DSColors.muted));
+      });
+
+  Widget _input(bool weight, {bool label = false}) {
+    final field = TextField(
+        key: ValueKey('set-${weight ? 'weight' : 'reps'}-${widget.number}'),
+        controller: weight ? _weight : _reps,
+        focusNode: weight ? _weightFocus : _repsFocus,
+        enabled: !widget.disabled && !_busy,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 16, color: DSColors.silver),
+        keyboardType: weight
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.number,
+        inputFormatters: [
+          if (weight)
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
+          else
+            FilteringTextInputFormatter.digitsOnly
+        ],
+        onChanged: _changed,
+        decoration: InputDecoration(
+            hintText: weight ? '—' : fitnessText(context, 'Reps'),
+            semanticCounterText:
+                fitnessText(context, weight ? 'Weight (kg)' : 'Reps'),
+            filled: true,
+            fillColor: const Color(0xFF0D0D0D),
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide:
+                    const BorderSide(color: DSColors.border, width: .7)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide:
+                    const BorderSide(color: DSColors.silver, width: .7))));
+    if (!label) return field;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text(fitnessText(context, weight ? 'Weight (kg)' : 'Reps'),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+              fontSize: 10, height: 1.4, color: DSColors.muted)),
+      const SizedBox(height: 6),
+      field,
+    ]);
+  }
+
+  Widget _savedValue(bool weight) {
+    final value = weight ? _weight.text : _reps.text;
+    final number = num.tryParse(value.replaceAll(',', '.'));
+    return Text(number == null ? '—' : _number(number),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+            fontSize: 15,
+            color: widget.log == null ? DSColors.muted : DSColors.silver));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = widget.log != null &&
+        !_dirty &&
+        (widget.bodyweight || (_load != null && _load! > 0));
+    final large = MediaQuery.textScalerOf(context).scale(14) > 20;
+    final counter = Container(
+        width: 28,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            color: widget.active ? DSColors.silver : Colors.transparent,
+            borderRadius: BorderRadius.circular(7)),
+        child: Text('${widget.number}',
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: widget.active ? DSColors.bg : DSColors.muted)));
+    final status = widget.showSaveAction
+        ? IconButton(
+            tooltip: fitnessText(
+                context,
+                saved
+                    ? (widget.log?['pendingSync'] == true
+                        ? 'Saved on this phone'
+                        : 'Saved')
+                    : 'Save set'),
+            onPressed: widget.disabled || _busy || saved ? null : _save,
+            icon: _busy
+                ? const CupertinoActivityIndicator()
+                : const Icon(CupertinoIcons.checkmark,
+                    size: 17, color: DSColors.silver))
+        : SizedBox(
+            width: 18,
+            child: saved
+                ? const Icon(CupertinoIcons.checkmark,
+                    size: 14, color: DSColors.silver)
+                : const SizedBox.shrink());
+    Widget values() => Row(children: [
+          if (!widget.bodyweight) ...[
+            Expanded(
+                child: widget.active
+                    ? _input(true, label: large)
+                    : _savedValue(true)),
+            const SizedBox(width: 8)
+          ],
+          Expanded(
+              child: widget.active
+                  ? _input(false, label: large)
+                  : _savedValue(false)),
+        ]);
+    return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Material(
+            color: Colors.transparent,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: InkWell(
+                onTap: widget.disabled || _busy ? null : widget.onActivate,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (large) ...[
+                            Row(children: [
+                              counter,
+                              const SizedBox(width: 8),
+                              Expanded(child: _previousValue()),
+                              status
+                            ]),
+                            const SizedBox(height: 10),
+                            values(),
+                          ] else
+                            Row(children: [
+                              counter,
+                              const SizedBox(width: 8),
+                              Expanded(flex: 2, child: _previousValue()),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                  flex: widget.bodyweight ? 2 : 4,
+                                  child: values()),
+                              const SizedBox(width: 8),
+                              status,
+                            ]),
+                          if (widget.active && _validation != null)
+                            Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(fitnessText(context, _validation!),
+                                    style: const TextStyle(
+                                        color: Color(0xFFED927F),
+                                        fontSize: 12,
+                                        height: 1.4))),
+                          if (widget.active &&
+                              widget.showDetailsAction &&
+                              widget.targetLabel != null)
+                            Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                    '${fitnessText(context, 'Target')} · ${widget.targetLabel}',
+                                    style: const TextStyle(
+                                        color: DSColors.muted,
+                                        fontSize: 11,
+                                        height: 1.4))),
+                          if (widget.bodyweight &&
+                              _addedLoad &&
+                              _weight.text.isNotEmpty)
+                            Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                    '${fitnessText(context, 'Added weight (kg)')} · ${_weight.text}',
+                                    style: const TextStyle(
+                                        fontSize: 11, color: DSColors.muted))),
+                          if (widget.active && widget.showDetailsAction)
+                            Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: TextButton(
+                                    onPressed: widget.disabled || _busy
+                                        ? null
+                                        : showDetails,
+                                    style: TextButton.styleFrom(
+                                        foregroundColor: DSColors.muted),
+                                    child: Text(
+                                        fitnessText(context, 'Set details'),
+                                        style: const TextStyle(fontSize: 11)))),
+                        ])))));
+  }
 }

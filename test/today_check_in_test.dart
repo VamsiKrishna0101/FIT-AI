@@ -7,17 +7,17 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health/health.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/health/health_models.dart';
-import 'package:fitai_mobile/core/health/health_sync_service.dart';
-import 'package:fitai_mobile/core/health/phone_sleep_service.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/today/models/daily_check_in_prompt.dart';
-import 'package:fitai_mobile/features/today/views/today_home_view.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/features/wellness/views/daily_check_in_sheet.dart';
-import 'package:fitai_mobile/features/wellness/repositories/wellness_repository.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/health/health_models.dart';
+import 'package:setcraft/core/health/health_sync_service.dart';
+import 'package:setcraft/core/health/phone_sleep_service.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/today/models/daily_check_in_prompt.dart';
+import 'package:setcraft/features/today/views/today_home_view.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/features/wellness/views/daily_check_in_sheet.dart';
+import 'package:setcraft/features/wellness/repositories/wellness_repository.dart';
 import 'today_date_filter_test.dart' show DateAdapter;
 import 'health_connection_test.dart' show FakeHealth;
 
@@ -140,6 +140,7 @@ void main() {
                 body: TextButton(
                     onPressed: () => showDailyCheckInSheet(context,
                         date: DateTime(2026, 10, 22),
+                        clock: () => DateTime(2026, 10, 22, 10),
                         syncedSleepMinutes: 450,
                         repository: repo),
                     child: const Text('Open'))))));

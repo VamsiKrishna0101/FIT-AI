@@ -1,6 +1,6 @@
-# fitai_mobile
+# Setcraft
 
-A new Flutter project.
+Setcraft mobile app for personalized training, nutrition, and progress tracking.
 
 ## Getting Started
 

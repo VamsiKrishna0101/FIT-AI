@@ -65,6 +65,69 @@ class BodyProgressSummary {
   BodyReading? latest(String key) =>
       readings.where((reading) => reading.key == key).firstOrNull;
 
+  BodyReading? latestEntered(String key) {
+    final spec = bodyMetricSpecs[key];
+    if (spec == null) return null;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    return readings
+        .where((r) =>
+            r.key == key &&
+            r.date.compareTo(today) <= 0 &&
+            r.assessment?.status == 'SAVED' &&
+            r.assessment?.synthetic != true &&
+            !r.metric.isPhotoEstimate &&
+            !['preview', 'profile'].contains(r.metric.source) &&
+            r.metric.value.isFinite &&
+            r.metric.value >= spec.min &&
+            r.metric.value <= spec.max)
+        .firstOrNull;
+  }
+
+  /// One reading per day, from the latest measurement method. Photo estimates,
+  /// profile defaults and draft entries never become measured progress.
+  List<BodyReading> measuredTrend(String key, {DateTime? now}) {
+    final current = now ?? DateTime.now();
+    final today = DateTime(current.year, current.month, current.day);
+    final spec = bodyMetricSpecs[key];
+    if (spec == null) return [];
+    final valid = readings.where((reading) {
+      final date = DateTime.tryParse(reading.date);
+      final entry = reading.assessment;
+      return reading.key == key &&
+          date != null &&
+          !date.isAfter(today) &&
+          (entry == null || entry.status == 'SAVED') &&
+          !reading.metric.isPhotoEstimate &&
+          (key == 'weightKg'
+              ? [
+                  'scale',
+                  'smart_scale',
+                  'GOOGLE_HEALTH_CONNECT',
+                  'APPLE_HEALTHKIT'
+                ].contains(reading.series)
+              : key == 'bodyFatPct'
+                  ? [
+                      'smart_scale',
+                      'dexa',
+                      'calipers',
+                      'GOOGLE_HEALTH_CONNECT',
+                      'APPLE_HEALTHKIT'
+                    ].contains(reading.series)
+                  : reading.series == 'tape') &&
+          reading.metric.value.isFinite &&
+          reading.metric.value >= spec.min &&
+          reading.metric.value <= spec.max;
+    }).toList();
+    if (valid.isEmpty) return [];
+    final source = valid.first.series;
+    final dates = <String>{};
+    return valid
+        .where((r) => r.series == source && dates.add(r.date))
+        .toList()
+        .reversed
+        .toList();
+  }
+
   BodyReading? get weight => readings
       .where((reading) =>
           reading.key == 'weightKg' &&

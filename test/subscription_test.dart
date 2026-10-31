@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -13,11 +14,11 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/localization/membership_copy.dart';
-import 'package:fitai_mobile/features/subscription/subscription_gate.dart';
-import 'package:fitai_mobile/features/subscription/subscription_service.dart';
-import 'package:fitai_mobile/features/subscription/subscription_view.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/localization/membership_copy.dart';
+import 'package:setcraft/features/subscription/subscription_gate.dart';
+import 'package:setcraft/features/subscription/subscription_service.dart';
+import 'package:setcraft/features/subscription/subscription_view.dart';
 
 Map<String, dynamic> accessData(String state) => {
       'state': state,
@@ -50,8 +51,12 @@ MembershipOffer exampleOffer(String interval, {bool trial = true}) {
 class PreviewMembership extends SubscriptionService {
   String? selected;
   bool fail = false;
+  final bool iPhone;
   PreviewMembership(
-      {String state = 'available', bool trial = true, bool prices = true}) {
+      {String state = 'available',
+      bool trial = true,
+      bool prices = true,
+      this.iPhone = false}) {
     access = SubscriptionAccess(accessData(state));
     storeReady = prices;
     if (prices) {
@@ -61,7 +66,9 @@ class PreviewMembership extends SubscriptionService {
     }
   }
   @override
-  bool get android => true;
+  bool get android => !iPhone;
+  @override
+  bool get ios => iPhone;
   @override
   Future<void> initialize() async {
     if (fail) throw StateError('Connection failed. Please retry.');
@@ -87,6 +94,25 @@ class StoreFixture extends Fake implements InAppPurchase {
   final stream = StreamController<List<PurchaseDetails>>.broadcast();
   PurchaseParam? requested;
   int completions = 0;
+  int queries = 0;
+  bool available = true, catalogFails = false;
+  List<ProductDetails> catalog = [];
+  @override
+  Future<bool> isAvailable() async => available;
+  @override
+  Future<ProductDetailsResponse> queryProductDetails(
+      Set<String> identifiers) async {
+    queries++;
+    if (catalogFails) {
+      throw StateError('Could not load Google Play prices. Please retry.');
+    }
+    return ProductDetailsResponse(
+        productDetails: catalog,
+        notFoundIDs: identifiers
+            .where((id) => !catalog.any((p) => p.id == id))
+            .toList());
+  }
+
   @override
   Stream<List<PurchaseDetails>> get purchaseStream => stream.stream;
   @override
@@ -104,6 +130,7 @@ class StoreFixture extends Fake implements InAppPurchase {
 class VerificationFixture implements HttpClientAdapter {
   final paths = <String>[];
   bool reject = false;
+  bool billingReady = true;
   String state = 'available';
   @override
   Future<ResponseBody> fetch(RequestOptions options,
@@ -114,7 +141,10 @@ class VerificationFixture implements HttpClientAdapter {
     return ResponseBody.fromString(
         jsonEncode(verify && reject
             ? {'error': 'Verification unavailable'}
-            : {'data': accessData(state), 'purchaseActive': verify && !reject}),
+            : {
+                'data': {...accessData(state), 'billingReady': billingReady},
+                'purchaseActive': verify && !reject
+              }),
         verify && reject ? 503 : 200,
         headers: {
           Headers.contentTypeHeader: ['application/json']
@@ -124,6 +154,39 @@ class VerificationFixture implements HttpClientAdapter {
   @override
   void close({bool force = false}) {}
 }
+
+class CatalogService extends SubscriptionService {
+  CatalogService(StoreFixture store) : super(store: store);
+  @override
+  bool get android => true;
+  @override
+  bool get ios => false;
+}
+
+ProductDetails catalogProduct() =>
+    GooglePlayProductDetails.fromProductDetails(const ProductDetailsWrapper(
+        description: 'Fixture',
+        name: 'Annual',
+        title: 'Annual',
+        productId: 'annual-product',
+        productType: ProductType.subs,
+        subscriptionOfferDetails: [
+          SubscriptionOfferDetailsWrapper(
+            basePlanId: 'annual',
+            offerId: null,
+            offerTags: [],
+            offerIdToken: 'base',
+            pricingPhases: [
+              PricingPhaseWrapper(
+                  billingCycleCount: 0,
+                  billingPeriod: 'P1Y',
+                  formattedPrice: '€99.99',
+                  priceAmountMicros: 99990000,
+                  priceCurrencyCode: 'EUR',
+                  recurrenceMode: RecurrenceMode.infiniteRecurring)
+            ],
+          )
+        ])).single;
 
 class CheckoutService extends SubscriptionService {
   CheckoutService(StoreFixture store) : super(store: store);
@@ -137,6 +200,14 @@ class CheckoutService extends SubscriptionService {
       offers[interval] = exampleOffer(interval, trial: !offerChanged);
     }
   }
+}
+
+class IPhoneCheckoutService extends CheckoutService {
+  IPhoneCheckoutService(super.store);
+  @override
+  bool get android => false;
+  @override
+  bool get ios => true;
 }
 
 PurchaseDetails purchaseEvent(PurchaseStatus status) => PurchaseDetails(
@@ -261,8 +332,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('14 days free, then €99.99/year'), findsOneWidget);
     expect(find.text('Not now'), findsNothing);
-    expect(find.byIcon(Icons.check_rounded), findsNWidgets(12));
-    expect(find.byIcon(Icons.close_rounded), findsNWidgets(12));
+    expect(find.byIcon(Icons.check_rounded), findsNothing);
+    expect(find.byIcon(Icons.remove_rounded), findsNothing);
     await Scrollable.ensureVisible(
         tester.element(find.byKey(const ValueKey('membership-monthly'))),
         alignment: .3);
@@ -270,7 +341,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('membership-monthly')));
     await tester.pumpAndSettle();
     expect(find.text('14 days free, then €12.99/month'), findsOneWidget);
-    await tester.tap(find.text('Start my 14-day free trial'));
+    await tester.tap(find.text('Try for €0.00'));
     await tester.pumpAndSettle();
     expect(service.selected, 'monthly');
     expect(service.access!.hasAccess, false);
@@ -281,9 +352,9 @@ void main() {
     await tester.pumpWidget(app(SubscriptionView(
         service: PreviewMembership(state: 'expired', trial: false))));
     await tester.pumpAndSettle();
-    expect(find.text('Start my 14-day free trial'), findsNothing);
+    expect(find.text('Try for €0.00'), findsNothing);
     expect(find.text('Subscribe & continue'), findsOneWidget);
-    expect(find.text('€99.99/year · auto-renewing'), findsOneWidget);
+    expect(find.text('€99.99/year · auto-renewing'), findsNWidgets(2));
   });
   testWidgets('missing prices and network failure keep access locked',
       (tester) async {
@@ -292,10 +363,126 @@ void main() {
     await tester.pumpWidget(app(SubscriptionView(
         service: service, onContinue: () => continued = true)));
     await tester.pumpAndSettle();
-    expect(find.text('Retry loading plans'), findsOneWidget);
-    expect(find.text('Start my 14-day free trial'), findsNothing);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.text('Try for €0.00'), findsNothing);
     expect(find.text('Connection failed. Please retry.'), findsOneWidget);
     expect(continued, false);
+  });
+  testWidgets(
+      'Paywall has the reference hierarchy without a brand or account header',
+      (tester) async {
+    await tester
+        .pumpWidget(app(SubscriptionView(service: PreviewMembership())));
+    await tester.pumpAndSettle();
+    expect(find.text('SETCRAFT'), findsNothing);
+    expect(find.text('Account'), findsNothing);
+    expect(find.text('Your first 14 days are free'), findsOneWidget);
+    expect(find.text('Today:'), findsOneWidget);
+    expect(find.text('Day 14:'), findsOneWidget);
+    expect(find.text('Try for €0.00'), findsOneWidget);
+    expect(find.text('This is included'), findsOneWidget);
+    expect(find.text('We couldn’t load your plans.'), findsNothing);
+  });
+  testWidgets(
+      'Missing billing setup has a clear availability state and never opens checkout',
+      (tester) async {
+    final service = PreviewMembership(prices: false)
+      ..access = SubscriptionAccess(
+          {...accessData('available'), 'billingReady': false})
+      ..catalogIssue = SubscriptionCatalogIssue.setupPending;
+    await tester.pumpWidget(app(SubscriptionView(service: service)));
+    await tester.pumpAndSettle();
+    expect(find.text('Membership opens soon'), findsOneWidget);
+    expect(find.text('Check availability'), findsOneWidget);
+    expect(find.text('We couldn’t load your plans.'), findsNothing);
+    expect(find.text('Your first 14 days are free'), findsNothing);
+    await tester.tap(find.text('Check availability'));
+    await tester.pumpAndSettle();
+    expect(service.selected, isNull);
+  });
+  testWidgets(
+      'A delayed verified purchase continues once without another button tap',
+      (tester) async {
+    final service = PreviewMembership();
+    var continued = 0;
+    await tester.pumpWidget(
+        app(SubscriptionView(service: service, onContinue: () => continued++)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Try for €0.00'));
+    await tester.pumpAndSettle();
+    expect(continued, 0);
+    service.verified('trial');
+    await tester.pumpAndSettle();
+    service.verified('trial');
+    await tester.pumpAndSettle();
+    expect(continued, 1);
+  });
+  testWidgets(
+      'Store setup, unavailable store and missing products remain distinct',
+      (tester) async {
+    final adapter = VerificationFixture()..billingReady = false;
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final store = StoreFixture();
+    final catalogue = CatalogService(store);
+    await tester.runAsync(catalogue.initialize);
+    expect(catalogue.catalogIssue, SubscriptionCatalogIssue.setupPending);
+    expect(store.queries, 0);
+    adapter.billingReady = true;
+    store.available = false;
+    await tester.runAsync(catalogue.initialize);
+    expect(catalogue.catalogIssue, SubscriptionCatalogIssue.storeUnavailable);
+    store.available = true;
+    await tester.runAsync(catalogue.initialize);
+    expect(catalogue.catalogIssue, SubscriptionCatalogIssue.productsMissing);
+    expect(catalogue.plansAvailable, false);
+    store.catalog = [catalogProduct()];
+    await tester.runAsync(catalogue.initialize);
+    expect(catalogue.catalogIssue, isNull);
+    expect(catalogue.plansAvailable, true);
+    catalogue.dispose();
+    await store.stream.close();
+  });
+  testWidgets(
+      'A temporary store failure keeps the last price and recovers on retry',
+      (tester) async {
+    final adapter = VerificationFixture();
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final store = StoreFixture()..catalog = [catalogProduct()];
+    final service = CatalogService(store);
+    await tester.runAsync(service.initialize);
+    expect(service.offers['annual']!.price, '€99.99');
+    store.catalogFails = true;
+    await tester.runAsync(service.initialize);
+    expect(service.catalogIssue, SubscriptionCatalogIssue.connection);
+    expect(service.offers['annual']!.price, '€99.99');
+    expect(service.plansAvailable, false);
+    store.catalogFails = false;
+    await tester.runAsync(service.initialize);
+    expect(service.catalogIssue, isNull);
+    expect(service.plansAvailable, true);
+    service.dispose();
+    await store.stream.close();
+  });
+  testWidgets('Concurrent membership loads share one store request',
+      (tester) async {
+    final adapter = VerificationFixture();
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final store = StoreFixture()..catalog = [catalogProduct()];
+    final service = CatalogService(store);
+    await tester.runAsync(() async {
+      final first = service.initialize(), second = service.initialize();
+      await Future.wait([first, second]);
+    });
+    expect(store.queries, 1);
+    expect(adapter.paths.where((p) => p.endsWith('/status')).length, 1);
+    service.dispose();
+    await store.stream.close();
   });
   testWidgets(
       'root gate has no dashboard bypass and responds to verified expiry',
@@ -412,8 +599,7 @@ void main() {
           app(SubscriptionView(service: PreviewMembership()), scale: scale));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      expect(find.text('Start my 14-day free trial').hitTestable(),
-          findsOneWidget);
+      expect(find.text('Try for €0.00').hitTestable(), findsOneWidget);
       await tester.drag(find.byType(ListView), const Offset(0, -1800));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -433,8 +619,11 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(
           find
-              .text(membershipTranslation(
-                  language, 'Start my 14-day free trial')!)
+              .text(membershipTranslation(language, 'Try for {price}')!
+                  .replaceAll(
+                      '{price}',
+                      NumberFormat.simpleCurrency(name: 'EUR', locale: language)
+                          .format(0)))
               .hitTestable(),
           findsOneWidget);
       await tester.drag(find.byType(ListView), const Offset(0, -1800));
@@ -465,29 +654,101 @@ void main() {
           image.dispose();
         });
     await capture('membership-example-offer');
-    await tester.drag(find.byType(ListView), const Offset(0, -620));
+    await tester.ensureVisible(find.text('This is included'));
+    await tester.tap(find.text('This is included'));
     await tester.pumpAndSettle();
-    await capture('membership-trial-timeline');
-    await Scrollable.ensureVisible(
-        tester.element(find.text('See what’s included.')),
-        alignment: 0);
+    await tester.ensureVisible(find.text('Workout logging & history'));
     await tester.pumpAndSettle();
     await capture('membership-feature-comparison');
-    expect(find.byIcon(Icons.check_rounded), findsNWidgets(12));
-    expect(find.byIcon(Icons.close_rounded), findsNWidgets(12));
-    expect(find.text('Sets, reps & weight guidance'), findsOneWidget);
-    await Scrollable.ensureVisible(
-        tester.element(find.text('Personal records & exercise progress')),
-        alignment: 0);
-    await tester.pumpAndSettle();
-    await capture('membership-feature-comparison-more');
-    await Scrollable.ensureVisible(
-        tester.element(find.text('Progress photos & comparisons')),
-        alignment: .6);
-    await tester.pumpAndSettle();
-    expect(
-        find.text('Start my 14-day free trial').hitTestable(), findsOneWidget);
-    await capture('membership-feature-comparison-body');
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(4));
+    expect(find.byIcon(Icons.remove_rounded), findsNWidgets(4));
+    expect(find.text('Try for €0.00').hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'iPhone checkout binds the Apple account and verifies through the iOS endpoint',
+      (tester) async {
+    final adapter = VerificationFixture();
+    final original = ApiClient.shared.client.httpClientAdapter;
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final store = StoreFixture();
+    final service = IPhoneCheckoutService(store);
+    await tester.runAsync(service.initialize);
+    await tester.runAsync(() => service.purchase('annual'));
+    expect(store.requested?.applicationUserName, 'member');
+    store.stream.add([
+      PurchaseDetails(
+          purchaseID: '12345678',
+          productID: 'annual-product',
+          verificationData: PurchaseVerificationData(
+              localVerificationData: '',
+              serverVerificationData: 'fixture-signed-storekit-transaction',
+              source: 'app_store'),
+          transactionDate: '2026-10-26',
+          status: PurchaseStatus.purchased)
+        ..pendingCompletePurchase = true
+    ]);
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+    expect(adapter.paths, contains('/api/subscription/ios/verify'));
+    expect(adapter.paths, isNot(contains('/api/subscription/android/verify')));
+    expect(service.access!.hasAccess, true);
+    expect(store.completions, 1);
+    service.dispose();
+    await store.stream.close();
+  });
+
+  testWidgets(
+      'iPhone paywall uses App Store labels and closes back to the preview',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final capture = GlobalKey();
+    final service = PreviewMembership(iPhone: true);
+    await tester.pumpWidget(app(Builder(
+        builder: (context) => Scaffold(
+            body: Center(
+                child: TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                            builder: (_) => RepaintBoundary(
+                                key: capture,
+                                child: SubscriptionView(service: service)))),
+                    child: const Text('Plan preview')))))));
+    await tester.tap(find.text('Plan preview'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cancel in App Store.'), findsOneWidget);
+    expect(find.text('Cancel anytime in App Store.'), findsOneWidget);
+    expect(find.textContaining('Google Play'), findsNothing);
+    expect(find.textContaining('Apple Pay'), findsNothing);
+    expect(find.byKey(const ValueKey('membership-close')), findsOneWidget);
+    await tester.runAsync(() => precacheImage(
+        const AssetImage('assets/branding/setcraft-training-hero-v1.png'),
+        capture.currentContext!));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      final boundary =
+          capture.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final image = await boundary.toImage(pixelRatio: 2);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      final file = File('build/previews/membership-iphone-example-offer.png');
+      file.parent.createSync(recursive: true);
+      file.writeAsBytesSync(bytes!.buffer.asUint8List());
+      image.dispose();
+    });
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    expect(find.text('Privacy & data'), findsOneWidget);
+    expect(find.text('Sign out'), findsOneWidget);
+    Navigator.of(tester.element(find.text('Sign out'))).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('membership-close')));
+    await tester.pumpAndSettle();
+    expect(find.text('Plan preview'), findsOneWidget);
+    expect(find.byType(SubscriptionView), findsNothing);
+    expect(service.selected, isNull);
   });
 }

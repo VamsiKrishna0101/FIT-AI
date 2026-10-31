@@ -6,9 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/auth/views/auth_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/training_preferences_view.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/auth/views/auth_view.dart';
+import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
 
 Widget app(Widget child, {double scale = 1}) => MaterialApp(
       theme: ThemeData.dark().copyWith(

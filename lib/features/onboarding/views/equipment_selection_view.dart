@@ -1,5 +1,6 @@
 import '../viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import '../../../core/components/content_transition.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -189,7 +190,9 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
                     }),
             ]),
             const SizedBox(height: 16),
-            _grid(primary),
+            ContentTransition(
+                child:
+                    KeyedSubtree(key: ValueKey(_group), child: _grid(primary))),
             if (_group == EquipmentGroup.machines) ...[
               const SizedBox(height: 12),
               Material(
@@ -222,10 +225,12 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
                                 size: 14,
                                 color: FitnessTheme.muted),
                           ])))),
-              if (_moreMachinesExpanded) ...[
-                const SizedBox(height: 12),
-                _grid(EquipmentCatalog.additionalMachines),
-              ],
+              ContentResize(
+                  child: _moreMachinesExpanded
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: _grid(EquipmentCatalog.additionalMachines))
+                      : const SizedBox.shrink()),
             ],
           ],
           if (_saveError != null) ...[

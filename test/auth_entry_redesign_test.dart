@@ -2,17 +2,18 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/components/liquid_chrome_button.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/localization/membership_copy.dart';
-import 'package:fitai_mobile/features/auth/views/auth_view.dart';
-import 'package:fitai_mobile/features/auth/data/social_sign_in.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/localization/membership_copy.dart';
+import 'package:setcraft/features/auth/views/auth_view.dart';
+import 'package:setcraft/features/auth/data/social_sign_in.dart';
 
 class PendingSocial extends SocialSignIn {
   final result = Completer<String?>();
@@ -24,6 +25,11 @@ class PendingSocial extends SocialSignIn {
     attempts++;
     return result.future;
   }
+}
+
+class UnconfiguredSocial extends SocialSignIn {
+  @override
+  bool available(SocialProvider provider) => false;
 }
 
 void main() {
@@ -54,7 +60,7 @@ void main() {
               child: AuthView(initialSignIn: signIn, socialSignIn: social)));
   testWidgets('unconfigured providers are honest and do not initialize SDKs',
       (tester) async {
-    await tester.pumpWidget(app());
+    await tester.pumpWidget(app(social: UnconfiguredSocial()));
     await tester.pumpAndSettle();
     final buttons =
         tester.widgetList<OutlinedButton>(find.byType(OutlinedButton));
@@ -72,6 +78,23 @@ void main() {
     expect(find.byType(TextField), findsNWidgets(2));
     expect(find.text('Sign in'), findsOneWidget);
     expect(tester.hasRunningAnimations, isFalse);
+  });
+  testWidgets('ordinary Android builds enable Google without build defines',
+      (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    final google = find.descendant(
+        of: find.byKey(const ValueKey('auth-google')),
+        matching: find.byType(OutlinedButton));
+    expect(tester.widget<OutlinedButton>(google).onPressed, isNotNull);
+    expect(find.text('Coming soon'), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  test(
+      'Google remains unavailable on iOS until its native client is configured',
+      () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    expect(SocialSignIn().available(SocialProvider.google), isFalse);
   });
   testWidgets(
       'provider cancellation restores controls without creating a session',

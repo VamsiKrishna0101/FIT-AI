@@ -23,17 +23,11 @@ class ContentTransition extends StatelessWidget {
       child: AnimatedSwitcher(
         duration: duration,
         reverseDuration: duration,
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
+        switchInCurve: DSMotion.contentIn,
+        switchOutCurve: DSMotion.contentOut,
         transitionBuilder: (child, animation) => FadeTransition(
           opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, .018),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
+          child: child,
         ),
         layoutBuilder: (current, previous) => Stack(
           alignment: Alignment.topCenter,
@@ -45,6 +39,25 @@ class ContentTransition extends StatelessWidget {
         ),
         child: child,
       ),
+    );
+  }
+}
+
+/// Late sections expand from their current height without replacing live content.
+class ContentResize extends StatelessWidget {
+  const ContentResize({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (DSMotion.reduced(context)) return child;
+    return AnimatedSize(
+      duration: DSMotion.regular,
+      reverseDuration: DSMotion.regular,
+      curve: DSMotion.effects,
+      alignment: Alignment.topCenter,
+      child: child,
     );
   }
 }

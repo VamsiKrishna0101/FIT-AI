@@ -11,11 +11,13 @@ class ProgressWeeklyBars extends StatelessWidget {
   final List<ProgressPoint> points;
   final String metric;
   final Color color;
+  final bool compact;
   const ProgressWeeklyBars(
       {super.key,
       required this.points,
       required this.metric,
-      this.color = progressBlue});
+      this.color = progressBlue,
+      this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +25,11 @@ class ProgressWeeklyBars extends StatelessWidget {
     final maximum =
         points.fold<double>(1, (max, point) => math.max(max, point.value));
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(fitnessText(context, 'Weekly total'),
-          style: const TextStyle(fontSize: 12, color: progressMuted)),
-      const SizedBox(height: 14),
+      if (!compact) ...[
+        Text(fitnessText(context, 'Weekly total'),
+            style: const TextStyle(fontSize: 12, color: progressMuted)),
+        const SizedBox(height: 14),
+      ],
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         for (final point in points)
           Expanded(
@@ -42,20 +46,21 @@ class ProgressWeeklyBars extends StatelessWidget {
                           child: Column(children: [
                         Text(progressValue(context, point.value, digits: 0),
                             style: TextStyle(
-                                fontSize: 13,
+                                fontSize: compact ? 12 : 13,
                                 fontWeight: FontWeight.w600,
                                 color:
                                     point.value == 0 ? progressMuted : color)),
-                        const SizedBox(height: 8),
+                        SizedBox(height: compact ? 6 : 8),
                         SizedBox(
-                            height: 70,
+                            height: compact ? 32 : 70,
                             child: Align(
                                 alignment: Alignment.bottomCenter,
                                 child: MotionValue(
                                     value: point.value / maximum,
                                     builder: (context, value) => Container(
-                                        width: 24,
-                                        height: math.max(2, value * 70),
+                                        width: compact ? 20 : 24,
+                                        height: math.max(
+                                            2, value * (compact ? 32 : 70)),
                                         decoration: BoxDecoration(
                                             borderRadius:
                                                 BorderRadius.circular(5),
@@ -76,7 +81,7 @@ class ProgressWeeklyBars extends StatelessWidget {
                                                         color.withValues(
                                                             alpha: .5)
                                                       ])))))),
-                        const SizedBox(height: 10),
+                        SizedBox(height: compact ? 7 : 10),
                         Text(DateFormat.Md(locale).format(point.date),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -84,7 +89,7 @@ class ProgressWeeklyBars extends StatelessWidget {
                                 fontSize: 12, color: progressMuted)),
                       ]))))),
       ]),
-      const SizedBox(height: 12),
+      if (!compact) const SizedBox(height: 12),
     ]);
   }
 }

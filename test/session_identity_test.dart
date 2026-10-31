@@ -1,3 +1,4 @@
+import 'package:setcraft/features/body_scan/views/widgets/body_measurement_dashboard.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -7,14 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/auth/data/auth_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_entry_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/auth/data/auth_repository.dart';
+import 'package:setcraft/features/body_scan/views/body_view.dart';
+import 'package:setcraft/features/body_scan/views/body_entry_view.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_physique_home.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
 
 String _token(String owner) =>
     '${base64Url.encode(utf8.encode('{"alg":"HS256"}'))}.'
@@ -167,8 +168,12 @@ void main() {
     expect(await CacheScope.userId(), 'anonymous');
   });
   testWidgets(
-      'token-only session loads saved Body history and prefills measurement weight',
+      'Token-only session loads Body readings and requests a real scale reading',
       (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     FlutterSecureStorage.setMockInitialValues(
         {'fitai_access_token': _token('existing-owner')});
     final adapter = _Adapter(),
@@ -179,28 +184,17 @@ void main() {
         MaterialApp(theme: ThemeData.dark(), home: BodyView(onTrain: () {})));
     await tester.pumpAndSettle();
     expect(adapter.paths, contains('/api/body'));
-    await tester.tap(find.text('Physique'));
-    await tester.pumpAndSettle();
-    expect(find.text('Sign in to see your body assessments.'), findsNothing);
-    final overview =
-        tester.widget<BodyPhysiqueHome>(find.byType(BodyPhysiqueHome)).overview;
-    expect(
-        overview?.records.map((record) => record.id), contains('saved-body'));
-    expect(overview?.profile?['weight'], 75);
-    tester.widget<BodyPhysiqueHome>(find.byType(BodyPhysiqueHome)).onManual();
+    expect(find.text('Sign in to see your measurements.'), findsNothing);
+    final dashboard = tester.widget<BodyMeasurementDashboard>(
+        find.byType(BodyMeasurementDashboard));
+    expect(dashboard.overview.records.map((record) => record.id),
+        contains('saved-body'));
+    expect(dashboard.overview.profile?['weight'], 75);
+    dashboard.onUpdate();
     await tester.pumpAndSettle();
     expect(find.byType(BodyEntryView), findsOneWidget);
-    expect(
-        tester.widget<BodyEntryView>(find.byType(BodyEntryView)).profileWeight,
-        75);
     final weightInput = find.byKey(const ValueKey('body-input-weightKg'));
-    await tester.scrollUntilVisible(weightInput, 180,
-        scrollable: find
-            .descendant(
-                of: find.byKey(const ValueKey('body-entry-scroll')),
-                matching: find.byType(Scrollable))
-            .first);
-    expect(tester.widget<TextField>(weightInput).controller!.text, '75.0');
+    expect(tester.widget<TextField>(weightInput).controller!.text, isEmpty);
     expect(tester.takeException(), isNull);
   });
 }

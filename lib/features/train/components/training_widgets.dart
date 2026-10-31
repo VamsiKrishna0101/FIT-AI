@@ -27,7 +27,7 @@ class TrainingSurface extends StatelessWidget {
       child: Material(
         color: DSColors.bgCard,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: DSColors.border, width: .7),
         ),
         clipBehavior: Clip.antiAlias,
@@ -130,6 +130,17 @@ Future<WorkoutExerciseModel?> pickTrainingExercise(BuildContext context,
   final exercise = await Navigator.of(context).push(route);
   await route.completed;
   return exercise;
+}
+
+Future<List<WorkoutExerciseModel>?> pickTrainingExercises(
+    BuildContext context) async {
+  final route = AppPageRoute<List<WorkoutExerciseModel>>(
+      page: ExerciseLibraryView(
+          onExerciseAdded: () {},
+          onSelectMany: (exercises) => Navigator.of(context).pop(exercises)));
+  final exercises = await Navigator.of(context).push(route);
+  await route.completed;
+  return exercises;
 }
 
 class WorkoutSyncNotice extends StatelessWidget {

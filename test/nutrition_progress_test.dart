@@ -5,10 +5,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/progress/components/wellness_progress_content.dart';
-import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
-import 'package:fitai_mobile/features/progress/models/progress_models.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/progress/components/wellness_progress_content.dart';
+import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/models/progress_models.dart';
 
 const data = <String, dynamic>{
   'nutrition': [

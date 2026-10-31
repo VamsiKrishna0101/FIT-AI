@@ -118,10 +118,10 @@ class SettingsAboutView extends StatelessWidget {
                 subtitle:
                     'Seven days after your last generated plan. Your saved plan remains available in Weekly plan.'),
             SettingsRow(
-                icon: CupertinoIcons.camera,
-                title: 'Are body photos required?',
+                icon: CupertinoIcons.resize,
+                title: 'What do I need for my plan?',
                 subtitle:
-                    'No. You can generate without a scan. Saving photos is an optional choice during each scan.'),
+                    'Complete your height, weight and waist measurements before creating a plan.'),
           ]),
         ],
       );

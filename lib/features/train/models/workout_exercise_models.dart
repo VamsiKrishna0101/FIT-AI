@@ -83,12 +83,12 @@ class WorkoutExerciseModel {
 
   WorkoutExerciseModel withDemo(String gender) {
     final variant = mediaVariants?[gender];
-    if (variant is! Map) return this;
     return WorkoutExerciseModel.fromJson({
       ...toJson(),
-      'url': variant['url'],
-      'thumbnailUrl': variant['posterUrl'],
-      'mediaAspectRatio': variant['aspectRatio'],
+      'url': hasDemo(gender) ? variant['url'] : null,
+      'videoUrl': null,
+      'thumbnailUrl': hasDemo(gender) ? variant['posterUrl'] : null,
+      'mediaAspectRatio': hasDemo(gender) ? variant['aspectRatio'] : null,
     });
   }
 
@@ -292,6 +292,11 @@ class TodayPlanItemModel {
   bool get isCompleted => status == 'COMPLETED';
   bool get isSkipped => status == 'SKIPPED';
   bool get isPending => !isCompleted && !isSkipped;
+  bool get isBodyweight =>
+      exercise.exerciseType == 'bodyweight_reps' ||
+      (exercise.exerciseType == null &&
+          exercise.equipment.toLowerCase().replaceAll(RegExp(r'[\s_-]'), '') ==
+              'bodyweight');
 
   TodayPlanItemModel copyWith({
     String? id,
@@ -455,11 +460,8 @@ class TodayPlanModel {
   int get totalCount => items.length;
   double get progress =>
       totalCount == 0 ? 0.0 : (completedCount / totalCount).clamp(0.0, 1.0);
-  int get estimatedDurationMinutes => items.fold<int>(
-        0,
-        (sum, item) =>
-            sum + (item.exercise.duration > 0 ? item.exercise.duration : 0),
-      );
+  int get estimatedDurationMinutes => prescribedWorkoutMinutes(
+      items, (warmup?['durationMinutes'] as num?)?.toInt() ?? 0);
 
   TodayPlanModel copyWith({
     Map<String, dynamic>? warmup,
@@ -505,4 +507,25 @@ class TodayPlanModel {
       'items': items.map((i) => i.toJson()).toList(),
     };
   }
+}
+
+// Keep in step with the server's prescription estimator. Catalogue demo
+// duration is unrelated to a member's actual sets and rest periods.
+int prescribedWorkoutMinutes(
+    List<TodayPlanItemModel> items, int warmupMinutes) {
+  if (items.isEmpty) return 0;
+  var seconds = warmupMinutes.clamp(0, 180) * 60;
+  for (final item in items) {
+    final reps = RegExp(r'\d+')
+        .allMatches(item.targetReps)
+        .map((match) => int.parse(match.group(0)!))
+        .toList();
+    if (reps.isEmpty || item.targetSets < 1) return 0;
+    final upperReps = reps.reduce((a, b) => a > b ? a : b);
+    final sets = item.targetSets;
+    seconds += sets * upperReps * 4 +
+        (sets - 1) * item.restSeconds.clamp(0, 1800) +
+        75;
+  }
+  return (seconds / 60).ceil();
 }

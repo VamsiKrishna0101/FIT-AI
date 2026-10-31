@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_training_view.dart';
-import 'package:fitai_mobile/features/train/models/training_session.dart';
-import 'package:fitai_mobile/features/train/repositories/training_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/features/body_scan/views/body_training_view.dart';
+import 'package:setcraft/features/train/models/training_session.dart';
+import 'package:setcraft/features/train/repositories/training_repository.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
 
 void main() {
   testWidgets(

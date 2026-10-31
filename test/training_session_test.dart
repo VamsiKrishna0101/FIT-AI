@@ -7,14 +7,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/localization/fitness_copy_data.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/train/components/workout_set_entry.dart';
-import 'package:fitai_mobile/features/train/models/training_session.dart';
-import 'package:fitai_mobile/features/train/repositories/training_repository.dart';
-import 'package:fitai_mobile/features/train/views/workout_session_view.dart';
-import 'package:fitai_mobile/features/train/views/train_view.dart';
+import 'package:setcraft/core/localization/fitness_copy_data.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/train/components/workout_set_entry.dart';
+import 'package:setcraft/features/train/models/training_session.dart';
+import 'package:setcraft/features/train/repositories/training_repository.dart';
+import 'package:setcraft/features/train/views/workout_session_view.dart';
+import 'package:setcraft/features/train/views/train_view.dart';
 
 String token(String owner) =>
     '${base64Url.encode(utf8.encode('{}'))}.${base64Url.encode(utf8.encode(jsonEncode({
@@ -83,8 +83,9 @@ class Adapter implements HttpClientAdapter {
       if (slowRead != null) await slowRead!.future;
       data = fixture(date, sets: savedSets);
     } else if (options.method == 'PUT') {
-      savedSets = 1;
-      data = fixture(date, sets: 1);
+      final number = options.data['setNumber'] as int? ?? 1;
+      if (number > savedSets) savedSets = number;
+      data = fixture(date, sets: savedSets);
     } else if (options.method == 'POST' && options.path.contains('/complete')) {
       final sets = options.data['sets'] as List;
       if (rejectCompletion) {
@@ -226,7 +227,7 @@ void main() {
   });
 
   testWidgets(
-      'Done saves entered sets before completing and totals survive finish',
+      'Finish exercise saves entered sets before completing and totals survive finish',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
@@ -244,20 +245,39 @@ void main() {
             .last,
         const Offset(0, -600));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Done').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('workout-primary-action')));
     await tester.pump(const Duration(seconds: 1));
     await tester.runAsync(() async {
       await Future<void>.delayed(const Duration(milliseconds: 100));
     });
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
+    expect(find.text('Log set 2'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Exercise options'), 200,
+        scrollable: find
+            .byWidgetPredicate((widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down)
+            .last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Exercise options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finish exercise'));
+    await tester.pump();
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await tester.pumpAndSettle();
     final writes = adapter.requests
         .where((r) => r.path.contains('/items/item') && r.method != 'GET')
         .toList();
-    expect(writes.map((r) => r.method), ['POST']);
-    expect(writes.first.data['sets'].first['reps'], 10);
-    expect(writes.first.data['sets'].first['weight'], 20);
+    expect(writes.map((r) => r.method), ['PUT', 'POST']);
+    expect(writes.first.data['reps'], 10);
+    expect(writes.first.data['weight'], 20);
     await tester.tap(find.text('Finish workout'));
+    await tester.pump();
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
     await tester.pumpAndSettle();
     expect(find.text('Workout complete'), findsOneWidget);
     expect(find.text('200 kg'), findsOneWidget);
@@ -273,6 +293,8 @@ void main() {
     await tester.pumpWidget(app(WorkoutSessionView(
         initial: TrainingDay(fixture('2026-10-10', finished: true)))));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Edit logged sets'), 180,
+        scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('Edit logged sets'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Your sets'), 200,
@@ -306,6 +328,8 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(find.text('Dumbbell press'), 180,
         scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text('Dumbbell press'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Dumbbell press'));
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutSessionView), findsOneWidget);
@@ -320,9 +344,11 @@ void main() {
       (tester) async {
     await tester.pumpWidget(app(const TrainView()));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Log sets'), 180,
+    await tester.scrollUntilVisible(find.text('Dumbbell press'), 180,
         scrollable: find.byType(Scrollable).first);
-    await tester.tap(find.text('Log sets'));
+    await tester.ensureVisible(find.text('Dumbbell press'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dumbbell press'));
     await tester.pumpAndSettle();
     expect(find.byType(WorkoutSessionView), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Your sets'), 200,
@@ -340,36 +366,67 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
-  testWidgets('Train Done completes an exercise that already has saved sets',
+  testWidgets(
+      'Train opens saved sets and completion stays in the workout screen',
       (tester) async {
     adapter.savedSets = 1;
     await tester.pumpWidget(app(const TrainView()));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Done'), 180,
+    await tester.scrollUntilVisible(find.text('Dumbbell press'), 180,
         scrollable: find.byType(Scrollable).first);
-    await tester.tap(find.text('Done'));
+    await tester.ensureVisible(find.text('Dumbbell press'));
     await tester.pumpAndSettle();
-    expect(find.text('Completed'), findsOneWidget);
+    await tester.tap(find.text('Dumbbell press'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Exercise options'), 200,
+        scrollable: find
+            .byWidgetPredicate((widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down)
+            .last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Exercise options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finish exercise'));
+
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await tester.pumpAndSettle();
+    expect(find.text('Finish workout'), findsOneWidget);
     expect(find.text('Could not save. Please try again.'), findsNothing);
     expect(
-        adapter.requests.where((request) => request.path.contains('/status')),
+        adapter.requests.where((request) => request.path.contains('/complete')),
         hasLength(1));
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });
 
-  testWidgets('Train preserves backend validation instead of hiding its reason',
+  testWidgets('Failed completion keeps the workout open and editable',
       (tester) async {
     adapter.savedSets = 1;
     adapter.rejectCompletion = true;
     await tester.pumpWidget(app(const TrainView()));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Done'), 180,
+    await tester.scrollUntilVisible(find.text('Dumbbell press'), 180,
         scrollable: find.byType(Scrollable).first);
-    await tester.tap(find.text('Done'));
+    await tester.ensureVisible(find.text('Dumbbell press'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dumbbell press'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Exercise options'), 200,
+        scrollable: find
+            .byWidgetPredicate((widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down)
+            .last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Exercise options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finish exercise'));
+
     // Dio delivers rejection on the event loop while the busy indicator loops.
-    final message =
-        find.text('Log at least one set before marking this exercise done.');
+    final message = find.text('Could not save. Please try again.');
     for (var attempt = 0;
         attempt < 100 && message.evaluate().isEmpty;
         attempt++) {
@@ -378,13 +435,12 @@ void main() {
       });
       await tester.pump(const Duration(milliseconds: 30));
     }
-    expect(find.text('Log at least one set before marking this exercise done.'),
-        findsOneWidget);
+    expect(find.text('Could not save. Please try again.'), findsOneWidget);
     expect(find.text('Completed'), findsNothing);
     expect(
         tester
-            .widget<FilledButton>(find.ancestor(
-                of: find.text('Done'), matching: find.byType(FilledButton)))
+            .widget<FilledButton>(
+                find.byKey(const ValueKey('workout-primary-action')))
             .onPressed,
         isNotNull);
     await tester.pumpWidget(const SizedBox());

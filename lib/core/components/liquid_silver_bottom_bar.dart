@@ -1,20 +1,21 @@
-import 'dart:ui';
 import 'dart:math' as math;
-
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:liquid_glass_native/liquid_glass_native.dart';
-
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart' as glass;
 import '../theme/ds_colors.dart';
-import 'animated_tab_stack.dart';
+import '../theme/ds_motion.dart';
+import 'navigation_glyph.dart';
 
+/// A compact, icon-only floating dock. Labels remain available to assistive
+/// technology and tooltips without changing the dock's geometry by locale.
 class LiquidSilverBottomBar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
   final List<String> labels;
-
   const LiquidSilverBottomBar({
     super.key,
     required this.selectedIndex,
@@ -23,227 +24,219 @@ class LiquidSilverBottomBar extends StatefulWidget {
   })  : assert(labels.length == 4),
         assert(selectedIndex >= 0 && selectedIndex < 4);
 
-  static bool get _isIOS =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-
-  static double _height(BuildContext context) =>
-      64 + (MediaQuery.textScalerOf(context).scale(11) - 11).clamp(0, 14);
-
-  static double _bottomMargin(BuildContext context) =>
-      MediaQuery.viewPaddingOf(context).bottom + 8;
-
+  /// Scaffold supplies the dock inset; leave breathing room above that inset.
   static double scrollBottomInset(BuildContext context) =>
-      math.max(
-          _isIOS ? 100.0 : 0.0, _height(context) + _bottomMargin(context)) +
-      32;
+      24 + MediaQuery.paddingOf(context).bottom;
 
   @override
   State<LiquidSilverBottomBar> createState() => _LiquidSilverBottomBarState();
 }
 
-class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
-  static const _platform = MethodChannel('fitai/navigation');
-  static const _maxWidth = 376.0;
-  static const _sideMargin = 20.0;
-  bool _nativeGlassAvailable = false;
-  int? _previewIndex;
-  bool _dragCancelled = false;
-
-  int get selectedIndex => widget.selectedIndex;
-  int get _visibleIndex => _previewIndex ?? selectedIndex;
-  List<String> get labels => widget.labels;
+class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
+    with WidgetsBindingObserver {
+  static const _icons = [
+    NavigationGlyphKind.today,
+    NavigationGlyphKind.train,
+    NavigationGlyphKind.body,
+    NavigationGlyphKind.progress,
+  ];
+  int? _previewIndex, _pointer;
+  final _pointers = <int>{};
+  double? _previewPosition;
+  double _dragStretch = 0;
+  bool _pressed = false, _dragging = false, _dragCancelled = false;
+  bool _refreshScheduled = false;
+  bool _deferredRefresh = false;
 
   @override
   void initState() {
     super.initState();
-    if (LiquidSilverBottomBar._isIOS) _checkNativeGlass();
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  Future<void> _checkNativeGlass() async {
-    try {
-      final available =
-          await _platform.invokeMethod<bool>('supportsLiquidGlass');
-      if (mounted && available == true) {
-        setState(() => _nativeGlassAvailable = true);
-      }
-    } on PlatformException {
-      // Keep navigation usable if the platform bridge is unavailable.
-    } on MissingPluginException {
-      // Widget previews and older app hosts use the Flutter dock.
-    }
+  @override
+  void didChangeAccessibilityFeatures() => _scheduleRefresh();
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
-  void _selectTab(int index) {
-    if (index == selectedIndex) return;
+  void _select(int index) {
+    if (index == widget.selectedIndex) return;
     HapticFeedback.selectionClick();
     widget.onTabSelected(index);
   }
 
-  Widget _nativeDock(BuildContext context) {
-    // Pin the plugin's host to the bottom edge. UIKit supplies the capsule's
-    // floating gap and home-indicator inset inside its 100pt native view.
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _sideMargin),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        heightFactor: 1,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _maxWidth),
-          child: LiquidGlassTabBar(
-            // The plugin updates selection in place; labels need a new native
-            // view when the account language changes.
-            key: ValueKey(List<String>.of(labels).join('\u0000')),
-            currentIndex: selectedIndex,
-            brightness: Brightness.dark,
-            tint: DSColors.navGlassText,
-            items: [
-              TabItem(label: labels[0], sfSymbol: 'sun.max'),
-              TabItem(label: labels[1], sfSymbol: 'flame'),
-              TabItem(label: labels[2], sfSymbol: 'person.crop.rectangle'),
-              TabItem(label: labels[3], sfSymbol: 'chart.bar'),
-            ],
-            onTap: _selectTab,
-          ),
-        ),
-      ),
-    );
+  void _scheduleRefresh() {
+    if (!mounted) return;
+    if (WidgetsBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      _deferredRefresh = true;
+    } else {
+      setState(() {});
+    }
+    if (_refreshScheduled) return;
+    _refreshScheduled = true;
+    // Pointer cancellation can happen during an accessibility subtree rebuild.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshScheduled = false;
+      if (!mounted) return;
+      if (_pointers.isEmpty) _dragCancelled = false;
+      if (_deferredRefresh) {
+        _deferredRefresh = false;
+        setState(() {});
+      }
+    });
   }
 
-  static final _blur = ImageFilter.blur(sigmaX: 12, sigmaY: 12);
-  static const _icons = [
-    CupertinoIcons.sun_max,
-    CupertinoIcons.flame,
-    CupertinoIcons.person_crop_rectangle,
-    CupertinoIcons.chart_bar,
-  ];
-
-  Widget _glassSurface(BuildContext context, Widget child) {
-    final highContrast = MediaQuery.highContrastOf(context);
-    return ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: BackdropFilter(
-            filter: _blur,
-            child: DecoratedBox(
-                decoration: BoxDecoration(
-                    color: highContrast
-                        ? DSColors.bgCard
-                        : const Color(0xF21C1C1C),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                        color: highContrast
-                            ? DSColors.textSecondary
-                            : const Color(0xFF393939),
-                        width: .7)),
-                child: child)));
+  void _clearPreview() {
+    _previewIndex = null;
+    _previewPosition = null;
+    _pressed = false;
+    _dragging = false;
+    _dragStretch = 0;
+    _scheduleRefresh();
   }
 
-  Widget _contents(BuildContext context, Duration duration) => Stack(children: [
-        Positioned.fill(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: AnimatedAlign(
-              alignment:
-                  Alignment(-1 + _visibleIndex * 2 / (labels.length - 1), 0),
-              duration: duration,
-              curve: AnimatedTabStack.curve,
-              child: FractionallySizedBox(
-                widthFactor: 1 / labels.length,
-                heightFactor: 1,
-                child: const DecoratedBox(
-                  key: ValueKey('navigation-active-lens'),
-                  decoration: BoxDecoration(
-                      color: Color(0xFF343434),
-                      borderRadius: BorderRadius.all(Radius.circular(25))),
-                ),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: Row(children: [
-            for (var index = 0; index < labels.length; index++)
-              Expanded(child: _tab(context, index, duration)),
-          ]),
-        ),
-      ]);
-
-  void _previewTab(Offset position, Size size) {
-    final inside = position.dx >= 0 &&
-        position.dx <= size.width &&
-        position.dy >= -24 &&
-        position.dy <= size.height + 24;
-    final index = inside
-        ? ((position.dx - 6) / ((size.width - 12) / labels.length))
-            .floor()
-            .clamp(0, labels.length - 1)
-        : null;
-
-    if (_previewIndex != index) setState(() => _previewIndex = index);
-  }
-
-  void _finishDrag() {
-    if (_dragCancelled) {
-      _cancelDrag();
+  void _preview(Offset point, Size size, TextDirection direction,
+      {required bool dragging}) {
+    if (_dragCancelled) return;
+    final inside = point.dx >= 0 &&
+        point.dx < size.width &&
+        point.dy >= -24 &&
+        point.dy <= size.height + 24;
+    if (!inside) {
+      _clearPreview();
       return;
     }
-    final index = _previewIndex;
-    if (index == null) return;
-    setState(() => _previewIndex = null);
-    // Preview locally while dragging; open the destination once on release.
-    _selectTab(index);
+    final slotWidth = size.width / 4;
+    final physicalIndex = (point.dx / slotWidth).floor().clamp(0, 3);
+    final index =
+        direction == TextDirection.rtl ? 3 - physicalIndex : physicalIndex;
+    final physicalPosition = (point.dx / slotWidth - .5).clamp(0.0, 3.0);
+    final position = dragging
+        ? direction == TextDirection.rtl
+            ? 3 - physicalPosition
+            : physicalPosition
+        : index.toDouble();
+    final travel =
+        (position - (_previewPosition ?? widget.selectedIndex)).abs();
+    setState(() {
+      _previewIndex = index;
+      _previewPosition = position;
+      _dragStretch = dragging ? (travel * .25).clamp(0.0, .12) : 0;
+      _pressed = true;
+      _dragging = dragging;
+    });
   }
 
-  void _cancelDrag() {
+  void _down(PointerDownEvent event, Size size, TextDirection direction) {
+    if ((event.buttons & kPrimaryButton) == 0) return;
+    _pointers.add(event.pointer);
+    if (_pointers.length > 1) {
+      // A second finger must not activate a second destination.
+      _dragCancelled = true;
+      _clearPreview();
+      return;
+    }
+    _pointer = event.pointer;
+    _dragCancelled = false;
+    _preview(event.localPosition, size, direction, dragging: false);
+  }
+
+  void _up(PointerUpEvent event) {
+    _pointers.remove(event.pointer);
+    if (_pointer == event.pointer) {
+      _pointer = null;
+      _pressed = false;
+    }
+    _scheduleRefresh();
+  }
+
+  void _cancel(PointerCancelEvent event) {
+    _pointers.remove(event.pointer);
+    if (_pointer == event.pointer) _pointer = null;
     _dragCancelled = true;
-    if (_previewIndex == null) return;
-    _previewIndex = null;
-    // Accessibility changes can cancel a gesture while its subtree is removed.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
+    _clearPreview();
+  }
+
+  void _release() {
+    final target = _previewIndex;
+    final canSelect = !_dragCancelled && target != null;
+    _clearPreview();
+    if (canSelect) _select(target);
+  }
+
+  void _tap(int index) {
+    if (_dragCancelled || _pointers.isNotEmpty) return;
+    _clearPreview();
+    _select(index);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_nativeGlassAvailable) return _nativeDock(context);
-    final duration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : AnimatedTabStack.duration;
-
-    return DecoratedBox(
-      key: const ValueKey('navigation-backdrop'),
-      decoration: const BoxDecoration(gradient: DSColors.navScrimGradient),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(_sideMargin, 24, _sideMargin,
-            LiquidSilverBottomBar._bottomMargin(context)),
-        child: Align(
-          alignment: Alignment.bottomCenter,
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      return const SizedBox.shrink();
+    }
+    final reduced = DSMotion.reduced(context) ||
+        WidgetsBinding
+            .instance.platformDispatcher.accessibilityFeatures.reduceMotion;
+    final duration = reduced ? Duration.zero : DSMotion.selection;
+    final highContrast = MediaQuery.highContrastOf(context);
+    final direction = Directionality.of(context);
+    return Padding(
+      key: const ValueKey('navigation-bar'),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 22),
+      child: SafeArea(
+        top: false,
+        child: Center(
           heightFactor: 1,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxWidth),
-            child: SizedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: _GlassCapsule(
               key: const ValueKey('navigation-capsule'),
-              width: double.infinity,
-              height: LiquidSilverBottomBar._height(context),
-              child: _DockTouchFeedback(
-                enabled: !MediaQuery.disableAnimationsOf(context),
+              highContrast: highContrast,
+              child: Padding(
+                padding: const EdgeInsets.all(2),
                 child: LayoutBuilder(builder: (context, constraints) {
-                  final size = constraints.biggest;
-                  return _glassSurface(
-                    context,
-                    Listener(
-                      onPointerDown: (_) => _dragCancelled = false,
-                      onPointerCancel: (_) => _dragCancelled = true,
+                  final size = Size(constraints.maxWidth, 48);
+                  return SizedBox(
+                    key: const ValueKey('navigation-tabs'),
+                    height: size.height,
+                    child: Listener(
+                      onPointerDown: (event) => _down(event, size, direction),
+                      onPointerUp: _up,
+                      onPointerCancel: _cancel,
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onHorizontalDragStart: (details) =>
-                            _previewTab(details.localPosition, size),
-                        onHorizontalDragUpdate: (details) =>
-                            _previewTab(details.localPosition, size),
-                        onHorizontalDragEnd: (_) => _finishDrag(),
-                        onHorizontalDragCancel: _cancelDrag,
-                        child: _contents(context, duration),
+                        onHorizontalDragStart: (event) => _preview(
+                            event.localPosition, size, direction,
+                            dragging: true),
+                        onHorizontalDragUpdate: (event) => _preview(
+                            event.localPosition, size, direction,
+                            dragging: true),
+                        onHorizontalDragEnd: (_) => _release(),
+                        onHorizontalDragCancel: _clearPreview,
+                        child: Stack(children: [
+                          _LiquidSelection(
+                            position: _previewPosition ??
+                                widget.selectedIndex.toDouble(),
+                            dragging: _dragging,
+                            pressed: _pressed,
+                            dragStretch: _dragStretch,
+                            reducedMotion: reduced,
+                            highContrast: highContrast,
+                            direction: direction,
+                            width: size.width,
+                            height: size.height,
+                          ),
+                          Row(children: [
+                            for (var index = 0; index < 4; index++)
+                              Expanded(child: _tab(index, duration)),
+                          ]),
+                        ]),
                       ),
                     ),
                   );
@@ -256,40 +249,36 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
     );
   }
 
-  Widget _tab(BuildContext context, int index, Duration duration) {
-    final selected = _visibleIndex == index;
+  Widget _tab(int index, Duration duration) {
+    final selected = (_previewIndex ?? widget.selectedIndex) == index;
     return Semantics(
       button: true,
-      selected: selected,
-      label: labels[index],
+      selected: widget.selectedIndex == index,
+      label: widget.labels[index],
+      onTap: () => _select(index),
       excludeSemantics: true,
       child: Tooltip(
-        message: labels[index],
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => _selectTab(index),
-          child: AnimatedOpacity(
-            opacity: selected ? 1 : .68,
+        message: widget.labels[index],
+        child: InkWell(
+          key: ValueKey('navigation-tab-$index'),
+          onTap: () => _tap(index),
+          borderRadius: BorderRadius.circular(100),
+          splashFactory: NoSplash.splashFactory,
+          focusColor: const Color(0x26FFFFFF),
+          hoverColor: const Color(0x0AFFFFFF),
+          highlightColor: Colors.transparent,
+          child: TweenAnimationBuilder<Color?>(
+            tween: ColorTween(
+                end:
+                    selected ? DSColors.navGlassText : const Color(0xFFC2C5CA)),
             duration: duration,
-            curve: AnimatedTabStack.curve,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(_icons[index], color: DSColors.navGlassText, size: 21),
-                const SizedBox(height: 3),
-                Text(
-                  labels[index],
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: DSColors.navGlassText,
-                    fontSize: 11,
-                    height: 1.1,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-              ],
+            curve: DSMotion.effects,
+            builder: (context, color, _) => SizedBox(
+              height: 48,
+              child: Center(
+                  child: NavigationGlyph(
+                      kind: _icons[index],
+                      color: color ?? DSColors.navGlassText)),
             ),
           ),
         ),
@@ -298,76 +287,260 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar> {
   }
 }
 
-/// Keep touch animation local to the dock, including cancelled gestures.
-class _DockTouchFeedback extends StatefulWidget {
+class _GlassCapsule extends StatelessWidget {
+  const _GlassCapsule(
+      {super.key, required this.highContrast, required this.child});
+  final bool highContrast;
   final Widget child;
-  final bool enabled;
-
-  const _DockTouchFeedback({required this.child, required this.enabled});
 
   @override
-  State<_DockTouchFeedback> createState() => _DockTouchFeedbackState();
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x33000000), blurRadius: 14, offset: Offset(0, 4)),
+          ],
+        ),
+        child: _NavigationGlass(
+          highContrast: highContrast,
+          child: CustomPaint(
+            foregroundPainter: _GlassRim(highContrast: highContrast),
+            child: Material(type: MaterialType.transparency, child: child),
+          ),
+        ),
+      );
 }
 
-class _DockTouchFeedbackState extends State<_DockTouchFeedback> {
-  int? _pointer;
-  Offset _origin = Offset.zero;
-  Offset _stretch = Offset.zero;
-
-  @override
-  void didUpdateWidget(_DockTouchFeedback oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!widget.enabled) {
-      _pointer = null;
-      _stretch = Offset.zero;
-    }
-  }
-
-  void _release(int pointer) {
-    if (pointer != _pointer) return;
-    setState(() {
-      _pointer = null;
-      _stretch = Offset.zero;
-    });
-  }
+/// Refraction is confined to the moving lens. A blurred shell avoids nesting
+/// two optical passes while the lens moves; icons paint above both surfaces.
+class _NavigationGlass extends StatelessWidget {
+  const _NavigationGlass({
+    required this.highContrast,
+    required this.child,
+    this.lens = false,
+    this.pressure = 0,
+  });
+  final bool highContrast, lens;
+  final double pressure;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
-
-    return Listener(
-      onPointerDown: (event) {
-        if (_pointer != null) return;
-        setState(() {
-          _pointer = event.pointer;
-          _origin = event.localPosition;
-        });
-      },
-      onPointerMove: (event) {
-        if (event.pointer != _pointer) return;
-        setState(() {
-          final delta = event.localPosition - _origin;
-          _stretch = Offset(delta.dx.clamp(-8, 8).toDouble(),
-              delta.dy.clamp(-5, 5).toDouble());
-        });
-      },
-      onPointerUp: (event) => _release(event.pointer),
-      onPointerCancel: (event) => _release(event.pointer),
-      child: AnimatedScale(
-        scale: _pointer == null ? 1 : 1.005,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        child: TweenAnimationBuilder<Offset>(
-          tween: Tween(end: _stretch),
-          duration: Duration(milliseconds: _pointer == null ? 380 : 80),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) => Transform.translate(
-              key: const ValueKey('navigation-touch-offset'),
-              offset: value,
-              child: child),
-          child: widget.child,
+    // The optical shader multiplies dark tints into its backdrop. On black it
+    // cannot supply a visible surface, so paint the smoke/silver finish above
+    // the optics on every renderer, including Android's shader path.
+    final finish = DecoratedBox(
+      key: ValueKey(lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(100),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: lens
+              ? [
+                  Color.lerp(const Color(0x669EA5AE), const Color(0x8AABB2BA),
+                      pressure)!,
+                  Color.lerp(const Color(0x52798089), const Color(0x737F8892),
+                      pressure)!,
+                ]
+              : const [Color(0xCC34363A), Color(0xD9232529)],
         ),
       ),
+      child: child,
     );
+    final Widget surface;
+    if (highContrast) {
+      surface = ColoredBox(
+          color: lens ? const Color(0xFF535A63) : DSColors.bgRaised,
+          child: child);
+    } else if (lens && ui.ImageFilter.isShaderFilterSupported) {
+      surface = glass.LiquidGlass.withOwnLayer(
+        shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
+        settings: glass.LiquidGlassSettings(
+          glassColor: Colors.transparent,
+          thickness: 9,
+          blur: 2,
+          refractiveIndex: 1.18,
+          chromaticAberration: 0,
+          lightAngle: -math.pi / 3,
+          lightIntensity: .16 + pressure * .12,
+          ambientStrength: .025,
+          saturation: 1.05,
+        ),
+        child: finish,
+      );
+    } else {
+      surface = BackdropFilter(
+        filter:
+            ui.ImageFilter.blur(sigmaX: lens ? 2 : 10, sigmaY: lens ? 2 : 10),
+        child: finish,
+      );
+    }
+    return ClipRRect(borderRadius: BorderRadius.circular(100), child: surface);
   }
+}
+
+/// A single continuous lens tracks the finger and carries velocity into a
+/// damped spring when released or retargeted. Hit targets never move with it.
+class _LiquidSelection extends StatefulWidget {
+  const _LiquidSelection({
+    required this.position,
+    required this.dragging,
+    required this.pressed,
+    required this.dragStretch,
+    required this.reducedMotion,
+    required this.highContrast,
+    required this.direction,
+    required this.width,
+    required this.height,
+  });
+  final double position, dragStretch, width, height;
+  final bool dragging, pressed, reducedMotion, highContrast;
+  final TextDirection direction;
+
+  @override
+  State<_LiquidSelection> createState() => _LiquidSelectionState();
+}
+
+class _LiquidSelectionState extends State<_LiquidSelection>
+    with TickerProviderStateMixin {
+  static const _spring =
+      SpringDescription(mass: 1, stiffness: 460, damping: 38);
+  late double _target;
+  late final AnimationController _motion, _press;
+
+  @override
+  void initState() {
+    super.initState();
+    _target = widget.position;
+    _motion = AnimationController.unbounded(vsync: this, value: widget.position)
+      ..addStatusListener(_settled);
+    _press = AnimationController(
+        vsync: this, duration: DSMotion.press, value: widget.pressed ? 1 : 0);
+  }
+
+  void _settled(AnimationStatus status) {
+    if (status == AnimationStatus.completed &&
+        !widget.dragging &&
+        _motion.value != _target) {
+      _motion.value = _target;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_LiquidSelection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reducedMotion) {
+      _motion.stop();
+      _target = widget.position;
+      _motion.value = _target;
+      _press.value = widget.pressed ? 1 : 0;
+      return;
+    }
+    if (oldWidget.pressed != widget.pressed || oldWidget.reducedMotion) {
+      _press.animateTo(widget.pressed ? 1 : 0, curve: DSMotion.effects);
+    }
+    if (widget.dragging) {
+      _motion.stop();
+      _target = widget.position;
+      _motion.value = widget.position;
+    } else if (widget.position != _target || oldWidget.dragging) {
+      final velocity = _motion.velocity.clamp(-12.0, 12.0);
+      _target = widget.position;
+      _motion.animateWith(SpringSimulation(
+          _spring, _motion.value, _target, velocity,
+          tolerance: const Tolerance(distance: .0001, velocity: .001)));
+    }
+  }
+
+  @override
+  void dispose() {
+    _motion.dispose();
+    _press.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: Listenable.merge([_motion, _press]),
+        builder: (context, _) {
+          final physicalPosition = widget.direction == TextDirection.rtl
+              ? 3 - _motion.value
+              : _motion.value;
+          final pressure = widget.reducedMotion ? 0.0 : _press.value;
+          final stretch = widget.reducedMotion
+              ? 0.0
+              : widget.dragging
+                  ? .04 + widget.dragStretch
+                  : (_motion.velocity.abs() * .012).clamp(0.0, .16);
+          final slot = widget.width / 4;
+          final width =
+              math.min(slot - 4, 48.0) * (1 + stretch + pressure * .04);
+          final height = 42 * (1 + pressure * .025 - stretch * .16);
+          final center = ((physicalPosition + .5) * slot)
+              .clamp(width / 2, widget.width - width / 2);
+          return Positioned(
+            left: center - width / 2,
+            top: (widget.height - height) / 2,
+            width: width,
+            height: height,
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: _NavigationGlass(
+                  lens: true,
+                  pressure: pressure,
+                  highContrast: widget.highContrast,
+                  child: CustomPaint(
+                    key: const ValueKey('navigation-active-pill'),
+                    foregroundPainter: _GlassRim(
+                        highContrast: widget.highContrast,
+                        lens: true,
+                        pressure: pressure),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+}
+
+class _GlassRim extends CustomPainter {
+  const _GlassRim(
+      {required this.highContrast, this.lens = false, this.pressure = 0});
+  final bool highContrast, lens;
+  final double pressure;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = (Offset.zero & size).deflate(.5);
+    final rim = RRect.fromRectAndRadius(bounds, const Radius.circular(100));
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = highContrast ? 1.2 : .55;
+    if (highContrast) {
+      paint.color = DSColors.silver;
+    } else {
+      paint.shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withValues(alpha: lens ? .48 + pressure * .12 : .30),
+          Colors.white.withValues(alpha: lens ? .14 : .09),
+          Colors.white.withValues(alpha: lens ? .08 : .05),
+          Colors.white.withValues(alpha: lens ? .24 : .16),
+        ],
+        stops: const [0, .35, .72, 1],
+      ).createShader(bounds);
+    }
+    canvas.drawRRect(rim, paint);
+  }
+
+  @override
+  bool shouldRepaint(_GlassRim oldDelegate) =>
+      highContrast != oldDelegate.highContrast ||
+      lens != oldDelegate.lens ||
+      pressure != oldDelegate.pressure;
 }

@@ -1,6 +1,6 @@
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -83,10 +83,10 @@ class _EatingStyleCardState extends State<_EatingStyleCard> {
       child: AnimatedScale(
         scale: _pressed ? 0.97 : 1.0,
         duration: DSMotion.duration(context, DSMotion.press),
-        curve: Curves.easeOutCubic,
+        curve: DSMotion.effects,
         child: AnimatedContainer(
           duration: DSMotion.duration(context, DSMotion.selection),
-          curve: Curves.easeOutCubic,
+          curve: DSMotion.effects,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
@@ -292,7 +292,7 @@ class _BudgetTab extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: DSMotion.duration(context, DSMotion.press),
-        curve: Curves.easeOutCubic,
+        curve: DSMotion.effects,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),

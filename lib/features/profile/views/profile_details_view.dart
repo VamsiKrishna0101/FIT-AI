@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/cache/cache_scope.dart';
-import '../../../core/localization/app_language.dart';
 import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/fitness_text.dart';
@@ -35,7 +34,6 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   String? _owner;
   String _gender = 'OTHER', _goal = 'BUILD_MUSCLE', _experience = 'BEGINNER';
   String _diet = 'NO_PREFERENCE';
-  String _country = 'GB';
 
   @override
   void initState() {
@@ -65,7 +63,6 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
       _gender = data['gender'] as String? ?? 'OTHER';
       _goal = data['workingToward'] as String? ?? 'BUILD_MUSCLE';
       _experience = data['experience'] as String? ?? 'BEGINNER';
-      _country = data['countryCode'] as String? ?? 'GB';
       _diet = data['eatingStyle'] as String? ?? 'NO_PREFERENCE';
       _customDiet.text = data['customEatingStyle'] as String? ?? '';
       _allergies.text = (data['foodAllergies'] as List? ?? []).join(', ');
@@ -104,7 +101,6 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
             'dislikedFoods': _foodList(_dislikes.text),
           }
         : <String, dynamic>{
-            'countryCode': _country,
             'name': _name.text.trim(),
             'age': double.parse(_age.text.replaceAll(',', '.')).round(),
             'height': double.parse(_height.text.replaceAll(',', '.')),
@@ -250,17 +246,6 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                         const SettingsNotice(
                             'Separate foods with commas. These preferences guide future recommendations.'),
                       ] else ...[
-                        _choices(
-                            'Country',
-                            _country,
-                            {
-                              ...appCountries,
-                              if (!appCountries.containsKey(_country))
-                                _country: _country
-                            },
-                            (value) => _country = value),
-                        const SettingsNotice(
-                            'Choose where you live. Your language stays the same.'),
                         _field('Name', _name,
                             validator: (text) => text == null ||
                                     text.trim().length < 2 ||

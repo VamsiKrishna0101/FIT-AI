@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
@@ -6,6 +8,11 @@ import '../../../core/localization/fitness_copy.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/training_targets.dart';
 import '../components/training_widgets.dart';
+import '../components/routine_exercise_card.dart';
+import '../components/saved_routine_tile.dart';
+import 'create_workout_view.dart';
+import '../../../core/components/fitness_form.dart';
+import '../../../core/theme/fitness_theme.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
@@ -20,36 +27,30 @@ class SavedRoutinesView extends StatefulWidget {
 
 class _SavedRoutinesViewState extends State<SavedRoutinesView> {
   late TrainingDay _day = widget.initial;
-  bool _busy = false;
+  bool _busy = false, _managing = false;
   String copy(String text) => fitnessText(context, text);
 
   Future<void> _open(Map<String, dynamic> routine) async {
-    await Navigator.of(context).push(AppPageRoute<void>(
-        page: RoutineDetailView(day: _day, routine: routine)));
+    if (_busy) return;
+    setState(() => _busy = true);
     try {
+      await Navigator.of(context).push(AppPageRoute<void>(
+          page: RoutineDetailView(day: _day, routine: routine)));
       final day =
           await TrainingRepository.shared.load(_day.date, refresh: true);
       if (mounted) setState(() => _day = day);
-    } catch (_) {/* Keep the last confirmed list when offline. */}
+    } catch (_) {
+      // Keep the last confirmed list when offline.
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _delete(Map<String, dynamic> routine) async {
-    final approved = await showDialog<bool>(
-        animationStyle: DSMotion.dialogStyle(context),
-context: context,
-        builder: (context) => AlertDialog(
-              title: Text(copy('Delete routine?')),
-              content: Text(routine['name'] as String),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(copy('Cancel'))),
-                TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(copy('Delete'))),
-              ],
-            ));
-    if (approved != true || !mounted) return;
+    if (_busy) return;
+    final approved =
+        await confirmRoutineDeletion(context, routine['name'] as String);
+    if (!approved || !mounted || _busy) return;
     setState(() => _busy = true);
     try {
       final day = await TrainingRepository.shared
@@ -66,45 +67,87 @@ context: context,
     }
   }
 
+  Future<void> _create() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final day = await Navigator.of(context).push(
+          AppPageRoute<TrainingDay>(page: CreateWorkoutView(date: _day.date)));
+      if (mounted && day != null) setState(() => _day = day);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: DSColors.bg,
+  Widget build(BuildContext context) => FitnessTheme(
+          child: Scaffold(
         appBar: AppBar(
-            title: Text(copy('Saved routines')), backgroundColor: DSColors.bg),
+          centerTitle: true,
+          title: Text(copy('My workouts'),
+              style:
+                  const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+          actions: [
+            if (_day.routines.isNotEmpty)
+              TextButton(
+                  onPressed: _busy
+                      ? null
+                      : () => setState(() => _managing = !_managing),
+                  child: Text(copy(_managing ? 'Done' : 'Manage'),
+                      style: const TextStyle(
+                          fontSize: 12, color: DSColors.silver))),
+          ],
+        ),
         body: SafeArea(
-            child: ListView(padding: const EdgeInsets.all(18), children: [
-          Text(
-              copy(
-                  'Preview a routine, adjust its targets, then use it for a workout.'),
-              style: const TextStyle(
-                  fontSize: 13, height: 1.4, color: trainingMuted)),
-          const SizedBox(height: 18),
-          if (_day.routines.isEmpty)
-            TrainingSurface(
-                child: Text(copy('Save a workout to use it again.'))),
-          for (final routine in _day.routines)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: TrainingSurface(
-                  padding: EdgeInsets.zero,
-                  child: ListTile(
-                    leading: const Icon(CupertinoIcons.bookmark,
-                        size: 20, color: trainingSilver),
-                    title: Text(routine['name'] as String,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500)),
-                    subtitle: Text(fitnessText(context, '{count} exercises',
-                        values: {'count': routine['count']})),
-                    onTap: _busy ? null : () => _open(routine),
-                    trailing: IconButton(
-                        tooltip: copy('Delete routine'),
-                        onPressed: _busy ? null : () => _delete(routine),
-                        icon: const Icon(CupertinoIcons.trash,
-                            size: 18, color: trainingMuted)),
-                  )),
-            ),
-        ])),
-      );
+            bottom: false,
+            child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+                children: [
+                  if (_day.routines.isEmpty)
+                    Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 40),
+                        child: Column(children: [
+                          Text(copy('Your workouts, ready to repeat'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontSize: 22,
+                                  height: 1.25,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -.6)),
+                          const SizedBox(height: 12),
+                          Text(
+                              copy(
+                                  'Save your exercises and sets once. Use them whenever you train.'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  height: 1.5,
+                                  color: DSColors.muted)),
+                        ])),
+                  for (final routine in _day.routines)
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: TrainingSurface(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 2, vertical: 5),
+                            child: SavedRoutineTile(
+                                routine: routine,
+                                onOpen: _busy || _managing
+                                    ? null
+                                    : () => _open(routine),
+                                onDelete: _busy || !_managing
+                                    ? null
+                                    : () => _delete(routine)))),
+                ])),
+        bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+                child: FitnessSubmit(
+                    label: 'Create workout',
+                    onPressed: _busy ? null : _create))),
+      ));
 }
 
 class RoutineDetailView extends StatefulWidget {
@@ -120,10 +163,21 @@ class RoutineDetailView extends StatefulWidget {
 class _RoutineDetailViewState extends State<RoutineDetailView> {
   final _repo = TrainingRepository.shared;
   final _name = TextEditingController();
-  List<TodayPlanItemModel>? _items;
+  List<TodayPlanItemModel>? _items, _savedItems;
+  String _savedName = '', _savedTargets = '';
   String? _error;
-  bool _busy = false, _changed = false;
-  String copy(String text) => fitnessText(context, text);
+  bool _busy = false,
+      _editing = false,
+      _allowPop = false,
+      _exitPromptOpen = false,
+      _confirming = false;
+  String copy(String text, {Map<String, Object> values = const {}}) =>
+      fitnessText(context, text, values: values);
+  bool get _changed =>
+      _items != null &&
+      (_name.text.trim() != _savedName ||
+          jsonEncode(_items!.map(TrainingDay.targets).toList()) !=
+              _savedTargets);
 
   @override
   void initState() {
@@ -138,7 +192,14 @@ class _RoutineDetailViewState extends State<RoutineDetailView> {
     super.dispose();
   }
 
+  void _rememberSaved() {
+    _savedName = _name.text.trim();
+    _savedItems = List.of(_items!);
+    _savedTargets = jsonEncode(_items!.map(TrainingDay.targets).toList());
+  }
+
   Future<void> _load() async {
+    setState(() => _error = null);
     try {
       final data =
           await _repo.routine(widget.day.date, widget.routine['id'] as String);
@@ -146,10 +207,10 @@ class _RoutineDetailViewState extends State<RoutineDetailView> {
       setState(() {
         _name.text = data['name'] as String;
         _items = (data['items'] as List)
-            .map((item) => TodayPlanItemModel.fromJson(
-                Map<String, dynamic>.from(item as Map)))
+            .map((row) => TodayPlanItemModel.fromJson(
+                Map<String, dynamic>.from(row as Map)))
             .toList();
-        _error = null;
+        _rememberSaved();
       });
     } catch (error) {
       if (mounted) {
@@ -160,61 +221,124 @@ class _RoutineDetailViewState extends State<RoutineDetailView> {
   }
 
   Future<void> _edit(int index) async {
+    if (_busy || !_editing) return;
     final input = await editTrainingTargets(context, _items![index]);
     if (input == null || !mounted) return;
-    final previous = _items![index];
     setState(() {
-      // Editing the general targets intentionally replaces per-set suggestions.
-      _items![index] = TodayPlanItemModel.fromJson(
-          {...previous.toJson(), ...input, 'setTargets': null});
-      _changed = true;
+      _items![index] =
+          TodayPlanItemModel.fromJson({..._items![index].toJson(), ...input});
+      _error = null;
     });
   }
 
+  void _cancelEditing() {
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _name.text = _savedName;
+      _items = List.of(_savedItems!);
+      _editing = false;
+      _error = null;
+    });
+  }
+
+  void _pop() {
+    setState(() => _allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  Future<void> _requestLeave() async {
+    if (_busy || _confirming || _exitPromptOpen) return;
+    if (!_changed) {
+      _pop();
+      return;
+    }
+    _exitPromptOpen = true;
+    try {
+      final discard = await showDialog<bool>(
+          context: context,
+          animationStyle: DSMotion.dialogStyle(context),
+          builder: (context) => AlertDialog(
+                  title: Text(copy('Discard changes?')),
+                  content:
+                      Text(copy('Your routine edits have not been saved.')),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(copy('Keep editing'))),
+                    TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: Text(copy('Discard'))),
+                  ]));
+      if (discard == true && mounted) _pop();
+    } finally {
+      _exitPromptOpen = false;
+    }
+  }
+
   Future<bool> _save() async {
-    if (!_changed) return true;
     if (_name.text.trim().isEmpty || _name.text.trim().length > 80) {
-      setState(() => _error = 'Enter a routine name.');
+      setState(() => _error = 'Enter a workout name.');
       return false;
     }
+    if (!_changed) return true;
     await _repo.mutate(
         widget.day.date, 'PUT', '/routines/${widget.routine['id']}',
         data: {
           'name': _name.text.trim(),
           'items': _items!.map(TrainingDay.targets).toList(),
         });
-    if (mounted) setState(() => _changed = false);
+    if (mounted) setState(_rememberSaved);
     return true;
   }
 
   Future<void> _action({bool use = false}) async {
-    setState(() => _busy = true);
+    if (_busy ||
+        _confirming ||
+        _items == null ||
+        (use &&
+            (widget.day.started ||
+                widget.day.pendingSync ||
+                _items!.isEmpty))) {
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    _confirming = true;
     try {
+      // Confirm before saving or applying, so cancellation has no side effects.
+      if (use && widget.day.items.isNotEmpty) {
+        final approved = await showDialog<bool>(
+            context: context,
+            animationStyle: DSMotion.dialogStyle(context),
+            builder: (context) => AlertDialog(
+                    title: Text(copy('Replace this workout?')),
+                    content: Text(copy(
+                        'Your saved routine will replace the scheduled exercises.')),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(copy('Cancel'))),
+                      TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text(copy('Use workout'))),
+                    ]));
+        if (approved != true || !mounted) return;
+      }
+      _confirming = false;
+      if (!mounted) return;
+      setState(() {
+        _busy = true;
+        _error = null;
+      });
       if (!await _save() || !mounted) return;
       if (use) {
-        final approved = widget.day.items.isEmpty ||
-            await showDialog<bool>(
-                    animationStyle: DSMotion.dialogStyle(context),
-context: context,
-                    builder: (context) => AlertDialog(
-                          title: Text(copy('Replace this workout?')),
-                          content: Text(copy(
-                              'Your saved routine will replace the scheduled exercises.')),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(copy('Cancel'))),
-                            TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(copy('Use routine'))),
-                          ],
-                        )) ==
-                true;
-        if (!approved) return;
         await _repo.mutate(
             widget.day.date, 'POST', '/routines/${widget.routine['id']}/apply');
-        if (mounted) Navigator.pop(context);
-      } else if (mounted) {
+        if (mounted) _pop();
+      } else {
+        setState(() => _editing = false);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(copy('Changes saved'))));
       }
@@ -224,108 +348,187 @@ context: context,
             error, 'Could not save. Please try again.'));
       }
     } finally {
+      _confirming = false;
       if (mounted) setState(() => _busy = false);
     }
   }
 
+  Widget _heading() {
+    final items = _items!;
+    final minutes = prescribedWorkoutMinutes(items, 0);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (_editing)
+        TextField(
+            key: const ValueKey('routine-name'),
+            controller: _name,
+            enabled: !_busy,
+            maxLength: 80,
+            decoration: InputDecoration(labelText: copy('Workout name')),
+            onChanged: (_) => setState(() => _error = null))
+      else
+        Text(_name.text,
+            style: const TextStyle(
+                fontSize: 23,
+                height: 1.15,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -.65)),
+      const SizedBox(height: 12),
+      Wrap(spacing: 12, runSpacing: 6, children: [
+        Text(copy('{count} exercises', values: {'count': items.length}),
+            style: const TextStyle(fontSize: 12, color: DSColors.muted)),
+        Text(
+            copy('{count} sets', values: {
+              'count': items.fold<int>(0, (sum, item) => sum + item.targetSets)
+            }),
+            style: const TextStyle(fontSize: 12, color: DSColors.muted)),
+        if (minutes > 0)
+          Text(copy('About {minutes} min', values: {'minutes': minutes}),
+              style: const TextStyle(fontSize: 12, color: DSColors.muted)),
+      ]),
+      if (items.any((item) =>
+          !item.isBodyweight &&
+          List.generate(
+                  item.targetSets, (i) => routineTargetWeight(item, i + 1))
+              .any((weight) => weight == null))) ...[
+        const SizedBox(height: 12),
+        Text(copy('Choose your working weight when you start.'),
+            style: const TextStyle(
+                fontSize: 12, height: 1.5, color: DSColors.muted)),
+      ],
+    ]);
+  }
+
+  Widget _footer() => SafeArea(
+      top: false,
+      child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          decoration: const BoxDecoration(
+              color: DSColors.bg,
+              border: Border(top: BorderSide(color: DSColors.border))),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!_editing &&
+                    (widget.day.started || widget.day.pendingSync)) ...[
+                  Text(
+                      copy(widget.day.started
+                          ? 'Use routines before starting your workout.'
+                          : 'Reconnect to sync your workout before making changes.'),
+                      style: const TextStyle(
+                          fontSize: 12, height: 1.4, color: DSColors.muted)),
+                  const SizedBox(height: 12),
+                ],
+                FilledButton(
+                    key: const ValueKey('routine-primary-action'),
+                    onPressed: _busy ||
+                            (!_editing &&
+                                (widget.day.started ||
+                                    widget.day.pendingSync ||
+                                    _items!.isEmpty))
+                        ? null
+                        : () => _action(use: !_editing),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: DSColors.silver,
+                        foregroundColor: DSColors.bg,
+                        disabledBackgroundColor:
+                            _busy ? DSColors.silver : DSColors.bgRaised,
+                        disabledForegroundColor:
+                            _busy ? DSColors.bg : DSColors.muted,
+                        minimumSize: const Size(0, 50),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    child: _busy
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                                const SizedBox.square(
+                                    dimension: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: DSColors.bg)),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                    child: Text(
+                                        copy(_editing
+                                            ? 'Saving'
+                                            : 'Adding routine…'),
+                                        textAlign: TextAlign.center)),
+                              ])
+                        : Text(copy(_editing ? 'Save changes' : 'Use workout'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w600))),
+                if (_editing)
+                  TextButton(
+                      onPressed: _busy ? null : _cancelEditing,
+                      style:
+                          TextButton.styleFrom(foregroundColor: DSColors.muted),
+                      child: Text(copy('Cancel'))),
+              ])));
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: DSColors.bg,
-        appBar:
-            AppBar(title: Text(copy('Routine')), backgroundColor: DSColors.bg),
-        body: SafeArea(
-            child: ListView(padding: const EdgeInsets.all(18), children: [
-          if (_error != null) ...[
-            Text(copy(_error!), style: const TextStyle(color: trainingMuted)),
-            if (_items == null)
-              TextButton(onPressed: _load, child: Text(copy('Retry'))),
-            const SizedBox(height: 12),
-          ],
-          if (_items == null && _error == null)
-            const Center(child: CupertinoActivityIndicator()),
-          if (_items != null) ...[
-            TextField(
-                controller: _name,
-                enabled: !_busy,
-                maxLength: 80,
-                decoration: InputDecoration(labelText: copy('Routine name')),
-                onChanged: (_) => setState(() => _changed = true)),
-            const SizedBox(height: 14),
-            for (var index = 0; index < _items!.length; index++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: TrainingSurface(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Row(children: [
-                        Expanded(
-                            child: Text(
-                                '${index + 1}. ${_items![index].exercise.name}',
-                                style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500))),
-                        IconButton(
-                            tooltip: copy('Edit targets'),
-                            onPressed: _busy ? null : () => _edit(index),
-                            icon: const Icon(CupertinoIcons.pencil,
-                                size: 17, color: trainingMuted)),
-                      ]),
-                      for (var number = 1;
-                          number <= _items![index].targetSets;
-                          number++)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                              fitnessText(context, 'Set {number}: {target}',
-                                  values: {
-                                    'number': number,
-                                    'target': fitnessText(
-                                        context,
-                                        _items![index].localizedTargetLabel(
-                                                context, number) ??
-                                            ''),
-                                  }),
-                              style: const TextStyle(
-                                  fontSize: 13, color: trainingSilver)),
-                        ),
-                      const SizedBox(height: 6),
-                      Text(
-                          fitnessText(context, 'Rest: {seconds} sec',
-                              values: {'seconds': _items![index].restSeconds}),
-                          style: const TextStyle(
-                              fontSize: 12, color: trainingMuted)),
-                    ])),
-              ),
-            if (widget.day.started)
-              Text(copy('Use routines before starting your workout.'),
-                  style: const TextStyle(fontSize: 12, color: trainingMuted)),
-          ],
-        ])),
-        bottomNavigationBar: _items == null
-            ? null
-            : SafeArea(
-                child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_changed) ...[
-                        OutlinedButton(
-                            onPressed: _busy ? null : () => _action(),
-                            child: Text(copy('Save changes'))),
-                        const SizedBox(height: 8),
-                      ],
-                      TrainingButton(
-                          label: 'Use routine',
-                          primary: true,
-                          onPressed: _busy ||
-                                  widget.day.started ||
-                                  widget.day.pendingSync
+  Widget build(BuildContext context) => PopScope<void>(
+      canPop: _allowPop || (!_busy && !_changed),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_requestLeave());
+      },
+      child: Scaffold(
+          backgroundColor: DSColors.bg,
+          appBar: AppBar(
+              leading: Navigator.of(context).canPop()
+                  ? BackButton(onPressed: _requestLeave)
+                  : null,
+              title: Text(copy('Workout'),
+                  style: const TextStyle(fontSize: 16, color: DSColors.silver)),
+              backgroundColor: DSColors.bg,
+              surfaceTintColor: Colors.transparent,
+              actions: [
+                if (_items != null && !_editing)
+                  Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: TextButton(
+                          onPressed: _busy
                               ? null
-                              : () => _action(use: true)),
-                    ]),
-              )),
-      );
+                              : () => setState(() => _editing = true),
+                          style: TextButton.styleFrom(
+                              foregroundColor: DSColors.silver),
+                          child: Text(copy('Edit'))))
+              ]),
+          body: SafeArea(
+              bottom: false,
+              child: ListView(
+                  key: const ValueKey('routine-detail-scroll'),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  children: [
+                    if (_error != null) ...[
+                      Text(copy(_error!),
+                          style: const TextStyle(
+                              color: DSColors.muted, height: 1.5)),
+                      if (_items == null)
+                        TextButton(
+                            onPressed: _load, child: Text(copy('Retry'))),
+                      const SizedBox(height: 16),
+                    ],
+                    if (_items == null && _error == null)
+                      const Center(child: CupertinoActivityIndicator()),
+                    if (_items != null) ...[
+                      _heading(),
+                      const SizedBox(height: 24),
+                      if (_items!.isEmpty)
+                        Text(copy('No exercises found'),
+                            style: const TextStyle(color: DSColors.muted)),
+                      for (var index = 0; index < _items!.length; index++)
+                        Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: RoutineExerciseCard(
+                                item: _items![index],
+                                number: index + 1,
+                                onEdit: _editing && !_busy
+                                    ? () => _edit(index)
+                                    : null)),
+                    ],
+                  ])),
+          bottomNavigationBar: _items == null ? null : _footer()));
 }

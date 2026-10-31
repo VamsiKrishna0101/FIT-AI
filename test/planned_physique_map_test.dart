@@ -7,14 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/models/planned_physique_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/planned_physique_map.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/physique_photo_report.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/physique_week_filter.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/models/planned_physique_models.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_physique_home.dart';
+import 'package:setcraft/features/body_scan/views/widgets/planned_physique_map.dart';
+import 'package:setcraft/features/body_scan/views/widgets/physique_photo_report.dart';
+import 'package:setcraft/features/body_scan/views/widgets/physique_week_filter.dart';
 
 PlannedPhysiqueData plan({String gender = 'MALE'}) =>
     PlannedPhysiqueData.fromJson({

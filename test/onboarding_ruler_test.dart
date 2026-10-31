@@ -6,14 +6,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/onboarding/components/biometric_ruler_card.dart';
-import 'package:fitai_mobile/features/onboarding/views/about_you_experience_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/training_preferences_view.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/about_you_viewmodel.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/onboarding/components/about_you_controls.dart';
+import 'package:setcraft/features/onboarding/components/biometric_ruler_card.dart';
+import 'package:setcraft/features/onboarding/views/about_you_experience_view.dart';
+import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
+import 'package:setcraft/features/onboarding/viewmodels/about_you_viewmodel.dart';
 
 const _preview = ValueKey('onboarding-preview');
 
@@ -179,6 +180,53 @@ void main() {
             .widget<BiometricRulerCard>(find.byType(BiometricRulerCard))
             .value,
         70);
+
+    final header = find.byType(BiometricsHeaderWithUnits);
+    final headerHeight = tester.getSize(header).height;
+    Future<void> selectMetric(String metric) async {
+      final choice = find.byKey(ValueKey('select-biometric-$metric'));
+      await tester.ensureVisible(choice);
+      await tester.pumpAndSettle();
+      await tester.tap(choice);
+      await tester.pumpAndSettle();
+    }
+
+    await selectMetric('age');
+    expect(
+        tester.widget<BiometricRulerCard>(find.byType(BiometricRulerCard)).unit,
+        AppLanguage.uk.yearsUnit);
+    expect(find.descendant(of: header, matching: find.byType(GestureDetector)),
+        findsNothing);
+    expect(tester.getSize(header).height, headerHeight);
+    await _capture(tester, 'about-you-age-units');
+
+    await selectMetric('weight');
+    expect(
+        tester.widget<BiometricRulerCard>(find.byType(BiometricRulerCard)).unit,
+        'lb');
+    final metricUnits = find.descendant(
+        of: header, matching: find.text(AppLanguage.uk.unitMetricLabel));
+    await tester.ensureVisible(metricUnits);
+    await tester.pumpAndSettle();
+    await tester.tap(metricUnits);
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<BiometricRulerCard>(find.byType(BiometricRulerCard)).unit,
+        'kg');
+
+    await selectMetric('age');
+    expect(find.descendant(of: header, matching: find.byType(GestureDetector)),
+        findsNothing);
+    expect(
+        tester
+            .widget<BiometricRulerCard>(find.byType(BiometricRulerCard))
+            .value,
+        27);
+    await selectMetric('height');
+    final heightRuler =
+        tester.widget<BiometricRulerCard>(find.byType(BiometricRulerCard));
+    expect(heightRuler.unit, 'cm');
+    expect(heightRuler.value, 177.8);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -188,15 +236,18 @@ void main() {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await OnboardingDraft(focusMuscles: ['chest']).save();
+    await OnboardingDraft(
+        focusMuscles: ['chest'], trainingDays: ['MONDAY', 'WEDNESDAY']).save();
     bool continued = false;
     await tester.pumpWidget(
         _app(TrainingPreferencesView(onContinue: () => continued = true)));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Choose individual muscles'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Choose individual muscles'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Biceps'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Biceps'));
     await tester.pumpAndSettle();
     await _capture(tester, 'make-it-yours');

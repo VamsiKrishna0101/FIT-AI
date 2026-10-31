@@ -1,3 +1,4 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -6,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/components/premium_surface.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
-import '../../../core/localization/fitai_copy.dart';
+import '../../../core/localization/setcraft_copy.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/workout_repository.dart';
 import '../components/workout_item_actions.dart';
@@ -78,10 +79,13 @@ class _TodayPlanViewState extends State<TodayPlanView> {
     if (mounted) setState(() => _plan = WorkoutRepository.shared.currentPlan);
   }
 
-  void _library() => Navigator.of(context).push(CupertinoPageRoute<void>(
-      builder: (_) => ExerciseLibraryView(onExerciseAdded: _sync)));
+  void _library() => Navigator.of(context).push(AppPageRoute<void>(
+      builder: (_) => ExerciseLibraryView(
+          onExerciseAdded: _sync,
+          addToWorkout: (exercise) => WorkoutRepository.shared
+              .addWorkoutItem(workoutId: exercise.id))));
   void _detail(TodayPlanItemModel item) =>
-      Navigator.of(context).push(CupertinoPageRoute<void>(
+      Navigator.of(context).push(AppPageRoute<void>(
           builder: (_) => ExerciseDetailView(
               exercise: item.exercise,
               planItem: item,
@@ -105,7 +109,7 @@ class _TodayPlanViewState extends State<TodayPlanView> {
 
   @override
   Widget build(BuildContext context) {
-    final copy = FitAiCopy.of(context);
+    final copy = SetcraftCopy.of(context);
     String text(String value) => fitnessText(context, value);
     final plan = _plan;
     return Theme(

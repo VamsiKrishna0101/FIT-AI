@@ -30,7 +30,7 @@ class ReadinessScoreRing extends StatelessWidget {
                       painter: _RingPainter(value, color, minimal),
                       child: child),
                   child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(size * .18),
                       child: Center(
                           child: FittedBox(
                               fit: BoxFit.scaleDown,
@@ -46,16 +46,12 @@ class ReadinessScoreRing extends StatelessWidget {
                                             letterSpacing: -.8,
                                             height: 1.1)),
                                     const SizedBox(height: 3),
-                                    Text(
-                                        score == null
-                                            ? 'READINESS'
-                                            : minimal
-                                                ? '/ 100'
-                                                : 'OF 100',
+                                    Text(score == null ? 'READINESS' : '/ 100',
                                         style: TextStyle(
                                             color: const Color(0xFF969696),
                                             letterSpacing: 1,
-                                            fontSize: size * .065)),
+                                            fontSize: (size * .065)
+                                                .clamp(8.0, 11.0))),
                                   ]))))))));
 }
 

@@ -1,3 +1,5 @@
+import '../../today/components/weekly_rhythm_calendar.dart';
+import 'package:setcraft/core/theme/ds_motion.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
@@ -9,8 +11,9 @@ import '../../../core/components/liquid_silver_bottom_bar.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../components/training_widgets.dart';
+import '../../../core/components/session_overview_card.dart';
+import '../components/training_exercise_row.dart';
 import '../components/training_targets.dart';
-import '../components/workout_item_actions.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
@@ -18,6 +21,7 @@ import 'exercise_detail_view.dart';
 import 'exercise_library_screen.dart';
 import 'workout_session_view.dart';
 import 'saved_routines_view.dart';
+import 'create_workout_view.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../planner/views/weekly_plan_card.dart';
 import '../components/reschedule_workout_sheet.dart';
@@ -41,7 +45,7 @@ class TrainView extends StatefulWidget {
 class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   String _date = CacheScope.todayKey();
   TrainingDay? _day;
-  bool _loading = true, _busy = false;
+  bool _loading = true, _busy = false, _opening = false;
   String? _error;
   int _generation = 0;
   Timer? _syncTimer;
@@ -175,7 +179,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
           ? _day!
           : await _repo.mutate(_date, 'POST', '/start');
       if (mounted) {
-        await Navigator.of(context).push(MaterialPageRoute<void>(
+        await Navigator.of(context).push(AppPageRoute<void>(
             builder: (_) => WorkoutSessionView(initial: day)));
       }
       return null;
@@ -184,27 +188,56 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Future<void> _restToday() async {
-    final changed = await showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: FitnessTheme.surface,
-        builder: (_) => FractionallySizedBox(
-            heightFactor: .9,
-            child: FitnessTheme(child: RescheduleWorkoutSheet(date: _date))));
-    if (changed == true && mounted) await _load(refresh: true);
+    if (_busy || _opening) return;
+    setState(() => _opening = true);
+    try {
+      final changed = await showModalBottomSheet<bool>(
+          sheetAnimationStyle: DSMotion.sheetStyle(context),
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: FitnessTheme.surface,
+          builder: (_) => FractionallySizedBox(
+              heightFactor: .9,
+              child: FitnessTheme(child: RescheduleWorkoutSheet(date: _date))));
+      if (changed == true && mounted) await _load(refresh: true);
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
   }
 
   Future<void> _saveRoutine() async {
     final day = _day;
-    if (day == null || day.items.isEmpty) return;
-    final name = await trainingName(context, 'Save routine',
-        day.name == 'Workout' ? copy('Workout') : day.name);
-    if (name != null) {
-      await _action(() => _repo.mutate(_date, 'POST', '/routines', data: {
-            'name': name,
-            'items': day.items.map(TrainingDay.targets).toList(),
-          }));
+    if (_busy || _opening || day == null || day.items.isEmpty) return;
+    setState(() => _opening = true);
+    try {
+      final route = AppPageRoute<TrainingDay>(
+          page: CreateWorkoutView(
+              date: _date,
+              initialName: day.name == 'Workout' ? copy('Workout') : day.name,
+              initialItems: day.items));
+      await Navigator.of(context).push(route);
+      await route.completed;
+      if (mounted) await _load(refresh: true);
+    } finally {
+      if (mounted) setState(() => _opening = false);
     }
+  }
+
+  Future<void> _renameWorkout() async {
+    final day = _day;
+    if (_busy || _opening || day == null || day.finished) return;
+    setState(() => _opening = true);
+    String? name;
+    try {
+      name = await trainingName(context, 'Rename workout',
+          day.name == 'Workout' ? copy('Workout') : day.name);
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+    final title = name?.trim();
+    if (!mounted || title == null || title.isEmpty) return;
+    await _action(
+        () => _repo.mutate(_date, 'PATCH', '/day', data: {'name': title}));
   }
 
   Future<void> _edit(TodayPlanItemModel item, String action) async {
@@ -236,177 +269,236 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
         () => _repo.mutate(_date, 'PUT', '/order', data: {'itemIds': ids}));
   }
 
+  Future<void> _myWorkouts() async {
+    if (_busy || _day == null) return;
+    await Navigator.of(context)
+        .push(AppPageRoute<void>(page: SavedRoutinesView(initial: _day!)));
+    if (mounted) await _load(refresh: true);
+  }
+
+  Future<void> _editWorkout() async {
+    if (_busy || _opening || _day == null) return;
+    setState(() => _opening = true);
+    try {
+      final route = AppPageRoute<void>(
+          page:
+              TrainView(standalone: true, editOnly: true, initialDate: _date));
+      await Navigator.of(context).push(route);
+      await route.completed;
+      if (mounted) await _load(refresh: true);
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final day = _day;
     final locale = Localizations.localeOf(context).toString();
-    final scheme = Theme.of(context).colorScheme.copyWith(
-          primary: trainingSilver,
-          secondary: trainingSilver,
-        );
-    return Theme(
-      data: Theme.of(context).copyWith(colorScheme: scheme),
-      child: Scaffold(
-        backgroundColor: DSColors.bg,
-        body: SafeArea(
-            bottom: false,
-            child: Column(children: [
-              _header(locale),
-              Expanded(
-                  child: RefreshIndicator(
-                color: trainingSilver,
-                onRefresh: () => _load(refresh: true),
-                child: MotionEntrance(
-                    child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics()),
-                  padding: EdgeInsets.fromLTRB(
-                      18,
-                      0,
-                      18,
-                      widget.standalone
-                          ? 28
-                          : LiquidSilverBottomBar.scrollBottomInset(context)),
-                  children: [
-                    if (day?.pendingSync == true) ...[
-                      WorkoutSyncNotice(
-                          blocked: day!.syncBlocked,
-                          onRetry: () => _load(refresh: true)),
-                      const SizedBox(height: 14),
-                    ],
-                    if (!widget.editOnly) ...[
-                      _exploreButton(),
-                      const SizedBox(height: 16),
-                      _week(locale),
-                      const SizedBox(height: 16),
-                    ],
-                    if (_error != null)
-                      Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(copy(_error!),
-                              style: const TextStyle(
-                                  color: trainingMuted, fontSize: 12))),
-                    if (_loading && day == null)
-                      const SizedBox(
-                          height: 150,
-                          child: Center(child: CupertinoActivityIndicator()))
-                    else if (day != null) ...[
-                      if (!widget.editOnly) _sessionCard(day),
-                      if (widget.editOnly) _editorSummary(day),
-                      const SizedBox(height: 18),
-                      _section('Exercises',
-                          icon: day.finished || widget.editOnly
-                              ? null
-                              : CupertinoIcons.plus,
-                          tooltip: 'Add exercise',
-                          action: _busy ? null : _add),
-                      const SizedBox(height: 8),
-                      if (day.items.isEmpty)
-                        TrainingSurface(
-                            child: Text(
-                                copy(
-                                    'Build your workout or choose a saved routine.'),
-                                style: const TextStyle(
-                                    color: trainingMuted,
-                                    fontSize: 13,
-                                    height: 1.4)))
-                      else
-                        TrainingSurface(
-                            padding: EdgeInsets.zero,
-                            child: Column(children: [
-                              for (var index = 0;
-                                  index < day.items.length;
-                                  index++) ...[
-                                _exercise(day.items[index], day),
-                                if (index < day.items.length - 1)
-                                  const Padding(
-                                      padding:
-                                          EdgeInsets.only(left: 76, right: 14),
-                                      child: Divider(
-                                          height: 1,
-                                          thickness: .5,
-                                          color: Color(0x18FFFFFF))),
-                              ],
-                            ])),
-                      if (!widget.editOnly) ...[
-                        const SizedBox(height: 18),
-                        _section('Saved routines',
-                            icon: day.items.isEmpty
+    return FitnessTheme(
+        child: Scaffold(
+      backgroundColor: DSColors.bg,
+      body: SafeArea(
+          bottom: false,
+          child: Column(children: [
+            _header(locale),
+            Expanded(
+                child: RefreshIndicator(
+              color: trainingSilver,
+              onRefresh: () => _load(refresh: true),
+              child: MotionEntrance(
+                  child: ListView(
+                key: const ValueKey('train-scroll'),
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics()),
+                padding: EdgeInsets.fromLTRB(
+                    18,
+                    0,
+                    18,
+                    widget.standalone
+                        ? 28
+                        : LiquidSilverBottomBar.scrollBottomInset(context)),
+                children: [
+                  if (!widget.editOnly) ...[
+                    _exploreButton(),
+                    const SizedBox(height: 14),
+                    _week(locale),
+                    const SizedBox(height: 18)
+                  ],
+                  if (day?.pendingSync == true) ...[
+                    WorkoutSyncNotice(
+                        blocked: day!.syncBlocked,
+                        onRetry: () => _load(refresh: true)),
+                    const SizedBox(height: 14),
+                  ],
+                  if (_error != null)
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(copy(_error!),
+                            style: const TextStyle(
+                                color: trainingMuted, fontSize: 12))),
+                  if (_loading && day == null)
+                    const SizedBox(
+                        height: 150,
+                        child: Center(child: CupertinoActivityIndicator()))
+                  else if (day != null) ...[
+                    if (!widget.editOnly)
+                      _sessionCard(day)
+                    else
+                      _editorSummary(day),
+                    const SizedBox(height: 22),
+                    _section('Exercises',
+                        actionLabel: widget.editOnly
+                            ? day.finished
                                 ? null
-                                : CupertinoIcons.bookmark,
-                            tooltip: 'Save routine',
-                            action: _busy ? null : _saveRoutine),
-                        const SizedBox(height: 8),
-                        TrainingSurface(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 5),
-                            child: day.routines.isEmpty
-                                ? Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                    child: Row(children: [
-                                      const Icon(CupertinoIcons.bookmark,
-                                          size: 19, color: trainingMuted),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                          child: Text(
-                                              copy(
-                                                  'Save a workout to use it again.'),
-                                              style: const TextStyle(
-                                                  color: trainingMuted,
-                                                  fontSize: 13,
-                                                  height: 1.4))),
-                                    ]))
-                                : Column(children: [
-                                    for (final routine in day.routines.take(3))
-                                      _routine(routine, day),
-                                    if (day.routines.length > 3)
-                                      TextButton(
-                                          onPressed: () async {
-                                            await Navigator.of(context).push(
-                                                AppPageRoute<void>(
-                                                    page: SavedRoutinesView(
-                                                        initial: day)));
-                                            await _load(refresh: true);
-                                          },
-                                          child: Text(copy('View all'))),
-                                  ])),
-                        const SizedBox(height: 20),
-                        WeeklyPlanCard(
-                            isActive: widget.isActive, onReturn: _load),
-                      ],
+                                : 'Add exercise'
+                            : day.finished
+                                ? 'Details'
+                                : 'Edit',
+                        action: _busy || _opening
+                            ? null
+                            : widget.editOnly
+                                ? _add
+                                : _editWorkout),
+                    const SizedBox(height: 10),
+                    if (day.items.isEmpty)
+                      TrainingSurface(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                            Text(copy('No exercises yet'),
+                                style: const TextStyle(
+                                    fontSize: 14, color: trainingMuted)),
+                            if (!day.finished) ...[
+                              const SizedBox(height: 12),
+                              TrainingButton(
+                                  label: 'Add exercise',
+                                  onPressed: _busy ? null : _add),
+                            ],
+                          ]))
+                    else
+                      TrainingSurface(
+                          padding: EdgeInsets.zero,
+                          child: Column(children: [
+                            for (var index = 0;
+                                index < day.items.length;
+                                index++) ...[
+                              _exercise(day.items[index], day),
+                              if (index < day.items.length - 1)
+                                const Padding(
+                                    padding: EdgeInsetsDirectional.only(
+                                        start: 78, end: 14),
+                                    child: Divider(
+                                        height: 1,
+                                        thickness: .5,
+                                        color: DSColors.border)),
+                            ],
+                          ])),
+                    if (!widget.editOnly) ...[
+                      const SizedBox(height: 22),
+                      WeeklyPlanCard(
+                          key: const ValueKey('train-weekly-plan'),
+                          compact: true,
+                          isActive: widget.isActive,
+                          onReturn: _load),
+                      const SizedBox(height: 10),
+                      TrainingSurface(
+                          key: const ValueKey('train-my-workouts'),
+                          padding: EdgeInsets.zero,
+                          onTap: _busy ? null : _myWorkouts,
+                          child: _resource(
+                              'My workouts',
+                              day.routines.isEmpty
+                                  ? copy('Create your first workout')
+                                  : copy(
+                                      day.routines.length == 1
+                                          ? '{count} saved workout'
+                                          : '{count} saved workouts',
+                                      values: {'count': day.routines.length}))),
+                      const SizedBox(height: 10),
                     ],
                   ],
-                )),
+                ],
               )),
-            ])),
-      ),
-    );
+            )),
+          ])),
+    ));
   }
 
-  Widget _editorSummary(TrainingDay day) => TrainingSurface(
-        child:
-            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(day.name,
-              style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -.5)),
-          const SizedBox(height: 8),
-          Text(
-              copy(day.finished
-                  ? 'This workout is already finished.'
-                  : 'Changes are saved to this day in your training schedule.'),
-              style: const TextStyle(
-                  fontSize: 12, height: 1.5, color: trainingMuted)),
-          if (!day.finished) ...[
-            const SizedBox(height: 16),
-            TrainingButton(
-                label: 'Add exercise',
-                icon: CupertinoIcons.plus,
-                primary: true,
-                onPressed: _busy ? null : _add),
-          ],
+  Widget _editorSummary(TrainingDay day) {
+    final reschedule =
+        _date == CacheScope.todayKey() && day.json['canReschedule'] == true;
+    final actions = <(String, String, VoidCallback)>[
+      if (!day.finished) ('rename', 'Rename workout', _renameWorkout),
+      if (day.items.isNotEmpty) ('save', 'Save to My workouts', _saveRoutine),
+      if (!day.finished && reschedule)
+        ('rest', 'Rest today', _restToday)
+      else if (!day.finished && !day.started && !day.restDay)
+        (
+          'rest',
+          'Set as rest day',
+          () => _action(() =>
+              _repo.mutate(_date, 'PATCH', '/day', data: {'restDay': true}))
+        ),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text(day.name,
+          style: const TextStyle(
+              fontSize: 23, fontWeight: FontWeight.w500, letterSpacing: -.65)),
+      if (day.finished) ...[
+        const SizedBox(height: 8),
+        Text(copy('This workout is already finished.'),
+            style: const TextStyle(
+                fontSize: 12, height: 1.4, color: trainingMuted)),
+      ],
+      if (actions.isNotEmpty) ...[
+        const SizedBox(height: 18),
+        TrainingSurface(
+            padding: EdgeInsets.zero,
+            child: Column(children: [
+              for (var index = 0; index < actions.length; index++) ...[
+                if (index > 0)
+                  const Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: DSColors.border),
+                ListTile(
+                    key: ValueKey('train-manage-${actions[index].$1}'),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    title: Text(copy(actions[index].$2),
+                        style: const TextStyle(
+                            fontSize: 13, height: 1.4, color: trainingSilver)),
+                    trailing: const Icon(CupertinoIcons.chevron_right,
+                        size: 12, color: trainingMuted),
+                    onTap: _busy || _opening ? null : actions[index].$3),
+              ],
+            ])),
+      ],
+    ]);
+  }
+
+  Widget _resource(String title, String? subtitle) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(children: [
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(copy(title),
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w500)),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 5),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 11, height: 1.4, color: trainingMuted)),
+                ],
+              ])),
+          const SizedBox(width: 12),
+          const Icon(CupertinoIcons.chevron_right,
+              size: 12, color: trainingMuted),
         ]),
       );
 
@@ -421,73 +513,52 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Text(copy(widget.editOnly ? 'Edit workout' : 'Train'),
+                Text(
+                    copy(widget.editOnly
+                        ? _day?.finished == true
+                            ? 'Workout'
+                            : 'Edit workout'
+                        : 'Train'),
                     style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -.6)),
-                const SizedBox(height: 5),
-                Text(
-                    DateFormat('EEEE, MMM d', locale)
-                        .format(DateTime.parse(_date)),
-                    style: const TextStyle(fontSize: 12, color: trainingMuted)),
               ])),
         ]),
       );
 
   Widget _exploreButton() => TrainingSurface(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.zero,
       onTap: () async {
-        await Navigator.of(context).push(MaterialPageRoute<void>(
+        await Navigator.of(context).push(AppPageRoute<void>(
             builder: (_) => ExerciseLibraryView(
-                onExerciseAdded: _load,
-                workoutDate: DateFormat.yMMMEd().format(DateTime.parse(_date)),
-                addToWorkout: (exercise) async {
-                  try {
-                    if (_day?.finished == true) return false;
-                    await _repo.mutate(_date, 'POST', '/items', data: {
-                      'workoutId': exercise.id,
-                      'targetSets': 3,
-                      'targetReps': '10',
-                      'targetWeight': 0,
-                      'restSeconds': 90,
-                    });
-                    return true;
-                  } catch (_) {
-                    return false;
-                  }
-                })));
+                onExerciseAdded: () => _load(refresh: true))));
         await _load();
       },
-      child: Row(children: [
-        const Icon(CupertinoIcons.search, size: 20, color: trainingSilver),
-        const SizedBox(width: 12),
-        Expanded(
-            child: Text(copy('Explore exercises'),
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w500))),
-        const SizedBox(width: 12),
-        const Icon(CupertinoIcons.chevron_right,
-            size: 16, color: trainingMuted),
-      ]));
-  Widget _section(String title,
-          {IconData? icon, String? tooltip, VoidCallback? action}) =>
-      Row(children: [
-        Expanded(
-            child: Text(copy(title),
-                style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -.2))),
-        if (icon != null)
-          SizedBox(
-              height: 38,
-              width: 44,
-              child: IconButton(
-                  tooltip: copy(tooltip ?? title),
-                  onPressed: action,
-                  icon: Icon(icon, size: 18, color: trainingSilver))),
-      ]);
+      child: _resource('Exercise library', null));
+
+  Widget _section(String title, {String? actionLabel, VoidCallback? action}) =>
+      LayoutBuilder(builder: (context, bounds) {
+        final heading = Text(copy(title),
+            style: const TextStyle(
+                fontSize: 17, fontWeight: FontWeight.w500, letterSpacing: -.3));
+        if (actionLabel == null) return heading;
+        final button = TextButton(
+            onPressed: action,
+            style: TextButton.styleFrom(foregroundColor: trainingSilver),
+            child:
+                Text(copy(actionLabel), style: const TextStyle(fontSize: 12)));
+        if (MediaQuery.textScalerOf(context).scale(17) > 22 ||
+            bounds.maxWidth < 260) {
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                heading,
+                Align(alignment: AlignmentDirectional.centerEnd, child: button)
+              ]);
+        }
+        return Row(children: [Expanded(child: heading), button]);
+      });
 
   Widget _week(String locale) {
     final selected = DateTime.parse(_date);
@@ -495,86 +566,76 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     return Column(children: [
       Row(children: [
         Expanded(
-            child: Text(DateFormat('MMM d', locale).format(monday),
-                style: const TextStyle(fontSize: 12, color: trainingMuted))),
-        _weekControl(
-            CupertinoIcons.chevron_left,
-            'Previous week',
-            () => _select(CacheScope.todayKey(
-                selected.subtract(const Duration(days: 7))))),
-        _weekControl(CupertinoIcons.calendar, 'Today',
-            () => _select(CacheScope.todayKey())),
-        _weekControl(
-            CupertinoIcons.chevron_right,
-            'Next week',
-            () => _select(
-                CacheScope.todayKey(selected.add(const Duration(days: 7))))),
+            child: Text(
+                '${DateFormat.MMMd(locale).format(monday)} – ${DateFormat.MMMd(locale).format(monday.add(const Duration(days: 6)))}',
+                style: const TextStyle(fontSize: 11, color: trainingMuted))),
+        WeeklyRhythmCalendarButton(
+            selectedDate: selected,
+            today: DateTime.now(),
+            allowFuture: true,
+            onSelected:
+                _busy ? null : (date) => _select(CacheScope.todayKey(date))),
       ]),
-      const SizedBox(height: 5),
+      const SizedBox(height: 4),
       TrainingSurface(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
           child: Row(
               children: List.generate(7, (index) {
             final date = monday.add(Duration(days: index));
-            final key = CacheScope.todayKey(date);
-            final active = key == _date;
+            final key = CacheScope.todayKey(date), active = key == _date;
             final status = _day?.week
                 .where((row) => row['date'] == key)
                 .firstOrNull?['status'];
             return Expanded(
-                child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+                child: Semantics(
+              selected: active,
+              label:
+                  '${DateFormat.yMMMMEEEEd(locale).format(date)}${status == 'COMPLETED' ? ', ${copy('Completed')}' : status == 'REST_DAY' ? ', ${copy('Rest day')}' : ''}',
+              button: true,
               onTap: _busy ? null : () => _select(key),
-              child: Column(children: [
-                Text(DateFormat('EEEEE', locale).format(date),
-                    style: const TextStyle(fontSize: 10, color: trainingMuted)),
-                const SizedBox(height: 7),
-                Container(
-                    width: 30,
-                    height: 30,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: active ? trainingSilver : Colors.transparent),
-                    child: Text('${date.day}',
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: active ? DSColors.bg : trainingSilver))),
-                const SizedBox(height: 5),
-                SizedBox(
-                    height: 7,
-                    child: status == 'COMPLETED'
-                        ? const Icon(CupertinoIcons.checkmark,
-                            size: 8, color: trainingSilver)
-                        : status == 'REST_DAY'
-                            ? const Icon(CupertinoIcons.moon,
-                                size: 8, color: trainingMuted)
-                            : Container(
-                                width: 3,
-                                height: 3,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: status == 'SCHEDULED' ||
-                                            status == 'IN_PROGRESS'
-                                        ? trainingMuted
-                                        : Colors.transparent))),
-              ]),
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: _busy ? null : () => _select(key),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Column(children: [
+                      Text(DateFormat('EEEEE', locale).format(date),
+                          style: const TextStyle(
+                              fontSize: 10, color: trainingMuted)),
+                      const SizedBox(height: 7),
+                      Container(
+                          width: 30,
+                          height: 30,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(9),
+                              color:
+                                  active ? trainingSilver : Colors.transparent),
+                          child: Text('${date.day}',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      active ? DSColors.bg : trainingSilver))),
+                      const SizedBox(height: 5),
+                      Container(
+                          width: 3,
+                          height: 3,
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: status == 'COMPLETED'
+                                  ? trainingSilver
+                                  : status == 'SCHEDULED' ||
+                                          status == 'IN_PROGRESS'
+                                      ? trainingMuted
+                                      : Colors.transparent)),
+                    ])),
+              ),
             ));
           }))),
     ]);
   }
-
-  Widget _weekControl(IconData icon, String label, VoidCallback action) =>
-      SizedBox(
-        width: 38,
-        height: 36,
-        child: IconButton(
-            tooltip: copy(label),
-            onPressed: _busy ? null : action,
-            padding: EdgeInsets.zero,
-            icon: Icon(icon, size: 16, color: trainingMuted)),
-      );
 
   void _select(String date) {
     setState(() {
@@ -587,37 +648,13 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Widget _sessionCard(TrainingDay day) {
-    final completed = day.items.where((item) => item.isCompleted).length;
-    final progress = day.finished
-        ? 1.0
-        : day.items.isEmpty
-            ? 0.0
-            : completed / day.items.length;
     final title = day.name != 'Workout'
         ? day.name
         : copy(day.finished
-            ? (day.pendingSync ? 'Saved on this phone' : 'Workout complete')
+            ? 'Workout complete'
             : day.restDay
                 ? 'Recover & recharge'
                 : 'Your workout');
-    final detail = day.finished
-        ? copy('{sets} sets · {minutes} min · {skipped} skipped', values: {
-            'sets': day.loggedSets,
-            'minutes': (day.durationSeconds / 60).ceil(),
-            'skipped': day.skipped
-          })
-        : day.restDay
-            ? copy('Rest day')
-            : day.started
-                ? '${copy('Completed')}: $completed/${day.items.length} · ${copy('{count} logged sets', values: {
-                        'count': day.loggedSets
-                      })}'
-                : '${copy('{count} exercises', values: {
-                        'count': day.items.length
-                      })}'
-                    '${day.items.isEmpty ? '' : ' · ≈ ${copy('{minutes} min', values: {
-                            'minutes': day.estimatedMinutes
-                          })}'}';
     final label = day.finished
         ? 'View summary'
         : day.restDay
@@ -630,7 +667,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     final VoidCallback? action = _busy
         ? null
         : day.finished
-            ? () => Navigator.of(context).push(MaterialPageRoute<void>(
+            ? () => Navigator.of(context).push(AppPageRoute<void>(
                 builder: (_) => WorkoutSessionView(initial: day)))
             : day.restDay
                 ? () => _action(() => _repo
@@ -640,232 +677,79 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                     : (!day.started && _date != CacheScope.todayKey())
                         ? null
                         : _start;
-    return TrainingSurface(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          Row(children: [
-            SizedBox(
-                width: 48,
-                height: 48,
-                child: Stack(alignment: Alignment.center, children: [
-                  SizedBox.expand(
-                      child: CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 2,
-                          color: trainingSilver,
-                          backgroundColor: const Color(0xFF393939),
-                          strokeCap: StrokeCap.round)),
-                  Icon(
-                      day.finished
-                          ? CupertinoIcons.checkmark
-                          : day.restDay
-                              ? CupertinoIcons.moon
-                              : CupertinoIcons.bolt,
-                      size: 21,
-                      color: trainingSilver),
-                ])),
-            const SizedBox(width: 14),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -.3)),
-                  const SizedBox(height: 5),
-                  Text(detail,
-                      style: const TextStyle(
-                          fontSize: 12, color: trainingMuted, height: 1.4)),
-                ])),
-            if (!day.finished)
-              PopupMenuButton<String>(
-                  tooltip: copy('Your session'),
-                  enabled: !_busy,
-                  icon: const Icon(CupertinoIcons.ellipsis,
-                      size: 18, color: trainingMuted),
-                  color: const Color(0xFF252525),
-                  itemBuilder: (_) => [
-                        'Rename workout',
-                        if (_date == CacheScope.todayKey() &&
-                            day.json['canReschedule'] == true)
-                          'Rest today',
-                        if (!day.started &&
-                            !day.restDay &&
-                            !(_date == CacheScope.todayKey() &&
-                                day.json['canReschedule'] == true))
-                          'Set as rest day'
-                      ]
-                          .map((value) => PopupMenuItem(
-                              value: value, child: Text(copy(value))))
-                          .toList(),
-                  onSelected: (value) async {
-                    if (value == 'Rest today') {
-                      await _restToday();
-                    } else if (value == 'Set as rest day') {
-                      await _action(() => _repo.mutate(_date, 'PATCH', '/day',
-                          data: {'restDay': true}));
-                    } else {
-                      final name = await trainingName(context, 'Rename workout',
-                          day.name == 'Workout' ? copy('Workout') : day.name);
-                      if (name != null) {
-                        await _action(() => _repo.mutate(_date, 'PATCH', '/day',
-                            data: {'name': name}));
-                      }
-                    }
-                  }),
-          ]),
-          const SizedBox(height: 14),
-          SizedBox(
-              width: double.infinity,
-              child: TrainingButton(
-                  label: label,
-                  primary: !day.finished,
-                  icon: day.finished
-                      ? CupertinoIcons.checkmark_circle
-                      : day.items.isEmpty
-                          ? CupertinoIcons.plus
-                          : day.restDay
-                              ? CupertinoIcons.bolt
-                              : CupertinoIcons.play_fill,
-                  onPressed: action)),
-          if (_date == CacheScope.todayKey() &&
-              day.json['canReschedule'] == true)
-            Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                    onPressed: _busy ? null : _restToday,
-                    child: Text(copy('Rest today'),
-                        style: const TextStyle(color: trainingMuted)))),
-        ]));
+    return SessionOverviewCard(
+      key: const ValueKey('train-session-card'),
+      status: day.finished
+          ? SessionOverviewStatus.completed
+          : day.restDay
+              ? SessionOverviewStatus.restDay
+              : day.started
+                  ? SessionOverviewStatus.inProgress
+                  : SessionOverviewStatus.notStarted,
+      title: title,
+      metrics: [
+        if (day.finished && day.durationSeconds > 0)
+          copy('{minutes} min',
+              values: {'minutes': (day.durationSeconds / 60).ceil()})
+        else if (!day.restDay && day.estimatedMinutes > 0)
+          copy('About {minutes} min',
+              values: {'minutes': day.estimatedMinutes}),
+        if (!day.restDay && day.items.isNotEmpty)
+          copy(day.items.length == 1 ? '{count} exercise' : '{count} exercises',
+              values: {'count': day.items.length}),
+      ],
+      caption: day.started && !day.restDay
+          ? Text(copy('{count} logged sets', values: {'count': day.loggedSets}),
+              style: const TextStyle(color: trainingMuted, fontSize: 11))
+          : null,
+      actionLabel: copy(label),
+      onAction: action,
+      busy: _busy,
+      primary: !day.restDay,
+    );
   }
 
   Future<void> _openExercise(TodayPlanItemModel item, TrainingDay day) async {
     if (!widget.editOnly && day.started && !day.finished) {
-      await Navigator.of(context).push(MaterialPageRoute<void>(
+      await Navigator.of(context).push(AppPageRoute<void>(
           builder: (_) =>
               WorkoutSessionView(initial: day, initialItemId: item.id)));
       await _load();
     } else {
-      await Navigator.of(context).push(MaterialPageRoute<void>(
+      await Navigator.of(context).push(AppPageRoute<void>(
           builder: (_) => ExerciseDetailView(exercise: item.exercise)));
     }
   }
 
-  Future<void> _completeExercise(
-      TodayPlanItemModel item, TrainingDay day) async {
-    await _action(() async {
-      if (day.logs(item.id).isEmpty) {
-        await _openExercise(item, day);
-        return null;
-      }
-      return _repo.mutate(_date, 'PATCH', '/items/${item.id}/status',
-          data: {'status': 'COMPLETED'});
-    });
-  }
-
-  Widget _exercise(TodayPlanItemModel item, TrainingDay day) => InkWell(
-        onTap: () => _openExercise(item, day),
-        child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 13, 8, 13),
-            child: Column(children: [
-              Row(children: [
-                TrainingPoster(exercise: item.exercise),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text(item.exercise.displayName,
-                          style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              height: 1.3)),
-                      const SizedBox(height: 4),
-                      Text(
-                          copy('{sets} sets · {reps} reps', values: {
-                            'sets': item.targetSets,
-                            'reps': item.targetReps
-                          }),
-                          style: const TextStyle(
-                              fontSize: 11, color: trainingMuted)),
-                    ])),
-                if (!day.finished)
-                  PopupMenuButton<String>(
-                      tooltip: copy('Edit exercise'),
-                      enabled: !_busy,
-                      color: const Color(0xFF252525),
-                      icon: const Icon(CupertinoIcons.ellipsis,
-                          size: 17, color: trainingMuted),
-                      onSelected: (action) => _edit(item, action),
-                      itemBuilder: (_) => [
-                            'Edit targets',
-                            'Move up',
-                            'Move down',
-                            if (day.logs(item.id).isEmpty) ...[
-                              'Replace',
-                              'Remove'
-                            ]
-                          ]
-                              .map((value) => PopupMenuItem(
-                                  value: value, child: Text(copy(value))))
-                              .toList()),
-              ]),
-              if (!widget.editOnly && day.started && !day.finished)
-                Padding(
-                    padding: const EdgeInsets.only(left: 60, top: 8),
-                    child: WorkoutItemActions(
-                        item: item,
-                        busy: _busy,
-                        doneLabel:
-                            day.logs(item.id).isEmpty ? 'Log sets' : 'Done',
-                        onDone: () => _completeExercise(item, day),
-                        onSkip: () => _action(() => _repo.mutate(
-                            _date, 'PATCH', '/items/${item.id}/status',
-                            data: {'status': 'SKIPPED'})),
-                        onUndo: () => _action(() => _repo.mutate(
-                            _date, 'PATCH', '/items/${item.id}/status',
-                            data: {'status': 'NOT_STARTED'})))),
-            ])),
-      );
-
-  Widget _routine(Map<String, dynamic> routine, TrainingDay day) => InkWell(
+  Widget _exercise(TodayPlanItemModel item, TrainingDay day) =>
+      TrainingExerciseRow(
+        key: ValueKey('train-exercise-${item.id}'),
+        item: item,
+        subtitle: '${item.targetSets} × ${item.targetReps} ${copy('reps')}'
+            '${item.isCompleted ? ' · ${copy('Completed')}' : item.isSkipped ? ' · ${copy('Skipped')}' : ''}',
         onTap: _busy
             ? null
-            : () async {
-                await Navigator.of(context).push(AppPageRoute<void>(
-                    page: RoutineDetailView(day: day, routine: routine)));
-                await _load(refresh: true);
-              },
-        child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(children: [
-              const Icon(CupertinoIcons.bookmark,
-                  size: 18, color: trainingMuted),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(routine['name'] as String,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 3),
-                    Text(
-                        copy('{count} exercises',
-                            values: {'count': routine['count'] as int}),
-                        style: const TextStyle(
-                            fontSize: 11, color: trainingMuted)),
-                  ])),
-              IconButton(
-                  tooltip: copy('Delete routine'),
-                  onPressed: _busy
-                      ? null
-                      : () => _action(() => _repo.mutate(
-                          _date, 'DELETE', '/routines/${routine['id']}')),
-                  icon: const Icon(CupertinoIcons.trash,
-                      size: 16, color: trainingMuted)),
-            ])),
+            : () => widget.editOnly && !day.finished
+                ? _edit(item, 'Edit targets')
+                : _openExercise(item, day),
+        trailing: widget.editOnly && !day.finished
+            ? PopupMenuButton<String>(
+                tooltip: copy('Edit exercise'),
+                enabled: !_busy,
+                color: DSColors.bgCard,
+                icon: const Icon(CupertinoIcons.ellipsis,
+                    size: 17, color: trainingMuted),
+                onSelected: (action) => _edit(item, action),
+                itemBuilder: (_) => [
+                  'Edit targets',
+                  'Move up',
+                  'Move down',
+                  if (day.logs(item.id).isEmpty) ...['Replace', 'Remove'],
+                ]
+                    .map((value) =>
+                        PopupMenuItem(value: value, child: Text(copy(value))))
+                    .toList(),
+              )
+            : null,
       );
 }

@@ -10,17 +10,18 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/progress/repositories/progress_repository.dart';
-import 'package:fitai_mobile/features/train/components/graphite_anatomy.dart';
-import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
-import 'package:fitai_mobile/features/progress/components/exercise_progress_content.dart';
-import 'package:fitai_mobile/features/train/components/exercise_insights.dart';
-import 'package:fitai_mobile/features/train/components/exercise_muscle_map.dart';
-import 'package:fitai_mobile/features/train/models/workout_exercise_models.dart';
-import 'package:fitai_mobile/features/train/views/exercise_detail_view.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/progress/repositories/progress_repository.dart';
+import 'package:setcraft/features/train/components/graphite_anatomy.dart';
+import 'package:setcraft/core/media/fit_video_surface.dart';
+import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/components/exercise_progress_content.dart';
+import 'package:setcraft/features/train/components/exercise_insights.dart';
+import 'package:setcraft/features/train/components/exercise_muscle_map.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
+import 'package:setcraft/features/train/views/exercise_detail_view.dart';
 
 final _exercise = WorkoutExerciseModel.fromJson({
   'id': 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
@@ -52,69 +53,7 @@ Map<String, dynamic> _day(int day) => {
       ],
     };
 
-Map<String, dynamic> _rank({bool empty = false}) => {
-      'kind': 'PERSONAL_TRAINING',
-      'tier': empty ? 0 : 2,
-      'title': empty ? 'Getting started' : 'Building momentum',
-      'trainingDays': empty ? 0 : 6,
-      'nextMilestone': {
-        'trainingDays': empty ? 5 : 12,
-        'progress': empty ? 0 : .5
-      },
-      'strengthRank': {
-        'tier': empty ? 0 : 3,
-        'title': empty ? 'Not ranked yet' : 'Intermediate',
-        'estimatedMaxKg': empty ? null : 40,
-        'bodyWeightKg': 70,
-        'weightUnit': 'per_hand',
-        'progress': empty ? 0 : .4,
-        'nextLevel': empty ? null : {'title': 'Advanced', 'estimatedMaxKg': 50},
-        'reason':
-            'Log this exercise on two different days with confirmed load units to estimate your level.',
-        'sourceUrl':
-            'https://strengthlevel.com/strength-standards/dumbbell-bench-press/kg',
-      },
-      'strengthBadges': [
-        for (var index = 0; index < 5; index++)
-          {
-            'id': 'STRENGTH_${index + 1}',
-            'title': const [
-              'Beginner',
-              'Novice',
-              'Intermediate',
-              'Advanced',
-              'Elite'
-            ][index],
-            'tier': index + 1,
-            'earned': !empty && index < 3,
-            'description':
-                'An estimated exercise level from repeated logged performance and a matching bodyweight reference.'
-          },
-      ],
-      'badges': [
-        {
-          'title': 'First log',
-          'description': 'Log a set of this exercise.',
-          'tier': 1,
-          'earned': !empty
-        },
-        {
-          'title': 'Five training days',
-          'description': 'Train this exercise on five different days.',
-          'tier': 2,
-          'earned': !empty
-        },
-        {
-          'title': 'Personal best',
-          'description': 'Improve a previous load, rep or volume record.',
-          'tier': 3,
-          'earned': !empty
-        },
-      ],
-    };
-
 Map<String, dynamic> _history({int days = 6, String? cursor}) => {
-      'rank': _rank(),
       'series': [for (var day = 1; day <= days; day++) _day(day)],
       'previous': [_day(5), _day(6)],
       'records': {
@@ -137,9 +76,13 @@ class _HistoryAdapter implements HttpClientAdapter {
       Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
     paths.add(options.path);
     final rankRoute = options.path.endsWith('/rank');
-    final status = rankRoute || logged ? 200 : 404;
+    final status = rankRoute
+        ? 503
+        : logged
+            ? 200
+            : 404;
     final body = rankRoute
-        ? {'data': _rank(empty: true)}
+        ? {'error': 'Rank service unavailable'}
         : logged
             ? {'data': _history()}
             : {'error': 'Exercise history not found'};
@@ -154,6 +97,7 @@ class _HistoryAdapter implements HttpClientAdapter {
 
 Widget _app(Widget page, {double scale = 1, String language = 'en'}) =>
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       locale: Locale(language),
       supportedLocales: const [Locale('en'), Locale('fr'), Locale('de')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -233,7 +177,7 @@ void main() {
   });
 
   testWidgets(
-      'Info, Progress and Rank share history and preserve the add action',
+      'Info and Progress preserve history and scope the add action to Info',
       (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(393, 852);
@@ -242,6 +186,7 @@ void main() {
     await tester.pumpWidget(_app(ExerciseDetailView(
       exercise: _exercise,
       loadDetail: false,
+      female: false,
       historyLoader: ({cursor, refresh = false}) async {
         loads++;
         return _history(cursor: cursor);
@@ -251,46 +196,57 @@ void main() {
         return false;
       },
     )));
+    await tester.runAsync(() => precacheImage(
+        const AssetImage(graphiteAnatomyAsset),
+        tester.element(find.byType(ExerciseDetailView))));
     await tester.pumpAndSettle();
     expect(loads, 0);
     await _capture(tester, 'exercise-info');
     expect(find.text('Info'), findsOneWidget);
-    expect(
-        find.descendant(of: find.byType(TabBar), matching: find.byType(Icon)),
-        findsNothing);
+    expect(find.text('Rank'), findsNothing);
+    expect(find.byType(TabBar), findsNothing);
+    expect(find.byKey(const ValueKey('exercise-anatomy-map')), findsOneWidget);
+    final anatomy = tester.widget<CustomPaint>(find.byWidgetPredicate(
+        (widget) =>
+            widget is CustomPaint && widget.painter is GraphiteAnatomyPainter));
+    expect((anatomy.painter as GraphiteAnatomyPainter).image, isNotNull);
+    final infoScroll = find
+        .descendant(
+            of: find.byKey(PageStorageKey('exercise-info-${_exercise.id}')),
+            matching: find.byType(Scrollable))
+        .first;
+    await tester.scrollUntilVisible(find.text('Press with control.'), 200,
+        scrollable: infoScroll);
+    await tester.pumpAndSettle();
+    expect(find.text('Press with control.'), findsOneWidget);
     await tester.tap(find.text('Progress'));
     await tester.pumpAndSettle();
     expect(find.byType(ProgressChart), findsOneWidget);
     expect(loads, 1);
-    await _capture(tester, 'exercise-progress');
-    await tester.tap(find.text('Rank'));
-    await tester.pumpAndSettle();
-    expect(find.text('Intermediate'), findsNWidgets(2));
-    expect(find.text('Building momentum'), findsNothing);
-    expect(loads, 1);
-    await _capture(tester, 'exercise-rank');
-    await tester.drag(find.byType(ListView).last, const Offset(0, -350));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('exercise-badge-STRENGTH_2')));
-    await tester.pumpAndSettle();
+    expect(find.text('Add to today'), findsNothing);
+    expect(find.text('Trends'), findsNothing);
+    expect(find.byType(DropdownButton<String>), findsOneWidget);
     expect(
-        find.text(
-            'An estimated exercise level from repeated logged performance and a matching bodyweight reference.'),
-        findsOneWidget);
-    Navigator.of(tester.element(find.text(
-            'An estimated exercise level from repeated logged performance and a matching bodyweight reference.')))
-        .pop();
+        TickerMode.valuesOf(tester.element(find.byType(FitVideoSurface)))
+            .enabled,
+        false);
+    await _capture(tester, 'exercise-progress');
+    await tester.tap(find.text('Info'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Add to today'));
     await tester.pumpAndSettle();
     expect(adds, 1);
     expect(find.byType(ExerciseDetailView), findsOneWidget);
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+    expect(loads, 1);
     await tester.tap(find.text('Info'));
     await tester.pumpAndSettle();
-    await tester.pump(const Duration(seconds: 5));
+    final info = find.byKey(PageStorageKey('exercise-info-${_exercise.id}'));
     await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('exercise-anatomy-map')), 250,
-        scrollable: find.byType(Scrollable).last);
+        find.byKey(const ValueKey('exercise-anatomy-map')), 200,
+        scrollable:
+            find.descendant(of: info, matching: find.byType(Scrollable)).first);
     await tester.pumpAndSettle();
     await _capture(tester, 'exercise-muscles');
     expect(tester.takeException(), isNull);
@@ -301,34 +257,48 @@ void main() {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(320, 760);
     addTearDown(tester.view.reset);
+    final demo = WorkoutExerciseModel.fromJson({
+      ..._exercise.toJson(),
+      'mediaVariants': {
+        'male': {'url': 'https://example.test/demo.mp4', 'aspectRatio': 16 / 9}
+      }
+    });
     await tester.pumpWidget(_app(
-        ExerciseDetailView(
-          exercise: _exercise,
-          loadDetail: false,
-          historyLoader: ({cursor, refresh = false}) async => _history(),
-        ),
+        TickerMode(
+            enabled: false,
+            child: ExerciseDetailView(
+                exercise: demo,
+                mediaGender: 'male',
+                loadDetail: false,
+                historyLoader: ({cursor, refresh = false}) async =>
+                    _history())),
         scale: 1.6));
     await tester.pumpAndSettle();
     final stage = find.byKey(const ValueKey('exercise-demo-stage'));
-    expect(tester.getTopLeft(stage).dx, 0);
-    expect(tester.getSize(stage).width, 320);
-    expect(tester.getSize(stage).height, closeTo(180, .1));
+    expect(tester.getTopLeft(stage).dx, 18);
+    final demoWidth = tester.getSize(stage).width;
+    expect(demoWidth, 284);
+    expect(tester.getSize(stage).height, closeTo(284 * 9 / 16, .1));
+    expect(tester.getSize(stage).height, lessThanOrEqualTo(280));
+    final muscles = find.byKey(PageStorageKey('exercise-muscles-${demo.id}'));
+    final guide = find.byKey(const ValueKey('exercise-instructions'));
+    expect(tester.widget<ExpansionTile>(muscles).initiallyExpanded, true);
+    expect(tester.getRect(muscles).left, tester.getRect(stage).left);
+    expect(tester.getRect(muscles).width, demoWidth);
     expect(
-        tester
-            .getSize(find.byKey(const ValueKey('exercise-demo-stage')))
-            .height,
-        lessThanOrEqualTo(280));
-    await tester.tap(find.text('Rank'));
+        tester.getRect(muscles).top, greaterThan(tester.getRect(stage).bottom));
+    await tester.scrollUntilVisible(guide, 200,
+        scrollable: find
+            .descendant(
+                of: find.byType(ListView), matching: find.byType(Scrollable))
+            .first);
     await tester.pumpAndSettle();
-    await _capture(tester, 'exercise-rank-large-text');
-    expect(tester.takeException(), isNull);
-    await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('exercise-badge-STRENGTH_5')), 200,
-        scrollable: find.byType(Scrollable).last);
+    expect(tester.getRect(guide).width, demoWidth);
+    await tester.tap(find.text('Progress'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('exercise-badge-STRENGTH_5')));
-    await tester.pumpAndSettle();
-    expect(find.text('Elite'), findsWidgets);
+    await _capture(tester, 'exercise-progress-large-text');
+    expect(find.text('Rank'), findsNothing);
+    expect(find.byType(ProgressChart), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -347,20 +317,31 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('square MP4 uses its verified dimensions without side padding',
+  testWidgets(
+      'square MP4 preserves its proportions and shares the card margins',
       (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(320, 760);
     addTearDown(tester.view.reset);
-    final square = WorkoutExerciseModel.fromJson(
-        {..._exercise.toJson(), 'mediaAspectRatio': 1});
-    expect(WorkoutExerciseModel.fromJson(square.toJson()).demoAspectRatio, 1);
-    await tester.pumpWidget(
-        _app(ExerciseDetailView(exercise: square, loadDetail: false)));
+    final square = WorkoutExerciseModel.fromJson({
+      ..._exercise.toJson(),
+      'mediaVariants': {
+        'male': {'url': 'https://example.test/square.mp4', 'aspectRatio': 1}
+      }
+    });
+    expect(
+        WorkoutExerciseModel.fromJson(square.toJson())
+            .withDemo('male')
+            .demoAspectRatio,
+        1);
+    await tester.pumpWidget(_app(TickerMode(
+        enabled: false,
+        child: ExerciseDetailView(
+            exercise: square, mediaGender: 'male', loadDetail: false))));
     await tester.pumpAndSettle();
     final stage = find.byKey(const ValueKey('exercise-demo-stage'));
-    expect(tester.getTopLeft(stage).dx, 0);
-    expect(tester.getSize(stage), const Size(320, 320));
+    expect(tester.getTopLeft(stage).dx, 18);
+    expect(tester.getSize(stage), const Size(284, 284));
     expect(tester.takeException(), isNull);
   });
 
@@ -374,8 +355,6 @@ void main() {
               cursors.add(cursor);
               return _history(cursor: cursor);
             }))));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Set history'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Load more'), 300,
         scrollable: find
@@ -401,7 +380,7 @@ void main() {
   });
 
   testWidgets(
-      'new exercises load backend locked badges and new sets refresh ranks',
+      'Empty and populated history never depend on the unavailable rank endpoint',
       (tester) async {
     final adapter = _HistoryAdapter();
     final client = ApiClient.shared.client;
@@ -409,16 +388,78 @@ void main() {
     client.httpClientAdapter = adapter;
     addTearDown(() => client.httpClientAdapter = original);
     await tester.pumpWidget(_app(const Scaffold(
-        body: ExerciseInsights(
-            exerciseId: 'rank-contract-exercise', rank: true))));
+        body: ExerciseInsights(exerciseId: 'history-only-contract'))));
     await tester.pumpAndSettle();
-    expect(adapter.paths.last,
-        '/api/progress/exercises/rank-contract-exercise/rank');
-    expect(find.text('Not ranked yet'), findsOneWidget);
+    expect(find.text('Your progress starts here'), findsOneWidget);
+    expect(adapter.paths.any((path) => path.endsWith('/rank')), false);
     adapter.logged = true;
     await ProgressRepository.shared.invalidate();
     await tester.pumpAndSettle();
-    expect(find.text('Intermediate'), findsNWidgets(2));
+    expect(find.byType(ProgressChart), findsOneWidget);
+    expect(find.text('Could not load exercise history.'), findsNothing);
+    expect(adapter.paths.any((path) => path.endsWith('/rank')), false);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Bodyweight progress starts with reps and never invents a load',
+      (tester) async {
+    final history = _history();
+    history['series'] = [
+      for (var day = 1; day <= 3; day++)
+        {..._day(day), 'load': 0, 'volume': 0, 'estimatedStrength': null},
+    ];
+    history['records'] = {
+      'bestLoad': {'weight': 0, 'reps': 10, 'date': '2026-10-03'}
+    };
+    await tester.pumpWidget(_app(Scaffold(
+        body: SingleChildScrollView(
+            child: ExerciseProgressContent(data: history)))));
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<DropdownButton<String>>(
+                find.byKey(const ValueKey('exercise-progress-metric')))
+            .value,
+        'reps');
+    expect(
+        tester.widget<ProgressChart>(find.byType(ProgressChart)).unit, 'reps');
+    expect(find.text('0 kg'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('A failed older page keeps history and retries the same cursor',
+      (tester) async {
+    final cursors = <String?>[], refreshes = <bool>[];
+    var fail = true;
+    await tester.pumpWidget(_app(Scaffold(
+        body: ExerciseInsights(
+            exerciseId: 'retry-page',
+            loader: ({cursor, refresh = false}) async {
+              cursors.add(cursor);
+              refreshes.add(refresh);
+              if (cursor != null && fail) throw StateError('Offline');
+              return _history(cursor: cursor);
+            }))));
+    await tester.pumpAndSettle();
+    final scroll = find
+        .descendant(
+            of: find.byType(ListView), matching: find.byType(Scrollable))
+        .first;
+    await tester.scrollUntilVisible(find.text('Load more'), 250,
+        scrollable: scroll);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Load more'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProgressSetHistory), findsNWidgets(2));
+    expect(find.byType(ProgressChart), findsOneWidget);
+    expect(find.text('Could not load exercise history.'), findsNothing);
+    fail = false;
+    await tester.ensureVisible(find.text('Retry'));
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(cursors, [null, '2026-10-05', '2026-10-05']);
+    expect(refreshes, [false, false, true]);
+    expect(find.byType(ProgressSetHistory), findsNWidgets(3));
     expect(tester.takeException(), isNull);
   });
 
@@ -472,27 +513,10 @@ void main() {
     expect(find.byType(ProgressChart), findsNothing);
   });
 
-  testWidgets(
-      'strength badges stay locked without evidence and fit enlarged text',
-      (tester) async {
+  testWidgets('Muscle maps remain readable with enlarged text', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(320, 760);
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_app(
-        Scaffold(
-            body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child:
-                    ExerciseRankContent(data: {'rank': _rank(empty: true)}))),
-        scale: 1.6));
-    await tester.pumpAndSettle();
-    expect(find.text('Not ranked yet'), findsOneWidget);
-    expect(
-        tester
-            .widgetList<ExerciseRankBadge>(find.byType(ExerciseRankBadge))
-            .every((badge) => !badge.earned),
-        isTrue);
-    expect(tester.takeException(), isNull);
     await tester.pumpWidget(_app(
         Scaffold(
             body: SingleChildScrollView(

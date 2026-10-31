@@ -1,9 +1,11 @@
 import Flutter
 import UIKit
 import HealthKit
+import CoreMotion
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private let hydrationTilt = HydrationTiltStream()
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -13,6 +15,15 @@ import HealthKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    if let motionRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "SetcraftHydrationMotion") {
+      FlutterEventChannel(name: "setcraft/hydration_motion", binaryMessenger: motionRegistrar.messenger())
+        .setStreamHandler(hydrationTilt)
+      let control = FlutterMethodChannel(name: "setcraft/hydration_motion_control", binaryMessenger: motionRegistrar.messenger())
+      control.setMethodCallHandler { [weak self] call, result in
+        if call.method == "isAvailable" { result(self?.hydrationTilt.available ?? false) }
+        else { result(FlutterMethodNotImplemented) }
+      }
+    }
     if let credentialsRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "SetcraftCredentials") {
       let credentials = FlutterMethodChannel(name: "setcraft/credentials", binaryMessenger: credentialsRegistrar.messenger())
       credentials.setMethodCallHandler { call, result in
@@ -77,5 +88,49 @@ import HealthKit
       }
       store.execute(query)
     }
+  }
+}
+
+private final class HydrationTiltStream: NSObject, FlutterStreamHandler {
+  private let motion = CMMotionManager()
+  private var sink: FlutterEventSink?
+  private var observers: [NSObjectProtocol] = []
+  private var lastX = Double.nan, lastY = Double.nan, lastZ = Double.nan
+  var available: Bool { motion.isDeviceMotionAvailable }
+
+  override init() {
+    super.init()
+    observers.append(NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification,
+      object: nil, queue: .main) { [weak self] _ in self?.motion.stopDeviceMotionUpdates() })
+    observers.append(NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification,
+      object: nil, queue: .main) { [weak self] _ in self?.start() })
+  }
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    sink = events
+    lastX = .nan; lastY = .nan; lastZ = .nan
+    start()
+    return nil
+  }
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    motion.stopDeviceMotionUpdates()
+    sink = nil
+    return nil
+  }
+  private func start() {
+    guard available, sink != nil, UIApplication.shared.applicationState == .active else { return }
+    motion.stopDeviceMotionUpdates()
+    motion.deviceMotionUpdateInterval = 1.0 / 30.0
+    motion.startDeviceMotionUpdates(to: .main) { [weak self] sample, error in
+      guard let self = self, let sample = sample, error == nil else { return }
+      let x = sample.gravity.x, y = sample.gravity.y, z = sample.gravity.z
+      guard x.isFinite, y.isFinite, z.isFinite else { return }
+      if self.lastX.isFinite && abs(x - self.lastX) + abs(y - self.lastY) + abs(z - self.lastZ) < 0.003 { return }
+      self.lastX = x; self.lastY = y; self.lastZ = z
+      self.sink?([x, y, z])
+    }
+  }
+  deinit {
+    motion.stopDeviceMotionUpdates()
+    observers.forEach { NotificationCenter.default.removeObserver($0) }
   }
 }

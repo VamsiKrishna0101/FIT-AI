@@ -7,18 +7,20 @@ class BodyProgressCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final bool highlighted;
+  final double radius;
 
   const BodyProgressCard(
       {super.key,
       required this.child,
       this.padding = const EdgeInsets.all(20),
-      this.highlighted = false});
+      this.highlighted = false,
+      this.radius = 24});
 
   @override
   Widget build(BuildContext context) => Container(
         padding: padding,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(radius),
           color: DSColors.bgCard,
           border: Border.all(
               color: highlighted ? DSColors.borderHi : DSColors.border,

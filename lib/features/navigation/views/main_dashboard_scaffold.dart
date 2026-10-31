@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/branding/setcraft_launch_screen.dart';
 import '../../../core/components/animated_tab_stack.dart';
 import '../../../core/components/liquid_silver_bottom_bar.dart';
-import '../../../core/localization/fitai_copy.dart';
+import '../../../core/localization/setcraft_copy.dart';
 import '../../../core/theme/ds_colors.dart';
 import '../../../core/cache/app_data_mode.dart';
 import '../../../core/health/health_sync_service.dart';
@@ -158,7 +158,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
   @override
   Widget build(BuildContext context) {
     if (!_modeReady) return const SetcraftLaunchScreen();
-    final copy = FitAiCopy.of(context);
+    final copy = SetcraftCopy.of(context);
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
@@ -167,41 +167,35 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
       child: Scaffold(
         backgroundColor: DSColors.dashboardBg,
         extendBody: true,
-        // Let nested page Scaffolds paint through the dock's artificial safe area.
-        // Each scroll view reserves its own space using scrollBottomInset.
-        body: MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            padding: MediaQuery.paddingOf(context).copyWith(bottom: 0),
-          ),
-          child: AnimatedTabStack(
-            key: ValueKey(AppDataMode.shared.dataset),
-            index: _currentIndex,
-            children: <Widget>[
-              _visitedTabs.contains(0)
-                  ? TodayHomeView(
-                      isActive: _currentIndex == 0,
-                      onSelectTab: _onTabSelected,
-                      onOpenProfile: () => _openRoute(const ProfileView()),
-                    )
-                  : const SizedBox.shrink(),
-              _visitedTabs.contains(1)
-                  ? TrainView(isActive: _currentIndex == 1)
-                  : const SizedBox.shrink(),
-              _visitedTabs.contains(2)
-                  ? BodyView(
-                      onTrain: () => _onTabSelected(1),
-                      isActive: _currentIndex == 2)
-                  : const SizedBox.shrink(),
-              _visitedTabs.contains(3)
-                  ? ProgressView(isActive: _currentIndex == 3)
-                  : const SizedBox.shrink(),
-            ]
-                .asMap()
-                .entries
-                .map((entry) => TickerMode(
-                    enabled: _currentIndex == entry.key, child: entry.value))
-                .toList(),
-          ),
+        // Preserve the Scaffold's dock inset for each tab's scroll padding.
+        body: AnimatedTabStack(
+          key: ValueKey(AppDataMode.shared.dataset),
+          index: _currentIndex,
+          children: <Widget>[
+            _visitedTabs.contains(0)
+                ? TodayHomeView(
+                    isActive: _currentIndex == 0,
+                    onSelectTab: _onTabSelected,
+                    onOpenProfile: () => _openRoute(const ProfileView()),
+                  )
+                : const SizedBox.shrink(),
+            _visitedTabs.contains(1)
+                ? TrainView(isActive: _currentIndex == 1)
+                : const SizedBox.shrink(),
+            _visitedTabs.contains(2)
+                ? BodyView(
+                    onTrain: () => _onTabSelected(1),
+                    isActive: _currentIndex == 2)
+                : const SizedBox.shrink(),
+            _visitedTabs.contains(3)
+                ? ProgressView(isActive: _currentIndex == 3)
+                : const SizedBox.shrink(),
+          ]
+              .asMap()
+              .entries
+              .map((entry) => TickerMode(
+                  enabled: _currentIndex == entry.key, child: entry.value))
+              .toList(),
         ),
         bottomNavigationBar: LiquidSilverBottomBar(
           selectedIndex: _currentIndex,

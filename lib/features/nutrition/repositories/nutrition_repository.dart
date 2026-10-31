@@ -150,6 +150,7 @@ class NutritionRepository {
   }
 
   Future<bool> logMeal(
+      // Saved routines and suggestions use their own dated confirmation endpoint.
       {String? nutritionId,
       Map<String, dynamic>? customFood,
       required String mealType,
@@ -166,6 +167,17 @@ class NutritionRepository {
           'month': month,
           'year': year,
         }));
+  }
+
+  Future<void> foodPlanningChanged() async {
+    TodayRepository.shared.invalidate();
+    await Future.wait([
+      invalidate(),
+      UserDataCache.shared.invalidate('custom_food_pages'),
+      ProgressRepository.shared.invalidate(),
+      HistoryRepository.shared.invalidate()
+    ]);
+    unawaited(getTodayDietPlan(forceRefresh: true).catchError((_) => null));
   }
 
   Future<bool> logWater(int amountMl) {
@@ -187,7 +199,7 @@ class NutritionRepository {
   Future<List<NutritionFoodItemModel>> searchFoodCatalog(
       {String? query, String? category}) async {
     final key = await CacheScope.userKey(
-        'food_catalog_everyday_v1_${LanguageManager.shared.currentLanguage.code}_${query ?? ''}_${category ?? ''}');
+        'food_catalog_generic_300_v1_${LanguageManager.shared.currentLanguage.code}_${query ?? ''}_${category ?? ''}');
     final entry = await LocalCache.shared.getEntry(key);
     List<NutritionFoodItemModel> parse(List rows) => rows
         .map((row) => NutritionFoodItemModel.fromJson(
@@ -230,7 +242,7 @@ class NutritionRepository {
       if (category != null) 'category': category,
     };
     final data = await UserDataCache.shared.load(
-        source == 'LIBRARY' ? 'everyday_food_pages_v1' : 'custom_food_pages',
+        source == 'LIBRARY' ? 'generic_food_pages_v1' : 'custom_food_pages',
         query.toString(), () async {
       final response = await ApiClient.shared.get<Map<String, dynamic>>(
           '/api/nutrition/catalog',

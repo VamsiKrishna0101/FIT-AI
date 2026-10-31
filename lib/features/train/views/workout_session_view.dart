@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/media/fit_video_surface.dart';
 import '../components/training_widgets.dart';
-import '../components/workout_item_actions.dart';
+import '../components/workout_completion_summary.dart';
 import '../components/workout_set_entry.dart';
 import '../components/workout_rest_timer.dart';
 import '../../../core/theme/ds_motion.dart';
@@ -16,7 +16,8 @@ import '../../../core/theme/fitness_theme.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
-import 'exercise_detail_view.dart';
+import '../components/workout_form_guide.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class WorkoutSessionView extends StatefulWidget {
   final TrainingDay initial;
@@ -32,7 +33,11 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     with WidgetsBindingObserver {
   late TrainingDay _day;
   int _index = 0;
-  bool _busy = false;
+  bool _busy = false, _optionsOpen = false;
+  final _scroll = ScrollController();
+  final _selectedSets = <String, int>{};
+  final _collapsedDemos = <String>{};
+  final _stepKeys = <int, GlobalKey>{};
   DateTime get _now => widget.clock?.call() ?? DateTime.now();
   bool _editingFinished = false;
   final _setEntries = <String, GlobalKey<WorkoutSetEntryState>>{};
@@ -132,6 +137,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _scroll.dispose();
     _syncSubscription?.cancel();
     _restState.dispose();
     _clock.dispose();
@@ -173,12 +179,14 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
             data: {'status': status});
       }
       if (mounted && status != 'NOT_STARTED') {
+        _updateRest(null);
         final next = _day.items.indexWhere((row) => row.isPending);
         if (next >= 0) {
           setState(() {
             _index = next;
             _loadPrevious();
           });
+          _showCurrentStep();
         }
       }
     } catch (error) {
@@ -240,7 +248,6 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         duration: duration,
         exercise: item.exercise.displayName,
         setNumber: setNumber));
-    unawaited(_showRest());
   }
 
   void _addRest() {
@@ -334,7 +341,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
       if (_day.items.isNotEmpty) await _saveEnteredSets(_day.items[_index].id);
       await _mutate('POST', '/finish');
       _updateRest(null);
-      await HapticFeedback.mediumImpact();
+      unawaited(HapticFeedback.mediumImpact().catchError((Object _) {}));
     } catch (error) {
       _error(TrainingRepository.errorMessage(
           error, 'Could not finish. Please try again.'));
@@ -343,308 +350,602 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     }
   }
 
+  int? _activeNumber(TodayPlanItemModel item) {
+    final selected = _selectedSets[item.id];
+    if (selected != null && selected <= _setCount(item)) return selected;
+    if (!item.isPending || _editingFinished) return null;
+    final saved = _day.logs(item.id).map((row) => row['setNumber']).toSet();
+    for (var number = 1; number <= _setCount(item); number++) {
+      if (!saved.contains(number)) return number;
+    }
+    return null;
+  }
+
+  void _showCurrentStep() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final step = _stepKeys[_index]?.currentContext;
+      if (step != null) {
+        unawaited(Scrollable.ensureVisible(step,
+            alignment: .5,
+            duration: DSMotion.duration(context, DSMotion.regular)));
+      }
+      if (_scroll.hasClients) _scroll.jumpTo(0);
+    });
+  }
+
+  void _selectSet(TodayPlanItemModel item, int number) {
+    if (_busy) return;
+    setState(() => _selectedSets[item.id] = number);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setEntries['${item.id}:$number']?.currentState?.focusEditor();
+    });
+  }
+
+  Future<void> _logSet(TodayPlanItemModel item, int number) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    FocusScope.of(context).unfocus();
+    try {
+      var entry = _setEntries['${item.id}:$number']?.currentState;
+      if (entry == null && _scroll.hasClients) {
+        await _scroll.animateTo(_scroll.position.maxScrollExtent,
+            duration: DSMotion.duration(context, DSMotion.regular),
+            curve: DSMotion.standard);
+        await WidgetsBinding.instance.endOfFrame;
+        entry = _setEntries['${item.id}:$number']?.currentState;
+      }
+      if (entry == null) return;
+      await entry.savePending(confirmSuggestion: true);
+      if (!mounted) return;
+      setState(() => _selectedSets.remove(item.id));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final next = _activeNumber(item);
+        final row = next == null
+            ? null
+            : _setEntries['${item.id}:$next']?.currentContext;
+        if (row != null) {
+          unawaited(Scrollable.ensureVisible(row,
+              alignment: .6,
+              duration: DSMotion.duration(context, DSMotion.regular)));
+        }
+      });
+    } catch (error) {
+      _error(error is FormatException
+          ? error.message
+          : TrainingRepository.errorMessage(
+              error, 'Not saved yet. Tap save to retry.'));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _completeAndAdvance(TodayPlanItemModel item) async {
+    await _status(item, 'COMPLETED');
+    if (mounted && _day.allResolved) await _finish();
+  }
+
+  Future<void> _exerciseOptions(TodayPlanItemModel item) async {
+    if (_busy || _optionsOpen) return;
+    _optionsOpen = true;
+    FocusScope.of(context).unfocus();
+    final actions = [
+      if (item.isPending) 'Skip exercise' else 'Reopen exercise',
+      if (item.isPending && _day.logs(item.id).isNotEmpty) 'Finish exercise',
+    ];
+    final action = await showModalBottomSheet<String>(
+        context: context,
+        showDragHandle: true,
+        useSafeArea: true,
+        isScrollControlled: true,
+        backgroundColor: DSColors.bg,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            side: BorderSide(color: DSColors.border)),
+        builder: (sheetContext) => FitnessTheme(
+            child: SafeArea(
+                top: false,
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+                          child: Text(copy('Exercise options'),
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w500))),
+                      for (final action in actions)
+                        ListTile(
+                            title: Text(copy(action),
+                                style: const TextStyle(fontSize: 14)),
+                            onTap: () => Navigator.pop(sheetContext, action)),
+                      const SizedBox(height: 12),
+                    ]))));
+    _optionsOpen = false;
+    if (!mounted || action == null) return;
+    if (action == 'Finish exercise') {
+      await _status(item, 'COMPLETED');
+    } else {
+      await _status(
+          item, action == 'Skip exercise' ? 'SKIPPED' : 'NOT_STARTED');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = _day.items.isEmpty
         ? null
         : _day.items[_index.clamp(0, _day.items.length - 1)];
-    return Theme(
-        data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context)
-                .colorScheme
-                .copyWith(primary: trainingSilver, secondary: trainingSilver)),
+    return FitnessTheme(
         child: Scaffold(
-          backgroundColor: DSColors.bg,
-          appBar: AppBar(
-              backgroundColor: DSColors.bg,
-              title: Text(
-                  _day.name == 'Workout' ? copy('Your workout') : _day.name,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w600)),
-              actions: [
-                if (!_day.finished)
-                  Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ValueListenableBuilder<DateTime>(
-                          valueListenable: _clock,
-                          builder: (_, now, __) {
-                            final start = DateTime.tryParse(
-                                _day.session?['startedAt'] as String? ?? '');
-                            final minutes = start == null
-                                ? 0
-                                : now.difference(start).inMinutes;
-                            return Center(
-                                child: Text(
-                                    copy('{minutes} min',
-                                        values: {'minutes': minutes}),
-                                    style: const TextStyle(
-                                        color: trainingMuted, fontSize: 12)));
-                          }))
-              ]),
-          body: _day.finished && !_editingFinished
-              ? _summary()
-              : item == null
-                  ? Center(child: Text(copy('No exercises found')))
-                  : Column(children: [
-                      if (_day.pendingSync)
-                        Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 8),
-                            child: WorkoutSyncNotice(
-                                blocked: _day.syncBlocked,
-                                onRetry: () => _sync(retry: true))),
-                      SizedBox(
-                          height: 54,
-                          child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 18),
-                              itemCount: _day.items.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 8),
-                              itemBuilder: (_, index) => ChoiceChip(
-                                  label: Text('${index + 1}'),
-                                  selected: index == _index,
-                                  showCheckmark: false,
-                                  selectedColor: trainingSilver,
-                                  backgroundColor: const Color(0xFF242424),
-                                  labelStyle: TextStyle(
-                                      color: index == _index
-                                          ? Colors.black
-                                          : trainingMuted),
-                                  avatar: _day.items[index].isCompleted
-                                      ? Icon(CupertinoIcons.checkmark,
-                                          size: 12,
-                                          color: index == _index
-                                              ? Colors.black
-                                              : trainingSilver)
-                                      : null,
-                                  onSelected: _busy
-                                      ? null
-                                      : (_) => setState(() {
-                                            _index = index;
-                                            _loadPrevious();
-                                          })))),
-                      Expanded(
-                          child: MotionEntrance(
-                              key: ValueKey(item.id),
-                              child: ListView(
-                                  key: const ValueKey('workout-session-scroll'),
-                                  padding:
-                                      const EdgeInsets.fromLTRB(18, 8, 18, 24),
+      backgroundColor: DSColors.bg,
+      appBar: AppBar(
+        backgroundColor: DSColors.bg,
+        surfaceTintColor: Colors.transparent,
+        title: Text(_day.name == 'Workout' ? copy('Your workout') : _day.name,
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: DSColors.silver)),
+        actions: [
+          if (!_day.finished)
+            Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: Center(
+                    child: ValueListenableBuilder<DateTime>(
+                        valueListenable: _clock,
+                        builder: (_, now, __) {
+                          final start = DateTime.tryParse(
+                              _day.session?['startedAt'] as String? ?? '');
+                          final seconds = start == null
+                              ? 0
+                              : now.difference(start).inSeconds.clamp(0, 86400);
+                          return Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 11, vertical: 7),
+                              decoration: BoxDecoration(
+                                  color: DSColors.bgElevated,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: DSColors.border)),
+                              child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (_index == 0)
-                                      WorkoutWarmup(
-                                          warmup: (_day.json['warmup'] as Map?)
-                                              ?.cast<String, dynamic>()),
-                                    ClipRRect(
-                                        borderRadius: BorderRadius.circular(22),
-                                        child: AspectRatio(
-                                            aspectRatio:
-                                                item.exercise.demoAspectRatio,
-                                            child: RepaintBoundary(
-                                                child: FitVideoSurface(
-                                                    key: ValueKey(item.id),
-                                                    url: item.exercise.url,
-                                                    autoplay: true,
-                                                    fit: BoxFit.contain,
-                                                    neutralBackground: true,
-                                                    backgroundColor:
-                                                        Colors.white)))),
-                                    const SizedBox(height: 17),
-                                    Text(item.exercise.displayName,
-                                        style: const TextStyle(
-                                            fontSize: 23,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: -.5)),
-                                    const SizedBox(height: 5),
+                                    const Icon(CupertinoIcons.clock,
+                                        size: 13, color: DSColors.muted),
+                                    const SizedBox(width: 6),
                                     Text(
-                                        '${item.exercise.targetLabel ?? item.exercise.target} · ${item.exercise.equipmentLabel ?? item.exercise.equipment}',
+                                        '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
                                         style: const TextStyle(
-                                            fontSize: 13,
-                                            color: trainingMuted)),
-                                    Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: TextButton.icon(
-                                            onPressed: () => Navigator.of(context)
-                                                .push(MaterialPageRoute<void>(
-                                                    builder: (_) =>
-                                                        ExerciseDetailView(
-                                                            exercise: item
-                                                                .exercise))),
-                                            icon: const Icon(
-                                                CupertinoIcons.info_circle,
-                                                size: 16),
-                                            label: Text(copy('Form guide'),
-                                                style:
-                                                    const TextStyle(fontSize: 12)))),
-                                    TrainingSurface(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(children: [
-                                                Expanded(
-                                                    child: Text(
-                                                        copy('Your sets'),
-                                                        style: const TextStyle(
-                                                            fontSize: 17,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600))),
-                                                Text(
-                                                    copy('{sets} × {reps}',
-                                                        values: {
-                                                          'sets':
-                                                              item.targetSets,
-                                                          'reps':
-                                                              item.targetReps
-                                                        }),
-                                                    style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: trainingMuted))
-                                              ]),
-                                              const SizedBox(height: 7),
-                                              Text(
-                                                  copy(
-                                                      'Confirm or edit each set before saving.'),
-                                                  style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: trainingMuted)),
-                                              if (item.setTargets?[
-                                                      'weightBasis'] ==
-                                                  'estimated_start')
-                                                Text(
-                                                    copy(
-                                                        'Starting estimate · reduce the load if needed'),
-                                                    style: const TextStyle(
-                                                        color: trainingMuted,
-                                                        fontSize: 11)),
-                                              const SizedBox(height: 10),
-                                              for (int number = 1;
-                                                  number <= _setCount(item);
-                                                  number++)
-                                                WorkoutSetEntry(
-                                                    key: _setEntries.putIfAbsent(
-                                                        '${item.id}:$number',
-                                                        () => GlobalKey<
-                                                            WorkoutSetEntryState>()),
-                                                    date: _day.date,
-                                                    itemId: item.id,
-                                                    number: number,
-                                                    targetLabel: item
-                                                        .localizedTargetLabel(
-                                                            context, number),
-                                                    suggestedReps:
-                                                        _suggestedReps(
-                                                            item, number),
-                                                    suggestedWeight:
-                                                        _suggestedWeight(
-                                                            item, number),
-                                                    previous: _previous,
-                                                    log: _day
-                                                        .logs(item.id)
-                                                        .where((row) =>
-                                                            row['setNumber'] ==
-                                                            number)
-                                                        .firstOrNull,
-                                                    disabled: _busy,
-                                                    onSave: (reps, weight,
-                                                        effort) async {
-                                                      final wasLogged = _day
-                                                          .logs(item.id)
-                                                          .any((log) =>
-                                                              log['setNumber'] ==
-                                                              number);
-                                                      await _mutate('PUT',
-                                                          '/items/${item.id}/sets',
-                                                          data: {
-                                                            'setNumber': number,
-                                                            'reps': reps,
-                                                            'weight': weight,
-                                                            'rpe': effort,
-                                                          });
-                                                      if (!wasLogged) {
-                                                        _startRest(
-                                                            item, number);
-                                                      }
-                                                      await HapticFeedback
-                                                          .selectionClick();
-                                                    },
-                                                    onDelete: () => _mutate(
-                                                        'DELETE',
-                                                        '/items/${item.id}/sets/$number')),
-                                              TextButton.icon(
-                                                  onPressed: _busy
-                                                      ? null
-                                                      : () => _extraSet(item),
-                                                  icon: const Icon(
-                                                      CupertinoIcons.plus,
-                                                      size: 14),
-                                                  label: Text(copy('Add set'),
-                                                      style: const TextStyle(
-                                                          fontSize: 12))),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                  copy(
-                                                      'Only saved sets count toward your body map.'),
-                                                  style: const TextStyle(
-                                                      color: trainingMuted,
-                                                      fontSize: 11,
-                                                      height: 1.4)),
-                                              const SizedBox(height: 12),
-                                              if (!_day.finished)
-                                                WorkoutItemActions(
-                                                    item: item,
-                                                    busy: _busy,
-                                                    onDone: () => _status(
-                                                        item, 'COMPLETED'),
-                                                    onSkip: () => _status(
-                                                        item, 'SKIPPED'),
-                                                    onUndo: () => _status(
-                                                        item, 'NOT_STARTED')),
-                                            ])),
-                                  ]))),
-                    ]),
-          bottomNavigationBar: _day.finished
-              ? (_editingFinished
-                  ? SafeArea(
-                      child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: FilledButton(
-                              onPressed: _busy ? null : _saveFinishedEdits,
-                              child: Text(copy('Save changes')))))
-                  : null)
-              : SafeArea(
-                  child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-                      child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _restBar(),
-                            TrainingButton(
-                                label: _day.allResolved
-                                    ? 'Finish workout'
-                                    : 'Continue workout',
-                                primary: true,
-                                onPressed: _busy
-                                    ? null
-                                    : _day.allResolved
-                                        ? _finish
-                                        : () {
-                                            final index = _day.items.indexWhere(
-                                                (row) => row.isPending);
-                                            if (index >= 0) {
-                                              setState(() {
-                                                _index = index;
-                                                _loadPrevious();
-                                              });
-                                            }
-                                          }),
-                          ]))),
-        ));
+                                            fontSize: 12,
+                                            color: DSColors.silver)),
+                                  ]));
+                        })))
+        ],
+      ),
+      body: _day.finished && !_editingFinished
+          ? _summary()
+          : item == null
+              ? Center(child: Text(copy('No exercises found')))
+              : Column(children: [
+                  _progress(),
+                  if (_day.pendingSync)
+                    Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                        child: WorkoutSyncNotice(
+                            blocked: _day.syncBlocked,
+                            onRetry: () => _sync(retry: true))),
+                  Expanded(
+                      child: MotionEntrance(
+                          key: ValueKey(item.id),
+                          child: ListView(
+                              key: const ValueKey('workout-session-scroll'),
+                              controller: _scroll,
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
+                              children: [
+                                _movement(item),
+                                const SizedBox(height: 12),
+                                Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18),
+                                    child: WorkoutFormGuide(
+                                        key: ValueKey('form-${item.id}'),
+                                        exercise: item.exercise)),
+                                const SizedBox(height: 12),
+                                if (_index == 0)
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 18),
+                                      child: WorkoutWarmup(
+                                          warmup: (_day.json['warmup'] as Map?)
+                                              ?.cast<String, dynamic>())),
+                                Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18),
+                                    child: _sets(item)),
+                              ]))),
+                ]),
+      bottomNavigationBar:
+          item == null && !_day.finished ? null : _footer(item),
+    ));
+  }
+
+  Widget _progress() => Padding(
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(
+            copy('Exercise {current} of {total}',
+                values: {'current': _index + 1, 'total': _day.items.length}),
+            style: const TextStyle(fontSize: 11, color: DSColors.muted)),
+        const SizedBox(height: 6),
+        SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              for (var index = 0; index < _day.items.length; index++) ...[
+                if (index > 0) const SizedBox(width: 6),
+                _exerciseStep(index),
+              ],
+            ])),
+      ]));
+
+  Widget _exerciseStep(int index) {
+    final item = _day.items[index];
+    final selected = index == _index;
+    final size = MediaQuery.textScalerOf(context).scale(14) + 30;
+    final touchSize = (size + 4).clamp(48.0, double.infinity);
+    return Semantics(
+        key: _stepKeys.putIfAbsent(index, () => GlobalKey()),
+        button: true,
+        selected: selected,
+        enabled: !_busy,
+        label: '${index + 1}: ${item.exercise.displayName}',
+        value: item.isCompleted
+            ? copy('Done')
+            : item.isPending
+                ? null
+                : copy('Skipped'),
+        child: InkWell(
+            onTap: _busy
+                ? null
+                : () {
+                    setState(() {
+                      _index = index;
+                      _loadPrevious();
+                    });
+                    _showCurrentStep();
+                  },
+            borderRadius: BorderRadius.circular(10),
+            highlightColor: Colors.white.withValues(alpha: .08),
+            splashColor: Colors.white.withValues(alpha: .12),
+            child: SizedBox.square(
+                dimension: touchSize,
+                child: Center(
+                    child: Container(
+                        width: size,
+                        height: size,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: item.isCompleted
+                                ? Colors.white
+                                : DSColors.bgElevated,
+                            border: Border.all(
+                                color: selected || item.isCompleted
+                                    ? Colors.white
+                                    : DSColors.borderHi,
+                                width: selected ? 2 : 1)),
+                        child: ExcludeSemantics(
+                            child: Text('${index + 1}',
+                                maxLines: 1,
+                                softWrap: false,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: item.isCompleted
+                                        ? Colors.black
+                                        : DSColors.silver))))))));
+  }
+
+  Widget _movement(TodayPlanItemModel item) {
+    final expanded = !_collapsedDemos.contains(item.id);
+    final hasMedia = item.exercise.url?.isNotEmpty == true ||
+        item.exercise.thumbnailUrl?.isNotEmpty == true;
+    final name = Text(item.exercise.displayName,
+        style: const TextStyle(
+            fontSize: 22,
+            height: 1.25,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -.5));
+    final toggle = TextButton(
+        onPressed: () => setState(() {
+              if (expanded) {
+                _collapsedDemos.add(item.id);
+              } else {
+                _collapsedDemos.remove(item.id);
+              }
+            }),
+        child: Text(copy(expanded ? 'Hide demo' : 'Show demo'),
+            style: const TextStyle(fontSize: 11, color: DSColors.muted)));
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            LayoutBuilder(
+                builder: (context, box) =>
+                    MediaQuery.textScalerOf(context).scale(14) > 20
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                                name,
+                                Align(
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    child: toggle)
+                              ])
+                        : Row(children: [
+                            Expanded(child: name),
+                            const SizedBox(width: 8),
+                            toggle
+                          ])),
+            Text(
+                '${item.exercise.targetLabel ?? item.exercise.target} · ${item.exercise.equipmentLabel ?? item.exercise.equipment}',
+                style: const TextStyle(
+                    color: DSColors.muted, fontSize: 11, height: 1.4)),
+          ])),
+      if (expanded)
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: TrainingSurface(
+                key: ValueKey('demo-${item.id}'),
+                padding: EdgeInsets.zero,
+                child: !hasMedia
+                    ? SizedBox(
+                        height: 88,
+                        child: Center(
+                            child: Text(copy('Demo unavailable'),
+                                style: const TextStyle(
+                                    color: DSColors.muted, fontSize: 12))))
+                    : AspectRatio(
+                        aspectRatio: item.exercise.demoAspectRatio,
+                        child: RepaintBoundary(
+                            child: FitVideoSurface(
+                                url: item.exercise.url,
+                                autoplay: true,
+                                fit: BoxFit.contain,
+                                neutralBackground: true,
+                                backgroundColor:
+                                    hasMedia ? Colors.white : DSColors.bgCard,
+                                placeholder: item.exercise.thumbnailUrl?.isNotEmpty == true
+                                    ? CachedNetworkImage(
+                                        imageUrl: item.exercise.thumbnailUrl!,
+                                        fit: BoxFit.contain,
+                                        errorWidget: (_, __, ___) => Center(
+                                            child: Text(copy('Demo unavailable'),
+                                                style: const TextStyle(
+                                                    color: DSColors.muted,
+                                                    fontSize: 12))))
+                                    : Center(
+                                        child: Text(copy('Demo unavailable'),
+                                            style: const TextStyle(color: DSColors.muted, fontSize: 12)))))))),
+    ]);
+  }
+
+  Widget _sets(TodayPlanItemModel item) {
+    final count = _setCount(item);
+    final active = _activeNumber(item);
+    final large = MediaQuery.textScalerOf(context).scale(14) > 20;
+    Widget heading(String text) => Text(copy(text),
+        textAlign: TextAlign.center,
+        style:
+            const TextStyle(fontSize: 10, height: 1.4, color: DSColors.muted));
+    return TrainingSurface(
+        padding: const EdgeInsets.all(12),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 14),
+              child: Row(children: [
+                Expanded(
+                    child: Text(copy('Your sets'),
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w500))),
+                Text(
+                    copy('{sets} × {reps}', values: {
+                      'sets': item.targetSets,
+                      'reps': item.targetReps
+                    }),
+                    style:
+                        const TextStyle(fontSize: 11, color: DSColors.muted)),
+              ])),
+          if (active != null &&
+              item.localizedTargetLabel(context, active) != null)
+            Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 14),
+                child: Text(
+                    '${copy('Target')} · ${item.localizedTargetLabel(context, active)}',
+                    style: const TextStyle(
+                        fontSize: 11, height: 1.4, color: DSColors.muted))),
+          if (!large)
+            Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(children: [
+                  SizedBox(width: 28, child: heading('Set')),
+                  const SizedBox(width: 8),
+                  Expanded(flex: 2, child: heading('Previous')),
+                  const SizedBox(width: 8),
+                  if (!item.isBodyweight) ...[
+                    Expanded(flex: 2, child: heading('Weight (kg)')),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(flex: 2, child: heading('Reps')),
+                  const SizedBox(width: 26),
+                ])),
+          for (var number = 1; number <= count; number++)
+            WorkoutSetEntry(
+                key: _setEntries.putIfAbsent('${item.id}:$number',
+                    () => GlobalKey<WorkoutSetEntryState>()),
+                date: _day.date,
+                itemId: item.id,
+                number: number,
+                compact: true,
+                active: active == number,
+                showSaveAction: false,
+                showDetailsAction: false,
+                onActivate: () => _selectSet(item, number),
+                bodyweight: item.isBodyweight,
+                targetLabel: item.localizedTargetLabel(context, number),
+                suggestedReps: _suggestedReps(item, number),
+                suggestedWeight: _suggestedWeight(item, number),
+                previous: _previous,
+                log: _day
+                    .logs(item.id)
+                    .where((row) => row['setNumber'] == number)
+                    .firstOrNull,
+                disabled: _busy,
+                onSave: (reps, weight, effort) async {
+                  final wasLogged = _day
+                      .logs(item.id)
+                      .any((log) => log['setNumber'] == number);
+                  setState(() => _busy = true);
+                  try {
+                    await _mutate('PUT', '/items/${item.id}/sets', data: {
+                      'setNumber': number,
+                      'reps': reps,
+                      'weight': weight,
+                      'rpe': effort
+                    });
+                    if (mounted) {
+                      setState(() => _selectedSets.remove(item.id));
+                      if (!wasLogged) {
+                        if (_day.logs(item.id).length < count) {
+                          _startRest(item, number);
+                        } else if (_restState.value?.exercise ==
+                            item.exercise.displayName) {
+                          _updateRest(null);
+                        }
+                      }
+                    }
+                    unawaited(HapticFeedback.selectionClick()
+                        .catchError((Object _) {}));
+                  } finally {
+                    if (mounted) setState(() => _busy = false);
+                  }
+                },
+                onDelete: () =>
+                    _mutate('DELETE', '/items/${item.id}/sets/$number')),
+          const SizedBox(height: 6),
+          const Divider(height: 1, color: DSColors.border),
+          Wrap(alignment: WrapAlignment.spaceBetween, children: [
+            TextButton(
+                onPressed: _busy ? null : () => _extraSet(item),
+                child: Text(copy('Add set'),
+                    style:
+                        const TextStyle(fontSize: 12, color: DSColors.silver))),
+            if (active != null)
+              TextButton(
+                  onPressed: _busy
+                      ? null
+                      : () => _setEntries['${item.id}:$active']
+                          ?.currentState
+                          ?.showDetails(),
+                  child: Text(copy('Set details'),
+                      style: const TextStyle(
+                          fontSize: 12, color: DSColors.muted))),
+            if (!_day.finished)
+              TextButton(
+                  onPressed: _busy ? null : () => _exerciseOptions(item),
+                  child: Text(copy('Exercise options'),
+                      style: const TextStyle(
+                          fontSize: 11, color: DSColors.muted))),
+          ]),
+        ]));
+  }
+
+  void _nextExercise() {
+    final index = _day.items.indexWhere((item) => item.isPending);
+    if (index >= 0) {
+      setState(() {
+        _index = index;
+        _loadPrevious();
+      });
+      _showCurrentStep();
+    }
+  }
+
+  Widget _footer(TodayPlanItemModel? item) {
+    final summary = _day.finished && !_editingFinished;
+    final active = item == null ? null : _activeNumber(item);
+    final editing = active != null &&
+        _day.logs(item!.id).any((log) => log['setNumber'] == active);
+    final last =
+        _day.items.where((row) => row.isPending && row.id != item?.id).isEmpty;
+    final label = summary
+        ? copy('Done')
+        : _editingFinished || editing
+            ? copy('Save changes')
+            : active != null
+                ? copy('Log set {number}', values: {'number': active})
+                : _day.allResolved || last
+                    ? copy('Finish workout')
+                    : copy('Next exercise');
+    final VoidCallback? action = _busy
+        ? null
+        : summary
+            ? () => Navigator.pop(context)
+            : _editingFinished
+                ? _saveFinishedEdits
+                : active != null && item != null
+                    ? () => _logSet(item, active)
+                    : _day.allResolved
+                        ? _finish
+                        : item?.isPending == true
+                            ? () => _completeAndAdvance(item!)
+                            : _nextExercise;
+    return Padding(
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        child: SafeArea(
+            top: false,
+            child: Container(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+                decoration: const BoxDecoration(
+                    color: DSColors.bg,
+                    border: Border(
+                        top: BorderSide(color: DSColors.border, width: .7))),
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!summary &&
+                          !_editingFinished &&
+                          MediaQuery.viewInsetsOf(context).bottom == 0)
+                        _restBar(),
+                      FilledButton(
+                          key: const ValueKey('workout-primary-action'),
+                          onPressed: action,
+                          style: FilledButton.styleFrom(
+                              backgroundColor: DSColors.silver,
+                              foregroundColor: DSColors.bg,
+                              disabledBackgroundColor: DSColors.bgRaised,
+                              disabledForegroundColor: DSColors.muted,
+                              minimumSize: const Size(double.infinity, 50),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                          child: _busy
+                              ? const CupertinoActivityIndicator(
+                                  color: DSColors.bg)
+                              : Text(label,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      height: 1.3,
+                                      fontWeight: FontWeight.w600))),
+                    ]))));
   }
 
   final _extra = <String, int>{};
@@ -676,62 +977,8 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   }
 
   Widget _summary() => MotionEntrance(
-          child: ListView(padding: const EdgeInsets.all(18), children: [
-        const SizedBox(height: 30),
-        const Icon(CupertinoIcons.checkmark_circle_fill,
-            size: 54, color: trainingSilver),
-        const SizedBox(height: 18),
-        Text(
-            copy(_day.pendingSync
-                ? 'Workout saved on this phone'
-                : 'Workout complete'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 29, fontWeight: FontWeight.w700, letterSpacing: -.7)),
-        const SizedBox(height: 8),
-        Text(_day.date,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: trainingMuted, fontSize: 13)),
-        const SizedBox(height: 28),
-        if (_day.pendingSync) ...[
-          WorkoutSyncNotice(
-              blocked: _day.syncBlocked, onRetry: () => _sync(retry: true)),
-          const SizedBox(height: 16),
-        ],
-        TrainingSurface(
-            child: Column(children: [
-          _stat(
-              'Duration',
-              copy('{minutes} min',
-                  values: {'minutes': (_day.durationSeconds / 60).ceil()})),
-          const Divider(color: Color(0xFF333333)),
-          _stat('Logged sets', '${_day.loggedSets}'),
-          const Divider(color: Color(0xFF333333)),
-          _stat('Volume', '${_day.volume.toStringAsFixed(0)} kg'),
-          const Divider(color: Color(0xFF333333)),
-          _stat('Skipped', '${_day.skipped}'),
-        ])),
-        const SizedBox(height: 16),
-        TextButton.icon(
-            onPressed: () => setState(() => _editingFinished = true),
-            icon: const Icon(CupertinoIcons.pencil),
-            label: Text(copy('Edit logged sets'))),
-        if (_day.loggedSets == 0)
-          Text(copy('No sets were logged. Your body map is unchanged.'),
-              style: const TextStyle(color: trainingMuted, fontSize: 13)),
-        const SizedBox(height: 20),
-        TrainingButton(
-            label: 'Done',
-            primary: true,
-            onPressed: () => Navigator.pop(context)),
-      ]));
-  Widget _stat(String label, String value) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(children: [
-        Expanded(
-            child: Text(copy(label),
-                style: const TextStyle(color: trainingMuted, fontSize: 14))),
-        Text(value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-      ]));
+      child: WorkoutCompletionSummary(
+          day: _day,
+          onEdit: () => setState(() => _editingFinished = true),
+          onRetry: () => _sync(retry: true)));
 }

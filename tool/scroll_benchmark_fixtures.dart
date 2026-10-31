@@ -1,7 +1,7 @@
 // Synthetic sample data only. Never contacts the backend.
 import 'dart:convert';
-import 'package:fitai_mobile/models/home_models.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/models/home_models.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
 
 final benchmarkHome = HomeData.fromJson(jsonDecode(
         r'''{"user":{"name":"Sample member","streakDays":1},"readiness":{"score":8.4,"label":"Optimal Recovery","aiTarget":"Sample day: follow your planned session and keep your usual rest between sets.","source":"sample","date":"2026-10-06","hrvMs":68,"sleepMinutes":462,"sleepEfficiency":91,"restingHrBpm":54,"steps":6840,"activeCalories":420},"todayWorkout":{"userWorkoutId":"99ce11fa-0a54-4f9c-92de-3c16c96063ee","weekLabel":"Week 4 Hypertrophy","workoutTitle":"pec deck machine fly","sessionTitle":"Full-body strength","category":"strength","exerciseCount":6,"durationMinutes":48,"status":"NOT_STARTED","aiNote":"Target Effort: 8.5/10 \u2014 Full recovery detected. Prime window for hypertrophy."},"nutrition":{"calories":{"consumed":1480,"target":2508},"protein":{"consumed":100,"target":161},"carbs":{"consumed":189,"target":309},"fat":{"consumed":37,"target":70},"water":{"consumed":1450,"target":2825}},"weeklyStreak":[{"day":"MON","dateNum":5,"status":"UNAVAILABLE","isToday":false},{"day":"TUE","dateNum":6,"status":"NOT_STARTED","isToday":true},{"day":"WED","dateNum":7,"status":"UNAVAILABLE","isToday":false},{"day":"THU","dateNum":8,"status":"UNAVAILABLE","isToday":false},{"day":"FRI","dateNum":9,"status":"UNAVAILABLE","isToday":false},{"day":"SAT","dateNum":10,"status":"UNAVAILABLE","isToday":false},{"day":"SUN","dateNum":11,"status":"UNAVAILABLE","isToday":false}]}''')

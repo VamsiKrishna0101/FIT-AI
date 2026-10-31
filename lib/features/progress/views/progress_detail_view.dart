@@ -1,3 +1,4 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import '../components/exercise_progress_content.dart';
 import '../components/exercise_overview_control.dart';
 import '../components/muscle_progress_content.dart';
 import '../components/progress_date_filter.dart';
+import '../components/progress_activity.dart';
 import '../components/progress_surface.dart';
 import '../components/progress_workout_history.dart';
 import '../components/wellness_progress_content.dart';
@@ -25,12 +27,14 @@ class ProgressDetailView extends StatefulWidget {
   final String kind;
   final ProgressJson? initial;
   final Map<String, dynamic> query;
+  final ProgressRepository? repository;
   const ProgressDetailView(
       {super.key,
       required this.title,
       required this.path,
       required this.period,
       required this.kind,
+      this.repository,
       this.initial,
       this.query = const {}});
   @override
@@ -38,6 +42,8 @@ class ProgressDetailView extends StatefulWidget {
 }
 
 class _ProgressDetailViewState extends State<ProgressDetailView> {
+  ProgressRepository get _repo =>
+      widget.repository ?? ProgressRepository.shared;
   ProgressJson? _data;
   late String _period;
   DateTimeRange? _custom;
@@ -85,7 +91,7 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
       _failed = false;
     });
     try {
-      final result = await ProgressRepository.shared.load(widget.path, _period,
+      final result = await _repo.load(widget.path, _period,
           refresh: refresh,
           query: {..._query, if (more) 'cursor': _data!['nextCursor']});
       if (!mounted || request != _request) return;
@@ -109,20 +115,20 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
     }
   }
 
-  void _exercise(ProgressJson row) =>
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => ProgressDetailView(
-              title: row['name'] as String,
-              path: '/exercises/${row['id']}',
-              period: _period,
-              kind: 'exercise',
-              query: _query)));
+  void _exercise(ProgressJson row) => Navigator.of(context).push(AppPageRoute(
+      builder: (_) => ProgressDetailView(
+          repository: _repo,
+          title: row['name'] as String,
+          path: '/exercises/${row['id']}',
+          period: _period,
+          kind: 'exercise',
+          query: _query)));
 
   Future<void> _add() async {
-    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(
+    final saved = await Navigator.of(context).push<bool>(AppPageRoute(
         builder: (_) => const FitnessTheme(child: BodyEntryView())));
     if (saved == true) {
-      await ProgressRepository.shared.invalidate();
+      await _repo.invalidate();
       if (mounted) await _load(refresh: true);
     }
   }
@@ -131,10 +137,10 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
     try {
       final record = await BodyAssessmentRepository.shared.entry(id);
       if (!mounted) return;
-      await Navigator.of(context).push(MaterialPageRoute(
+      await Navigator.of(context).push(AppPageRoute(
           builder: (_) => FitnessTheme(
               child: BodyRecordView(entry: record, onCompare: () {}))));
-      await ProgressRepository.shared.invalidate();
+      await _repo.invalidate();
       if (mounted) await _load(refresh: true);
     } catch (_) {
       if (mounted) {
@@ -155,6 +161,17 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
   Widget _content() {
     final data = _data!;
     switch (widget.kind) {
+      case 'training':
+        return Column(children: [
+          ProgressTrainingSummary(
+              summary: Map<String, dynamic>.from(data['summary'] as Map? ?? {}),
+              rangeLabel: _rangeLabel),
+          const SizedBox(height: 14),
+          ProgressActivity(
+              weeks: progressRows(data['weeks']),
+              activity: progressRows(data['activity']),
+              endDate: (data['range'] as Map?)?['end'] as String?),
+        ]);
       case 'exercise':
         return ExerciseProgressContent(
             data: data,
@@ -164,8 +181,9 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
       case 'muscles':
         return MuscleDistributionContent(
             muscles: progressRows(data['muscles']),
-            onMuscle: (row) => Navigator.of(context).push(MaterialPageRoute(
+            onMuscle: (row) => Navigator.of(context).push(AppPageRoute(
                 builder: (_) => ProgressDetailView(
+                    repository: _repo,
                     title: row['label'] as String,
                     path: '/muscles/${row['id']}',
                     period: _period,
@@ -183,10 +201,9 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           ProgressWorkoutHistory(
               sessions: progressRows(data['items']),
-              onSession: (session) => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => ProgressWorkoutRecap(
-                          session: session, onExercise: _exercise)))),
+              onSession: (session) => Navigator.of(context).push(AppPageRoute(
+                  builder: (_) => ProgressWorkoutRecap(
+                      session: session, onExercise: _exercise)))),
           if (data['nextCursor'] != null)
             Center(
                 child: TextButton(
@@ -198,6 +215,23 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
     }
   }
 
+  bool get _expandedFilter =>
+      MediaQuery.sizeOf(context).width < 360 ||
+      MediaQuery.textScalerOf(context).scale(14) > 18;
+
+  Widget _dateFilter({bool expanded = false}) => ProgressDateFilter(
+      period: _period,
+      custom: _custom,
+      compact: true,
+      controlWidth: expanded ? MediaQuery.sizeOf(context).width - 36 : 118,
+      onChanged: (period, dates) {
+        setState(() {
+          _period = period;
+          _custom = dates;
+          _data = null;
+        });
+        _load(refresh: true);
+      });
   @override
   Widget build(BuildContext context) => FitnessTheme(
       child: Scaffold(
@@ -205,6 +239,14 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
           appBar: AppBar(
               backgroundColor: DSColors.bg,
               surfaceTintColor: Colors.transparent,
+              actions: [
+                if (!_expandedFilter) ...[
+                  Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: SizedBox(width: 118, child: _dateFilter())),
+                  const SizedBox(width: 18),
+                ]
+              ],
               title: Text(
                   fitnessText(
                       context,
@@ -223,19 +265,18 @@ class _ProgressDetailViewState extends State<ProgressDetailView> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(18, 10, 18, 40),
                   children: [
-                    ProgressDateFilter(
-                        period: _period,
-                        custom: _custom,
-                        rangeLabel: _rangeLabel,
-                        onChanged: (period, dates) {
-                          setState(() {
-                            _period = period;
-                            _custom = dates;
-                            _data = null;
-                          });
-                          _load(refresh: true);
-                        }),
-                    const SizedBox(height: 14),
+                    if (_expandedFilter) ...[
+                      _dateFilter(expanded: true),
+                      const SizedBox(height: 12),
+                    ],
+                    if (_rangeLabel != null) ...[
+                      Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: Text(_rangeLabel!,
+                              style: const TextStyle(
+                                  color: progressMuted, fontSize: 12))),
+                      const SizedBox(height: 14),
+                    ],
                     if (_loading && _data == null)
                       const Padding(
                           padding: EdgeInsets.all(50),

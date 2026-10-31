@@ -9,21 +9,21 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/components/liquid_chrome_button.dart';
-import 'package:fitai_mobile/core/components/premium_surface.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/onboarding/data/discovery_repository.dart';
-import 'package:fitai_mobile/features/onboarding/views/discovery_onboarding_gate.dart';
-import 'package:fitai_mobile/features/onboarding/data/starter_plan_repository.dart';
-import 'package:fitai_mobile/features/onboarding/views/starter_plan_view.dart';
-import 'package:fitai_mobile/features/train/components/exercise_muscle_map.dart';
-import 'package:fitai_mobile/features/train/components/graphite_anatomy.dart';
-import 'package:fitai_mobile/features/train/models/workout_exercise_models.dart';
-import 'package:fitai_mobile/features/train/views/exercise_detail_screen.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/features/today/components/readiness_score_ring.dart';
-import 'package:fitai_mobile/features/today/views/readiness_detail_view.dart';
-import 'package:fitai_mobile/models/home_models.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/components/premium_surface.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/onboarding/data/discovery_repository.dart';
+import 'package:setcraft/features/onboarding/views/discovery_onboarding_gate.dart';
+import 'package:setcraft/features/onboarding/data/starter_plan_repository.dart';
+import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
+import 'package:setcraft/features/train/components/exercise_muscle_map.dart';
+import 'package:setcraft/features/train/components/graphite_anatomy.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
+import 'package:setcraft/features/train/views/exercise_detail_screen.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/features/today/components/readiness_score_ring.dart';
+import 'package:setcraft/features/today/views/readiness_detail_view.dart';
+import 'package:setcraft/models/home_models.dart';
 
 const boundary = ValueKey('training-experience-preview');
 Widget app(Widget child, {double scale = 1, String locale = 'en'}) =>
@@ -401,23 +401,23 @@ void main() {
       (tester) async {
     phone(tester);
     Widget today(HomeReadiness? readiness) => Scaffold(
-        body: TodayDashboard(
-            data: HomeData.fromJson({
-              'readiness': readiness?.toJson(),
-              'sleepLog': {
-                'sleepMinutes': 450,
-                'rested': 4,
-                'energy': 4,
-                'soreness': 2
-              }
-            }),
-            now: DateTime(2026, 10, 24),
-            onRefresh: () async {},
-            onProfile: () {},
-            onSession: () {},
-            onTrain: () {},
-            onNutrition: () {},
-            onBody: () {}));
+            body: TodayDashboard(
+          data: HomeData.fromJson({
+            'readiness': readiness?.toJson(),
+            'sleepLog': {
+              'sleepMinutes': 450,
+              'rested': 4,
+              'energy': 4,
+              'soreness': 2
+            }
+          }),
+          now: DateTime(2026, 10, 24),
+          onRefresh: () async {},
+          onProfile: () {},
+          onSession: () {},
+          onTrain: () {},
+          onNutrition: () {},
+        ));
     const reading = HomeReadiness(
         score: 8.25,
         label: 'Daily check-in estimate',

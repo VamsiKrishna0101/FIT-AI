@@ -37,7 +37,7 @@ void main() {
     ),
   );
 
-  runApp(FitAIApp(
+  runApp(SetcraftApp(
     initialHome: AppStartup(
       initialize: _initializeHome,
       onReady: () => unawaited(NotificationService.shared.initialize()),
@@ -63,10 +63,10 @@ Future<Widget> _initializeHome() async {
 }
 
 // MARK: - Root Setcraft Mobile Application
-class FitAIApp extends StatelessWidget {
+class SetcraftApp extends StatelessWidget {
   final Widget initialHome;
 
-  const FitAIApp({super.key, required this.initialHome});
+  const SetcraftApp({super.key, required this.initialHome});
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +79,8 @@ class FitAIApp extends StatelessWidget {
         supportedLocales: AppLanguage.values.map((language) => language.locale),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         debugShowCheckedModeBanner: false,
+        builder: (context, child) => ColoredBox(
+            color: DSColors.bg, child: child ?? const SizedBox.expand()),
         themeMode: ThemeMode.dark,
         darkTheme: ThemeData(
           useMaterial3: true,
@@ -190,6 +192,10 @@ class FitAIApp extends StatelessWidget {
             builders: {
               TargetPlatform.android: OnboardingPageTransitionsBuilder(),
               TargetPlatform.iOS: OnboardingPageTransitionsBuilder(),
+              TargetPlatform.macOS: OnboardingPageTransitionsBuilder(),
+              TargetPlatform.windows: OnboardingPageTransitionsBuilder(),
+              TargetPlatform.linux: OnboardingPageTransitionsBuilder(),
+              TargetPlatform.fuchsia: OnboardingPageTransitionsBuilder(),
             },
           ),
         ),

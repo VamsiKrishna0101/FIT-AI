@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/nutrition/models/nutrition_diet_models.dart';
-import 'package:fitai_mobile/features/nutrition/views/meal_portion_view.dart';
-import 'package:fitai_mobile/features/nutrition/views/food_library_view.dart';
-import 'package:fitai_mobile/features/nutrition/models/food_catalog_page.dart';
+import 'package:setcraft/features/nutrition/models/nutrition_diet_models.dart';
+import 'package:setcraft/features/nutrition/views/meal_portion_view.dart';
+import 'package:setcraft/features/nutrition/views/food_library_view.dart';
+import 'package:setcraft/features/nutrition/models/food_catalog_page.dart';
 import 'nutrition_view_test.dart' show app, capture;
 import 'food_library_view_test.dart' show phone;
 
@@ -43,6 +43,38 @@ void main() {
     final milk = everydayFood('Whole milk — 3.25% fat');
     expect(milk.previewQuantity, '250 ml');
     expect(milk.previewFactor, closeTo(2.578319231, .00001));
+  });
+
+  test('food photo credits survive caching without changing nutrition', () {
+    final source = everydayFood('Boiled egg').toJson();
+    source['imageAttribution'] = {
+      'creditUrl': 'https://example.com/credits.html#egg',
+      'author': 'A photographer',
+      'license': 'CC BY 4.0',
+    };
+    final food = NutritionFoodItemModel.fromJson(source);
+    final cached = NutritionFoodItemModel.fromJson(food.toJson());
+    expect(cached.imageCreditsUrl, 'https://example.com/credits.html#egg');
+    expect(cached.imageCredit, 'A photographer · CC BY 4.0');
+    expect(cached.caloriesPerServing, 155);
+    expect(cached.preferredPortion!.gramsPerUnit, 50);
+  });
+
+  test(
+      'generic whey uses an explicit 30 g portion rather than guessing a scoop',
+      () {
+    final data = jsonDecode(
+        File('../backend/data/generic_foods.json').readAsStringSync()) as Map;
+    final source = Map<String, dynamic>.from((data['foods'] as List)
+        .firstWhere((f) => f['name'] == 'Whey protein') as Map);
+    source['portions'] = source['sourceDetails']['portions'];
+    source['defaultPortionUnit'] =
+        source['sourceDetails']['defaultPortionUnit'];
+    final whey = NutritionFoodItemModel.fromJson(source);
+    expect(whey.brand, isNull);
+    expect(whey.previewQuantity, '1 portion (30 g)');
+    expect(whey.previewFactor, .3);
+    expect(whey.proteinPerServing * whey.previewFactor, closeTo(23.43, .001));
   });
 
   testWidgets(
@@ -118,8 +150,13 @@ void main() {
     await tester.pumpAndSettle();
     await capture(tester, 'build/everyday-library-preview.png');
     for (final label in ['Recent', 'My foods', 'My meals']) {
-      await tester.ensureVisible(find.text(label));
-      await tester.tap(find.text(label));
+      await tester.tap(find.byKey(const ValueKey('food-filters')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply filters'));
       await tester.pumpAndSettle();
     }
     expect(sections, ['LIBRARY', 'RECENT', 'MY_FOODS', 'MY_MEALS']);

@@ -1,7 +1,9 @@
-import 'package:fitai_mobile/core/theme/ds_colors.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/models/home_models.dart';
+import 'package:setcraft/core/theme/ds_colors.dart';
+import 'package:setcraft/features/nutrition/components/nutrition_summary_card.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/models/home_models.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _data = HomeData(
@@ -58,7 +60,8 @@ Widget _app(
         {HomeData? data = _data,
         double textScale = 1,
         VoidCallback? onProfile,
-        VoidCallback? onSession}) =>
+        VoidCallback? onSession,
+        VoidCallback? onTrain}) =>
     MaterialApp(
       home: Builder(
           builder: (context) => MediaQuery(
@@ -72,14 +75,88 @@ Widget _app(
                       onRefresh: () async {},
                       onProfile: onProfile ?? () {},
                       onSession: onSession ?? () {},
-                      onTrain: () {},
+                      onTrain: onTrain ?? () {},
                       onNutrition: () {},
-                      onBody: () {},
                     )),
               )),
     );
 
 void main() {
+  setUpAll(() async {
+    await (FontLoader('Inter')
+          ..addFont(rootBundle.load('assets/fonts/Inter.ttf')))
+        .load();
+  });
+  testWidgets('Today sections follow the requested reading order',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('weekly-rhythm-range')), findsNothing);
+    expect(tester.getSize(find.byType(NutritionSummaryCard)).height,
+        lessThan(220));
+    for (final label in ['Protein', 'Carbs', 'Fat']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(find.textContaining('View all'), findsNothing);
+    expect(find.text('Recovery'), findsOneWidget);
+    expect(find.text('Training readiness'), findsNothing);
+    expect(find.byKey(const ValueKey('today-readiness-date')), findsNothing);
+    final session = find.byKey(const ValueKey('today-session-card'));
+    expect(find.descendant(of: session, matching: find.text('Week 4')),
+        findsNothing);
+    final title = tester.getRect(find.text('Full-body strength'));
+    final badge = tester.getRect(find.text('Not started'));
+    expect(title.top, lessThanOrEqualTo(badge.top));
+    expect(title.left, lessThan(badge.left));
+    final keys = [
+      'today-weekly-rhythm',
+      'today-section-readiness',
+      'today-session-card',
+      'today-recorded-sleep-heading',
+      'today-section-nutrition'
+    ];
+    final tops = keys
+        .map((key) => tester.getTopLeft(find.byKey(ValueKey(key))).dy)
+        .toList();
+    for (var i = 1; i < tops.length; i++) {
+      expect(tops[i], greaterThan(tops[i - 1]));
+    }
+  });
+
+  testWidgets(
+      'Session action stays correct for planned, resumed, completed and rest days',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final (status, label) in [
+      ('NOT_STARTED', 'Start session'),
+      ('IN_PROGRESS', 'Continue session'),
+      ('COMPLETED', 'Review session'),
+      ('REST_DAY', 'Open plan')
+    ]) {
+      var sessions = 0, plans = 0;
+      final data = HomeData.fromJson({
+        ..._data.toJson(),
+        'todayWorkout': {..._data.todayWorkout!.toJson(), 'status': status}
+      });
+      await tester.pumpWidget(_app(
+          data: data, onSession: () => sessions++, onTrain: () => plans++));
+      await tester.scrollUntilVisible(find.text(label), 180,
+          scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.text(label));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label));
+      expect(sessions, status == 'REST_DAY' ? 0 : 1);
+      expect(plans, status == 'REST_DAY' ? 1 : 0);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    }
+  });
+
   testWidgets('Today header and profile stay fixed while content scrolls',
       (tester) async {
     await tester.pumpWidget(_app());
@@ -104,17 +181,20 @@ void main() {
       tester.view.physicalSize = Size(width, 852);
       addTearDown(tester.view.reset);
       await tester.pumpWidget(_app(textScale: scale));
-      await tester.scrollUntilVisible(find.text('Daily check-in estimate'), 120,
+      await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('today-readiness-card')), 120,
           scrollable: find.byType(Scrollable).first);
-      expect(find.text('Daily check-in estimate'), findsOneWidget);
+      expect(find.text('Check-in saved'), findsNothing);
       expect(find.text('84'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.scrollUntilVisible(find.text('Fat'), 300,
           scrollable: find.byType(Scrollable).first);
       expect(find.text('37 / 65 g'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.scrollUntilVisible(find.text('See your body progress'), 250,
-          scrollable: find.byType(Scrollable).first);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(find.text('Muscles this week'), findsNothing);
+      expect(find.text('See your body progress'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -132,8 +212,8 @@ void main() {
     expect(profiles, 1);
     await tester.tap(find.text('84'));
     await tester.pumpAndSettle();
-    expect(find.text('How this is calculated'), findsOneWidget);
-    expect(find.text('What went into your score'), findsOneWidget);
+    expect(find.text('How this is calculated'), findsNothing);
+    expect(find.text('Your check-in'), findsOneWidget);
     expect(find.text('84'), findsOneWidget);
     Navigator.of(tester.element(find.text('84'))).pop();
     await tester.pumpAndSettle();
@@ -148,7 +228,7 @@ void main() {
   testWidgets('Missing readings do not display invented values or a rest day',
       (tester) async {
     await tester.pumpWidget(_app(data: null));
-    expect(find.text('Your readiness check-in'), findsOneWidget);
+    expect(find.text('How are you feeling?'), findsOneWidget);
     expect(find.text('84'), findsNothing);
     expect(find.text('HRV'), findsNothing);
     expect(find.text('A day to recover'), findsNothing);
@@ -165,8 +245,7 @@ void main() {
       'sleepLog': {'sleepMinutes': 420, 'energy': 3},
     });
     await tester.pumpWidget(_app(data: data));
-    expect(find.text('Your readiness check-in'), findsOneWidget);
-    expect(find.textContaining('rest, soreness'), findsOneWidget);
+    expect(find.text('Progress saved'), findsOneWidget);
     expect(find.text('84'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -192,14 +271,14 @@ void main() {
     });
     await tester.pumpWidget(_app(data: data));
     expect(find.text('70'), findsOneWidget);
-    expect(find.text('Daily check-in estimate'), findsOneWidget);
+    expect(find.text('Check-in saved'), findsNothing);
     expect(find.text('Okay'), findsOneWidget);
     expect(find.text('Somewhat rested'), findsOneWidget);
     await tester.tap(find.text('70'));
     await tester.pumpAndSettle();
     expect(find.text('HRV'), findsNothing);
     expect(find.text('Resting HR'), findsNothing);
-    expect(find.text('What went into your score'), findsOneWidget);
+    expect(find.text('Your check-in'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -222,7 +301,7 @@ void main() {
     expect(label('7 h 42 m'), findsOneWidget);
     expect(label('HRV'), findsNothing);
     expect(label('RHR'), findsNothing);
-    expect(find.bySemanticsLabel(RegExp('No reading')), findsNWidgets(6));
+    expect(find.bySemanticsLabel(RegExp('No reading')), findsNWidgets(5));
     expect(tester.takeException(), isNull);
     semantics.dispose();
   });
@@ -242,7 +321,8 @@ void main() {
     expect(
         find.descendant(of: card, matching: find.text('54 bpm')), findsNothing);
     expect(find.descendant(of: card, matching: find.text('Add answer')),
-        findsNWidgets(3));
+        findsNothing);
+    expect(find.byKey(const ValueKey('today-readiness-ring')), findsNothing);
   });
 
   test('Home cache preserves measurement date, real source and session title',

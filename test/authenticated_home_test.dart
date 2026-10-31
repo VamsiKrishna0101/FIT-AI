@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/navigation/authenticated_home.dart';
-import 'package:fitai_mobile/features/health/views/health_setup_gate.dart';
-import 'package:fitai_mobile/features/today/views/today_view.dart';
-import 'package:fitai_mobile/features/subscription/subscription_gate.dart';
-import 'package:fitai_mobile/core/navigation/profile_setup_gate.dart';
-import 'package:fitai_mobile/features/onboarding/views/starter_plan_view.dart';
+import 'package:setcraft/core/navigation/authenticated_home.dart';
+import 'package:setcraft/features/health/views/health_setup_gate.dart';
+import 'package:setcraft/features/today/views/today_view.dart';
+import 'package:setcraft/features/subscription/subscription_gate.dart';
+import 'package:setcraft/core/navigation/profile_setup_gate.dart';
+import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
 
 void main() {
   test('Returning sessions verify a profile and skip optional health setup',

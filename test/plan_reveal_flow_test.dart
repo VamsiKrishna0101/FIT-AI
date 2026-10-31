@@ -10,19 +10,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/components/liquid_chrome_button.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/features/onboarding/components/starter_plan_reveal.dart';
-import 'package:fitai_mobile/features/onboarding/views/onboarding_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/goal_selection_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/starter_plan_view.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/features/subscription/subscription_view.dart';
-import 'package:fitai_mobile/features/train/components/graphite_anatomy.dart';
-import 'package:fitai_mobile/features/train/models/training_session.dart';
-import 'package:fitai_mobile/features/train/views/workout_session_view.dart';
-import 'package:fitai_mobile/features/planner/views/widgets/weekly_plan_schedule.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/features/onboarding/components/starter_plan_reveal.dart';
+import 'package:setcraft/features/onboarding/views/onboarding_view.dart';
+import 'package:setcraft/features/onboarding/views/goal_selection_view.dart';
+import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
+import 'package:setcraft/features/onboarding/viewmodels/onboarding_controller.dart';
+import 'package:setcraft/features/subscription/subscription_view.dart';
+import 'package:setcraft/features/train/components/graphite_anatomy.dart';
+import 'package:setcraft/features/train/models/training_session.dart';
+import 'package:setcraft/features/train/views/workout_session_view.dart';
+import 'package:setcraft/features/planner/views/widgets/weekly_plan_schedule.dart';
 import 'starter_plan_view_test.dart' show StarterRepo, TrialService;
 import 'training_session_test.dart' as session;
 
@@ -161,78 +161,86 @@ void main() {
     model.dispose();
   });
   testWidgets(
-      'Personal reveal shows the saved goal, focus, dates and actual samples before checkout',
+      'Personal reveal shows the whole recommended week and only two exercises before checkout',
       (tester) async {
     phone(tester);
-    final repo = StarterRepo();
-    final service = TrialService();
-    String? opened;
+    final repo = StarterRepo(), service = TrialService();
     final preview = (repo.value['plan'] as Map)['preview'] as Map;
-    (preview['firstWorkout'] as Map)['exercises'] = [
-      ((preview['muscleGroups'] as List).first as Map)['exercises'][0]
+    final days = preview['workouts'] as List;
+    final names = [
+      'Chest + Triceps',
+      'Rest day',
+      'Back + Biceps',
+      'Rest day',
+      'Legs + Glutes',
+      'Rest day',
+      'Shoulders + Core'
     ];
+    for (var n = 0; n < days.length; n++) {
+      (days[n] as Map)['name'] = names[n];
+    }
+    final firstWorkout = preview['firstWorkout'] as Map;
+    firstWorkout['name'] = 'Chest + Triceps';
+    ((firstWorkout['exercises'] as List)[1] as Map)['name'] =
+        'Triceps extension';
+    String? opened;
     await tester.pumpWidget(app(StarterPlanView(
         repository: repo,
         subscription: service,
         profileLoader: () async => profile,
         onComplete: (id) => opened = id)));
     await tester.pumpAndSettle();
-    await artwork(tester);
     expect(find.text('Nora, your plan is ready'), findsOneWidget);
     expect(find.text('Beginner'), findsOneWidget);
-    expect(find.text('Dumbbells'), findsOneWidget);
+    expect(find.text('Dumbbells'), findsNothing);
+    expect(find.text('Your recommended week'), findsOneWidget);
+    for (var day = 19; day <= 25; day++) {
+      expect(find.byKey(ValueKey('starter-day-2026-10-$day')), findsOneWidget);
+    }
+    expect(find.text('Rest day'), findsNWidgets(3));
+    expect(
+        find.descendant(
+            of: find.byKey(const ValueKey('starter-day-2026-10-19')),
+            matching: find.text('Chest + Triceps')),
+        findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byKey(const ValueKey('starter-day-2026-10-21')),
+            matching: find.text('Back + Biceps')),
+        findsOneWidget);
+    expect(find.text('Dumbbell row'), findsNothing);
+    expect(find.byType(GraphiteMuscleFigure), findsNothing);
+    expect(service.starts, 0);
+    expect(repo.activations, 0);
+    await capture(tester, 'personal-plan-reveal');
+    final first = find.byKey(const ValueKey('starter-first-workout'));
+    expect(
+        find.descendant(of: first, matching: find.text('Dumbbell floor press')),
+        findsOneWidget);
+    expect(find.descendant(of: first, matching: find.text('Triceps extension')),
+        findsOneWidget);
+    expect(find.text('Unlock your full plan'), findsOneWidget);
+    await tester.scrollUntilVisible(first, 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+    await capture(tester, 'personal-plan-workout-preview');
+    await tester.scrollUntilVisible(find.text('Muscle focus'), 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text('Muscle focus'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Muscle focus'));
+    await artwork(tester);
+    expect(find.byType(GraphiteMuscleFigure), findsNWidgets(2));
     for (final figure in tester
         .widgetList<GraphiteMuscleFigure>(find.byType(GraphiteMuscleFigure))) {
       expect(figure.female, true);
       expect(figure.primary, {'chest', 'triceps'});
     }
-    for (final figure in find.byType(GraphiteMuscleFigure).evaluate()) {
-      final paint = find.descendant(
-          of: find.byWidget(figure.widget), matching: find.byType(CustomPaint));
-      expect(tester.getSize(paint).height, greaterThan(250));
-      expect(tester.widget<CustomPaint>(paint).painter,
-          isA<GraphiteAnatomyPainter>());
-      expect(
-          (tester.widget<CustomPaint>(paint).painter as GraphiteAnatomyPainter)
-              .image,
-          isNotNull);
-    }
-    expect(service.starts, 0);
-    expect(repo.activations, 0);
-    await capture(tester, 'personal-plan-reveal');
-    await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('starter-day-2026-10-20')), 250,
-        scrollable: find.byType(Scrollable).first);
-    await Scrollable.ensureVisible(
-        tester.element(find.byKey(const ValueKey('starter-day-2026-10-20'))),
-        alignment: .25);
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('starter-day-2026-10-20')).hitTestable(),
-        findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('starter-day-2026-10-20')));
-    await tester.pumpAndSettle();
-    expect(
-        tester
-            .widget<Text>(find.descendant(
-                of: find.byKey(const ValueKey('starter-selected-day')),
-                matching: find.byType(Text)))
-            .data,
-        'Rest day');
-    final first = find.byKey(const ValueKey('starter-first-workout'));
-    expect(
-        find.descendant(of: first, matching: find.text('Dumbbell floor press')),
-        findsOneWidget);
-    expect(find.descendant(of: first, matching: find.text('Dumbbell row')),
-        findsNothing);
-    await tester.scrollUntilVisible(first, 250,
-        scrollable: find.byType(Scrollable).first);
-    await tester.pumpAndSettle();
-    await capture(tester, 'personal-plan-workout-preview');
     await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
     expect(find.byType(SubscriptionView), findsOneWidget);
     expect(repo.activations, 0);
-    await tester.pageBack();
+    await tester.tap(find.byKey(const ValueKey('membership-close')));
     await tester.pumpAndSettle();
     expect(opened, isNull);
     expect(find.text('Unlock my plan'), findsOneWidget);
@@ -270,15 +278,21 @@ void main() {
             },
         onComplete: (_) {})));
     await tester.pumpAndSettle();
-    await artwork(tester);
     expect(find.text('Get stronger'), findsOneWidget);
+    await capture(tester, 'personal-plan-reveal-male');
+    await tester.scrollUntilVisible(find.text('Muscle focus'), 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text('Muscle focus'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Muscle focus'));
+    await artwork(tester);
+    expect(find.byType(GraphiteMuscleFigure), findsNWidgets(2));
     for (final figure in tester
         .widgetList<GraphiteMuscleFigure>(find.byType(GraphiteMuscleFigure))) {
       expect(figure.female, false);
       expect(figure.primary,
           containsAll(['chest', 'lats', 'upper_back', 'lower_back']));
     }
-    await capture(tester, 'personal-plan-reveal-male');
     expect(tester.takeException(), isNull);
   });
   for (final language in ['en', 'de', 'fr']) {
@@ -344,13 +358,10 @@ void main() {
       await tester.pumpWidget(schedule(true));
       await tester.pumpAndSettle();
       expect(starts, 0);
-      expect(
-          find.text(
-              offset == 0 ? 'Start my first workout' : 'View my first workout'),
+      expect(find.text(offset == 0 ? 'Start workout' : 'View workout'),
           findsOneWidget);
       if (offset == 0) {
-        await tester
-            .tap(find.byKey(const ValueKey('onboarding-first-workout-action')));
+        await tester.tap(find.text('Start workout'));
         await tester.pumpAndSettle();
         expect(starts, 1);
         expect(find.byType(WorkoutSessionView), findsOneWidget);

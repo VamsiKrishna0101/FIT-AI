@@ -1,15 +1,19 @@
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/views/body_entry_view.dart';
 import 'dart:io';
+import 'dart:async';
 import 'dart:ui' as ui;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/onboarding/data/starter_plan_repository.dart';
-import 'package:fitai_mobile/features/onboarding/views/starter_plan_view.dart';
-import 'package:fitai_mobile/features/subscription/subscription_service.dart';
-import 'package:fitai_mobile/features/subscription/subscription_view.dart';
+import 'package:setcraft/features/onboarding/data/starter_plan_repository.dart';
+import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
+import 'package:setcraft/features/subscription/subscription_service.dart';
+import 'package:setcraft/features/subscription/subscription_view.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 Map<String, dynamic> complete() => {
@@ -90,13 +94,49 @@ Map<String, dynamic> complete() => {
       },
     };
 
+class BaselineStarterRepo extends StarterRepo {
+  bool unavailable = false;
+  @override
+  Future<Map<String, dynamic>> start() async {
+    starts++;
+    final request = RequestOptions(path: '/api/plans/starter');
+    throw DioException(
+        requestOptions: request,
+        response: Response(requestOptions: request, statusCode: 422, data: {
+          'code': 'MEASUREMENTS_REQUIRED',
+          'error': 'Complete your measurements.'
+        }));
+  }
+
+  @override
+  Future<BodyOverview> bodyOverview() async {
+    if (unavailable)
+      throw StateError('Could not load measurements. Try again.');
+    return BodyOverview.fromJson({
+      'profile': {'height': 175},
+      'records': []
+    });
+  }
+}
+
 class StarterRepo extends StarterPlanRepository {
   Map<String, dynamic> value = complete();
   int starts = 0, polls = 0, activations = 0;
+  int validations = 0, staleValidations = 0, staleActivations = 0;
+  bool alwaysStale = false, refreshFails = false;
+  Map<String, dynamic>? refreshValue;
+  Completer<void>? validationGate;
+  final activatedIds = <String>[];
   bool activationFails = false;
   bool validationFails = false;
   @override
   Future<void> prepareUnlock(String id) async {
+    validations++;
+    await validationGate?.future;
+    if (staleValidations > 0 || alwaysStale) {
+      staleValidations--;
+      throw stalePlan();
+    }
     if (validationFails) {
       throw StateError('Your setup changed. Review your plan.');
     }
@@ -105,6 +145,12 @@ class StarterRepo extends StarterPlanRepository {
   @override
   Future<Map<String, dynamic>> start() async {
     starts++;
+    if (starts > 1) {
+      if (refreshFails) {
+        throw StateError('Could not update your plan. Try again.');
+      }
+      if (refreshValue != null) value = refreshValue!;
+    }
     return value;
   }
 
@@ -117,10 +163,33 @@ class StarterRepo extends StarterPlanRepository {
   @override
   Future<void> activate(String id) async {
     activations++;
+    activatedIds.add(id);
+    if (staleActivations > 0) {
+      staleActivations--;
+      throw stalePlan();
+    }
     if (activationFails) {
       throw StateError('Could not activate. Please try again.');
     }
   }
+}
+
+DioException stalePlan() {
+  final options = RequestOptions(path: '/api/plans/starter/validate');
+  return DioException(
+      requestOptions: options,
+      type: DioExceptionType.badResponse,
+      response: Response(requestOptions: options, statusCode: 409, data: {
+        'code': 'STALE_PLAN',
+        'error':
+            'Your history or preferences changed. Generate an updated plan.'
+      }));
+}
+
+Map<String, dynamic> refreshedPlan() {
+  final result = complete();
+  (result['plan'] as Map)['id'] = 'refreshed-plan';
+  return result;
 }
 
 class TrialService extends SubscriptionService {
@@ -245,6 +314,37 @@ void main() {
   });
   setUp(() => FlutterSecureStorage.setMockInitialValues(
       {'fitai_access_token': 'opaque', 'fitai_user_id': 'starter-test'}));
+
+  testWidgets('Starter requires baseline setup before generation or checkout',
+      (tester) async {
+    final repo = BaselineStarterRepo(), service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}));
+    await tester.pumpAndSettle();
+    expect(find.text('Complete your measurements'), findsOneWidget);
+    expect(find.text('Add measurements'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+    expect(service.starts, 0);
+    expect(repo.activations, 0);
+    await tester.tap(find.text('Add measurements'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BodyEntryView), findsOneWidget);
+    expect(
+        tester
+            .widget<BodyEntryView>(find.byType(BodyEntryView))
+            .requireBaseline,
+        isTrue);
+  });
+  testWidgets('Starter shows a retryable error when baseline cannot load',
+      (tester) async {
+    final repo = BaselineStarterRepo()..unavailable = true;
+    await tester.pumpWidget(screen(repo, TrialService(), (_) {}));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add measurements'));
+    await tester.pumpAndSettle();
+    expect(
+        find.text('Could not load measurements. Try again.'), findsOneWidget);
+    expect(find.text('Add measurements'), findsOneWidget);
+  });
   testWidgets(
       'Preview reveals real details, then verified store checkout activates the plan',
       (tester) async {
@@ -252,26 +352,24 @@ void main() {
     String? opened;
     await tester.pumpWidget(screen(repo, service, (id) => opened = id));
     await tester.pumpAndSettle();
-    expect(find.text('How this plan was built'), findsOneWidget);
+    expect(find.text('How this plan was built'), findsNothing);
     expect(find.text('Not now'), findsNothing);
     expect(find.byIcon(Icons.auto_awesome_outlined), findsNothing);
     expect(find.byIcon(Icons.view_week_outlined), findsNothing);
     expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
     expect(find.text('Dumbbell floor press'), findsOneWidget);
-    expect(find.text('Chest'), findsOneWidget);
+    expect(find.text('Your recommended week'), findsOneWidget);
     expect(
-        find.descendant(
-            of: find.byKey(const ValueKey('starter-muscle-regions')),
-            matching: find.text('Back')),
-        findsOneWidget);
-    expect(find.text('Legs'), findsOneWidget);
+        find.byKey(const ValueKey('starter-day-2026-10-19')), findsOneWidget);
+    expect(find.text('Rest day'), findsNWidgets(3));
+    expect(find.text('Unlock your full plan'), findsOneWidget);
     expect(service.starts, 0);
     expect(repo.activations, 0);
     await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
     expect(service.starts, 0);
     expect(repo.activations, 0);
-    await tester.tap(find.text('Start my 14-day free trial'));
+    await tester.tap(find.byKey(const ValueKey('membership-primary-action')));
     await tester.pumpAndSettle();
     expect(service.starts, 1);
     expect(repo.activations, 1);
@@ -286,7 +384,8 @@ void main() {
     final repo = StarterRepo(), service = TrialService();
     await tester.pumpWidget(screen(repo, service, (_) {}));
     await tester.pumpAndSettle();
-    final pricing = find.text('Membership');
+    expect(find.text('Membership'), findsNothing);
+    final pricing = find.text('Unlock my plan');
     expect(pricing.hitTestable(), findsOneWidget);
     await tester.tap(pricing);
     await tester.pumpAndSettle();
@@ -295,13 +394,39 @@ void main() {
     expect(service.starts, 0);
     expect(repo.activations, 0);
   });
+  testWidgets(
+      'Existing trial access opens the plan without another membership prompt',
+      (tester) async {
+    final repo = StarterRepo();
+    final service = TrialService()
+      ..access = SubscriptionAccess({
+        'state': 'trial',
+        'serverTime': DateTime.now().toUtc().toIso8601String(),
+        'trialEndsAt': DateTime.now()
+            .add(const Duration(days: 7))
+            .toUtc()
+            .toIso8601String(),
+      });
+    String? opened;
+    await tester.pumpWidget(screen(repo, service, (id) => opened = id));
+    await tester.pumpAndSettle();
+    expect(find.text('Open my full plan'), findsOneWidget);
+    expect(find.text('Choose your membership next'), findsNothing);
+    expect(find.text('Unlock your full plan'), findsNothing);
+    await tester.tap(find.text('Open my full plan'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SubscriptionView), findsNothing);
+    expect(repo.activations, 1);
+    expect(service.starts, 0);
+    expect(opened, 'starter-plan');
+  });
   testWidgets('Trial failure never activates a plan', (tester) async {
     final repo = StarterRepo(), service = TrialService()..fail = true;
     await tester.pumpWidget(screen(repo, service, (_) {}));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start my 14-day free trial'));
+    await tester.tap(find.byKey(const ValueKey('membership-primary-action')));
     await tester.pumpAndSettle();
     expect(repo.activations, 0);
     expect(service.access!.trialAvailable, true);
@@ -383,7 +508,7 @@ void main() {
     expect(repo.starts, 1);
     expect(service.starts, 0);
   });
-  testWidgets('An outdated preview never starts a trial', (tester) async {
+  testWidgets('A validation failure never starts checkout', (tester) async {
     final repo = StarterRepo()..validationFails = true;
     final service = TrialService();
     await tester.pumpWidget(screen(repo, service, (_) {}));
@@ -393,6 +518,136 @@ void main() {
     expect(service.starts, 0);
     expect(repo.activations, 0);
     expect(find.text('Your setup changed. Review your plan.'), findsOneWidget);
+  });
+  testWidgets(
+      'Unlock is visibly busy and rejects repeated taps while validating',
+      (tester) async {
+    final gate = Completer<void>();
+    final repo = StarterRepo()..validationGate = gate;
+    final service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}));
+    await tester.pumpAndSettle();
+    final button = find.text('Unlock my plan');
+    await tester.tap(button);
+    await tester.tap(button);
+    await tester.pump();
+    expect(find.text('Checking your plan…'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(repo.validations, 1);
+    expect(find.byType(SubscriptionView), findsNothing);
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    expect(service.starts, 0);
+  });
+  testWidgets(
+      'Stale preview refreshes before checkout and unlocks the new plan',
+      (tester) async {
+    final repo = StarterRepo()
+      ..staleValidations = 1
+      ..refreshValue = refreshedPlan();
+    final service = TrialService();
+    String? opened;
+    await tester.pumpWidget(screen(repo, service, (id) => opened = id));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    expect(repo.starts, 2);
+    expect(repo.validations, 2);
+    expect(service.starts, 0);
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    expect(find.textContaining('Your history or preferences changed'),
+        findsNothing);
+    await tester.tap(find.byKey(const ValueKey('membership-primary-action')));
+    await tester.pumpAndSettle();
+    expect(opened, 'refreshed-plan');
+    expect(repo.activatedIds, ['refreshed-plan']);
+    expect(service.starts, 1);
+  });
+  testWidgets('Queued refresh resumes unlock only in the foreground',
+      (tester) async {
+    final repo = StarterRepo()
+      ..staleValidations = 1
+      ..refreshValue = {
+        'id': 'starter-run',
+        'status': 'QUEUED',
+        'stage': 'queued'
+      };
+    final service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Updating your plan…'), findsNWidgets(2));
+    expect(find.byType(SubscriptionView), findsNothing);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    repo.value = refreshedPlan();
+    await tester.pump(const Duration(seconds: 6));
+    expect(repo.polls, 0);
+    expect(find.byType(SubscriptionView), findsNothing);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    expect(service.starts, 0);
+    expect(repo.starts, 2);
+  });
+  testWidgets(
+      'A second stale response stops automatic refresh and offers retry',
+      (tester) async {
+    final repo = StarterRepo()..alwaysStale = true;
+    final service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    expect(repo.starts, 2);
+    expect(
+        find.text('Your setup changed again. Refresh your plan to continue.'),
+        findsOneWidget);
+    expect(find.text('Refresh my plan'), findsOneWidget);
+    expect(find.byType(SubscriptionView), findsNothing);
+    expect(service.starts, 0);
+  });
+  testWidgets(
+      'Failed automatic refresh keeps answers and offers a working retry',
+      (tester) async {
+    final repo = StarterRepo()
+      ..staleValidations = 1
+      ..refreshFails = true;
+    final service = TrialService();
+    await tester.pumpWidget(screen(repo, service, (_) {}));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Could not update your plan. Try again.'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(service.starts, 0);
+    repo.refreshFails = false;
+    repo.refreshValue = refreshedPlan();
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unlock my plan'), findsOneWidget);
+    expect(repo.starts, 3);
+  });
+  testWidgets('Staleness after checkout refreshes without another purchase',
+      (tester) async {
+    final repo = StarterRepo()
+      ..staleActivations = 1
+      ..refreshValue = refreshedPlan();
+    final service = TrialService();
+    String? opened;
+    await tester.pumpWidget(screen(repo, service, (id) => opened = id));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unlock my plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('membership-primary-action')));
+    await tester.pumpAndSettle();
+    expect(repo.starts, 2);
+    expect(repo.activatedIds, ['starter-plan', 'refreshed-plan']);
+    expect(service.starts, 1);
+    expect(opened, 'refreshed-plan');
+    expect(find.byType(SubscriptionView), findsNothing);
   });
   testWidgets('Changing account before unlock never starts trial or activates',
       (tester) async {
@@ -413,7 +668,7 @@ void main() {
     await tester.pumpWidget(screen(repo, service, (_) => left = true));
     await tester.pumpAndSettle();
     expect(find.text('Not now'), findsNothing);
-    await tester.tap(find.text('Membership'));
+    await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
     expect(left, false);
     expect(service.starts, 0);
@@ -459,7 +714,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Unlock my plan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start my 14-day free trial'));
+    await tester.tap(find.byKey(const ValueKey('membership-primary-action')));
     await tester.pumpAndSettle();
     repo.activationFails = false;
     await tester.tap(find.text('Open my full plan'));

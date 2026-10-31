@@ -12,7 +12,7 @@ class AnimatedTabStack extends StatefulWidget {
     required this.children,
   }) : assert(index >= 0 && index < children.length);
 
-  static const duration = DSMotion.feedback;
+  static const duration = DSMotion.pageTransition;
   static const curve = DSMotion.effects;
 
   @override
@@ -54,16 +54,21 @@ class _AnimatedTabStackState extends State<AnimatedTabStack> {
             offstage: reducedMotion
                 ? index != widget.index
                 : !_visible.contains(index),
-            child: IgnorePointer(
-              ignoring: index != widget.index,
-              child: ExcludeSemantics(
-                excluding: index != widget.index,
-                child: AnimatedOpacity(
-                  opacity: index == widget.index ? 1 : 0,
-                  duration: duration,
-                  curve: AnimatedTabStack.curve,
-                  onEnd: () => _hideFinishedTab(index),
-                  child: RepaintBoundary(child: widget.children[index]),
+            child: ExcludeFocus(
+              excluding: index != widget.index,
+              child: IgnorePointer(
+                ignoring: index != widget.index,
+                child: ExcludeSemantics(
+                  excluding: index != widget.index,
+                  child: AnimatedOpacity(
+                    opacity: index == widget.index ? 1 : 0,
+                    duration: duration,
+                    // Match both fades so the old screen doesn't disappear
+                    // before its replacement becomes visible.
+                    curve: AnimatedTabStack.curve,
+                    onEnd: () => _hideFinishedTab(index),
+                    child: RepaintBoundary(child: widget.children[index]),
+                  ),
                 ),
               ),
             ),

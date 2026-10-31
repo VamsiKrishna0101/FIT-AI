@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/onboarding/components/training_style_picker.dart';
-import 'package:fitai_mobile/features/train/components/workout_warmup.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/onboarding/components/training_style_picker.dart';
+import 'package:setcraft/features/train/components/workout_warmup.dart';
 
 void main() {
   testWidgets('Training setup preview preserves neutral surfaces',

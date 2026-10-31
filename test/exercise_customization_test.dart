@@ -9,16 +9,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/train/components/training_targets.dart';
-import 'package:fitai_mobile/features/train/models/training_session.dart';
-import 'package:fitai_mobile/features/train/models/workout_exercise_models.dart';
-import 'package:fitai_mobile/features/train/repositories/training_repository.dart';
-import 'package:fitai_mobile/features/train/views/exercise_library_view.dart';
-import 'package:fitai_mobile/features/train/views/train_dashboard_view.dart';
-import 'package:fitai_mobile/features/planner/views/widgets/weekly_plan_schedule.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/train/components/training_targets.dart';
+import 'package:setcraft/features/train/models/training_session.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
+import 'package:setcraft/features/train/repositories/training_repository.dart';
+import 'package:setcraft/features/train/views/exercise_library_view.dart';
+import 'package:setcraft/features/train/views/train_dashboard_view.dart';
+import 'package:setcraft/features/planner/views/widgets/weekly_plan_schedule.dart';
 
 Map<String, dynamic> exercise(String id, String name) => {
       'id': id,
@@ -240,6 +240,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('add-exercise-fly')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-exercise-selection')));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('target-weight-0')), '4');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
@@ -261,13 +263,14 @@ void main() {
   });
 
   testWidgets(
-      'Weekly overview shows saved exercise changes rather than the generated snapshot',
+      'Weekly workout details show saved exercise changes rather than the generated snapshot',
       (tester) async {
     final dates = <String>[];
     await tester.pumpWidget(app(Scaffold(
         body: SingleChildScrollView(
             child: WeeklyPlanSchedule(
       active: true,
+      showOverview: false,
       payload: const {
         'workouts': [
           {
@@ -294,6 +297,9 @@ void main() {
     )))));
     await tester.pumpAndSettle();
     expect(find.text('Dumbbell press'), findsOneWidget);
+    expect(find.text('1 exercise · 5 min'), findsOneWidget);
+    await tester.tap(find.text('Dumbbell press'));
+    await tester.pumpAndSettle();
     expect(find.text('10 reps · 12.0 kg per hand'), findsOneWidget);
     expect(
         find.byKey(const ValueKey('edit-plan-day-2026-10-18')), findsOneWidget);
@@ -329,12 +335,15 @@ void main() {
     final add = find.byKey(const ValueKey('add-exercise-fly'));
     await tester.ensureVisible(add);
     await tester.tap(add);
+    await tester.pumpAndSettle();
+    final confirm = find.byKey(const ValueKey('confirm-exercise-selection'));
+    await tester.tap(confirm);
     await tester.pump();
-    await tester.tap(add);
+    await tester.tap(confirm);
     expect(calls, 1);
     saving.complete(false);
     await tester.pumpAndSettle();
-    await tester.tap(add);
+    await tester.tap(confirm);
     await tester.pumpAndSettle();
     expect(calls, 2);
     expect(tester.takeException(), isNull);

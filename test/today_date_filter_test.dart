@@ -6,13 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/core/storage/local_cache.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/features/today/views/today_home_view.dart';
-import 'package:fitai_mobile/features/today/repositories/today_repository.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/core/storage/local_cache.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/features/nutrition/views/food_library_view.dart';
+import 'package:setcraft/features/nutrition/views/nutrition_view.dart';
+import 'package:setcraft/features/today/views/today_home_view.dart';
+import 'package:setcraft/features/today/views/readiness_detail_view.dart';
+import 'package:setcraft/features/today/repositories/today_repository.dart';
 
 class DateAdapter implements HttpClientAdapter {
   final requests = <RequestOptions>[];
@@ -71,13 +74,11 @@ class DateAdapter implements HttpClientAdapter {
                   'status': 'UNAVAILABLE'
                 }),
       };
-    } else if (options.path == '/api/heatmap/training') {
+    } else if (options.path == '/api/history/recovery') {
       response = {
-        'date': date,
-        'weekStart': CacheScope.todayKey(monday),
-        'regions': [],
-        'summary': {},
-        'gender': 'OTHER'
+        'data': [
+          {'date': date, 'sleepHours': 7.5}
+        ]
       };
     } else {
       response = {'data': []};
@@ -114,6 +115,35 @@ void main() {
     final old = ApiClient.shared.client.httpClientAdapter;
     ApiClient.shared.client.httpClientAdapter = adapter;
     addTearDown(() => ApiClient.shared.client.httpClientAdapter = old);
+  });
+
+  testWidgets(
+      'Today plus opens Add meal directly and Back returns to the same Today tab',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(),
+        home: TodayHomeView(onSelectTab: (_) {}, onOpenProfile: () {})));
+    await tester.pumpAndSettle();
+    final original = tester.state(find.byType(TodayHomeView));
+    await tester.scrollUntilVisible(find.byTooltip('Add meal'), 180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byTooltip('Add meal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Add meal'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FoodLibraryView), findsOneWidget);
+    expect(find.byType(NutritionView, skipOffstage: false), findsNothing);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(FoodLibraryView), findsNothing);
+    expect(tester.state(find.byType(TodayHomeView)), same(original));
+    expect(Navigator.of(tester.element(find.byType(TodayHomeView))).canPop(),
+        isFalse);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets(
@@ -156,27 +186,28 @@ void main() {
     expect(dashboard.data!.sleepLog!['sleepMinutes'], second.day * 10);
     expect(dashboard.data!.readiness!.date, CacheScope.todayKey(second));
     expect(dashboard.data!.readiness!.score, second.day / 10);
-    expect(dashboard.trainingUpdates!.value!.date, CacheScope.todayKey(second));
-    expect(
-        adapter.requests
-            .where((r) => r.path == '/api/heatmap/training')
-            .every((r) => r.uri.queryParameters['period'] == 'day'),
-        isTrue);
+    expect(adapter.requests.where((r) => r.path == '/api/heatmap/training'),
+        isEmpty);
     expect(
         adapter.requests.every((r) => !r.path.contains('/preview/')), isTrue);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Empty readiness opens a dated sheet without invented scores',
+  testWidgets(
+      'Empty recovery opens its details and a dated sheet without invented scores',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
         theme: ThemeData.dark(),
         home: TodayHomeView(onSelectTab: (_) {}, onOpenProfile: () {})));
     await tester.pumpAndSettle();
-    final card = find.byKey(const ValueKey('today-readiness-card'));
+    final card = find.byKey(const ValueKey('today-readiness-heading'));
     await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
     await tester.tap(card);
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadinessDetailView), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('readiness-detail-update')));
     await tester.pumpAndSettle();
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(
@@ -240,8 +271,8 @@ void main() {
     expect(adapter.requests.any((r) => r.path == '/api/home'), isTrue);
     expect(
         adapter.requests.any((r) => r.path == '/api/history/recovery'), isTrue);
-    expect(
-        adapter.requests.any((r) => r.path == '/api/heatmap/training'), isTrue);
+    expect(adapter.requests.where((r) => r.path == '/api/heatmap/training'),
+        isEmpty);
     adapter.release.complete();
     await tester.pumpAndSettle();
     final before = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
@@ -281,7 +312,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Slow history and preview never block or rebuild the main cards',
+  testWidgets('Slow history never blocks or rebuilds the main cards',
       (tester) async {
     adapter.holdOptional = true;
     await tester.pumpWidget(MaterialApp(
@@ -291,7 +322,7 @@ void main() {
     final before = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
     expect(before.loading, isFalse);
     expect(before.data!.calendarDate, CacheScope.todayKey());
-    expect(before.trainingUpdates!.value, isNull);
+    expect(before.recoveryUpdates!.value, isEmpty);
     // Dio's transport futures run outside the widget test's frame clock.
     await tester.runAsync(() async {
       adapter.optionalReady.complete();
@@ -300,7 +331,7 @@ void main() {
     await tester.pumpAndSettle();
     final after = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
     expect(identical(before, after), isTrue);
-    expect(after.trainingUpdates!.value!.date, CacheScope.todayKey());
+    expect(after.recoveryUpdates!.value.single.sleepHours, 7.5);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

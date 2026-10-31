@@ -62,6 +62,14 @@ class SubscriptionPreparation {
       identical(service.access, snapshot);
 }
 
+enum SubscriptionCatalogIssue {
+  mobileOnly,
+  setupPending,
+  storeUnavailable,
+  productsMissing,
+  connection,
+}
+
 class SubscriptionService extends ChangeNotifier {
   static final shared = SubscriptionService();
   final ApiClient api;
@@ -75,6 +83,10 @@ class SubscriptionService extends ChangeNotifier {
   final offers = <String, MembershipOffer>{};
   String? error, notice, _owner;
   bool busy = false, storeReady = false, awaitingConfirmation = false;
+  SubscriptionCatalogIssue? catalogIssue;
+  String? catalogError;
+  Future<void>? _initializing;
+  int? _initializingRevision;
   StreamSubscription<List<PurchaseDetails>>? _purchases;
   Future<void> _purchaseQueue = Future.value();
   bool get android =>
@@ -85,6 +97,7 @@ class SubscriptionService extends ChangeNotifier {
       (android || ios) &&
       access?.billingReady == true &&
       storeReady &&
+      catalogIssue == null &&
       offers.isNotEmpty;
 
   void _listen() {
@@ -105,14 +118,38 @@ class SubscriptionService extends ChangeNotifier {
   }
 
   Future<void> initialize() async {
+    final revision = SecureSessionStore.shared.revision;
+    if (_initializing != null && _initializingRevision == revision) {
+      return _initializing!;
+    }
+    final pending = _initialize();
+    _initializing = pending;
+    _initializingRevision = revision;
+    try {
+      await pending;
+    } finally {
+      if (identical(_initializing, pending)) _initializing = null;
+    }
+  }
+
+  Future<void> _initialize() async {
     _listen();
     await refresh();
+    if (access?.hasAccess == true) return;
+    final owner = _owner;
+    final revision = SecureSessionStore.shared.revision;
     try {
       await loadProducts();
-    } catch (_) {
-      products.clear();
-      offers.clear();
-      storeReady = false;
+    } catch (failure) {
+      if (owner != _owner ||
+          revision != SecureSessionStore.shared.revision ||
+          owner != await SecureSessionStore.shared.userId) {
+        return;
+      }
+      // Keep the last confirmed price visible during a temporary store outage.
+      // Checkout stays disabled until a successful catalogue refresh.
+      catalogIssue = SubscriptionCatalogIssue.connection;
+      catalogError = message(failure);
       notifyListeners();
     }
   }
@@ -137,6 +174,8 @@ class SubscriptionService extends ChangeNotifier {
       error = null;
       notice = null;
       awaitingConfirmation = false;
+      catalogIssue = null;
+      catalogError = null;
       _owner = owner;
     }
     if (owner == null) {
@@ -163,23 +202,45 @@ class SubscriptionService extends ChangeNotifier {
   Future<void> loadProducts() async {
     _listen();
     final owner = _owner, snapshot = access;
-    products.clear();
-    offers.clear();
-    storeReady = false;
-    if ((!android && !ios) || snapshot?.billingReady != true) {
+    final revision = SecureSessionStore.shared.revision;
+    void unavailable(SubscriptionCatalogIssue issue) {
+      products.clear();
+      offers.clear();
+      storeReady = false;
+      catalogIssue = issue;
+      catalogError = null;
       notifyListeners();
+    }
+
+    if (!android && !ios) {
+      unavailable(SubscriptionCatalogIssue.mobileOnly);
       return;
     }
-    storeReady = await store.isAvailable();
-    if (!storeReady) {
-      notifyListeners();
+    if (snapshot?.billingReady != true) {
+      unavailable(SubscriptionCatalogIssue.setupPending);
       return;
     }
-    final ids = Map<String, dynamic>.from(snapshot!.data['products'] as Map);
+    final available = await store.isAvailable();
+    if (owner != _owner ||
+        revision != SecureSessionStore.shared.revision ||
+        owner != await SecureSessionStore.shared.userId) {
+      return;
+    }
+    if (!available) {
+      unavailable(SubscriptionCatalogIssue.storeUnavailable);
+      return;
+    }
+    final ids =
+        Map<String, dynamic>.from(snapshot!.data['products'] as Map? ?? {});
+    final productIds =
+        ids.values.whereType<String>().where((id) => id.isNotEmpty).toSet();
+    if (productIds.isEmpty) {
+      unavailable(SubscriptionCatalogIssue.productsMissing);
+      return;
+    }
     final plans =
         Map<String, dynamic>.from(snapshot.data['basePlans'] as Map? ?? {});
-    final response =
-        await store.queryProductDetails(ids.values.cast<String>().toSet());
+    final response = await store.queryProductDetails(productIds);
     if (response.error != null) {
       throw StateError('Could not load $storeName prices. Please retry.');
     }
@@ -243,9 +304,17 @@ class SubscriptionService extends ChangeNotifier {
             trialDays: eligible ? 14 : 0);
       }
     }
-    if (owner != _owner || owner != await SecureSessionStore.shared.userId) {
+    if (owner != _owner ||
+        revision != SecureSessionStore.shared.revision ||
+        owner != await SecureSessionStore.shared.userId) {
       return;
     }
+    products.clear();
+    offers.clear();
+    storeReady = true;
+    catalogIssue =
+        loaded.isEmpty ? SubscriptionCatalogIssue.productsMissing : null;
+    catalogError = null;
     offers.addAll(loaded);
     products.addAll(loaded.map((key, value) => MapEntry(key, value.product)));
     notifyListeners();

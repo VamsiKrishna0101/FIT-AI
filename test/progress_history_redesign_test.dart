@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/progress/components/exercise_progress_content.dart';
-import 'package:fitai_mobile/features/progress/components/progress_chart.dart';
-import 'package:fitai_mobile/features/progress/components/progress_trend_tiles.dart';
-import 'package:fitai_mobile/features/progress/components/progress_workout_history.dart';
-import 'package:fitai_mobile/features/progress/models/progress_models.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/progress/components/exercise_progress_content.dart';
+import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/components/progress_trend_tiles.dart';
+import 'package:setcraft/features/progress/components/progress_workout_history.dart';
+import 'package:setcraft/features/progress/models/progress_models.dart';
 
 const session = <String, dynamic>{
   'id': 'session-1',
@@ -92,7 +92,7 @@ void main() {
   });
 
   testWidgets(
-      'Exercise history is separate from trends and retains logged set values',
+      'Exercise history sits below the chart and retains logged set values',
       (tester) async {
     await tester.pumpWidget(page(const Scaffold(
         body: SingleChildScrollView(
@@ -111,13 +111,13 @@ void main() {
     })))));
     await tester.pumpAndSettle();
     expect(find.byType(ProgressChart), findsOneWidget);
-    expect(find.byType(ProgressSetHistory), findsNothing);
-    await tester.tap(find.text('Set history'));
-    await tester.pumpAndSettle();
-    expect(find.byType(ProgressChart), findsNothing);
+    expect(find.byType(ProgressSetHistory), findsOneWidget);
     await tester.tap(find.byType(ProgressSetHistory));
     await tester.pumpAndSettle();
-    expect(find.text('—'), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byType(ProgressSetTable), matching: find.text('—')),
+        findsOneWidget);
     expect(find.text('10'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/cache/cache_scope.dart';
-import 'package:fitai_mobile/core/storage/local_cache.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_progress_summary.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_progress_cards.dart';
-import 'package:fitai_mobile/features/train/components/workout_set_entry.dart';
-import 'package:fitai_mobile/features/train/repositories/training_repository.dart';
-import 'package:fitai_mobile/features/train/repositories/workout_offline_store.dart';
+import 'package:setcraft/core/cache/cache_scope.dart';
+import 'package:setcraft/core/storage/local_cache.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/models/body_progress_summary.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_progress_cards.dart';
+import 'package:setcraft/features/train/components/workout_set_entry.dart';
+import 'package:setcraft/features/train/repositories/training_repository.dart';
+import 'package:setcraft/features/train/repositories/workout_offline_store.dart';
 import 'training_session_test.dart' as training;
 
 class OfflineAdapter extends training.Adapter {
@@ -138,7 +138,7 @@ void main() {
       onSave: (reps, weight, effort) async {
         saves++;
         expect(reps, 10);
-        expect(weight, isNull);
+        expect(weight, 4.25);
       },
       onDelete: () async {},
     ))));
@@ -147,10 +147,14 @@ void main() {
         tester.widget<TextField>(find.byType(TextField).first).controller!.text,
         isEmpty);
     expect(find.text('Target · 10 reps · 2.5 kg'), findsOneWidget);
-    expect(find.text('Last: 2 kg × 10'), findsOneWidget);
+    expect(find.text('2 × 10'), findsOneWidget);
     expect(key.currentState!.pendingSet(), isNull);
     await key.currentState!.savePending();
     expect(saves, 0);
+    await tester.tap(find.byTooltip('Save set'));
+    await tester.pumpAndSettle();
+    expect(saves, 0);
+    await tester.enterText(find.byType(TextField).first, '4.25');
     await tester.tap(find.byTooltip('Save set'));
     await tester.pumpAndSettle();
     expect(saves, 1);
@@ -180,18 +184,19 @@ void main() {
     expect(
         tester.widget<TextField>(find.byType(TextField).first).controller!.text,
         isEmpty);
-    expect(find.byTooltip('Saved'), findsOneWidget);
+    expect(find.byTooltip('Saved'), findsNothing);
     await tester.enterText(find.byType(TextField).at(1), '12');
     await tester.pump();
-    expect(key.currentState!.pendingSet()!['weight'], isNull);
+    expect(() => key.currentState!.pendingSet(), throwsFormatException);
+    await tester.enterText(find.byType(TextField).first, '15');
     await tester.tap(find.byTooltip('Save set'));
     await tester.pumpAndSettle();
-    expect(savedWeight, isNull);
+    expect(savedWeight, 15);
     await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets(
-      'Only entered loads are saved, including decimal and explicit zero',
+      'Weighted entries accept actual decimals and reject zero or missing load',
       (tester) async {
     final weights = <double?>[];
     await tester.pumpWidget(training.app(Scaffold(
@@ -213,7 +218,7 @@ void main() {
       await tester.tap(find.byTooltip('Save set'));
       await tester.pumpAndSettle();
     }
-    expect(weights, [2.25, 0.0, null]);
+    expect(weights, [2.25]);
     await tester.pumpWidget(const SizedBox());
   });
 

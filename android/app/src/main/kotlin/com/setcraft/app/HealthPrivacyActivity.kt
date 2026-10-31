@@ -1,4 +1,4 @@
-package com.example.fitai_mobile
+package com.setcraft.app
 
 import android.app.Activity
 import android.os.Bundle

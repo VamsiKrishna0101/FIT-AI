@@ -9,8 +9,12 @@ import '../repositories/nutrition_repository.dart';
 class FoodDetailSheet extends StatefulWidget {
   final UserMealLogItemModel mealLog;
   final VoidCallback onUpdated;
+  final bool readOnly;
   const FoodDetailSheet(
-      {super.key, required this.mealLog, required this.onUpdated});
+      {super.key,
+      required this.mealLog,
+      required this.onUpdated,
+      this.readOnly = false});
   @override
   State<FoodDetailSheet> createState() => _FoodDetailSheetState();
 }
@@ -20,6 +24,7 @@ class _FoodDetailSheetState extends State<FoodDetailSheet> {
   bool _confirm = false;
   String? _error;
   Future<void> _delete() async {
+    if (widget.readOnly || _busy) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -83,7 +88,11 @@ class _FoodDetailSheetState extends State<FoodDetailSheet> {
                               ])),
                       ])),
                       const SizedBox(height: 24),
-                      if (AppDataMode.shared.preview)
+                      if (widget.readOnly)
+                        const FitnessText('Read-only',
+                            style: TextStyle(
+                                color: FitnessTheme.muted, fontSize: 12))
+                      else if (AppDataMode.shared.preview)
                         const FitnessText('Preview data',
                             style: TextStyle(
                                 color: FitnessTheme.muted, fontSize: 12))

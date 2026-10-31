@@ -1,3 +1,4 @@
+import 'package:setcraft/core/theme/ds_motion.dart';
 import '../viewmodels/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/app_language.dart';
@@ -112,6 +113,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
                       child: LiquidChromeButton(
                           title: 'Get started',
+                          loadingTitle: 'Continuing…',
                           solid: true,
                           pill: true,
                           showArrow: false,
@@ -132,6 +134,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Future<void> _chooseLanguage() => showModalBottomSheet<void>(
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
       context: context,
       backgroundColor: FitnessTheme.canvas,
       showDragHandle: true,

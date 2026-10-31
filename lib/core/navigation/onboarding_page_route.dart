@@ -3,7 +3,14 @@ import 'package:flutter/cupertino.dart';
 import '../theme/ds_motion.dart';
 import '../theme/fitness_theme.dart';
 
-/// Native page movement keeps the screen opaque throughout navigation.
+Widget _pageFade(
+        BuildContext context, Animation<double> animation, Widget child) =>
+    FadeTransition(
+        opacity: animation.drive(CurveTween(curve: Curves.easeInOutCubic)),
+        child: ColoredBox(
+            color: FitnessTheme.canvas, child: SizedBox.expand(child: child)));
+
+/// Keep native back gestures while presenting stationary, fading pages.
 class OnboardingPageTransitionsBuilder extends PageTransitionsBuilder {
   const OnboardingPageTransitionsBuilder();
 
@@ -15,8 +22,12 @@ class OnboardingPageTransitionsBuilder extends PageTransitionsBuilder {
       Animation<double> secondaryAnimation,
       Widget child) {
     if (MediaQuery.disableAnimationsOf(context)) return child;
-    return const CupertinoPageTransitionsBuilder()
-        .buildTransitions(route, context, animation, secondaryAnimation, child);
+    return const CupertinoPageTransitionsBuilder().buildTransitions(
+        route,
+        context,
+        const AlwaysStoppedAnimation(1),
+        const AlwaysStoppedAnimation(0),
+        _pageFade(context, animation, child));
   }
 }
 
@@ -24,14 +35,23 @@ class AppPageRoute<T> extends CupertinoPageRoute<T> {
   final Duration _duration;
   final Duration _reverseDuration;
 
+  @override
+  DelegatedTransitionBuilder? get delegatedTransition => null;
+
   AppPageRoute({
-    required Widget page,
-    Duration duration = const Duration(milliseconds: 380),
-    Duration reverseDuration = const Duration(milliseconds: 320),
-  })  : _duration = duration,
+    Widget? page,
+    WidgetBuilder? builder,
+    super.settings,
+    super.fullscreenDialog,
+    super.maintainState,
+    Duration duration = DSMotion.pageTransition,
+    Duration reverseDuration = DSMotion.pageTransition,
+  })  : assert((page == null) != (builder == null)),
+        _duration = duration,
         _reverseDuration = reverseDuration,
         super(
-            builder: (_) => RepaintBoundary(child: FitnessTheme(child: page)));
+            builder: (context) => RepaintBoundary(
+                child: FitnessTheme(child: page ?? builder!(context))));
 
   bool get _reducedMotion =>
       navigator != null &&
@@ -48,8 +68,8 @@ class AppPageRoute<T> extends CupertinoPageRoute<T> {
   Widget buildTransitions(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation, Widget child) {
     if (MediaQuery.disableAnimationsOf(context)) return child;
-    return super
-        .buildTransitions(context, animation, secondaryAnimation, child);
+    return super.buildTransitions(context, const AlwaysStoppedAnimation(1),
+        const AlwaysStoppedAnimation(0), _pageFade(context, animation, child));
   }
 }
 

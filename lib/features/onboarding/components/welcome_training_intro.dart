@@ -12,8 +12,8 @@ class WelcomeTrainingIntro extends StatefulWidget {
 
 class _WelcomeTrainingIntroState extends State<WelcomeTrainingIntro>
     with SingleTickerProviderStateMixin {
-  late final _entrance = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1200));
+  late final _entrance =
+      AnimationController(vsync: this, duration: DSMotion.reveal);
   bool _started = false;
   @override
   void didChangeDependencies() {
@@ -44,7 +44,7 @@ class _WelcomeTrainingIntroState extends State<WelcomeTrainingIntro>
                         MediaQuery.sizeOf(context).height < 740 ? 210 : 330),
                 builder: (context, child) => Transform.scale(
                     scale: 1.035 -
-                        Curves.easeOutCubic.transform(_entrance.value) * .035,
+                        DSMotion.effects.transform(_entrance.value) * .035,
                     child: child))),
         Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
@@ -72,8 +72,8 @@ class _WelcomeTrainingIntroState extends State<WelcomeTrainingIntro>
                                 ? const Color(0xFFAAAAAA)
                                 : Colors.white)),
                     builder: (context, child) {
-                      final value = Interval(index * .16, .68 + index * .16,
-                              curve: Curves.easeOutCubic)
+                      final value = Interval(index * .08, .84 + index * .08,
+                              curve: DSMotion.effects)
                           .transform(_entrance.value);
                       return Opacity(
                           key: ValueKey('welcome-goal-$index'),

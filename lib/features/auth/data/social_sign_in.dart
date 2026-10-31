@@ -2,16 +2,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../../core/config/google_auth_config.dart';
 
 enum SocialProvider { apple, google }
 
-/// Disabled until native provider setup AND the API exchange are configured.
-/// Public client IDs belong in build defines; provider secrets never do.
+/// Android uses the verified public Firebase configuration by default.
+/// Build defines can override it; provider secrets never belong in the app.
 class SocialSignIn {
-  static const googleEnabled = bool.fromEnvironment('SETCRAFT_GOOGLE_SIGN_IN');
+  static const googleEnabled = bool.fromEnvironment('SETCRAFT_GOOGLE_SIGN_IN',
+      defaultValue: GoogleAuthConfig.androidEnabled);
   static const appleEnabled = bool.fromEnvironment('SETCRAFT_APPLE_SIGN_IN');
-  static const _googleServerId =
-      String.fromEnvironment('SETCRAFT_GOOGLE_SERVER_CLIENT_ID');
+  static const _googleServerId = String.fromEnvironment(
+      'SETCRAFT_GOOGLE_SERVER_CLIENT_ID',
+      defaultValue: GoogleAuthConfig.serverClientId);
   static const _googleIosId =
       String.fromEnvironment('SETCRAFT_GOOGLE_IOS_CLIENT_ID');
   static Future<void>? _googleInitialization;
@@ -23,7 +26,10 @@ class SocialSignIn {
       return false;
     }
     return switch (provider) {
-      SocialProvider.google => googleEnabled && _googleServerId.isNotEmpty,
+      SocialProvider.google => googleEnabled &&
+          _googleServerId.isNotEmpty &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              _googleIosId.isNotEmpty),
       SocialProvider.apple => appleEnabled,
     };
   }

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/onboarding/models/training_style.dart';
-import 'package:fitai_mobile/features/onboarding/components/training_style_picker.dart';
-import 'package:fitai_mobile/features/onboarding/components/onboarding_scaffold.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/features/onboarding/views/training_preferences_view.dart';
-import 'package:fitai_mobile/features/train/components/workout_warmup.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/onboarding/models/training_style.dart';
+import 'package:setcraft/features/onboarding/components/training_style_picker.dart';
+import 'package:setcraft/features/onboarding/components/onboarding_scaffold.dart';
+import 'package:setcraft/features/onboarding/viewmodels/onboarding_controller.dart';
+import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
+import 'package:setcraft/features/train/components/workout_warmup.dart';
 
 void main() {
   testWidgets(
@@ -104,11 +104,80 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
+      'Training days require two selections before continuing and before saving',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var continued = 0;
+    final controller = OnboardingController(
+        load: () async => OnboardingDraft(name: 'Elena', daysPerWeek: 'DAYS_3'),
+        save: (_) async {});
+    await controller.initialize();
+    await tester.pumpWidget(MaterialApp(
+        home: TrainingPreferencesView(
+            controller: controller, onContinue: () => continued++)));
+    await tester.pumpAndSettle();
+
+    Future<void> tap(String label) async {
+      final target = find.text(label);
+      await tester.ensureVisible(target);
+      await tester.pumpAndSettle();
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+    }
+
+    const error = 'Select at least 2 training days to continue.';
+    await tap('Continue');
+    expect(find.text('Which days work for you?'), findsOneWidget);
+    await tap('Continue');
+    expect(find.text(error), findsOneWidget);
+    expect(find.byType(TrainingStylePicker), findsNothing);
+    expect(controller.draft.trainingDays, isEmpty);
+
+    await tap('Mon');
+    await tap('Continue');
+    expect(find.text(error), findsOneWidget);
+    expect(find.byType(TrainingStylePicker), findsNothing);
+    expect(controller.draft.trainingDays, ['MONDAY']);
+
+    await tap('Tue');
+    expect(find.text(error), findsNothing);
+    await tap('Continue');
+    expect(find.text('Your training style'), findsOneWidget);
+    expect(controller.draft.trainingDays, ['MONDAY', 'TUESDAY']);
+    await tap('Continue');
+    expect(find.text('Final details'), findsOneWidget);
+
+    // Final submission also guards an invalid restored or changed draft.
+    controller.draft.trainingDays = [];
+    await tap('Build my plan');
+    expect(continued, 0);
+    expect(controller.draft.completedStep, isNot(7));
+    expect(find.text('Which days work for you?'), findsOneWidget);
+    expect(find.text(error), findsOneWidget);
+
+    await tap('Mon');
+    await tap('Tue');
+    await tap('Continue');
+    await tap('Continue');
+    await tap('Build my plan');
+    expect(continued, 1);
+    expect(controller.draft.completedStep, 7);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+  });
+
+  testWidgets(
       'Final preferences continue directly without a confirmation checkbox',
       (tester) async {
     var continued = 0;
     final controller = OnboardingController(
-        load: () async => OnboardingDraft(name: 'Elena', daysPerWeek: 'DAYS_3'),
+        load: () async => OnboardingDraft(
+            name: 'Elena',
+            daysPerWeek: 'DAYS_3',
+            trainingDays: ['MONDAY', 'WEDNESDAY', 'FRIDAY']),
         save: (_) async {});
     await controller.initialize();
     await tester.pumpWidget(MaterialApp(

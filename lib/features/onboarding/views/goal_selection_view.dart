@@ -43,7 +43,7 @@ class _GoalSelectionViewState extends State<GoalSelectionView> {
     Navigator.of(context).pop();
   }
 
-  void _onContinue() async {
+  Future<void> _onContinue() async {
     if (_advancing) return;
     setState(() => _advancing = true);
     try {

@@ -1,7 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/database/app_database.dart';
-import 'package:fitai_mobile/core/database/cache_manager.dart';
+import 'package:setcraft/core/database/app_database.dart';
+import 'package:setcraft/core/database/cache_manager.dart';
 import 'package:drift/drift.dart' as drift;
 
 void main() {

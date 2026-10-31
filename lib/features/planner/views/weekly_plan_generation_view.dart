@@ -54,6 +54,7 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
   }
 
   String get _status => switch (_run['stage']) {
+        'retrying' => 'Reconnecting and retrying automatically',
         'specialists' => 'Choosing exercises for each muscle group',
         'workout_prescriptions' => 'Balancing your sets, reps and weights',
         'nutrition' => 'Matching food to your training week',
@@ -174,7 +175,18 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
           'The exercise or food library changed. Generate a new plan.',
         'PLAN_COOLDOWN' =>
           'Your weekly plan is already saved. Return to your planner.',
-        _ => 'We couldn’t finish this plan. Try again.',
+        'RETRY_EXHAUSTED' =>
+          'Planning is unavailable right now. Please return to your planner.',
+        'PREMIUM_REQUIRED' ||
+        'SUBSCRIPTION_REQUIRED' =>
+          'Check your membership before planning again.',
+        'INVALID_SPLIT' ||
+        'STARTER_REVIEW_REQUIRED' ||
+        'PROFILE_INCOMPLETE' =>
+          'Review your training preferences before planning again.',
+        _ => _run['canRetry'] == true
+            ? 'We couldn’t finish this plan. Try again.'
+            : 'We couldn’t finish this plan. Please return to your planner.',
       };
 
   @override
@@ -236,7 +248,7 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
                 _unavailable
                     ? 'This plan is unavailable. Return to your planner.'
                     : _complete
-                        ? 'Workouts and food, ready to review'
+                        ? 'Your training week is ready to open'
                         : _failed
                             ? _failure
                             : _status,
@@ -245,41 +257,32 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
                     fontSize: 13, height: 1.5, color: DSColors.silver),
               ),
             ),
-            if (!_complete &&
-                !_failed &&
-                !_unavailable &&
-                _run['stage'] == 'specialists') ...[
-              const SizedBox(height: 6),
-              FitnessText(
-                  '${_steps.intersection({
-                        'chest',
-                        'back',
-                        'legs',
-                        'shoulders',
-                        'biceps',
-                        'triceps',
-                        'core'
-                      }).length} of 7 muscle groups reviewed',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 11, color: DSColors.muted)),
-            ],
             const SizedBox(height: 22),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                  color: DSColors.bgCard,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: DSColors.border, width: .7)),
-              child: Column(children: [
-                _step('Review history', 'history', 1),
-                const Divider(height: 1, color: DSColors.border),
-                _step('Build workouts', 'workouts', 2),
-                const Divider(height: 1, color: DSColors.border),
-                _step('Plan food', 'nutrition', 3),
-                const Divider(height: 1, color: DSColors.border),
-                _step('Check and save', 'saved', 4),
-              ]),
-            ),
+            ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const FitnessText('Planning details',
+                    style: TextStyle(fontSize: 12, color: DSColors.muted)),
+                shape: const Border(),
+                collapsedShape: const Border(),
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: DSColors.bgCard,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: DSColors.border, width: .7)),
+                    child: Column(children: [
+                      _step('Review history', 'history', 1),
+                      const Divider(height: 1, color: DSColors.border),
+                      _step('Build workouts', 'workouts', 2),
+                      const Divider(height: 1, color: DSColors.border),
+                      _step('Plan food', 'nutrition', 3),
+                      const Divider(height: 1, color: DSColors.border),
+                      _step('Check and save', 'saved', 4),
+                    ]),
+                  )
+                ]),
             if (_connectionError != null && !_unavailable) ...[
               const SizedBox(height: 16),
               FitnessText(_connectionError!,

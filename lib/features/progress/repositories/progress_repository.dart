@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/cache/user_data_cache.dart';
 import '../../../core/cache/app_data_mode.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/network/api_client.dart';
@@ -92,6 +93,7 @@ class ProgressRepository {
   }
 
   Future<void> invalidate() async {
+    await UserDataCache.shared.invalidate('body_map');
     final owner = await CacheScope.userId();
     _versions[owner] = (_versions[owner] ?? 0) + 1;
     _requests.clear();

@@ -3,11 +3,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:fitai_mobile/core/health/phone_sleep_service.dart';
-import 'package:fitai_mobile/features/wellness/repositories/wellness_repository.dart';
-import 'package:fitai_mobile/features/wellness/views/sleep_entry_view.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/models/home_models.dart';
+import 'package:setcraft/core/health/phone_sleep_service.dart';
+import 'package:setcraft/features/wellness/repositories/wellness_repository.dart';
+import 'package:setcraft/features/wellness/views/sleep_entry_view.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/models/home_models.dart';
 
 class _Repo extends WellnessRepository {
   String usage;
@@ -248,16 +248,15 @@ void main() {
                 onSession: () {},
                 onTrain: () {},
                 onNutrition: () {},
-                onBody: () {},
                 onSleep: () => opened++))));
     await tester.pumpAndSettle();
     await tap(tester, find.byKey(const ValueKey('today-readiness-card')));
     expect(opened, 1);
     expect(find.text('Resting heart rate or HRV'), findsNothing);
-    expect(find.text('Your readiness check-in'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Complete check-in'), 200,
+    expect(find.text('Sleep saved'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Finish'), 200,
         scrollable: find.byType(Scrollable).first);
-    expect(find.text('Complete check-in'), findsWidgets);
+    expect(find.text('Finish'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

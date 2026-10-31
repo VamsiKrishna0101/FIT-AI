@@ -6,9 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/weekly_muscle_coverage.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/features/body_scan/views/widgets/weekly_muscle_coverage.dart';
 
 Map<String, dynamic> fixture() =>
     jsonDecode(File('test/fixtures/training_map.json').readAsStringSync())

@@ -1,3 +1,4 @@
+import 'package:setcraft/core/theme/ds_motion.dart';
 import '../../../core/components/content_transition.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -159,7 +160,7 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
                     duration: MediaQuery.disableAnimationsOf(context)
                         ? Duration.zero
                         : ContentTransition.duration,
-                    curve: Curves.easeOutCubic,
+                    curve: DSMotion.effects,
                     sliver: SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverList.builder(

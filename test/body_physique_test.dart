@@ -1,6 +1,8 @@
-import 'package:fitai_mobile/features/body_scan/models/planned_physique_models.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_card.dart';
-import 'package:fitai_mobile/core/theme/fitness_accents.dart';
+import 'fixtures/body_map_fixture.dart';
+import 'package:setcraft/features/body_scan/models/body_map_models.dart';
+import 'package:setcraft/features/body_scan/models/planned_physique_models.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_card.dart';
+import 'package:setcraft/core/theme/fitness_accents.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:io';
 import 'dart:async';
@@ -12,21 +14,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/repositories/body_assessment_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_entry_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_photo_review_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_estimate_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_focus_panel.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_comparison_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_history_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_dashboard.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_controls.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
+import 'package:setcraft/features/body_scan/views/body_view.dart';
+import 'package:setcraft/features/body_scan/views/body_entry_view.dart';
+import 'package:setcraft/features/body_scan/views/body_photo_review_view.dart';
+import 'package:setcraft/features/body_scan/views/body_estimate_view.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_focus_panel.dart';
+import 'package:setcraft/features/body_scan/views/body_comparison_view.dart';
+import 'package:setcraft/features/body_scan/views/body_history_view.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_physique_dashboard.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_physique_home.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_controls.dart';
 
 Map<String, dynamic> _metric(double value, [String source = 'tape']) =>
     {'value': value, 'source': source};
@@ -96,6 +98,11 @@ final _comparison = BodyComparison.fromJson({
 });
 
 class _Repository extends BodyAssessmentRepository {
+  @override
+  Future<BodyMapData> bodyMap(
+          {DateTime? date, BodyDateSelection? selection}) async =>
+      emptyBodyMap(date);
+
   @override
   Future<PlannedPhysiqueData> plannedPhysique({DateTime? date}) async =>
       PlannedPhysiqueData.fromJson({'status': 'none', 'workouts': []});
@@ -196,53 +203,41 @@ void main() {
     expect(_comparison.label('bodyFatPct'), 'Different sources');
     expect(_comparison.label('waistCm'), '-1.8 cm');
   });
-  testWidgets('fixed header, source labels and no false target achievement',
+  testWidgets(
+      'Body keeps its fixed header and measurement history without photo sections',
       (tester) async {
     await _size(tester);
     final repository = _Repository();
     await tester
         .pumpWidget(_app(BodyView(onTrain: () {}, repository: repository)));
     await tester.pumpAndSettle();
-    expect(find.text('Training'), findsOneWidget);
-    expect(find.byType(WeeklyPlanCard), findsNothing,
-        reason: 'Body Training keeps the muscle map without a planner card');
-    await _snapshot(tester, 'body-training-calendar-preview');
-    await tester.tap(find.text('Physique'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 120));
-    final fades = tester.widgetList<FadeTransition>(find.ancestor(
-        of: find.byType(BodyPhysiqueHome),
-        matching: find.byType(FadeTransition)));
-    expect(
-        fades.any((fade) => fade.opacity.value > 0 && fade.opacity.value < 1),
-        true,
-        reason: 'Physique fades into view while the Body header stays fixed');
-    await tester.pumpAndSettle();
-    expect(find.byType(BodyPhysiqueHome), findsOneWidget);
+    expect(find.text('Measurements'), findsOneWidget);
     expect(find.text('Target met'), findsNothing);
+    expect(find.byType(WeeklyPlanCard), findsNothing);
+    expect(find.byType(BodyPhysiqueHome), findsNothing);
     expect(repository.loads, 1);
-    expect(repository.comparisons, 0,
-        reason: 'Opening Body never compares records automatically');
-    await tester.scrollUntilVisible(find.text('Explore'), 160,
-        scrollable: find.byType(Scrollable).last);
-    await tester.ensureVisible(find.text('Explore'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Explore'));
-    await tester.pumpAndSettle();
     expect(repository.comparisons, 0);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('body-measurement-weightKg')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('body-measurement-weightKg')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Measurement history').last);
+    await tester.pumpAndSettle();
     expect(find.byType(BodyHistoryView), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Compare'), findsNothing);
     await tester.pageBack();
     await tester.pumpAndSettle();
     final header =
         tester.getTopLeft(find.byKey(const ValueKey('body-fixed-header')));
-    await _snapshot(tester, 'body-physique-preview');
-    await tester.drag(find.byType(BodyPhysiqueHome), const Offset(0, -240));
+    await tester.drag(
+        find.byKey(const ValueKey('body-scroll')), const Offset(0, -240));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.byKey(const ValueKey('body-fixed-header'))),
         header);
-    await tester.pumpWidget(const SizedBox());
+    expect(tester.takeException(), isNull);
   });
+
   testWidgets('front/back map and chosen focus use explicit meanings',
       (tester) async {
     await _size(tester);
@@ -310,7 +305,7 @@ void main() {
     expect(find.text('Add two tape readings to see a trend.'), findsOneWidget);
   });
   testWidgets(
-      'saving a visual review preserves estimates, replacing requires an entered reading',
+      'Editing measurements excludes old visual estimates unless replaced by an entered reading',
       (tester) async {
     await _size(tester);
     Map<String, dynamic>? submitted;
@@ -322,31 +317,18 @@ void main() {
           submitted = data;
         })));
     await tester.pumpAndSettle();
-    expect(find.text('18–26%'), findsOneWidget);
-    expect(find.byKey(const ValueKey('body-input-bodyFatPct')), findsNothing);
-    await _snapshot(tester, 'body-review-preview');
-    await tester.tap(find.text('Save entry'));
-    await tester.pumpAndSettle();
-    expect((submitted!['metrics'] as Map)['bodyFatPct'],
-        review.metrics['bodyFatPct']!.toJson());
-    submitted = null;
-    await tester.pumpWidget(const SizedBox());
-    await tester.pumpWidget(_app(BodyEntryView(
-        existing: review,
-        onSubmit: (data) async {
-          submitted = data;
-        })));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Enter reading'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-        find.byKey(const ValueKey('body-input-bodyFatPct')), '21');
-    await tester.tap(find.text('Save entry'));
+    expect(find.text('18–26%'), findsNothing);
+    final field = find.byKey(const ValueKey('body-input-bodyFatPct'));
+    await tester.ensureVisible(field);
+    expect(tester.widget<TextField>(field).controller!.text, isEmpty);
+    await tester.enterText(field, '21');
+    await tester.tap(find.text('Save measurements'));
     await tester.pumpAndSettle();
     expect((submitted!['metrics'] as Map)['bodyFatPct'],
         {'value': 21.0, 'source': 'manual_estimate'});
   });
-  testWidgets('forms survive keyboard and reject implausible entered weight',
+
+  testWidgets('Forms survive keyboard and reject implausible entered weight',
       (tester) async {
     await _size(tester, width: 320, height: 640);
     var saves = 0;
@@ -354,23 +336,15 @@ void main() {
       saves++;
     }), scale: 1.3, keyboard: 260));
     await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
     await tester.enterText(
         find.byKey(const ValueKey('body-input-weightKg')), '999');
-    await tester.tap(find.text('Save & get focus'));
+    await tester.tap(find.text('Save measurements'));
     await tester.pumpAndSettle();
     expect(saves, 0);
+    expect(find.text('20–500 kg'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    expect(find.text('Save & get focus'), findsOneWidget);
-    await tester.pumpWidget(_app(const BodyPhotoReviewView(profileWeight: 75),
-        scale: 1.3, keyboard: 260));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byType(TextField), findsNothing,
-        reason: 'A visual review does not require weight');
-    expect(find.text('Start with a front photo. Other views are optional.'),
-        findsOneWidget);
   });
+
   testWidgets(
       'initial physique fits small screens without reports or comparisons',
       (tester) async {
@@ -751,7 +725,7 @@ void main() {
   });
 
   testWidgets(
-      'manual sizes request coaching while weight-only logging does not',
+      'Measurement updates save entered readings without AI coaching or profile defaults',
       (tester) async {
     await _size(tester);
     Map<String, dynamic>? submitted;
@@ -761,11 +735,19 @@ void main() {
           submitted = value;
         })));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save & get focus'));
+    expect(
+        tester
+            .widget<TextField>(
+                find.byKey(const ValueKey('body-input-weightKg')))
+            .controller!
+            .text,
+        isEmpty);
+    await tester.enterText(
+        find.byKey(const ValueKey('body-input-waistCm')), '86');
+    await tester.tap(find.text('Save measurements'));
     await tester.pumpAndSettle();
-    expect(submitted!['requestCoaching'], true);
-    expect((submitted!['metrics'] as Map)['weightKg'],
-        {'value': 75.0, 'source': 'profile'});
+    expect(submitted!['requestCoaching'], false);
+    expect((submitted!['metrics'] as Map).keys, ['waistCm']);
     await tester.pumpWidget(const SizedBox());
     await tester.pumpWidget(_app(BodyEntryView(
         weightOnly: true,
@@ -773,13 +755,12 @@ void main() {
           submitted = value;
         })));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('body-input-bodyFatPct')), findsNothing);
+    expect(find.byKey(const ValueKey('body-input-waistCm')), findsNothing);
     await tester.enterText(
         find.byKey(const ValueKey('body-input-weightKg')), '76');
     await tester.tap(find.text('Save weight'));
     await tester.pumpAndSettle();
     expect(submitted!['requestCoaching'], false);
-    expect((submitted!['metrics'] as Map).keys, ['weightKg']);
     expect((submitted!['metrics'] as Map)['weightKg'],
         {'value': 76.0, 'source': 'scale'});
   });

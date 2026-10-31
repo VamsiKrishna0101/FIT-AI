@@ -6,21 +6,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/components/liquid_chrome_button.dart';
-import 'package:fitai_mobile/core/components/liquid_silver_bottom_bar.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/onboarding/components/onboarding_focus_body.dart';
-import 'package:fitai_mobile/features/onboarding/components/onboarding_scaffold.dart';
-import 'package:fitai_mobile/features/onboarding/views/discovery_onboarding_gate.dart';
-import 'package:fitai_mobile/features/onboarding/data/discovery_repository.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/features/onboarding/views/about_you_experience_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/schedule_location_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/lifestyle_nutrition_limitations_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/training_preferences_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/onboarding_view.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/components/liquid_silver_bottom_bar.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/onboarding/components/onboarding_focus_body.dart';
+import 'package:setcraft/features/onboarding/components/onboarding_scaffold.dart';
+import 'package:setcraft/features/onboarding/views/discovery_onboarding_gate.dart';
+import 'package:setcraft/features/onboarding/data/discovery_repository.dart';
+import 'package:setcraft/features/onboarding/viewmodels/onboarding_controller.dart';
+import 'package:setcraft/features/onboarding/views/about_you_experience_view.dart';
+import 'package:setcraft/features/onboarding/views/schedule_location_view.dart';
+import 'package:setcraft/features/onboarding/views/lifestyle_nutrition_limitations_view.dart';
+import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
+import 'package:setcraft/features/onboarding/views/onboarding_view.dart';
 
 const _preview = ValueKey('redesign-preview');
 Widget app(Widget child, {double scale = 1}) => MaterialApp(
@@ -197,7 +197,8 @@ void main() {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(393, 852);
     addTearDown(tester.view.reset);
-    final model = await controller(OnboardingDraft(gender: 'FEMALE'));
+    final model = await controller(OnboardingDraft(
+        gender: 'FEMALE', trainingDays: ['MONDAY', 'WEDNESDAY']));
     var continued = false;
     await tester.pumpWidget(app(TrainingPreferencesView(
         controller: model, onContinue: () => continued = true)));

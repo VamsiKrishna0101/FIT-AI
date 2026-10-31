@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:path_drawing/path_drawing.dart';
+import '../../../core/localization/fitness_copy.dart';
+import '../../../core/theme/ds_colors.dart';
 
 const anatomyPrimary = Color(0xFFFF5B50);
 const anatomySecondary = Color(0xFFE7ACA8);
@@ -59,6 +61,9 @@ const _regionData = <String, Map<String, List<String>>>{
     'quads': [
       'M194 402 C212 406 241 412 265 407 C263 436 248 461 240 475 L231 485 C211 486 201 469 197 450 C191 434 191 419 194 402 Z'
     ],
+    'calves': [
+      'M203 492 C199 511 185 526 184 547 C182 575 191 607 194 640 L207 648 C209 619 221 591 231 571 C239 547 237 526 226 504 L220 493 Z'
+    ],
   },
   'male_back': {
     'upper_back': [
@@ -106,6 +111,9 @@ const _regionData = <String, Map<String, List<String>>>{
     ],
     'quads': [
       'M195 1100 C217 1107 241 1113 268 1112 C268 1146 252 1183 238 1206 L226 1220 C206 1219 202 1193 197 1167 C191 1145 190 1123 195 1100 Z'
+    ],
+    'calves': [
+      'M204 1232 C200 1251 187 1271 186 1294 C184 1322 193 1361 195 1391 L208 1400 C210 1370 221 1344 232 1320 C240 1294 235 1265 224 1244 L218 1232 Z'
     ],
   },
   'female_back': {
@@ -193,16 +201,20 @@ class _GraphiteMuscleFigureState extends State<GraphiteMuscleFigure> {
 
   @override
   Widget build(BuildContext context) => _failed
-      ? const SizedBox.shrink()
-      : RepaintBoundary(
-          child: CustomPaint(
-              isComplex: true,
-              painter: GraphiteAnatomyPainter(
-                  image: _frame?.image,
-                  female: widget.female,
-                  back: widget.back,
-                  primary: widget.primary,
-                  secondary: widget.secondary)));
+      ? Center(
+          child: Text(fitnessText(context, 'Muscle map unavailable'),
+              style: const TextStyle(fontSize: 12, color: DSColors.muted)))
+      : _frame == null
+          ? const Center(child: CupertinoActivityIndicator())
+          : RepaintBoundary(
+              child: CustomPaint(
+                  isComplex: true,
+                  painter: GraphiteAnatomyPainter(
+                      image: _frame?.image,
+                      female: widget.female,
+                      back: widget.back,
+                      primary: widget.primary,
+                      secondary: widget.secondary)));
 }
 
 class GraphiteAnatomyPainter extends CustomPainter {

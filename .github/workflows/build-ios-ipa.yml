@@ -8,7 +8,7 @@ on:
       backend_url:
         description: 'Backend Base URL (ngrok)'
         required: false
-        default: 'https://4266-2401-4900-1cb4-ee3e-a9de-3d34-fc2b-928c.ngrok-free.app'
+        default: 'https://1594-2401-4900-1c27-f174-d504-d2f1-613-9731.ngrok-free.app'
 
 jobs:
   build-ipa:
@@ -48,7 +48,7 @@ jobs:
 
       - name: Build iOS Application (Release, No Codesign)
         env:
-          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://4266-2401-4900-1cb4-ee3e-a9de-3d34-fc2b-928c.ngrok-free.app' }}
+          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://1594-2401-4900-1c27-f174-d504-d2f1-613-9731.ngrok-free.app' }}
         run: |
           if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
             cd mobile

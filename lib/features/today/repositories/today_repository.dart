@@ -77,7 +77,7 @@ class TodayRepository {
     _confirmedSleep['$owner:$date'] = Map.of(entry);
     final locale = LanguageManager.shared.currentLanguage.code;
     final key =
-        '${CacheScope.userPrefix}${owner}_home_v14_${locale}_${date}_real';
+        '${CacheScope.userPrefix}${owner}_home_v15_${locale}_${date}_real';
     HomeData? data = _activeUserId == owner && _lastKnown?.calendarDate == date
         ? _lastKnown
         : null;
@@ -125,7 +125,7 @@ class TodayRepository {
       await SecureSessionStore.shared.userId ?? 'current_user';
 
   String _cacheKeyForUser(String userId, [String? locale]) =>
-      '${CacheScope.userPrefix}${userId}_home_v14_${locale ?? LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${AppDataMode.shared.dataset}';
+      '${CacheScope.userPrefix}${userId}_home_v15_${locale ?? LanguageManager.shared.currentLanguage.code}_${CacheScope.todayKey()}_${AppDataMode.shared.dataset}';
 
   /// Historical snapshots never replace today's shared cache or stream.
   Future<HomeData?> loadDate(DateTime selected,
@@ -138,7 +138,7 @@ class TodayRepository {
     final owner = await _currentUserId();
     final locale = LanguageManager.shared.currentLanguage.code;
     final key =
-        '${CacheScope.userPrefix}${owner}_home_v14_${locale}_${date}_real';
+        '${CacheScope.userPrefix}${owner}_home_v15_${locale}_${date}_real';
     HomeData? cached;
     try {
       final raw = await LocalCache.shared.getJson(key);

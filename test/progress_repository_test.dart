@@ -5,11 +5,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/features/progress/repositories/progress_repository.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/features/progress/repositories/progress_repository.dart';
 
 String token(String owner) =>
     '${base64Url.encode(utf8.encode('{}'))}.${base64Url.encode(utf8.encode(jsonEncode({

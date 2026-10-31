@@ -1,559 +1,544 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:flutter/rendering.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:fitai_mobile/core/components/liquid_silver_bottom_bar.dart';
-import 'package:flutter/foundation.dart';
+import 'package:setcraft/core/components/navigation_glyph.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:liquid_glass_native/liquid_glass_native.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart' as glass;
+import 'package:setcraft/core/components/liquid_silver_bottom_bar.dart';
+import 'package:setcraft/core/theme/ds_colors.dart';
 
+class _NavigationPreview extends StatefulWidget {
+  final double scale;
+  final bool reduced, rtl, highContrast;
+  final List<String> labels;
+  final ValueChanged<int>? onSelected;
+  final Widget? body;
+  const _NavigationPreview(
+      {this.scale = 1,
+      this.reduced = false,
+      this.rtl = false,
+      this.highContrast = false,
+      this.labels = const ['Today', 'Train', 'Body', 'Progress'],
+      this.onSelected,
+      this.body});
+  @override
+  State<_NavigationPreview> createState() => _NavigationPreviewState();
+}
+
+class _NavigationPreviewState extends State<_NavigationPreview> {
+  int selected = 0;
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+      theme: ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: Colors.black,
+          textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Inter')),
+      builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(widget.scale),
+              disableAnimations: widget.reduced,
+              highContrast: widget.highContrast),
+          child: Directionality(
+              textDirection: widget.rtl ? TextDirection.rtl : TextDirection.ltr,
+              child: child!)),
+      home: RepaintBoundary(
+          key: const ValueKey('navigation-preview'),
+          child: Scaffold(
+            extendBody: true,
+            body: widget.body ??
+                const SizedBox.expand(key: ValueKey('navigation-content')),
+            bottomNavigationBar: LiquidSilverBottomBar(
+                selectedIndex: selected,
+                labels: widget.labels,
+                onTabSelected: (value) {
+                  widget.onSelected?.call(value);
+                  setState(() => selected = value);
+                }),
+          )));
+}
+
+void phone(WidgetTester tester, {double width = 393, double inset = 34}) {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = Size(width, 852);
+  tester.view.viewPadding = FakeViewPadding(bottom: inset);
+  tester.view.padding = FakeViewPadding(bottom: inset);
+  addTearDown(tester.view.reset);
+}
+
+Future<void> capture(WidgetTester tester, String name) async {
+  await tester.runAsync(() async {
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(const ValueKey('navigation-preview')));
+    final image = await boundary.toImage(pixelRatio: 2);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    final file = File('build/previews/$name.png');
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes!.buffer.asUint8List());
+    image.dispose();
+  });
+}
+
+Color iconColor(WidgetTester tester, String label) => tester
+    .widget<NavigationGlyph>(find.descendant(
+        of: find.byTooltip(label), matching: find.byType(NavigationGlyph)))
+    .color;
 void main() {
-  const navigationChannel = MethodChannel('fitai/navigation');
   setUpAll(() async {
-    await (FontLoader('Inter')
-          ..addFont(rootBundle.load('assets/fonts/Inter.ttf')))
-        .load();
-    await (FontLoader('packages/cupertino_icons/CupertinoIcons')
-          ..addFont(rootBundle
-              .load('packages/cupertino_icons/assets/CupertinoIcons.ttf')))
-        .load();
+    for (final font in {
+      'Inter': 'assets/fonts/Inter.ttf',
+      'MaterialIcons': 'fonts/MaterialIcons-Regular.otf',
+      'packages/cupertino_icons/CupertinoIcons':
+          'packages/cupertino_icons/assets/CupertinoIcons.ttf'
+    }.entries) {
+      await (FontLoader(font.key)..addFont(rootBundle.load(font.value))).load();
+    }
   });
 
-  testWidgets('Older iOS keeps the floating dock and working destinations',
+  testWidgets('Navigation uses the same floating capsule on Android and iOS',
       (tester) async {
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(navigationChannel, (_) async => false);
-    addTearDown(
-        () => messenger.setMockMethodCallHandler(navigationChannel, null));
-
-    final selected = <int>[];
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        bottomNavigationBar: LiquidSilverBottomBar(
-          selectedIndex: 0,
-          labels: const ['Today', 'Train', 'Body', 'Progress'],
-          onTabSelected: selected.add,
-        ),
-      ),
-    ));
-    await tester.pumpAndSettle();
-    expect(find.byType(LiquidGlassTabBar), findsNothing);
-    expect(find.byType(BackdropFilter), findsOneWidget);
-    await tester.tap(find.text('Body'));
-    expect(selected, [2]);
-  }, variant: const TargetPlatformVariant({TargetPlatform.iOS}));
-
-  testWidgets('iOS 26 bridges native tabs, updates selection and language',
-      (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.viewPadding = const FakeViewPadding(bottom: 34);
-    addTearDown(tester.view.reset);
-
-    final messenger = tester.binding.defaultBinaryMessenger;
-    final views = <Map<dynamic, dynamic>>[];
-    final updates = <MethodCall>[];
-    final nativeChannels = <MethodChannel>[];
-    messenger.setMockMethodCallHandler(navigationChannel, (_) async => true);
-    messenger.setMockMethodCallHandler(SystemChannels.platform_views,
-        (call) async {
-      if (call.method == 'create') {
-        final args = call.arguments as Map<dynamic, dynamic>;
-        views.add(args);
-        final channel = MethodChannel('${args['viewType']}/${args['id']}');
-        nativeChannels.add(channel);
-        messenger.setMockMethodCallHandler(channel, (call) async {
-          updates.add(call);
-          return null;
-        });
-      }
-      return null;
+    phone(tester);
+    var nativeRequests = 0;
+    const channel = MethodChannel('fitai/navigation');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (_) async {
+      nativeRequests++;
+      return true;
     });
-    addTearDown(() {
-      messenger.setMockMethodCallHandler(navigationChannel, null);
-      messenger.setMockMethodCallHandler(SystemChannels.platform_views, null);
-      for (final channel in nativeChannels) {
-        messenger.setMockMethodCallHandler(channel, null);
-      }
-    });
-
-    var selectedIndex = 0;
-    var labels = ['Today', 'Train', 'Body', 'Progress'];
-    late StateSetter update;
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
     final selections = <int>[];
-    await tester.pumpWidget(MaterialApp(
-      home: StatefulBuilder(builder: (context, setState) {
-        update = setState;
-        return Scaffold(
-          extendBody: true,
-          bottomNavigationBar: LiquidSilverBottomBar(
-            selectedIndex: selectedIndex,
-            labels: labels,
-            onTabSelected: (index) {
-              selections.add(index);
-              setState(() => selectedIndex = index);
-            },
-          ),
-        );
-      }),
-    ));
+    await tester.pumpWidget(_NavigationPreview(onSelected: selections.add));
     await tester.pumpAndSettle();
-
-    expect(views, hasLength(1));
-    expect(views.single['viewType'], 'flutter_native_view/glass_tab_bar');
-    final params = const StandardMessageCodec().decodeMessage(
-        ByteData.sublistView(views.single['params'] as Uint8List)) as Map;
-    expect(params['currentIndex'], 0);
-    expect((params['items'] as List).map((item) => item['label']), labels);
-    expect(params['brightness'], 'dark');
-    expect(params['respectAccessibility'], true);
-    expect(find.byType(BackdropFilter), findsNothing);
-    final bounds = tester.getRect(find.byType(UiKitView));
-    expect(bounds.center.dx, closeTo(393 / 2, .01));
-    expect(bounds.width, 353);
-    // The host reaches the screen edge; UIKit floats the visible glass above
-    // the home indicator instead of receiving the safe area twice.
-    expect(bounds.bottom, closeTo(852, .01));
-    expect(bounds.height, 100);
-
-    // Exercise the real method-channel callback, rather than calling the Dart
-    // widget's callback directly. The existing tab stack owns the selection.
-    await messenger.handlePlatformMessage(
-      nativeChannels.single.name,
-      const StandardMethodCodec()
-          .encodeMethodCall(const MethodCall('onIndexChanged', 2)),
-      (_) {},
-    );
+    expect(nativeRequests, 0);
+    expect(find.byType(UiKitView), findsNothing);
+    expect(find.byType(BackdropFilter), findsNWidgets(2));
+    expect(
+        find.byKey(const ValueKey('navigation-active-pill')), findsOneWidget);
+    expect(find.text('Today'), findsNothing);
+    expect(find.byTooltip('Today'), findsOneWidget);
+    await tester.tap(find.byTooltip('Body'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Body'));
     expect(selections, [2]);
-    expect(views, hasLength(1));
-    expect(updates.last.arguments['currentIndex'], 2);
-
-    await messenger.handlePlatformMessage(
-      nativeChannels.single.name,
-      const StandardMethodCodec()
-          .encodeMethodCall(const MethodCall('onIndexChanged', 2)),
-      (_) {},
-    );
-    expect(selections, [2]);
-
-    update(() => labels = ['Heute', 'Training', 'Körper', 'Fortschritt']);
-    await tester.pumpAndSettle();
-    expect(views, hasLength(2));
-    final translated = const StandardMessageCodec().decodeMessage(
-        ByteData.sublistView(views.last['params'] as Uint8List)) as Map;
-    expect((translated['items'] as List).map((item) => item['label']), labels);
-    expect(translated['currentIndex'], 2);
+    expect(iconColor(tester, 'Body'), DSColors.navGlassText);
     expect(tester.takeException(), isNull);
-  }, variant: const TargetPlatformVariant({TargetPlatform.iOS}));
+  },
+      variant: const TargetPlatformVariant(
+          {TargetPlatform.android, TargetPlatform.iOS}));
 
   for (final width in [320.0, 393.0, 768.0]) {
-    testWidgets('Four destinations stay centered at width $width',
+    testWidgets(
+        'Navigation reserves space and preserves comfortable taps at width $width',
         (tester) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = Size(width, 852);
-      tester.view.viewPadding = const FakeViewPadding(bottom: 34);
-      addTearDown(tester.view.reset);
-      final selected = <int>[];
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          extendBody: true,
-          body: const SizedBox.expand(),
-          bottomNavigationBar: LiquidSilverBottomBar(
-            selectedIndex: 0,
-            labels: const ['Heute', 'Training', 'Körper', 'Fortschritt'],
-            onTabSelected: selected.add,
-          ),
-        ),
-      ));
+      phone(tester, width: width);
+      final selections = <int>[];
+      await tester.pumpWidget(_NavigationPreview(onSelected: selections.add));
+      await tester.pumpAndSettle();
+      final bar = tester.getRect(find.byKey(const ValueKey('navigation-bar')));
+      final tabs =
+          tester.getRect(find.byKey(const ValueKey('navigation-tabs')));
       final capsule =
           tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
-      expect(capsule.center.dx, closeTo(width / 2, .01));
-      expect(capsule.width, closeTo(width < 416 ? width - 40 : 376, .01));
-      expect(capsule.left, greaterThanOrEqualTo(20));
-      expect(capsule.bottom, closeTo(852 - 34 - 8, .01));
-      expect(find.byType(BackdropFilter), findsOneWidget);
-      for (final label in ['Training', 'Körper', 'Fortschritt']) {
-        await tester.tap(find.text(label));
+      expect(bar.left, 0);
+      expect(bar.right, width);
+      expect(bar.bottom, 852);
+      expect(capsule.left, greaterThanOrEqualTo(18));
+      expect(capsule.right, lessThanOrEqualTo(width - 18));
+      expect(capsule.width, lessThanOrEqualTo(300));
+      expect(capsule.height, closeTo(52, .01));
+      expect(capsule.bottom, closeTo(852 - 34 - 22, .01));
+      expect(tabs.bottom, closeTo(capsule.bottom - 2, .01));
+      expect(
+          tester
+              .getRect(find.byKey(const ValueKey('navigation-content')))
+              .bottom,
+          closeTo(bar.bottom, .01));
+      for (var i = 0; i < 4; i++) {
+        final tap = tester.getRect(find.byKey(ValueKey('navigation-tab-$i')));
+        expect(tap.height, greaterThanOrEqualTo(48));
+        expect(tap.width, greaterThanOrEqualTo(48));
       }
-      expect(selected, [1, 2, 3]);
+      for (final label in ['Train', 'Body', 'Progress']) {
+        await tester.tap(find.byTooltip(label));
+      }
+      expect(selections, [1, 2, 3]);
       expect(tester.takeException(), isNull);
     });
   }
 
-  testWidgets('The glass lens follows the selected tab after a tap',
+  testWidgets('The glass lens moves and stretches while icons stay still',
       (tester) async {
-    var selectedIndex = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: StatefulBuilder(
-        builder: (context, setState) => Scaffold(
-          bottomNavigationBar: LiquidSilverBottomBar(
-            selectedIndex: selectedIndex,
-            labels: const ['Today', 'Train', 'Body', 'Progress'],
-            onTabSelected: (index) => setState(() => selectedIndex = index),
-          ),
-        ),
-      ),
-    ));
-    final capsule =
-        tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
-    final screenHeight =
-        tester.view.physicalSize.height / tester.view.devicePixelRatio;
-    expect(screenHeight - capsule.bottom, closeTo(8, .01));
-    final lens = find.byKey(const ValueKey('navigation-active-lens'));
-    expect(tester.getCenter(lens).dx,
-        closeTo(tester.getCenter(find.text('Today')).dx, .01));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
-    expect(selectedIndex, 3);
-    expect(tester.getCenter(lens).dx,
-        closeTo(tester.getCenter(find.text('Progress')).dx, .01));
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Large labels and reduced motion fit the centered dock',
-      (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(320, 640);
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(MaterialApp(
-        home: Builder(
-      builder: (context) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-            textScaler: const TextScaler.linear(1.6), disableAnimations: true),
-        child: Scaffold(
-            bottomNavigationBar: LiquidSilverBottomBar(
-          selectedIndex: 2,
-          labels: const ['Aujourd’hui', 'Entraînement', 'Corps', 'Progression'],
-          onTabSelected: (_) {},
-        )),
-      ),
-    )));
-    expect(
-        tester.getSize(find.byKey(const ValueKey('navigation-capsule'))).height,
-        closeTo(70.6, .01));
-    expect(tester.widget<AnimatedAlign>(find.byType(AnimatedAlign)).duration,
-        Duration.zero);
-    expect(find.byType(AnimatedScale), findsNothing);
-    expect(find.byType(glass.GlassGlow), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Dragging previews a tab and opens it only once on release',
-      (tester) async {
-    final selections = <int>[];
-    var selected = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: StatefulBuilder(
-          builder: (context, setState) => Scaffold(
-                bottomNavigationBar: LiquidSilverBottomBar(
-                  selectedIndex: selected,
-                  labels: const ['Today', 'Train', 'Body', 'Progress'],
-                  onTabSelected: (index) {
-                    selections.add(index);
-                    setState(() => selected = index);
-                  },
-                ),
-              )),
-    ));
-
-    final touch =
-        await tester.startGesture(tester.getCenter(find.text('Today')));
-    await tester.pump(const Duration(milliseconds: 240));
-    expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale,
-        greaterThan(1));
-    await touch.moveTo(tester.getCenter(find.text('Train')));
-    await tester.pump(const Duration(milliseconds: 100));
-    await touch.moveTo(tester.getCenter(find.text('Progress')));
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview());
+    final positions = [
+      for (final label in ['Today', 'Train', 'Body', 'Progress'])
+        tester.getRect(find.byTooltip(label))
+    ];
+    final pill = find.byKey(const ValueKey('navigation-active-pill'));
+    final before = tester.getRect(pill);
+    await tester.tap(find.byTooltip('Progress'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(selections, isEmpty);
-    expect(
-        tester
-            .getCenter(find.byKey(const ValueKey('navigation-active-lens')))
-            .dx,
-        closeTo(tester.getCenter(find.text('Progress')).dx, .1));
-    expect(
-        tester
-            .widget<Transform>(
-                find.byKey(const ValueKey('navigation-touch-offset')))
-            .transform
-            .getTranslation()
-            .x,
-        greaterThan(0));
+    await tester.pump(const Duration(milliseconds: 70));
+    final moving = tester.getRect(pill);
+    expect(moving.center.dx, greaterThan(before.center.dx));
+    expect(moving.center.dx,
+        lessThan(tester.getCenter(find.byTooltip('Progress')).dx));
+    expect(moving.width, greaterThan(before.width));
+    expect(iconColor(tester, 'Progress'), isNot(DSColors.navGlassText));
+    await capture(tester, 'navigation-liquid-glass-moving');
+    await tester.pumpAndSettle();
+    expect(iconColor(tester, 'Progress'), DSColors.navGlassText);
+    expect(tester.getCenter(pill).dx,
+        closeTo(tester.getCenter(find.byTooltip('Progress')).dx, .01));
+    expect(tester.getSize(pill).width, closeTo(before.width, .01));
+    final after = [
+      for (final label in ['Today', 'Train', 'Body', 'Progress'])
+        tester.getRect(find.byTooltip(label))
+    ];
+    expect(after, positions);
+    expect(tester.takeException(), isNull);
+  });
 
+  testWidgets('The dock and silver lens stay visible over a black screen',
+      (tester) async {
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview());
+    await tester.pumpAndSettle();
+    final lens =
+        tester.getRect(find.byKey(const ValueKey('navigation-active-pill')));
+    final train = tester.getCenter(find.byTooltip('Train'));
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(const ValueKey('navigation-preview')));
+      final image = await boundary.toImage(pixelRatio: 1);
+      try {
+        final bytes =
+            (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+        Color pixel(Offset point) {
+          final offset =
+              (point.dy.round() * image.width + point.dx.round()) * 4;
+          return Color.fromARGB(
+              bytes.getUint8(offset + 3),
+              bytes.getUint8(offset),
+              bytes.getUint8(offset + 1),
+              bytes.getUint8(offset + 2));
+        }
+
+        final shell = pixel(train + const Offset(17, 0));
+        final silver = pixel(lens.center + const Offset(16, 0));
+        expect(shell.computeLuminance(), greaterThan(.012),
+            reason: 'The shell must separate from pure black');
+        expect(silver.computeLuminance(),
+            greaterThan(shell.computeLuminance() + .025),
+            reason: 'The selection must separate from the dark shell');
+      } finally {
+        image.dispose();
+      }
+    });
+  });
+
+  testWidgets('Rapid tab changes retarget the lens without jumping',
+      (tester) async {
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview());
+    final pill = find.byKey(const ValueKey('navigation-active-pill'));
+    await tester.tap(find.byTooltip('Progress'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+    final moving = tester.getCenter(pill);
+    await tester.tap(find.byTooltip('Train'));
+    await tester.pump();
+    expect(tester.getCenter(pill).dx, closeTo(moving.dx, .01));
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(pill).dx,
+        closeTo(tester.getCenter(find.byTooltip('Train')).dx, .01));
+    expect(iconColor(tester, 'Train'), DSColors.navGlassText);
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Holding a tab lifts the lens and releasing restores its shape',
+      (tester) async {
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview());
+    await tester.pumpAndSettle();
+    final lens = find.byKey(const ValueKey('navigation-active-pill'));
+    final resting = tester.getSize(lens);
+    final icon = find.descendant(
+        of: find.byTooltip('Today'), matching: find.byType(NavigationGlyph));
+    final iconBefore = tester.getRect(icon);
+    final touch = await tester.startGesture(tester.getCenter(icon));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(lens).width, greaterThan(resting.width));
+    expect(tester.getSize(lens).height, greaterThan(resting.height));
+    expect(tester.getRect(icon), iconBefore);
+    await capture(tester, 'navigation-glass-pressed');
     await touch.up();
     await tester.pumpAndSettle();
-    expect(selections, [3]);
-    expect(
-        tester
-            .widget<Transform>(
-                find.byKey(const ValueKey('navigation-touch-offset')))
-            .transform
-            .getTranslation()
-            .length,
-        0);
-    expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale, 1);
-    expect(tester.takeException(), isNull);
+    expect(tester.getSize(lens), resting);
+    expect(tester.binding.hasScheduledFrame, isFalse);
   });
 
-  testWidgets('Accessibility changes during a press leave no elastic state',
+  testWidgets('The lens follows between icons and settles at the released tab',
       (tester) async {
-    var reducedMotion = false;
-    late StateSetter update;
-    final selections = <int>[];
-    await tester.pumpWidget(MaterialApp(
-      home: StatefulBuilder(builder: (context, setState) {
-        update = setState;
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            disableAnimations: reducedMotion,
-            highContrast: reducedMotion,
-          ),
-          child: Scaffold(
-            bottomNavigationBar: LiquidSilverBottomBar(
-              selectedIndex: 0,
-              labels: const ['Today', 'Train', 'Body', 'Progress'],
-              onTabSelected: selections.add,
-            ),
-          ),
-        );
-      }),
-    ));
+    phone(tester);
+    final selected = <int>[];
+    await tester.pumpWidget(_NavigationPreview(onSelected: selected.add));
+    final lens = find.byKey(const ValueKey('navigation-active-pill'));
+    final train = tester.getCenter(find.byTooltip('Train'));
+    final body = tester.getCenter(find.byTooltip('Body'));
+    final between = Offset(ui.lerpDouble(train.dx, body.dx, .3)!, train.dy);
     final touch =
-        await tester.startGesture(tester.getCenter(find.text('Today')));
-    await touch.moveTo(tester.getCenter(find.text('Train')));
-    await tester.pump(const Duration(milliseconds: 100));
-    update(() => reducedMotion = true);
+        await tester.startGesture(tester.getCenter(find.byTooltip('Today')));
+    await touch.moveTo(between);
     await tester.pumpAndSettle();
-    expect(find.byType(AnimatedScale), findsNothing);
-    expect(find.byType(glass.GlassGlow), findsNothing);
-    await touch.cancel();
-    update(() => reducedMotion = false);
-    await tester.pumpAndSettle();
-    expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale, 1);
-    await tester.tap(find.text('Body'));
-    await tester.pumpAndSettle();
-    expect(selections, [2]);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Cancelled touches settle without navigating', (tester) async {
-    final selections = <int>[];
-    await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-      bottomNavigationBar: LiquidSilverBottomBar(
-        selectedIndex: 0,
-        labels: const ['Today', 'Train', 'Body', 'Progress'],
-        onTabSelected: selections.add,
-      ),
-    )));
-    final touch =
-        await tester.startGesture(tester.getCenter(find.text('Train')));
-    await touch.moveBy(const Offset(45, 0));
-    await tester.pump(const Duration(milliseconds: 160));
-    await touch.cancel();
-    await tester.pumpAndSettle();
-    expect(selections, isEmpty);
-    expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale, 1);
-    expect(
-        tester
-            .widget<Transform>(
-                find.byKey(const ValueKey('navigation-touch-offset')))
-            .transform
-            .getTranslation()
-            .length,
-        0);
-    expect(
-        tester
-            .getCenter(find.byKey(const ValueKey('navigation-active-lens')))
-            .dx,
-        closeTo(tester.getCenter(find.text('Today')).dx, .1));
-    await tester.tap(find.text('Body'));
-    await tester.pumpAndSettle();
-    expect(selections, [2]);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Dragging out of the dock does not change destinations',
-      (tester) async {
-    final selections = <int>[];
-    await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-      bottomNavigationBar: LiquidSilverBottomBar(
-        selectedIndex: 0,
-        labels: const ['Today', 'Train', 'Body', 'Progress'],
-        onTabSelected: selections.add,
-      ),
-    )));
-    final touch =
-        await tester.startGesture(tester.getCenter(find.text('Today')));
-    await touch.moveTo(tester.getCenter(find.text('Progress')));
-    await tester.pump();
-    await touch.moveBy(const Offset(0, -120));
+    expect(tester.getCenter(lens).dx, closeTo(between.dx, .01));
+    expect(selected, isEmpty);
     await touch.up();
     await tester.pumpAndSettle();
-    expect(selections, isEmpty);
+    expect(selected, [1]);
+    expect(tester.getCenter(lens).dx, closeTo(train.dx, .01));
+    expect(tester.binding.hasScheduledFrame, isFalse);
+  });
+
+  testWidgets('A second finger cancels the preview without switching tabs',
+      (tester) async {
+    phone(tester);
+    final selected = <int>[];
+    await tester.pumpWidget(_NavigationPreview(onSelected: selected.add));
+    final first = await tester
+        .startGesture(tester.getCenter(find.byTooltip('Today')), pointer: 1);
+    await first.moveTo(tester.getCenter(find.byTooltip('Train')));
+    final second = await tester
+        .startGesture(tester.getCenter(find.byTooltip('Body')), pointer: 2);
+    await first.up();
+    await tester.pumpAndSettle();
+    await second.up();
+    await tester.pumpAndSettle();
+    expect(selected, isEmpty);
+    await tester.tap(find.byTooltip('Progress'));
+    await tester.pumpAndSettle();
+    expect(selected, [3]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('High contrast keeps an opaque readable selection without blur',
+      (tester) async {
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview(highContrast: true));
+    await tester.tap(find.byTooltip('Body'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackdropFilter), findsNothing);
+    expect(
+        tester
+            .getCenter(find.byKey(const ValueKey('navigation-active-pill')))
+            .dx,
+        closeTo(tester.getCenter(find.byTooltip('Body')).dx, .01));
+    expect(iconColor(tester, 'Body'), DSColors.navGlassText);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-      'Content can scroll clear of the floating dock and icon style stays consistent',
+      'Localized tooltips remain available and reduced motion is immediate',
       (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.viewPadding = const FakeViewPadding(bottom: 34);
-    addTearDown(tester.view.reset);
-    var selected = 2;
-    await tester.pumpWidget(MaterialApp(
-      theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: Colors.black,
-          textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Inter')),
-      home: RepaintBoundary(
-        key: const ValueKey('navigation-preview'),
-        child: StatefulBuilder(
-            builder: (context, setState) => Scaffold(
-                  extendBody: true,
-                  body: ListView(
-                    padding: EdgeInsets.fromLTRB(16, 48, 16,
+    phone(tester, width: 320);
+    await tester.pumpWidget(const _NavigationPreview(
+        scale: 1.8,
+        reduced: true,
+        labels: ['Aujourd’hui', 'Entraînement', 'Corps', 'Progression']));
+    await tester.pumpAndSettle();
+    final bar = tester.getRect(find.byKey(const ValueKey('navigation-tabs')));
+    final icons = tester
+        .widgetList<NavigationGlyph>(find.byType(NavigationGlyph))
+        .toList();
+    expect(icons.map((icon) => icon.kind), [
+      NavigationGlyphKind.today,
+      NavigationGlyphKind.train,
+      NavigationGlyphKind.body,
+      NavigationGlyphKind.progress
+    ]);
+    final tops = [
+      for (final label in [
+        'Aujourd’hui',
+        'Entraînement',
+        'Corps',
+        'Progression'
+      ])
+        tester.getTopLeft(find.byTooltip(label)).dy
+    ];
+    expect(tops.every((top) => (top - tops.first).abs() < .01), isTrue);
+    for (var i = 0; i < 4; i++) {
+      expect(tester.getRect(find.byKey(ValueKey('navigation-tab-$i'))).bottom,
+          bar.bottom);
+    }
+    await tester.tap(find.byTooltip('Corps'));
+    await tester.pump();
+    expect(iconColor(tester, 'Corps'), DSColors.navGlassText);
+    expect(
+        tester
+            .getCenter(find.byKey(const ValueKey('navigation-active-pill')))
+            .dx,
+        closeTo(tester.getCenter(find.byTooltip('Corps')).dx, .01));
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(tester.takeException(), isNull);
+    await capture(tester, 'navigation-capsule-large');
+  });
+
+  testWidgets(
+      'Dragging previews quietly and opens only the released destination',
+      (tester) async {
+    phone(tester);
+    final selected = <int>[];
+    await tester.pumpWidget(_NavigationPreview(onSelected: selected.add));
+    final before =
+        tester.getRect(find.byKey(const ValueKey('navigation-tabs')));
+    final touch =
+        await tester.startGesture(tester.getCenter(find.byTooltip('Today')));
+    await touch.moveTo(tester.getCenter(find.byTooltip('Progress')));
+    await tester.pumpAndSettle();
+    expect(selected, isEmpty);
+    expect(iconColor(tester, 'Progress'), DSColors.navGlassText);
+    expect(
+        tester.getRect(find.byKey(const ValueKey('navigation-tabs'))), before);
+    await touch.up();
+    await tester.pumpAndSettle();
+    expect(selected, [3]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Cancelled and out-of-bounds drags never navigate',
+      (tester) async {
+    phone(tester);
+    final selected = <int>[];
+    await tester.pumpWidget(_NavigationPreview(onSelected: selected.add));
+    var touch =
+        await tester.startGesture(tester.getCenter(find.byTooltip('Today')));
+    await touch.moveTo(tester.getCenter(find.byTooltip('Body')));
+    await touch.cancel();
+    await tester.pumpAndSettle();
+    expect(selected, isEmpty);
+    expect(iconColor(tester, 'Today'), DSColors.navGlassText);
+    touch =
+        await tester.startGesture(tester.getCenter(find.byTooltip('Today')));
+    await touch.moveTo(tester.getCenter(find.byTooltip('Progress')));
+    await touch.moveBy(const Offset(0, -140));
+    await touch.up();
+    await tester.pumpAndSettle();
+    expect(selected, isEmpty);
+    await tester.tap(find.byTooltip('Train'));
+    expect(selected, [1]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Right-to-left dragging follows visual tab positions',
+      (tester) async {
+    phone(tester);
+    final selected = <int>[];
+    await tester
+        .pumpWidget(_NavigationPreview(rtl: true, onSelected: selected.add));
+    expect(tester.getCenter(find.byTooltip('Today')).dx,
+        greaterThan(tester.getCenter(find.byTooltip('Progress')).dx));
+    final touch =
+        await tester.startGesture(tester.getCenter(find.byTooltip('Today')));
+    await touch.moveTo(tester.getCenter(find.byTooltip('Body')));
+    await touch.up();
+    await tester.pumpAndSettle();
+    expect(selected, [2]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Keyboard focus and activation reach every destination',
+      (tester) async {
+    phone(tester);
+    final selected = <int>[];
+    await tester.pumpWidget(_NavigationPreview(onSelected: selected.add));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(selected, [1]);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pumpAndSettle();
+    expect(selected, [1, 2]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'Screen readers receive labelled tab actions and committed selection',
+      (tester) async {
+    phone(tester);
+    final semantics = tester.ensureSemantics();
+    try {
+      await tester.pumpWidget(const _NavigationPreview());
+      for (final label in ['Today', 'Train', 'Body', 'Progress']) {
+        final node = tester.getSemantics(find.bySemanticsLabel(label));
+        expect(
+            node.getSemanticsData().hasAction(ui.SemanticsAction.tap), isTrue);
+      }
+      await tester.tap(find.byTooltip('Body'));
+      await tester.pumpAndSettle();
+      final tabs = tester.widgetList<Semantics>(find.descendant(
+          of: find.byType(LiquidSilverBottomBar),
+          matching: find.byType(Semantics)));
+      final selected =
+          tabs.where((tab) => tab.properties.selected == true).toList();
+      expect(selected.length, 1);
+      expect(selected.single.properties.label, 'Body');
+    } finally {
+      semantics.dispose();
+    }
+  });
+
+  testWidgets('Keyboard opening hides the navigation surface', (tester) async {
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview());
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('navigation-tabs')), findsNothing);
+    tester.view.viewInsets = const FakeViewPadding();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('navigation-tabs')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('A footer scrolls clear of the floating capsule', (tester) async {
+    phone(tester);
+    await tester.pumpWidget(_NavigationPreview(
+        body: Builder(
+            builder: (context) => ListView(
+                    padding: EdgeInsets.fromLTRB(16, 32, 16,
                         LiquidSilverBottomBar.scrollBottomInset(context)),
                     children: [
-                      const Text('Body', style: TextStyle(fontSize: 28)),
-                      const SizedBox(height: 24),
+                      const Text('Your progress',
+                          style: TextStyle(fontSize: 22)),
+                      const SizedBox(height: 20),
                       Container(
-                          height: 380,
+                          height: 420,
                           decoration: BoxDecoration(
                               color: const Color(0xFF202020),
-                              borderRadius: BorderRadius.circular(24))),
+                              borderRadius: BorderRadius.circular(18))),
                       const SizedBox(height: 20),
                       Container(
                           height: 300,
                           decoration: BoxDecoration(
                               color: const Color(0xFF202020),
-                              borderRadius: BorderRadius.circular(24)),
-                          alignment: Alignment.topLeft,
-                          padding: const EdgeInsets.all(20),
-                          child: const Text('Strength map',
-                              style: TextStyle(fontSize: 18))),
+                              borderRadius: BorderRadius.circular(18))),
                       const SizedBox(height: 20),
                       OutlinedButton(
-                          onPressed: () {}, child: const Text('Open workout')),
-                    ],
-                  ),
-                  bottomNavigationBar: LiquidSilverBottomBar(
-                      selectedIndex: selected,
-                      labels: const ['Today', 'Train', 'Body', 'Progress'],
-                      onTabSelected: (value) =>
-                          setState(() => selected = value)),
-                )),
-      ),
-    ));
+                          onPressed: () {}, child: const Text('Open workout'))
+                    ]))));
     await tester.pumpAndSettle();
-    final icons = tester
-        .widgetList<Icon>(find.byType(Icon))
-        .map((icon) => icon.icon)
-        .toList();
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
-    expect(selected, 3);
-    expect(
-        tester
-            .widgetList<Icon>(find.byType(Icon))
-            .map((icon) => icon.icon)
-            .toList(),
-        icons);
-    expect(icons, contains(CupertinoIcons.person_crop_rectangle));
+    await capture(tester, 'navigation-liquid-glass-over-content');
     await tester.drag(find.byType(ListView), const Offset(0, -1400));
     await tester.pumpAndSettle();
-    final capsule =
-        tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
-    expect(capsule.height, 64);
-    expect(
-        tester
-            .getRect(find.widgetWithText(OutlinedButton, 'Open workout'))
-            .bottom,
-        lessThanOrEqualTo(capsule.top - 24));
-    await tester.runAsync(() async {
-      final boundary = tester.renderObject<RenderRepaintBoundary>(
-          find.byKey(const ValueKey('navigation-preview')));
-      final image = await boundary.toImage(pixelRatio: 2);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      final file = File('build/previews/navigation-refined.png');
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Scrolling content remains visible behind the translucent dock',
-      (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(393, 852);
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(MaterialApp(
-      theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: Colors.black,
-          textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Inter')),
-      home: RepaintBoundary(
-        key: const ValueKey('navigation-overlay-preview'),
-        child: Scaffold(
-          extendBody: true,
-          body: Stack(children: [
-            const Positioned(
-                top: 64,
-                left: 16,
-                child: Text('Readiness', style: TextStyle(fontSize: 22))),
-            Positioned(
-              top: 112,
-              left: 16,
-              right: 16,
-              bottom: -100,
-              child: Container(
-                decoration: BoxDecoration(
-                    color: const Color(0xFF202020),
-                    borderRadius: BorderRadius.circular(24)),
-                padding: const EdgeInsets.all(20),
-                child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Based on your check-in',
-                          style:
-                              TextStyle(color: Colors.white54, fontSize: 12)),
-                      SizedBox(height: 18),
-                      Text('Your day, at a glance',
-                          style: TextStyle(fontSize: 20))
-                    ]),
-              ),
-            ),
-          ]),
-          bottomNavigationBar: LiquidSilverBottomBar(
-              selectedIndex: 0,
-              labels: const ['Today', 'Train', 'Body', 'Progress'],
-              onTabSelected: (_) {}),
-        ),
-      ),
-    ));
+    final footer =
+        tester.getRect(find.widgetWithText(OutlinedButton, 'Open workout'));
+    final bar = tester.getRect(find.byKey(const ValueKey('navigation-bar')));
+    expect(bar.top - footer.bottom, closeTo(24, .1));
+    await tester.tap(find.byTooltip('Body'));
     await tester.pumpAndSettle();
-    await tester.runAsync(() async {
-      final boundary = tester.renderObject<RenderRepaintBoundary>(
-          find.byKey(const ValueKey('navigation-overlay-preview')));
-      final image = await boundary.toImage(pixelRatio: 2);
-      final raw = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
-      // Keep a gentle bottom fade without hiding the content under the glass.
-      final pixel = ((image.height - 4) * image.width + 48) * 4;
-      expect(raw.getUint8(pixel), lessThan(20));
-      expect(raw.getUint8(pixel + 1), lessThan(20));
-      expect(raw.getUint8(pixel + 2), lessThan(20));
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      final file = File('build/previews/navigation-overlay-refined.png');
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
+    await capture(tester, 'navigation-capsule');
     expect(tester.takeException(), isNull);
   });
 }

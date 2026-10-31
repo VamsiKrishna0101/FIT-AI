@@ -14,13 +14,32 @@ const trainingStyleLabels = {
   'CUSTOM': 'Choose each day',
 };
 
-class TrainingStylePicker extends StatelessWidget {
+class TrainingStylePicker extends StatefulWidget {
   final OnboardingDraft draft;
   final ValueChanged<String> onChanged;
+  final Widget? customDayEditor;
   const TrainingStylePicker(
-      {super.key, required this.draft, required this.onChanged});
+      {super.key,
+      required this.draft,
+      required this.onChanged,
+      this.customDayEditor});
+
+  @override
+  State<TrainingStylePicker> createState() => _TrainingStylePickerState();
+}
+
+class _TrainingStylePickerState extends State<TrainingStylePicker> {
+  final _alternatives = ExpansibleController();
+
+  @override
+  void dispose() {
+    _alternatives.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final draft = widget.draft;
     final preview = TrainingStylePreview(draft);
     final groups = preview.groups;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -45,6 +64,10 @@ class TrainingStylePicker extends StatelessWidget {
             values: {'minutes': preview.minutes},
             style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
       ]),
+      if (preview.resolved == 'CUSTOM' && widget.customDayEditor != null) ...[
+        const SizedBox(height: 18),
+        widget.customDayEditor!,
+      ],
       if (preview.resolved != 'CUSTOM') ...[
         const SizedBox(height: 18),
         for (var i = 0; i < preview.selectedDays.length; i++)
@@ -92,6 +115,7 @@ class TrainingStylePicker extends StatelessWidget {
       ],
       const SizedBox(height: 8),
       ExpansionTile(
+        controller: _alternatives,
         key: const ValueKey('training-style-alternatives'),
         tilePadding: EdgeInsets.zero,
         childrenPadding: EdgeInsets.zero,
@@ -114,7 +138,10 @@ class TrainingStylePicker extends StatelessWidget {
                         child: InkWell(
                             key: ValueKey('training-style-${entry.key}'),
                             borderRadius: BorderRadius.circular(14),
-                            onTap: () => onChanged(entry.key),
+                            onTap: () {
+                              _alternatives.collapse();
+                              widget.onChanged(entry.key);
+                            },
                             child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 15),

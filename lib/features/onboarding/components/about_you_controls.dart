@@ -1,6 +1,6 @@
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -160,7 +160,7 @@ class _GenderTab extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: DSMotion.duration(context, DSMotion.selection),
-        curve: Curves.easeOutCubic,
+        curve: DSMotion.effects,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(11),
           color: DSColors.bgCard,
@@ -195,6 +195,7 @@ class BiometricsHeaderWithUnits extends StatelessWidget {
   final String imperialLabel;
   final String metricLabel;
   final ValueChanged<bool> onUnitChanged;
+  final bool showUnitSelector;
 
   const BiometricsHeaderWithUnits({
     super.key,
@@ -203,6 +204,7 @@ class BiometricsHeaderWithUnits extends StatelessWidget {
     required this.imperialLabel,
     required this.metricLabel,
     required this.onUnitChanged,
+    this.showUnitSelector = true,
   });
 
   @override
@@ -224,44 +226,47 @@ class BiometricsHeaderWithUnits extends StatelessWidget {
           ),
         ),
         // Apple Segmented Switcher for Units
-        Container(
-          height: 30,
-          padding: const EdgeInsets.all(2.5),
-          decoration: BoxDecoration(
-            color: DSColors.bgCard,
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
-              width: 0.8,
+        if (showUnitSelector)
+          Container(
+            height: 30,
+            padding: const EdgeInsets.all(2.5),
+            decoration: BoxDecoration(
+              color: DSColors.bgCard,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 0.8,
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _UnitTab(
-                label: imperialLabel,
-                isSelected: isImperial,
-                onTap: () {
-                  if (!isImperial) {
-                    HapticFeedback.selectionClick();
-                    onUnitChanged(true);
-                  }
-                },
-              ),
-              const SizedBox(width: 3),
-              _UnitTab(
-                label: metricLabel,
-                isSelected: !isImperial,
-                onTap: () {
-                  if (isImperial) {
-                    HapticFeedback.selectionClick();
-                    onUnitChanged(false);
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _UnitTab(
+                  label: imperialLabel,
+                  isSelected: isImperial,
+                  onTap: () {
+                    if (!isImperial) {
+                      HapticFeedback.selectionClick();
+                      onUnitChanged(true);
+                    }
+                  },
+                ),
+                const SizedBox(width: 3),
+                _UnitTab(
+                  label: metricLabel,
+                  isSelected: !isImperial,
+                  onTap: () {
+                    if (isImperial) {
+                      HapticFeedback.selectionClick();
+                      onUnitChanged(false);
+                    }
+                  },
+                ),
+              ],
+            ),
+          )
+        else
+          const SizedBox(height: 30),
       ],
     );
   }

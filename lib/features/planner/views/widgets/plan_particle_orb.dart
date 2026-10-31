@@ -1,22 +1,15 @@
-import '../../../../core/theme/ds_motion.dart';
-import '../../../../core/theme/ds_colors.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../../../core/theme/ds_motion.dart';
+import '../../../../core/theme/ds_colors.dart';
+import '../../../../core/localization/fitness_text.dart';
 
-const planGlow = DSColors.silver;
-
-/// Activity motion stays alive while waiting for confirmed planning progress.
+/// A star-filled planning orb; its percentage is always server-confirmed.
 class PlanParticleOrb extends StatefulWidget {
   final int percent;
   final bool animating;
-
-  const PlanParticleOrb({
-    super.key,
-    required this.percent,
-    this.animating = true,
-  });
-
+  const PlanParticleOrb(
+      {super.key, required this.percent, this.animating = true});
   @override
   State<PlanParticleOrb> createState() => _PlanParticleOrbState();
 }
@@ -24,32 +17,25 @@ class PlanParticleOrb extends StatefulWidget {
 class _PlanParticleOrbState extends State<PlanParticleOrb>
     with TickerProviderStateMixin {
   late final _motion = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 32),
-    animationBehavior: AnimationBehavior.preserve,
-  );
+      vsync: this,
+      duration: const Duration(seconds: 8),
+      animationBehavior: AnimationBehavior.preserve);
   late final _progress = AnimationController(
-    vsync: this,
-    duration: DSMotion.chart,
-    upperBound: 100,
-    value: widget.percent.toDouble(),
-    animationBehavior: AnimationBehavior.preserve,
-  );
-  late final _particles = _makeParticles();
-
-  List<_Particle> _makeParticles() {
-    final random = math.Random(42);
-    return List.generate(
-        300,
-        (_) => _Particle(
-              angle: random.nextDouble() * math.pi * 2,
-              distance: .48 + math.pow(random.nextDouble(), .36) * .49,
-              radius: .35 + random.nextDouble() * 1.7,
-              brightness: .25 + random.nextDouble() * .7,
-              speed: random.nextBool() ? 1 : -1,
-            ));
-  }
-
+      vsync: this,
+      duration: DSMotion.chart,
+      upperBound: 100,
+      value: widget.percent.clamp(0, 100).toDouble(),
+      animationBehavior: AnimationBehavior.preserve);
+  late final _stars = List.generate(160, (index) {
+    final random = math.Random(1042 + index * 31);
+    return _Star(
+        random.nextDouble() * math.pi * 2,
+        math.sqrt(.36 + random.nextDouble() * .62),
+        .35 + random.nextDouble() * .85,
+        .35 + random.nextDouble() * .65,
+        index % 8 == 0,
+        index.isEven ? 1 : -1);
+  });
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -61,16 +47,13 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
     super.didUpdateWidget(oldWidget);
     _updateMotion();
     if (oldWidget.percent != widget.percent) {
-      // Count only to the latest server-confirmed value, never a timed estimate.
-      _progress.animateTo(widget.percent.toDouble(),
+      _progress.animateTo(widget.percent.clamp(0, 100).toDouble(),
           duration: DSMotion.reduced(context) ? DSMotion.fast : DSMotion.chart,
           curve: DSMotion.effects);
     }
   }
 
   void _updateMotion() {
-    // This is ongoing activity feedback. Keep it subtle with reduced motion,
-    // and pause it whenever the route/app stops being active.
     final enabled = widget.animating && TickerMode.valuesOf(context).enabled;
     if (enabled && !_motion.isAnimating) {
       _motion.repeat();
@@ -88,72 +71,57 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
 
   @override
   Widget build(BuildContext context) => RepaintBoundary(
-        child: AspectRatio(
+      child: AspectRatio(
           aspectRatio: 1,
           child: Stack(alignment: Alignment.center, children: [
             Positioned.fill(
                 child: CustomPaint(
-                    painter: _OrbPainter(
-              motion: _motion,
-              particles: _particles,
-              progress: _progress,
-              active: widget.animating,
-              gentle: DSMotion.reduced(context),
-            ))),
+                    painter: _ProgressPainter(
+                        stars: _stars,
+                        motion: _motion,
+                        progress: _progress,
+                        active: widget.animating,
+                        gentle: DSMotion.reduced(context)))),
             Semantics(
-              label: 'Plan progress ${widget.percent} percent',
-              child: ExcludeSemantics(
-                  child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+                label: 'Plan progress ${widget.percent} percent',
+                child: ExcludeSemantics(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
                   AnimatedBuilder(
-                    animation: _progress,
-                    builder: (context, _) => Text('${_progress.value.round()}%',
-                        key: const ValueKey('plan-progress-label'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 44,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -2,
-                          height: 1.1,
-                        )),
-                  ),
+                      animation: _progress,
+                      builder: (_, __) => Text('${_progress.value.round()}%',
+                          key: const ValueKey('plan-progress-label'),
+                          style: const TextStyle(
+                              fontSize: 44,
+                              height: 1.1,
+                              letterSpacing: -2,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white))),
                   const SizedBox(height: 9),
                   const FitnessText('YOUR WEEK',
                       style: TextStyle(
-                        color: DSColors.muted,
-                        fontSize: 10,
-                        letterSpacing: 2.5,
-                        fontWeight: FontWeight.w600,
-                      )),
-                ],
-              )),
-            ),
-          ]),
-        ),
-      );
+                          fontSize: 10,
+                          letterSpacing: 2,
+                          color: DSColors.muted)),
+                ]))),
+          ])));
 }
 
-class _Particle {
-  final double angle, distance, radius, brightness, speed;
-  const _Particle(
-      {required this.angle,
-      required this.distance,
-      required this.radius,
-      required this.brightness,
-      required this.speed});
+class _Star {
+  final double angle, distance, radius, brightness;
+  final bool sparkle;
+  final int direction;
+  const _Star(this.angle, this.distance, this.radius, this.brightness,
+      this.sparkle, this.direction);
 }
 
-class _OrbPainter extends CustomPainter {
-  final Animation<double> motion;
-  final List<_Particle> particles;
-  final Animation<double> progress;
+class _ProgressPainter extends CustomPainter {
+  final Animation<double> motion, progress;
+  final List<_Star> stars;
   final bool active, gentle;
-
-  _OrbPainter(
+  _ProgressPainter(
       {required this.motion,
-      required this.particles,
       required this.progress,
+      required this.stars,
       required this.active,
       required this.gentle})
       : super(repaint: Listenable.merge([motion, progress]));
@@ -161,80 +129,89 @@ class _OrbPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = size.shortestSide * .435;
-    final bounds = Rect.fromCircle(center: center, radius: radius);
+    final radius = size.shortestSide * .42;
     final phase = motion.value * math.pi * 2;
     final paint = Paint();
-
-    paint.shader = const RadialGradient(
-      colors: [
-        Color(0x00E2E2E2),
-        Color(0x00E2E2E2),
-        Color(0x18E2E2E2),
-        Color(0x50E2E2E2),
-        Color(0x00E2E2E2)
-      ],
-      stops: [0, .5, .78, .91, 1],
-    ).createShader(Rect.fromCircle(center: center, radius: radius * 1.12));
+    paint.shader = const RadialGradient(colors: [
+      Color(0x00000000),
+      Color(0x00000000),
+      Color(0x0FE2E2E2),
+      Color(0x00E2E2E2)
+    ], stops: [
+      0,
+      .5,
+      .85,
+      1
+    ]).createShader(Rect.fromCircle(center: center, radius: radius * 1.12));
     canvas.drawCircle(center, radius * 1.12, paint);
     paint.shader = null;
-
-    paint.color = planGlow.withValues(alpha: .26);
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 1;
-    canvas.drawCircle(center, radius, paint);
-    paint.color = planGlow.withValues(alpha: .85);
-    paint.strokeWidth = 1.7;
+    for (final star in stars) {
+      final angle = star.angle + phase * star.direction * (gentle ? 0 : 1);
+      final point = center +
+          Offset(math.cos(angle), math.sin(angle)) * radius * star.distance;
+      final shimmer = gentle
+          ? .82 + .12 * math.sin(phase * 2 + star.angle)
+          : .62 + .38 * math.sin(phase * 5 + star.angle * 3);
+      final opacity = (star.brightness * shimmer).clamp(0.0, 1.0);
+      final dot = star.radius * size.shortestSide / 220;
+      if (star.sparkle) {
+        paint.color = DSColors.silver.withValues(alpha: opacity * .10);
+        canvas.drawCircle(point, dot * 4.5, paint);
+        canvas.save();
+        canvas.translate(point.dx, point.dy);
+        canvas.rotate(star.angle + (gentle ? 0 : phase * .25));
+        final tip = dot * 3;
+        final path = Path()
+          ..moveTo(0, -tip)
+          ..quadraticBezierTo(tip * .13, -tip * .13, tip, 0)
+          ..quadraticBezierTo(tip * .13, tip * .13, 0, tip)
+          ..quadraticBezierTo(-tip * .13, tip * .13, -tip, 0)
+          ..quadraticBezierTo(-tip * .13, -tip * .13, 0, -tip)
+          ..close();
+        paint.color = Colors.white.withValues(alpha: .4 + opacity * .6);
+        canvas.drawPath(path, paint);
+        canvas.restore();
+      } else {
+        paint.color = DSColors.silver.withValues(alpha: opacity * .8);
+        canvas.drawCircle(point, dot, paint);
+      }
+    }
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .8
+      ..strokeCap = StrokeCap.round
+      ..color = DSColors.silver.withValues(alpha: .12);
+    final bounds = Rect.fromCircle(center: center, radius: radius * 1.035);
+    canvas.drawCircle(center, radius * 1.035, paint);
+    paint
+      ..strokeWidth = 1.2
+      ..color = DSColors.silver.withValues(alpha: .62);
     canvas.drawArc(
         bounds, -math.pi / 2, math.pi * 2 * progress.value / 100, false, paint);
-    if (active) {
-      // A separate moving highlight communicates activity even during a long
-      // model call. It never extends the server-confirmed progress arc.
-      final activityRadius = radius + 6;
-      paint.color = planGlow.withValues(alpha: gentle ? .5 : .75);
-      paint.strokeCap = StrokeCap.round;
-      paint.strokeWidth = 1.5;
-      canvas.drawArc(Rect.fromCircle(center: center, radius: activityRadius),
-          phase * 3 - math.pi / 2, math.pi * .18, false, paint);
-      paint.strokeCap = StrokeCap.butt;
-    }
-    paint.style = PaintingStyle.fill;
-
-    for (final particle in particles) {
-      final angle =
-          particle.angle + phase * particle.speed * (gentle ? .35 : 1);
-      final distance = radius * particle.distance;
-      final point =
-          center + Offset(math.cos(angle), math.sin(angle)) * distance;
-      final shimmer = .78 + .22 * math.sin(phase * 4 + particle.angle);
-      final dotRadius = particle.radius * size.shortestSide / 320;
-
-      if (particle.radius > 1.6) {
-        paint.color = planGlow.withValues(alpha: .07 * shimmer);
-        canvas.drawCircle(point, dotRadius * 3, paint);
+    // A separate orbit signals ongoing work without inventing progress.
+    if (active && !gentle) {
+      final orbit = Rect.fromCircle(center: center, radius: radius * 1.1);
+      final head = phase * 2 - math.pi / 2;
+      for (var segment = 0; segment < 18; segment++) {
+        paint
+          ..strokeWidth = 1.8
+          ..color = Colors.white.withValues(alpha: (1 - segment / 18) * .8);
+        canvas.drawArc(orbit, head - segment * .045, .05, false, paint);
       }
-      paint.color = planGlow.withValues(alpha: particle.brightness * shimmer);
-      canvas.drawCircle(point, dotRadius, paint);
-      if (particle.radius > 1.9) {
-        paint.strokeWidth = .7;
-        canvas.drawLine(point - Offset(dotRadius * 2, 0),
-            point + Offset(dotRadius * 2, 0), paint);
-        canvas.drawLine(point - Offset(0, dotRadius * 2),
-            point + Offset(0, dotRadius * 2), paint);
-      }
+      paint
+        ..style = PaintingStyle.fill
+        ..color = Colors.white;
+      canvas.drawCircle(
+          center + Offset(math.cos(head), math.sin(head)) * radius * 1.1,
+          2,
+          paint);
     }
-
-    // Fade the inner particles so the percentage stays crisp and readable.
-    paint.shader = const RadialGradient(
-      colors: [Color(0xFF000000), Color(0xFF000000), Color(0x00000000)],
-      stops: [0, .65, 1],
-    ).createShader(Rect.fromCircle(center: center, radius: radius * .64));
-    canvas.drawCircle(center, radius * .64, paint);
   }
 
   @override
-  bool shouldRepaint(_OrbPainter oldDelegate) =>
+  bool shouldRepaint(_ProgressPainter oldDelegate) =>
       oldDelegate.progress != progress ||
       oldDelegate.active != active ||
-      oldDelegate.gentle != gentle;
+      oldDelegate.gentle != gentle ||
+      oldDelegate.stars != stars;
 }

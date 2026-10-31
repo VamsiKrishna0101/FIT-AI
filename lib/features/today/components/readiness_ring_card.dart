@@ -1,5 +1,6 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_motion.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -134,7 +135,7 @@ class _ReadinessRingCardState extends State<ReadinessRingCard> {
       onTap: () {
         HapticFeedback.lightImpact();
         Navigator.of(context).push(
-          CupertinoPageRoute(
+          AppPageRoute(
             builder: (_) => BiometricsDetailView(readiness: r),
           ),
         );
@@ -216,7 +217,7 @@ class _ReadinessRingCardState extends State<ReadinessRingCard> {
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: score / 100.0),
                       duration: DSMotion.duration(context, DSMotion.chart),
-                      curve: Curves.easeOutCubic,
+                      curve: DSMotion.effects,
                       builder: (_, value, __) => CustomPaint(
                         size: const Size(118, 118),
                         painter: _SilverDialPainter(percent: value),
@@ -521,7 +522,7 @@ class _TrendBar extends StatelessWidget {
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: h),
           duration: DSMotion.duration(context, DSMotion.chart),
-          curve: Curves.easeOutCubic,
+          curve: DSMotion.effects,
           builder: (_, barH, __) => Container(
             width: 14,
             height: barH,

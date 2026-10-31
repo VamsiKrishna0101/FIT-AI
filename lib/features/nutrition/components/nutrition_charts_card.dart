@@ -1,5 +1,5 @@
 import '../../../core/components/motion.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../history/repositories/history_repository.dart';

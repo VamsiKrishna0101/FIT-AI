@@ -244,7 +244,7 @@ class _ProfileViewState extends State<ProfileView> {
                 onTap: () => _open(const SettingsPreferencesView())),
             SettingsRow(
                 icon: CupertinoIcons.lock_shield,
-                title: 'Photos & privacy',
+                title: 'Privacy',
                 onTap: () =>
                     _open(PrivacySettingsView(repository: _repository))),
             SettingsRow(

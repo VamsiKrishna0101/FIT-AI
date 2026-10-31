@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/navigation/profile_setup_gate.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/auth/data/auth_repository.dart';
+import 'package:setcraft/core/navigation/profile_setup_gate.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/auth/data/auth_repository.dart';
 
 class _ProfileAdapter implements HttpClientAdapter {
   bool exists = false, failSave = false;

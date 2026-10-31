@@ -1,5 +1,155 @@
 const _locales = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const _copy = <String, List<String>>{
+  'Continuing…': [
+    'Weiter…',
+    'Poursuite…',
+    'Fortsätter…',
+    'Fortsetter…',
+    'Fortsætter…',
+    'Doorgaan…',
+    'Continuando…',
+    'Proseguimento…'
+  ],
+  'Checking your plan…': [
+    'Dein Plan wird geprüft…',
+    'Vérification de votre programme…',
+    'Kontrollerar din plan…',
+    'Sjekker planen din…',
+    'Tjekker din plan…',
+    'Je plan controleren…',
+    'Comprobando tu plan…',
+    'Verifica del tuo piano…'
+  ],
+  'Updating your plan…': [
+    'Dein Plan wird aktualisiert…',
+    'Mise à jour de votre programme…',
+    'Uppdaterar din plan…',
+    'Oppdaterer planen din…',
+    'Opdaterer din plan…',
+    'Je plan bijwerken…',
+    'Actualizando tu plan…',
+    'Aggiornamento del tuo piano…'
+  ],
+  'Your setup changed again. Refresh your plan to continue.': [
+    'Deine Angaben haben sich erneut geändert. Aktualisiere deinen Plan, um fortzufahren.',
+    'Vos informations ont encore changé. Actualisez votre programme pour continuer.',
+    'Dina uppgifter har ändrats igen. Uppdatera din plan för att fortsätta.',
+    'Opplysningene dine er endret igjen. Oppdater planen for å fortsette.',
+    'Dine oplysninger er ændret igen. Opdater din plan for at fortsætte.',
+    'Je gegevens zijn opnieuw gewijzigd. Werk je plan bij om door te gaan.',
+    'Tus datos han vuelto a cambiar. Actualiza tu plan para continuar.',
+    'I tuoi dati sono cambiati di nuovo. Aggiorna il piano per continuare.'
+  ],
+  '{count} exercise': [
+    '{count} Übung',
+    '{count} exercice',
+    '{count} övning',
+    '{count} øvelse',
+    '{count} øvelse',
+    '{count} oefening',
+    '{count} ejercicio',
+    '{count} esercizio'
+  ],
+  'Your recommended week': [
+    'Deine empfohlene Woche',
+    'Votre semaine recommandée',
+    'Din rekommenderade vecka',
+    'Din anbefalte uke',
+    'Din anbefalede uge',
+    'Jouw aanbevolen week',
+    'Tu semana recomendada',
+    'La tua settimana consigliata'
+  ],
+  'Exercise preview': [
+    'Übungsvorschau',
+    'Aperçu des exercices',
+    'Förhandsvisning av övningar',
+    'Forhåndsvisning av øvelser',
+    'Forhåndsvisning af øvelser',
+    'Voorbeeld van oefeningen',
+    'Vista previa de ejercicios',
+    'Anteprima degli esercizi'
+  ],
+  'Muscle focus': [
+    'Muskelfokus',
+    'Groupes musculaires',
+    'Muskelfokus',
+    'Muskelfokus',
+    'Muskelfokus',
+    'Spiergroepen',
+    'Grupos musculares',
+    'Gruppi muscolari'
+  ],
+  'Unlock the remaining exercises and your full workout details.': [
+    'Schalte die übrigen Übungen und alle Trainingsdetails frei.',
+    'Débloquez les autres exercices et tous les détails de vos séances.',
+    'Lås upp resterande övningar och alla träningsdetaljer.',
+    'Lås opp resten av øvelsene og alle treningsdetaljene.',
+    'Lås op for resten af øvelserne og alle træningsdetaljer.',
+    'Ontgrendel de overige oefeningen en alle trainingsdetails.',
+    'Desbloquea los demás ejercicios y todos los detalles de tus entrenamientos.',
+    'Sblocca gli altri esercizi e tutti i dettagli dei tuoi allenamenti.'
+  ],
+  'Next workout': [
+    'Nächstes Training',
+    'Prochaine séance',
+    'Nästa träningspass',
+    'Neste treningsøkt',
+    'Næste træning',
+    'Volgende training',
+    'Próximo entrenamiento',
+    'Prossimo allenamento'
+  ],
+  'Continue your workout': [
+    'Training fortsetzen',
+    'Reprendre votre séance',
+    'Fortsätt ditt träningspass',
+    'Fortsett treningsøkten',
+    'Fortsæt din træning',
+    'Ga verder met je training',
+    'Continúa tu entrenamiento',
+    'Riprendi il tuo allenamento'
+  ],
+  '{done} of {total} complete': [
+    '{done} von {total} abgeschlossen',
+    '{done} sur {total} terminées',
+    '{done} av {total} klara',
+    '{done} av {total} fullført',
+    '{done} af {total} gennemført',
+    '{done} van {total} voltooid',
+    '{done} de {total} completados',
+    '{done} di {total} completati'
+  ],
+  'Planning details': [
+    'Planungsdetails',
+    'Détails de la préparation',
+    'Planeringsdetaljer',
+    'Planleggingsdetaljer',
+    'Planlægningsdetaljer',
+    'Planningsdetails',
+    'Detalles de la planificación',
+    'Dettagli della pianificazione'
+  ],
+  'Plan options': [
+    'Planoptionen',
+    'Options du programme',
+    'Planalternativ',
+    'Planalternativer',
+    'Planindstillinger',
+    'Planopties',
+    'Opciones del plan',
+    'Opzioni del piano'
+  ],
+  'Your training week is ready to open': [
+    'Deine Trainingswoche ist bereit',
+    'Votre semaine d’entraînement est prête',
+    'Din träningsvecka är klar',
+    'Treningsuken din er klar',
+    'Din træningsuge er klar',
+    'Je trainingsweek staat klaar',
+    'Tu semana de entrenamiento está lista',
+    'La tua settimana di allenamento è pronta'
+  ],
   'Signing in': [
     'Anmeldung läuft',
     'Connexion en cours',

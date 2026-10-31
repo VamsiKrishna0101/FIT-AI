@@ -89,3 +89,31 @@ The checked-path cleanup script is `../../scripts/cleanup_generated_artifacts.ps
 its applied manifest is `build/auth-refresh-cleanup.csv`. Signing files, models,
 runtime dependencies, source data, media fixtures and migration backups were
 preserved. No cloud storage or database records were deleted.
+
+
+## Compact paywall and catalogue availability
+
+The paywall uses the bundled gym hero, an overlaid close control when opened from
+the plan preview, one headline, a compact trial timeline and a fixed purchase
+action. The logo/account header and long feature descriptions were removed.
+Four feature comparisons expand under This is included; billing choices remain
+available. Privacy/data controls and sign-out are under More options in the footer.
+The charge, renewal period, cancellation and restore links remain visible.
+Free-trial copy and the localized zero-price action require a verified eligible
+store offer. The timeline does not promise an unconfigured reminder.
+
+Membership catalogue requests now share an in-flight load within the same secure
+session. Store setup pending, unsupported platform, unavailable store, missing
+products and connection errors have distinct states. A temporary store failure
+retains the last confirmed displayed price while checkout stays unavailable until
+refresh succeeds. A delayed verified purchase resumes the requested plan once.
+
+The local backend checked on 2026-10-26 has no Google Play verification credentials,
+Apple server verification configuration or subscription Terms/Privacy URLs. These
+operator settings and live store products are still required for real checkout;
+the app does not substitute draft country prices or grant access without verification.
+
+The onboarding preview now uses compact week rows, two exercise samples and a
+short unlock prompt. Equipment lists, duplicate session metadata and technical
+planner explanations were removed. The star loader has continuous orbits and
+shimmer at an unchanged confirmed percentage, with a gentle reduced-motion mode.

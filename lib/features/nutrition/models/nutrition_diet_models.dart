@@ -25,6 +25,7 @@ class NutritionFoodItemModel {
   final String category;
   final String? imageUrl;
   final String? sourceName, sourceVersion;
+  final String? imageCreditsUrl, imageCredit;
   final List<FoodPortion> portions;
   final String defaultPortionUnit;
   final double servingSize;
@@ -43,6 +44,8 @@ class NutritionFoodItemModel {
     this.imageUrl,
     this.sourceName,
     this.sourceVersion,
+    this.imageCreditsUrl,
+    this.imageCredit,
     this.portions = const [],
     this.defaultPortionUnit = 'g',
     this.servingSize = 100.0,
@@ -74,6 +77,9 @@ class NutritionFoodItemModel {
           : '1 ${preferredPortion!.label}';
 
   factory NutritionFoodItemModel.fromJson(Map<String, dynamic> json) {
+    final attribution = json['imageAttribution'] is Map
+        ? Map<String, dynamic>.from(json['imageAttribution'] as Map)
+        : null;
     return NutritionFoodItemModel(
       id: (json['id'] ?? '').toString(),
       name: (json['canonicalName'] ?? json['name'] ?? 'Custom Food').toString(),
@@ -82,6 +88,11 @@ class NutritionFoodItemModel {
       imageUrl: json['imageUrl']?.toString(),
       sourceName: json['sourceName']?.toString(),
       sourceVersion: json['sourceVersion']?.toString(),
+      imageCreditsUrl: attribution?['creditUrl']?.toString() ??
+          json['imageCreditsUrl']?.toString(),
+      imageCredit: attribution != null
+          ? '${attribution['author']} · ${attribution['license']}'
+          : json['imageCredit']?.toString(),
       portions: (json['portions'] as List? ?? [])
           .whereType<Map>()
           .map((p) => FoodPortion.fromJson(Map<String, dynamic>.from(p)))
@@ -119,6 +130,8 @@ class NutritionFoodItemModel {
       'imageUrl': imageUrl,
       'sourceName': sourceName,
       'sourceVersion': sourceVersion,
+      'imageCreditsUrl': imageCreditsUrl,
+      'imageCredit': imageCredit,
       'portions': portions.map((p) => p.toJson()).toList(),
       'defaultPortionUnit': defaultPortionUnit,
       'servingSize': servingSize,
@@ -236,6 +249,7 @@ class UserMealLogItemModel {
 }
 
 class TodayDietPlanModel {
+  final double fiberConsumed;
   final double caloriesConsumed;
   final double caloriesTarget;
   final double proteinConsumed;
@@ -249,6 +263,7 @@ class TodayDietPlanModel {
   final List<UserMealLogItemModel> logs;
 
   const TodayDietPlanModel({
+    this.fiberConsumed = 0,
     required this.caloriesConsumed,
     required this.caloriesTarget,
     required this.proteinConsumed,
@@ -295,6 +310,7 @@ class TodayDietPlanModel {
       .toList();
 
   TodayDietPlanModel copyWith({
+    double? fiberConsumed,
     double? caloriesConsumed,
     double? caloriesTarget,
     double? proteinConsumed,
@@ -308,6 +324,7 @@ class TodayDietPlanModel {
     List<UserMealLogItemModel>? logs,
   }) {
     return TodayDietPlanModel(
+      fiberConsumed: fiberConsumed ?? this.fiberConsumed,
       caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
       caloriesTarget: caloriesTarget ?? this.caloriesTarget,
       proteinConsumed: proteinConsumed ?? this.proteinConsumed,
@@ -339,6 +356,8 @@ class TodayDietPlanModel {
             .fold(0.0, (total, item) => total + valueOf(item));
 
     return TodayDietPlanModel(
+      fiberConsumed: (summary['totalFiber'] as num?)?.toDouble() ??
+          loggedTotal((item) => item.fiber),
       caloriesConsumed: (summary['totalCalories'] is num)
           ? (summary['totalCalories'] as num).toDouble()
           : loggedTotal((item) => item.calories),
@@ -374,6 +393,7 @@ class TodayDietPlanModel {
   Map<String, dynamic> toJson() {
     return {
       'dailySummary': {
+        'totalFiber': fiberConsumed,
         'totalCalories': caloriesConsumed,
         'totalProtein': proteinConsumed,
         'totalCarbs': carbsConsumed,

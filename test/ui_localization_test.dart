@@ -1,24 +1,32 @@
-import 'package:fitai_mobile/features/onboarding/views/training_preferences_view.dart';
+import 'fixtures/body_map_fixture.dart';
+import 'package:setcraft/features/body_scan/models/body_map_models.dart';
+import 'package:setcraft/core/localization/fitness_copy.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_measurement_dashboard.dart';
+import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:fitai_mobile/core/components/animated_tab_stack.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/notifications/views/notification_settings_view.dart';
+import 'package:setcraft/features/notifications/views/notification_settings_view.dart';
 import 'notification_settings_test.dart' show FakeNotifications, FakePush;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/localization/fitness_copy_data.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/repositories/body_assessment_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_view.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/localization/fitness_copy_data.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
+import 'package:setcraft/features/body_scan/views/body_view.dart';
 
 class _BodyRepository extends BodyAssessmentRepository {
+  @override
+  Future<BodyMapData> bodyMap(
+          {DateTime? date, BodyDateSelection? selection}) async =>
+      emptyBodyMap(date);
+
   @override
   Future<BodyOverview> load() async => BodyOverview.fromJson({
         'profile': {'weight': 80, 'gender': 'MALE'},
@@ -112,7 +120,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-      'Body changes language in place while preserving the selected view',
+      'Body changes language in place while keeping the measurement dashboard',
       (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(393, 852);
@@ -123,24 +131,23 @@ void main() {
         BodyView(repository: repository, onTrain: () {}), AppLanguage.germany));
     await tester.pumpAndSettle();
     expect(find.text(fitnessCopyData['de']!['Body']!), findsOneWidget);
-    expect(find.text('Body'), findsNothing);
-    await tester.tap(find.text(fitnessCopyData['de']!['Physique']!));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-        find.text(fitnessCopyData['de']!['Photo review']!), 200,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text(fitnessCopyData['de']!['Photo review']!), findsOneWidget);
+    expect(
+        find.text(fitnessText(
+            tester.element(find.byType(BodyMeasurementDashboard)),
+            'Measurements')),
+        findsOneWidget);
+    expect(find.text('Photo review'), findsNothing);
     await LanguageManager.shared.selectLanguage(AppLanguage.france);
     await tester.pumpWidget(_app(
         BodyView(repository: repository, onTrain: () {}), AppLanguage.france));
     await tester.pumpAndSettle();
     expect(find.text(fitnessCopyData['fr']!['Body']!), findsOneWidget);
-    expect(find.text(fitnessCopyData['fr']!['Photo review']!), findsOneWidget);
     expect(
-        tester
-            .widget<AnimatedTabStack>(find.byType(AnimatedTabStack).first)
-            .index,
-        1);
+        find.text(fitnessText(
+            tester.element(find.byType(BodyMeasurementDashboard)),
+            'Measurements')),
+        findsOneWidget);
+    expect(find.byType(BodyMeasurementDashboard), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -27,7 +27,9 @@ class TrainingDay {
   List<Map<String, dynamic>> get routines => (json['routines'] as List? ?? [])
       .map((row) => (row as Map).cast<String, dynamic>())
       .toList();
-  int get loggedSets => (json['summary']?['sets'] as num?)?.toInt() ?? 0;
+  int get loggedSets => loggedEntries.isNotEmpty
+      ? loggedEntries.length
+      : (json['summary']?['sets'] as num?)?.toInt() ?? 0;
   int get durationSeconds =>
       (session?['durationSeconds'] as num?)?.toInt() ?? 0;
   int get skipped => (json['summary']?['skipped'] as num?)?.toInt() ?? 0;
@@ -35,19 +37,37 @@ class TrainingDay {
   bool get syncBlocked => json['syncBlocked'] == true;
   bool get allResolved =>
       items.isNotEmpty && items.every((item) => !item.isPending);
-  double get volume => (json['summary']?['volume'] as num?)?.toDouble() ?? 0;
-  int get estimatedMinutes => items.isEmpty
+  List<Map<String, dynamic>> get loggedEntries => rawItems
+      .expand((item) => (item['setLogs'] as List? ?? []).whereType<Map>())
+      .where((log) =>
+          log['year'] == null ||
+          '${log['year']}-${'${log['month']}'.padLeft(2, '0')}-${'${log['day']}'.padLeft(2, '0')}' ==
+              date)
+      .map((log) => Map<String, dynamic>.from(log))
+      .toList();
+  int get loggedReps => loggedEntries.fold(
+      0, (sum, log) => sum + (log['reps'] as num? ?? 0).toInt());
+  int get loadedSets =>
+      loggedEntries.where((log) => (log['weight'] as num? ?? 0) > 0).length;
+  int get missingLoadSets => items.where((item) => !item.isBodyweight).fold(
+      0,
+      (sum, item) =>
+          sum +
+          logs(item.id)
+              .where((log) => (log['weight'] as num? ?? 0) <= 0)
+              .length);
+  double get volume => loggedEntries.isEmpty
+      ? (json['summary']?['volume'] as num?)?.toDouble() ?? 0
+      : loggedEntries.fold(
+          0,
+          (sum, log) =>
+              sum +
+              (log['weight'] as num? ?? 0).toDouble() *
+                  (log['reps'] as num? ?? 0).toDouble());
+  int get estimatedMinutes => restDay
       ? 0
-      : (items.fold<int>(
-                  (json['warmup']?['durationMinutes'] as num? ?? 0).toInt() *
-                      60,
-                  (seconds, item) =>
-                      seconds +
-                      item.targetSets * 45 +
-                      (item.targetSets - 1) * item.restSeconds +
-                      60) /
-              60)
-          .ceil();
+      : prescribedWorkoutMinutes(
+          items, (json['warmup']?['durationMinutes'] as num?)?.toInt() ?? 0);
 
   static Map<String, dynamic> targets(TodayPlanItemModel item) => {
         'workoutId': item.exercise.id,

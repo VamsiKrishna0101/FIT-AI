@@ -6,13 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/features/onboarding/models/equipment_models.dart';
-import 'package:fitai_mobile/features/onboarding/models/equipment_copy.dart';
-import 'package:fitai_mobile/features/onboarding/data/equipment_repository.dart';
-import 'package:fitai_mobile/features/onboarding/views/equipment_selection_view.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/features/onboarding/models/equipment_models.dart';
+import 'package:setcraft/features/onboarding/models/equipment_copy.dart';
+import 'package:setcraft/features/onboarding/data/equipment_repository.dart';
+import 'package:setcraft/features/onboarding/views/equipment_selection_view.dart';
 
 class _Repository extends EquipmentRepository {
   EquipmentProfile profile;

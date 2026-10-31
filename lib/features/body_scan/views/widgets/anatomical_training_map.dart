@@ -72,6 +72,7 @@ Map<String, List<Path>> musclePaths({required bool back, bool female = false}) {
 
 class AnatomicalTrainingMap extends StatelessWidget {
   final bool back, female;
+  final bool satin;
   final Map<String, Color> colors;
   final String? selected;
   final Set<String> highlighted;
@@ -80,6 +81,7 @@ class AnatomicalTrainingMap extends StatelessWidget {
       {super.key,
       this.back = false,
       this.female = false,
+      this.satin = false,
       this.colors = const {},
       this.selected,
       this.highlighted = const {},
@@ -110,7 +112,8 @@ class AnatomicalTrainingMap extends StatelessWidget {
                         child: CustomPaint(
                             isComplex: true,
                             painter: _AnatomyPainter(_geometry(back, female),
-                                colors, selected, back, highlighted)))),
+                                colors, selected, back, highlighted,
+                                satin: satin)))),
               )));
 }
 
@@ -137,8 +140,10 @@ class _AnatomyPainter extends CustomPainter {
   final String? selected;
   final bool back;
   final Set<String> highlighted;
+  final bool satin;
   _AnatomyPainter(
-      this.geometry, this.colors, this.selected, this.back, this.highlighted);
+      this.geometry, this.colors, this.selected, this.back, this.highlighted,
+      {this.satin = false});
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
@@ -148,8 +153,9 @@ class _AnatomyPainter extends CustomPainter {
     for (final entry in geometry.entries) {
       final id = _groups[entry.key];
       final color = id == null
-          ? const Color(0xFF414141)
-          : colors[id] ?? const Color(0xFF717171);
+          ? (satin ? const Color(0xFF383C41) : const Color(0xFF414141))
+          : colors[id] ??
+              (satin ? const Color(0xFF595E64) : const Color(0xFF717171));
       for (final path in entry.value) {
         // Front-facing anatomical left is the viewer's right; the back reverses it.
         final center = path.getBounds().center.dx;
@@ -171,19 +177,23 @@ class _AnatomyPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color.lerp(areaColor, Colors.white, .13)!,
+            Color.lerp(areaColor, Colors.white, satin ? .09 : .13)!,
             areaColor,
-            Color.lerp(areaColor, Colors.black, .2)!
+            Color.lerp(areaColor, Colors.black, satin ? .24 : .2)!,
           ],
+          stops: satin ? const [0, .45, 1] : null,
         ).createShader(path.getBounds());
         canvas.drawPath(path, fill);
         canvas.drawPath(
-            path,
-            outline
-              ..strokeWidth = active ? 1.4 : .6
-              ..color = active
-                  ? const Color(0xFFF2F2F2)
-                  : const Color(0xFFB2B2B2).withValues(alpha: .4));
+          path,
+          outline
+            ..strokeWidth = active ? 1.4 : (satin ? .4 : .6)
+            ..color = active
+                ? const Color(0xFFF2F2F2)
+                : satin
+                    ? Color.lerp(areaColor, Colors.white, .18)!
+                    : const Color(0xFFB2B2B2).withValues(alpha: .4),
+        );
       }
     }
     canvas.restore();
@@ -194,5 +204,6 @@ class _AnatomyPainter extends CustomPainter {
       old.geometry != geometry ||
       !mapEquals(old.colors, colors) ||
       old.selected != selected ||
+      old.satin != satin ||
       !setEquals(old.highlighted, highlighted);
 }

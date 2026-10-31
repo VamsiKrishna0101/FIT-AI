@@ -134,7 +134,7 @@ class _FitToastWidgetState extends State<_FitToastWidget>
         .animateBack(
           0.0,
           duration: DSMotion.duration(context, DSMotion.selection),
-          curve: Curves.easeInCubic,
+          curve: DSMotion.effects,
         )
         .then((_) => widget.onDismissed());
   }

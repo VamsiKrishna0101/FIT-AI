@@ -1,3 +1,4 @@
+import 'package:setcraft/core/theme/ds_motion.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -76,6 +77,7 @@ class WeeklyMuscleCoverage extends StatelessWidget {
       return;
     }
     final selected = await showModalBottomSheet<String>(
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
         context: context,
         showDragHandle: true,
         useSafeArea: true,

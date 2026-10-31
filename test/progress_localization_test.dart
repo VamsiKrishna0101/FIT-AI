@@ -1,8 +1,8 @@
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/localization/fitness_copy.dart';
-import 'package:fitai_mobile/core/localization/fitness_copy_data.dart';
-import 'package:fitai_mobile/features/progress/components/progress_date_filter.dart';
-import 'package:fitai_mobile/features/progress/models/progress_models.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/localization/fitness_copy.dart';
+import 'package:setcraft/core/localization/fitness_copy_data.dart';
+import 'package:setcraft/features/progress/components/progress_date_filter.dart';
+import 'package:setcraft/features/progress/models/progress_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';

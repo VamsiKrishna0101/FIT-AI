@@ -1,3 +1,4 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'dart:async';
@@ -386,7 +387,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                                     color: FitnessTheme.muted)),
                             TextButton(
                                 onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
+                                    AppPageRoute<void>(
                                         builder: (_) =>
                                             const HealthPrivacyView())),
                                 child: const FitnessText('Privacy & data use')),

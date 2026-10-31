@@ -1,7 +1,7 @@
 import '../viewmodels/onboarding_controller.dart';
 import '../../../core/theme/ds_motion.dart';
-import 'package:fitai_mobile/core/localization/fitness_copy.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_copy.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/cache/cache_scope.dart';
@@ -11,6 +11,7 @@ import '../../../core/cache/user_data_cache.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../components/training_style_picker.dart';
+import '../models/training_style.dart';
 import '../../auth/views/auth_view.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/storage/secure_session_store.dart';
@@ -67,6 +68,23 @@ class TrainingPreferencesView extends StatefulWidget {
 }
 
 class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
+  static const _minimumDaysMessage =
+      'Select at least 2 training days to continue.';
+  static const _restDayMessage = 'Keep at least one rest day in your week.';
+  static const _customDaysMessage =
+      'Choose at least one muscle group for each training day.';
+  final _customEditorKey = GlobalKey();
+
+  String? get _trainingDaysError {
+    if (_draft.trainingDays.length < 2) return _minimumDaysMessage;
+    if (_draft.trainingDays.length > 6) return _restDayMessage;
+    return null;
+  }
+
+  bool get _showActionError =>
+      !widget.editProfile &&
+      (_part == 1 || (_part == 2 && _draft.trainingSplit == 'CUSTOM'));
+
   OnboardingDraft _draft = OnboardingDraft();
   late final OnboardingController? _controller =
       widget.editProfile ? null : widget.controller ?? OnboardingController();
@@ -183,14 +201,9 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
     final amount = _budget.text.trim().isEmpty
         ? null
         : double.tryParse(_budget.text.trim());
-    String? error;
-    if (_draft.trainingDays.length == 1) {
-      error = 'Choose at least two training days, or leave your week flexible.';
-    }
-    if (_draft.trainingDays.length > 6) {
-      error = 'Keep at least one rest day in your week.';
-    }
-    if (_draft.trainingSplit == 'PUSH_PULL_LEGS' &&
+    String? error = _trainingDaysError;
+    if (error == null &&
+        _draft.trainingSplit == 'PUSH_PULL_LEGS' &&
         (_draft.trainingDays.isNotEmpty
                 ? _draft.trainingDays.length
                 : int.tryParse(
@@ -200,11 +213,12 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
             3) {
       error = 'Choose at least three days for push / pull / legs.';
     }
-    if (_draft.trainingSplit == 'CUSTOM' &&
+    if (error == null &&
+        _draft.trainingSplit == 'CUSTOM' &&
         (_draft.trainingDays.length < 2 ||
             _draft.trainingDays.any((day) =>
                 _draft.customTrainingSplit[day]?.isNotEmpty != true))) {
-      error = 'Choose your training days and add muscles to each day.';
+      error = _customDaysMessage;
     }
     if (allergies.length > 20 ||
         dislikes.length > 20 ||
@@ -225,7 +239,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
           _part = error!.contains('budget') || error.contains('food names')
               ? 3
               : error.contains('push / pull / legs') ||
-                      error.contains('add muscles')
+                      error == _customDaysMessage
                   ? 2
                   : 1;
         }
@@ -296,16 +310,18 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         _draft.focusMuscles = selected.toList();
       });
 
-  void _advance() {
+  Future<void> _advance() async {
     if (widget.editProfile || _part == 3) {
-      _save();
+      await _save();
+      return;
+    }
+    if (_part == 2 && _trainingDaysError != null) {
+      _chooseTrainingDays();
       return;
     }
     String? error;
-    if (_part == 1 && _draft.trainingDays.length == 1) {
-      error = 'Choose at least two training days, or leave your week flexible.';
-    } else if (_part == 1 && _draft.trainingDays.length > 6) {
-      error = 'Keep at least one rest day in your week.';
+    if (_part == 1) {
+      error = _trainingDaysError;
     } else if (_part == 2 &&
         _draft.trainingSplit == 'PUSH_PULL_LEGS' &&
         (_draft.trainingDays.isNotEmpty
@@ -321,13 +337,164 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         (_draft.trainingDays.length < 2 ||
             _draft.trainingDays.any((day) =>
                 _draft.customTrainingSplit[day]?.isNotEmpty != true))) {
-      error = 'Choose your training days and add muscles to each day.';
+      error = _customDaysMessage;
     }
     FocusScope.of(context).unfocus();
     setState(() {
       _error = error;
       if (error == null) _part++;
     });
+  }
+
+  void _chooseTrainingDays() {
+    setState(() {
+      _part = 1;
+      _error = _trainingDaysError;
+    });
+  }
+
+  void _selectTrainingStyle(String value) {
+    _change(() => _draft.trainingSplit = value);
+    if (value != 'CUSTOM') return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final editorContext = _customEditorKey.currentContext;
+      if (mounted && editorContext != null) {
+        Scrollable.ensureVisible(editorContext,
+            duration: DSMotion.duration(context, DSMotion.regular),
+            curve: DSMotion.effects);
+      }
+    });
+  }
+
+  Widget _trainingDayChoices() => Wrap(spacing: 7, runSpacing: 8, children: [
+        for (final day in _days)
+          _chip(
+              day[0] + day.substring(1, 3).toLowerCase(),
+              _draft.trainingDays.contains(day),
+              (selected) => _change(() {
+                    final values = [..._draft.trainingDays];
+                    if (selected) {
+                      values.add(day);
+                    } else {
+                      values.remove(day);
+                    }
+                    _draft.trainingDays = values;
+                    if (_error == _minimumDaysMessage ||
+                        _error == _restDayMessage) {
+                      _error = _trainingDaysError;
+                    }
+                  })),
+      ]);
+
+  void _suggestDayMuscles() {
+    if (_trainingDaysError != null) {
+      _chooseTrainingDays();
+      return;
+    }
+    final suggestion = TrainingStylePreview(
+        OnboardingDraft.fromJson(_draft.toJson())..trainingSplit = 'AUTO');
+    final days = suggestion.selectedDays;
+    final groups = suggestion.groups;
+    _change(() {
+      _draft.customTrainingSplit = {
+        ..._draft.customTrainingSplit,
+        for (var i = 0; i < days.length; i++)
+          if (_draft.customTrainingSplit[days[i]]?.isNotEmpty != true)
+            days[i]: [...groups[i]],
+      };
+      if (_error == _customDaysMessage) _error = null;
+    });
+  }
+
+  Widget _customTrainingDays() {
+    final days = _days.where(_draft.trainingDays.contains).toList();
+    final needsSuggestions =
+        days.any((day) => _draft.customTrainingSplit[day]?.isNotEmpty != true);
+    return Column(
+        key: _customEditorKey,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const FitnessText(
+              'Choose muscle groups for each training day. We’ll choose exercises for your plan.',
+              style: TextStyle(
+                  color: FitnessTheme.muted, fontSize: 13, height: 1.5)),
+          const SizedBox(height: 12),
+          if (_trainingDaysError != null && widget.editProfile) ...[
+            FitnessText(_trainingDaysError!,
+                style:
+                    const TextStyle(color: FitnessTheme.coral, fontSize: 12)),
+            const SizedBox(height: 10),
+            _trainingDayChoices(),
+          ] else if (_trainingDaysError != null)
+            OutlinedButton.icon(
+                key: const ValueKey('custom-choose-training-days'),
+                onPressed: _chooseTrainingDays,
+                icon: const Icon(CupertinoIcons.calendar, size: 16),
+                label: const FitnessText('Choose training days'))
+          else ...[
+            OutlinedButton.icon(
+                key: const ValueKey('custom-suggest-muscles'),
+                onPressed: needsSuggestions ? _suggestDayMuscles : null,
+                icon: const Icon(CupertinoIcons.sparkles, size: 16),
+                label: const FitnessText('Suggest muscle groups')),
+            const SizedBox(height: 8),
+            const FitnessText(
+                'Suggestions fill empty days. Your choices stay as you set them.',
+                style: TextStyle(
+                    color: FitnessTheme.muted, fontSize: 11, height: 1.4)),
+          ],
+          for (final day in days) ...[
+            const SizedBox(height: 18),
+            Container(
+                key: ValueKey('custom-training-day-$day'),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                    color: FitnessTheme.canvas,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: FitnessTheme.line)),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FitnessText(day[0] + day.substring(1).toLowerCase(),
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      const FitnessText('Select one or more muscle groups',
+                          style: TextStyle(
+                              fontSize: 12, color: FitnessTheme.muted)),
+                      const SizedBox(height: 12),
+                      Wrap(spacing: 7, runSpacing: 8, children: [
+                        for (final muscle in _splitMuscles.entries)
+                          _chip(
+                              muscle.value,
+                              _draft.customTrainingSplit[day]
+                                      ?.contains(muscle.key) ==
+                                  true,
+                              (selected) => _change(() {
+                                    final muscles = [
+                                      ...?_draft.customTrainingSplit[day]
+                                    ];
+                                    if (selected) {
+                                      muscles.add(muscle.key);
+                                    } else {
+                                      muscles.remove(muscle.key);
+                                    }
+                                    _draft.customTrainingSplit = {
+                                      ..._draft.customTrainingSplit,
+                                      day: muscles,
+                                    };
+                                    if (_error == _customDaysMessage &&
+                                        days.every((day) =>
+                                            _draft.customTrainingSplit[day]
+                                                ?.isNotEmpty ==
+                                            true)) {
+                                      _error = null;
+                                    }
+                                  })),
+                      ]),
+                    ])),
+          ],
+        ]);
   }
 
   @override
@@ -362,7 +529,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
             ? 'Your priorities, your schedule, your way to train.'
             : const [
                 'Choose as many as you like',
-                'Choose at least two days, or keep your schedule flexible.',
+                'Choose at least two training days.',
                 '',
                 'Optional',
               ][_part],
@@ -382,6 +549,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
           }
         },
         loading: _saving,
+        actionMessage: _showActionError ? _error : null,
         onContinue: _loading || _saving || _loadFailed ? null : _advance,
         children: [
           if (_loading)
@@ -389,7 +557,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                 padding: EdgeInsets.all(40),
                 child: Center(child: CupertinoActivityIndicator()))
           else ...[
-            if (_error != null)
+            if (_error != null && !_showActionError)
               Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: FitnessText(_error!,
@@ -477,32 +645,10 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    const _Heading('Your week',
-                        'Choose at least two days, or keep your schedule flexible.'),
+                    const _Heading(
+                        'Your week', 'Choose at least two training days.'),
                     const SizedBox(height: 12),
-                    Wrap(spacing: 7, runSpacing: 8, children: [
-                      for (int i = 0; i < _days.length; i++)
-                        _chip(
-                            const [
-                              'Mon',
-                              'Tue',
-                              'Wed',
-                              'Thu',
-                              'Fri',
-                              'Sat',
-                              'Sun'
-                            ][i],
-                            _draft.trainingDays.contains(_days[i]),
-                            (selected) => _change(() {
-                                  final values = [..._draft.trainingDays];
-                                  if (selected) {
-                                    values.add(_days[i]);
-                                  } else {
-                                    values.remove(_days[i]);
-                                  }
-                                  _draft.trainingDays = values;
-                                }))
-                    ]),
+                    _trainingDayChoices(),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                         initialValue: _draft.preferredTime ?? 'ANY',
@@ -540,51 +686,10 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                   children: [
                     TrainingStylePicker(
                         draft: _draft,
-                        onChanged: (value) =>
-                            _change(() => _draft.trainingSplit = value)),
-                    if (_draft.trainingSplit == 'CUSTOM') ...[
-                      const SizedBox(height: 16),
-                      for (final day
-                          in _days.where(_draft.trainingDays.contains)) ...[
-                        const SizedBox(height: 16),
-                        FitnessText(day[0] + day.substring(1).toLowerCase(),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 7,
-                          runSpacing: 3,
-                          children: [
-                            for (final muscle in _splitMuscles.entries)
-                              _chip(
-                                  muscle.value,
-                                  _draft.customTrainingSplit[day]
-                                          ?.contains(muscle.key) ==
-                                      true,
-                                  (selected) => _change(() {
-                                        final muscles = [
-                                          ...?_draft.customTrainingSplit[day]
-                                        ];
-                                        if (selected) {
-                                          muscles.add(muscle.key);
-                                        } else {
-                                          muscles.remove(muscle.key);
-                                        }
-                                        _draft.customTrainingSplit = {
-                                          ..._draft.customTrainingSplit,
-                                          day: muscles,
-                                        };
-                                      })),
-                          ],
-                        ),
-                      ],
-                      if (_draft.trainingDays.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 12),
-                          child: FitnessText(
-                              'Choose your days in Your week above.'),
-                        ),
-                    ],
+                        customDayEditor: _draft.trainingSplit == 'CUSTOM'
+                            ? _customTrainingDays()
+                            : null,
+                        onChanged: _selectTrainingStyle),
                   ],
                 ),
               ),

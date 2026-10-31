@@ -5,8 +5,8 @@ import '../../../core/network/api_client.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/components/content_transition.dart';
 import '../../../core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/localization/fitness_copy.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_copy.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
@@ -246,7 +246,7 @@ class _BodyTrainingViewState extends State<BodyTrainingView>
                         duration: MediaQuery.disableAnimationsOf(context)
                             ? Duration.zero
                             : ContentTransition.duration,
-                        curve: Curves.easeOutCubic,
+                        curve: DSMotion.effects,
                         child: TrainingMapDashboard(
                             planCard: widget.planCard,
                             showHeader: widget.showHeader,

@@ -1,4 +1,5 @@
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -51,14 +52,14 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
   void _openFullPlan() {
     HapticFeedback.mediumImpact();
     Navigator.of(context).push(
-      CupertinoPageRoute(builder: (_) => const TrainView(standalone: true)),
+      AppPageRoute(builder: (_) => const TrainView(standalone: true)),
     );
   }
 
   void _openExerciseDetail(TodayPlanItemModel item) {
     HapticFeedback.lightImpact();
     Navigator.of(context).push(
-      CupertinoPageRoute(
+      AppPageRoute(
         builder: (_) => ExerciseDetailView(
           exercise: item.exercise,
           planItem: item,
@@ -82,9 +83,9 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
     // Real values only — no invented fallbacks.
     final exerciseCount =
         items.isNotEmpty ? items.length : (w?.exerciseCount ?? 0);
-    final durationMin = (w?.durationMinutes ?? 0) > 0
-        ? w!.durationMinutes
-        : (plan?.estimatedDurationMinutes ?? 0);
+    final durationMin = items.isNotEmpty
+        ? plan!.estimatedDurationMinutes
+        : (w?.durationMinutes ?? 0);
     final rpeValues =
         items.map((i) => i.targetRpe).whereType<double>().toList();
     final avgRpe = rpeValues.isEmpty

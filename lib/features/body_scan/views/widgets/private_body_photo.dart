@@ -1,4 +1,4 @@
-import 'package:fitai_mobile/core/localization/fitness_copy.dart';
+import 'package:setcraft/core/localization/fitness_copy.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../core/cache/cache_scope.dart';

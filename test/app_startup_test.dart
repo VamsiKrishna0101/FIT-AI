@@ -6,10 +6,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:fitai_mobile/core/branding/app_startup.dart';
-import 'package:fitai_mobile/core/branding/setcraft_brand.dart';
-import 'package:fitai_mobile/features/onboarding/data/starter_plan_repository.dart';
-import 'package:fitai_mobile/features/onboarding/views/starter_plan_view.dart';
+import 'package:setcraft/core/branding/app_startup.dart';
+import 'package:setcraft/core/branding/setcraft_brand.dart';
+import 'package:setcraft/features/onboarding/data/starter_plan_repository.dart';
+import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
 
 class _PendingStarterRepository extends StarterPlanRepository {
   final response = Completer<Map<String, dynamic>>();

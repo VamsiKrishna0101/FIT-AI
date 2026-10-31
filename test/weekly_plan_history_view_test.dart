@@ -5,9 +5,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_history_view.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
+import 'package:setcraft/features/planner/repositories/weekly_plan_repository.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_history_view.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_view.dart';
 
 Map<String, dynamic> _savedWeek(String id, String week, String status,
         {bool test = false, bool food = true, int trainingDays = 5}) =>
@@ -194,7 +194,7 @@ void main() {
     await tester.tap(find.text('Test'));
     await tester.pumpAndSettle();
     expect(find.byType(WeeklyPlanHistoryView), findsNothing);
-    expect(find.text('older press'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan-day-2025-09-29')), findsOneWidget);
     expect(find.text('Generate weekly plan'), findsNothing);
     expect(find.text('Use this weekly plan'), findsNothing);
     expect(repository.generations, 0);
@@ -204,8 +204,13 @@ void main() {
         .show();
     await tester.pumpAndSettle();
     await refresh;
-    expect(find.text('older press'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan-day-2025-09-29')), findsOneWidget);
     expect(repository.detailCalls, 2);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('plan-day-2025-09-29')));
+    await tester.tap(find.byKey(const ValueKey('plan-day-2025-09-29')));
+    await tester.pumpAndSettle();
+    expect(find.text('older press'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

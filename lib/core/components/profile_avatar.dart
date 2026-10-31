@@ -60,7 +60,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
               duration: MediaQuery.disableAnimationsOf(context)
                   ? Duration.zero
                   : DSMotion.press,
-              curve: Curves.easeOutCubic,
+              curve: DSMotion.effects,
               child: ClipOval(
                 child: Material(
                   color: Colors.transparent,

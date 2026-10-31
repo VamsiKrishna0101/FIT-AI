@@ -6,10 +6,10 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:fitai_mobile/core/components/liquid_silver_bottom_bar.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/today/components/today_dashboard.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_training_view.dart';
+import 'package:setcraft/core/components/liquid_silver_bottom_bar.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/today/components/today_dashboard.dart';
+import 'package:setcraft/features/body_scan/views/body_training_view.dart';
 import 'scroll_benchmark_legacy_dock.dart';
 import 'scroll_benchmark_fixtures.dart';
 
@@ -141,13 +141,11 @@ class _ScrollBenchmarkState extends State<_ScrollBenchmark> {
                         ? TodayDashboard(
                             key: ValueKey('today-$_mode'),
                             data: benchmarkHome,
-                            trainingMap: benchmarkTraining,
                             now: DateTime(2026, 10, 6),
                             onRefresh: () async {},
                             onProfile: () {},
                             onSession: () {},
                             onTrain: () {},
-                            onBody: () {},
                             onNutrition: () {})
                         : TrainingMapDashboard(
                             key: ValueKey('body-$_mode'),

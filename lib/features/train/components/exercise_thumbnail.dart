@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/theme/ds_motion.dart';
 import '../models/workout_exercise_models.dart';
 
 /// Posters share the demo's white canvas, keeping wide and square source
@@ -34,7 +35,12 @@ class ExerciseThumbnail extends StatelessWidget {
                             memCacheWidth:
                                 (size * MediaQuery.devicePixelRatioOf(context))
                                     .ceil(),
-                            fadeInDuration: const Duration(milliseconds: 120),
+                            fadeInDuration:
+                                DSMotion.duration(context, DSMotion.regular),
+                            fadeOutDuration:
+                                DSMotion.duration(context, DSMotion.regular),
+                            fadeInCurve: DSMotion.effects,
+                            fadeOutCurve: DSMotion.effects,
                             placeholder: (_, __) => fallback,
                             errorWidget: (_, __, ___) => fallback)))));
   }

@@ -1,3 +1,4 @@
+import '../../body_scan/models/body_measurement_baseline.dart';
 import 'dart:async';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import '../../../core/cache/cache_scope.dart';
@@ -25,22 +26,8 @@ class WeeklyPlanRepository {
       }, ttl: ttl);
   Future<BodyOverview> bodyOverview() => BodyAssessmentRepository.shared.load();
 
-  static bool hasEnteredMeasurements(BodyOverview body, DateTime now) {
-    final today = DateTime(now.year, now.month, now.day);
-    return body.records.any((entry) {
-      final date = DateTime.tryParse(entry.recordedDate);
-      return entry.status == 'SAVED' &&
-          date != null &&
-          !date.isAfter(today) &&
-          entry.metrics.values.any((metric) => [
-                'tape',
-                'scale',
-                'smart_scale',
-                'dexa',
-                'calipers'
-              ].contains(metric.source));
-    });
-  }
+  static bool hasEnteredMeasurements(BodyOverview body, DateTime now) =>
+      BodyMeasurementBaseline(body, now: now).isComplete;
 
   Future<Map<String, dynamic>> availability() async {
     return _read('/api/plans/availability', ttl: const Duration(seconds: 30));

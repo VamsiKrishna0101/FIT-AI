@@ -1,3 +1,4 @@
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -423,7 +424,7 @@ class _SleepEntryViewState extends State<SleepEntryView> {
                                           ? null
                                           : () async {
                                               await Navigator.of(context).push(
-                                                  MaterialPageRoute<void>(
+                                                  AppPageRoute<void>(
                                                       builder: (_) =>
                                                           SleepPreferencesView(
                                                               repository:

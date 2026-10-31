@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'package:fitai_mobile/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/features/onboarding/components/onboarding_scaffold.dart';
-import 'package:fitai_mobile/features/onboarding/models/working_toward_goal.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/onboarding_controller.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/goal_viewmodel.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/about_you_viewmodel.dart';
-import 'package:fitai_mobile/features/onboarding/viewmodels/schedule_location_viewmodel.dart';
-import 'package:fitai_mobile/features/onboarding/views/goal_selection_view.dart';
-import 'package:fitai_mobile/features/onboarding/views/about_you_experience_view.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/features/onboarding/components/onboarding_scaffold.dart';
+import 'package:setcraft/features/onboarding/models/working_toward_goal.dart';
+import 'package:setcraft/features/onboarding/viewmodels/onboarding_controller.dart';
+import 'package:setcraft/features/onboarding/viewmodels/goal_viewmodel.dart';
+import 'package:setcraft/features/onboarding/viewmodels/about_you_viewmodel.dart';
+import 'package:setcraft/features/onboarding/viewmodels/schedule_location_viewmodel.dart';
+import 'package:setcraft/features/onboarding/views/goal_selection_view.dart';
+import 'package:setcraft/features/onboarding/views/about_you_experience_view.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +54,8 @@ void main() {
     await tester.tap(find.text('Continue'));
     // A second queued tap cannot open another route.
     action.onPressed!();
+    await tester.pump();
+    // The shared action paints its busy state before starting navigation.
     await tester.pump();
     var goalScaffold = tester.widget<OnboardingScaffold>(find.descendant(
         of: find.byType(GoalSelectionView, skipOffstage: false),

@@ -8,10 +8,12 @@ import '../models/progress_models.dart';
 
 const progressMuted = DSColors.muted;
 const progressSilver = DSColors.silver;
-const progressBlue = Color(0xFF6AA9FF);
-const progressCyan = Color(0xFF72D9ED);
-const progressViolet = Color(0xFFB29AF7);
-const progressAmber = Color(0xFFEBC487);
+// Keep analytics in Setcraft's silver/graphite palette. The existing token
+// names remain compatible with every detail screen and metric picker.
+const progressBlue = DSColors.silver;
+const progressCyan = Color(0xFFCDD2DA);
+const progressViolet = Color(0xFFA2A8B2);
+const progressAmber = Color(0xFFD3D0C9);
 // Match the rest of Setcraft: shared backgrounds, neutral values, chart accents only.
 const progressCard = DSColors.bgCard;
 
@@ -47,30 +49,36 @@ class ProgressHeading extends StatelessWidget {
   final String title;
   final VoidCallback? onTap;
   final String action;
+  final bool stacked;
   const ProgressHeading(this.title,
-      {super.key, this.onTap, this.action = 'View all'});
+      {super.key, this.onTap, this.action = 'View all', this.stacked = false});
   @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 10),
-      child: Row(children: [
-        Expanded(
-            child: Text(fitnessText(context, title),
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -.5))),
-        if (onTap != null)
-          TextButton(
-              onPressed: onTap,
-              style: TextButton.styleFrom(
-                  foregroundColor: progressMuted,
-                  padding: const EdgeInsets.symmetric(horizontal: 8)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text(fitnessText(context, action),
-                    style: const TextStyle(fontSize: 13)),
-                const Icon(CupertinoIcons.chevron_right, size: 12)
-              ])),
-      ]));
+  Widget build(BuildContext context) {
+    final heading = Text(fitnessText(context, title),
+        style: const TextStyle(
+            fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -.5));
+    final button = TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+            foregroundColor: progressMuted,
+            padding: EdgeInsets.symmetric(horizontal: stacked ? 0 : 8)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Flexible(
+              child: Text(fitnessText(context, action),
+                  style: const TextStyle(fontSize: 13))),
+          const Icon(CupertinoIcons.chevron_right, size: 12)
+        ]));
+    return Padding(
+        padding: const EdgeInsets.only(top: 24, bottom: 10),
+        child: stacked && onTap != null
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [heading, button])
+            : Row(children: [
+                Expanded(child: heading),
+                if (onTap != null) button
+              ]));
+  }
 }
 
 /// A compact destination for metrics that do not have readings yet.

@@ -64,11 +64,11 @@ class DSColors {
   );
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  static const Color navInactive = Color(0x7AFFFFFF);
-  static const Color navActiveBg = Color(0x2BFFFFFF);
+  static const Color navInactive = Color(0xFF989CA3);
+  static const Color navActiveBg = Color(0x16FFFFFF);
   static const Color navBarBg = Color(0x99111418);
-  static const Color navGlassText = Color(0xFFF3F3F5);
-  static const Color navGlassTint = Color(0x55121416);
+  static const Color navGlassText = Color(0xFFF5F7FA);
+  static const Color navGlassTint = Color(0xB8242527);
   static const Color navTouchGlow = Color(0x18FFFFFF);
 
   static const LinearGradient navGlassSheenGradient = LinearGradient(
@@ -89,7 +89,7 @@ class DSColors {
     center: Alignment(0, -.2),
     radius: .8,
     colors: [Color(0x20FFFFFF), Color(0x0CFFFFFF), Color(0x00FFFFFF)],
-    stops: [0, .5, 1],
+    stops: [0, .55, 1],
   );
 
   // Fade scrolling cards into the black canvas before they reach the dock.

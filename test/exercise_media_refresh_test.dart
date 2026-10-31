@@ -5,10 +5,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
-import 'package:fitai_mobile/core/media/video_cache.dart';
-import 'package:fitai_mobile/features/train/repositories/workout_repository.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
+import 'package:setcraft/core/media/video_cache.dart';
+import 'package:setcraft/features/train/repositories/workout_repository.dart';
 
 class _Adapter implements HttpClientAdapter {
   String url = 'https://media.example/videos/0025.gif';
@@ -149,5 +149,24 @@ void main() {
     adapter.url = 'https://media.example/updated.mp4';
     await repo.invalidateExerciseMedia();
     expect((await repo.getExercisePage()).exercises.single.url, adapter.url);
+  });
+
+  test('A profile media change removes the previous offline form guide',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    await SecureSessionStore.shared.saveTokens(
+        accessToken: 'offline-profile',
+        refreshToken: 'refresh',
+        userId: 'offline-profile-user');
+    final original = ApiClient.shared.client.httpClientAdapter;
+    final adapter = _CatalogAdapter();
+    ApiClient.shared.client.httpClientAdapter = adapter;
+    addTearDown(() => ApiClient.shared.client.httpClientAdapter = original);
+    final repo = WorkoutRepository.shared;
+    expect((await repo.getExerciseDetail('scoped-exercise'))!.url, adapter.url);
+    await repo.invalidateExerciseMedia();
+    adapter.offline = true;
+    expect(await repo.getExerciseDetail('scoped-exercise'), isNull);
   });
 }

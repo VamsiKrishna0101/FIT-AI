@@ -51,7 +51,7 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
     }
   }
 
-  void _onContinue() async {
+  Future<void> _onContinue() async {
     if (_advancing) return;
     if (_part < 2) {
       setState(() => _part++);

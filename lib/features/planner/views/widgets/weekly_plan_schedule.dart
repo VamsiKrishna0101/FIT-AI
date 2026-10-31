@@ -1,4 +1,5 @@
 import '../../../train/components/workout_warmup.dart';
+import '../../../nutrition/components/planned_meals_section.dart';
 import '../../../../core/cache/cache_scope.dart';
 import '../../../../core/components/liquid_chrome_button.dart';
 import '../../../train/views/workout_session_view.dart';
@@ -18,6 +19,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/fitness_theme.dart';
 import '../../../body_scan/views/widgets/body_controls.dart';
+import 'plan_week_list.dart';
+import '../../../../core/components/fitness_form.dart';
 
 class WeeklyPlanSchedule extends StatefulWidget {
   final Map<String, dynamic> payload;
@@ -25,6 +28,8 @@ class WeeklyPlanSchedule extends StatefulWidget {
   final Future<TrainingDay> Function(String)? loadDay;
   final Future<TrainingDay> Function(String)? startDay;
   final bool fromOnboarding;
+  final bool showOverview;
+  final String? initialDate;
 
   const WeeklyPlanSchedule(
       {super.key,
@@ -32,7 +37,9 @@ class WeeklyPlanSchedule extends StatefulWidget {
       this.active = false,
       this.loadDay,
       this.startDay,
-      this.fromOnboarding = false});
+      this.fromOnboarding = false,
+      this.showOverview = true,
+      this.initialDate});
 
   @override
   State<WeeklyPlanSchedule> createState() => _WeeklyPlanScheduleState();
@@ -43,6 +50,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   int _day = 0;
   int _section = 0;
   bool _startingFirst = false;
+  bool _openingDay = false;
   late final _reveal =
       AnimationController(vsync: this, duration: DSMotion.regular);
   bool _revealed = false;
@@ -66,6 +74,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
           .toList();
 
   final _live = <String, TrainingDay>{};
+  final _weekRows = <String, Map<String, dynamic>>{};
   final _errors = <String>{};
   StreamSubscription<TrainingDay>? _subscription;
   int _request = 0;
@@ -74,21 +83,27 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   void initState() {
     super.initState();
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final current = _days.indexWhere((day) => day['date'] == today);
+    final current =
+        _days.indexWhere((day) => day['date'] == (widget.initialDate ?? today));
     final firstWorkout = _days.indexWhere((day) => day['restDay'] != true);
-    _day = widget.fromOnboarding && firstWorkout >= 0
-        ? firstWorkout
-        : current >= 0
-            ? current
-            : firstWorkout >= 0
-                ? firstWorkout
-                : 0;
+    _day = widget.initialDate != null && current >= 0
+        ? current
+        : widget.fromOnboarding && firstWorkout >= 0
+            ? firstWorkout
+            : current >= 0
+                ? current
+                : firstWorkout >= 0
+                    ? firstWorkout
+                    : 0;
     _subscription = TrainingRepository.shared.changes.stream.listen((day) {
       if (mounted &&
           widget.active &&
           _days.any((row) => row['date'] == day.date)) {
         setState(() {
           _live[day.date] = day;
+          for (final row in day.week) {
+            _weekRows['${row['date']}'] = row;
+          }
           _errors.remove(day.date);
         });
       }
@@ -99,20 +114,43 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   @override
   void didUpdateWidget(WeeklyPlanSchedule oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.active && !oldWidget.active) unawaited(_loadSelected());
+    if (widget.active &&
+        (!oldWidget.active ||
+            !identical(
+                widget.payload['workouts'], oldWidget.payload['workouts']))) {
+      unawaited(_loadSelected());
+    }
   }
 
   Future<void> _loadSelected() async {
     final days = _days;
     if (!widget.active || days.isEmpty) return;
     final date = days[_day.clamp(0, days.length - 1)]['date'] as String;
+    await _loadDate(date);
+    if (widget.showOverview && mounted) {
+      final next = _nextTraining(_days.map(_currentWorkout).toList());
+      if (next != null && next['date'] != date) {
+        await _loadDate('${next['date']}');
+      }
+    }
+  }
+
+  Future<void> _loadDate(String date) async {
     final request = ++_request;
+    final owner = await CacheScope.userId();
     try {
       final day = await (widget.loadDay?.call(date) ??
           TrainingRepository.shared.load(date, refresh: true));
-      if (!mounted || request != _request) return;
+      if (!mounted ||
+          request != _request ||
+          owner != await CacheScope.userId()) {
+        return;
+      }
       setState(() {
         _live[date] = day;
+        for (final row in day.week) {
+          _weekRows['${row['date']}'] = row;
+        }
         _errors.remove(date);
       });
     } catch (_) {
@@ -164,14 +202,39 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
     }
   }
 
-  Future<void> _viewFirstWorkout(String date) async {
-    await Navigator.of(context).push(AppPageRoute<void>(
-        page: TrainView(standalone: true, initialDate: date)));
-    if (mounted) await _loadSelected();
+  Future<void> _openDay(String date) async {
+    if (_openingDay) return;
+    _openingDay = true;
+    try {
+      await Navigator.of(context).push(AppPageRoute<void>(
+          page: FitnessTheme(
+              child: Scaffold(
+        appBar: AppBar(
+            title: Text(
+                DateFormat.yMMMEd(
+                        Localizations.localeOf(context).toLanguageTag())
+                    .format(DateTime.parse(date)),
+                style: const TextStyle(fontSize: 15))),
+        body: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+            child: WeeklyPlanSchedule(
+                payload: widget.payload,
+                active: widget.active,
+                initialDate: date,
+                fromOnboarding: widget.fromOnboarding,
+                showOverview: false,
+                loadDay: widget.loadDay,
+                startDay: widget.startDay)),
+      ))));
+      if (mounted) await _loadSelected();
+    } finally {
+      _openingDay = false;
+    }
   }
 
   Future<void> _restToday(String date) async {
     final changed = await showModalBottomSheet<bool>(
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
         context: context,
         isScrollControlled: true,
         backgroundColor: FitnessTheme.surface,
@@ -183,7 +246,17 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
 
   Map<String, dynamic> _currentWorkout(Map<String, dynamic> saved) {
     final live = _live[saved['date']];
-    if (!widget.active || live == null) return saved;
+    if (!widget.active) return saved;
+    if (live == null) {
+      final row = _weekRows[saved['date']];
+      return row == null
+          ? saved
+          : {
+              ...saved,
+              ...row,
+              'restDay': row['status'] == 'REST_DAY' || row['status'] == 'EMPTY'
+            };
+    }
     final original = (saved['exercises'] as List? ?? []).whereType<Map>();
     return {
       ...saved,
@@ -191,6 +264,13 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
       'restDay': live.restDay,
       'warmup': live.json['warmup'],
       'estimatedMinutes': live.estimatedMinutes,
+      'status': live.finished
+          ? 'COMPLETED'
+          : live.started
+              ? 'IN_PROGRESS'
+              : live.restDay
+                  ? 'REST_DAY'
+                  : 'SCHEDULED',
       'exercises': [
         for (final item in live.items)
           {
@@ -233,23 +313,29 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
         days.where((day) => _currentWorkout(day)['restDay'] != true).length;
     final restDays = days.length - trainingDays;
 
+    if (widget.showOverview) return _overview(days);
+
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      FitnessText(
-          '$trainingDays training ${trainingDays == 1 ? 'day' : 'days'} · $restDays rest ${restDays == 1 ? 'day' : 'days'}',
-          style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-      const SizedBox(height: 14),
-      _weekStrip(days),
-      const SizedBox(height: 16),
+      if (widget.initialDate == null) ...[
+        FitnessText(
+            '$trainingDays training ${trainingDays == 1 ? 'day' : 'days'} · $restDays rest ${restDays == 1 ? 'day' : 'days'}',
+            style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+        const SizedBox(height: 14),
+        _weekStrip(days),
+        const SizedBox(height: 16),
+      ],
       BodySegment(
           labels: const ['Workout', 'Food'],
           selected: _section,
           onChanged: (section) => setState(() => _section = section)),
       const SizedBox(height: 20),
-      FitnessText(
-          DateFormat.MMMMEEEEd()
-              .format(DateTime.parse(selected['date'] as String)),
-          style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-      const SizedBox(height: 8),
+      if (widget.initialDate == null) ...[
+        FitnessText(
+            DateFormat.MMMMEEEEd()
+                .format(DateTime.parse(selected['date'] as String)),
+            style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+        const SizedBox(height: 8),
+      ],
       ContentTransition(
         child: KeyedSubtree(
           key: ValueKey('${selected['date']}:$_section'),
@@ -259,6 +345,141 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
         ),
       ),
     ]);
+  }
+
+  Widget _overview(List<Map<String, dynamic>> savedDays) {
+    final days = savedDays.map(_currentWorkout).toList();
+    final training = days.where((d) => d['restDay'] != true).toList();
+    final statuses = <String, String>{
+      for (final d in days)
+        if (d['status'] is String) '${d['date']}': d['status'] as String
+    };
+    final completed =
+        training.where((d) => statuses[d['date']] == 'COMPLETED').length;
+    final knownProgress = widget.active &&
+        training.isNotEmpty &&
+        training.every((d) => statuses.containsKey(d['date']));
+    final next = _nextTraining(days);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (next != null) ...[
+        _nextWorkout(next),
+        const SizedBox(height: 24),
+      ],
+      Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            const FitnessText('Your week',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            if (knownProgress)
+              FitnessText('{done} of {total} complete',
+                  values: {'done': completed, 'total': training.length},
+                  style:
+                      const TextStyle(fontSize: 12, color: FitnessTheme.muted))
+            else
+              FitnessText('{count} training days',
+                  values: {'count': training.length},
+                  style:
+                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+          ]),
+      if (knownProgress) ...[
+        const SizedBox(height: 12),
+        ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+                value: completed / training.length,
+                minHeight: 4,
+                color: FitnessTheme.silver,
+                backgroundColor: FitnessTheme.line)),
+        const SizedBox(height: 6),
+        Text('${(completed / training.length * 100).round()}%',
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
+      ],
+      const SizedBox(height: 12),
+      PlanWeekList(days: days, statuses: statuses, onSelected: _openDay),
+      if (widget.active && _errors.isNotEmpty)
+        TextButton.icon(
+            onPressed: _loadSelected,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const FitnessText('Could not sync. Tap to retry.')),
+    ]);
+  }
+
+  Map<String, dynamic>? _nextTraining(List<Map<String, dynamic>> days) {
+    final remaining = days
+        .where((d) =>
+            d['restDay'] != true &&
+            d['status'] != 'COMPLETED' &&
+            d['status'] != 'SKIPPED')
+        .toList();
+    return remaining.where((d) => d['status'] == 'IN_PROGRESS').firstOrNull ??
+        remaining
+            .where((d) => '${d['date']}'.compareTo(CacheScope.todayKey()) >= 0)
+            .firstOrNull;
+  }
+
+  Widget _nextWorkout(Map<String, dynamic> day) {
+    final date = '${day['date']}';
+    final live = _live[date];
+    final start = widget.active &&
+        live != null &&
+        !live.restDay &&
+        live.items.isNotEmpty &&
+        !live.finished &&
+        (live.started || date == CacheScope.todayKey());
+    final count =
+        day['exerciseCount'] ?? (day['exercises'] as List? ?? []).length;
+    return FitnessCard(
+        key: const ValueKey('next-plan-workout'),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          FitnessText(
+              live?.started == true ? 'Continue your workout' : 'Next workout',
+              style: const TextStyle(color: FitnessTheme.muted, fontSize: 12)),
+          const SizedBox(height: 12),
+          FitnessText('${day['name']}',
+              style: const TextStyle(
+                  fontSize: 25,
+                  height: 1.2,
+                  letterSpacing: -.5,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Text(
+              DateFormat.yMMMMEEEEd(
+                      Localizations.localeOf(context).toLanguageTag())
+                  .format(DateTime.parse(date)),
+              style: const TextStyle(fontSize: 12, color: FitnessTheme.silver)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 12, runSpacing: 4, children: [
+            FitnessText(count == 1 ? '{count} exercise' : '{count} exercises',
+                values: {'count': count},
+                style:
+                    const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+            if ((day['estimatedMinutes'] as num? ?? 0) > 0)
+              FitnessText('{minutes} min',
+                  values: {'minutes': (day['estimatedMinutes'] as num).round()},
+                  style:
+                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+          ]),
+          const SizedBox(height: 18),
+          FitnessSubmit(
+              label: start
+                  ? (live.started ? 'Resume workout' : 'Start workout')
+                  : 'View workout',
+              busy: _startingFirst,
+              onPressed: _startingFirst
+                  ? null
+                  : start
+                      ? () => _startFirstWorkout(date)
+                      : () => _openDay(date)),
+          if (start)
+            TextButton(
+                onPressed: _startingFirst ? null : () => _openDay(date),
+                child: const FitnessText('View workout')),
+        ]));
   }
 
   Widget _weekStrip(List<Map<String, dynamic>> days) => LayoutBuilder(
@@ -361,14 +582,13 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
               fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -.5)),
       const SizedBox(height: 8),
       if (widget.active) ...[
-        if (widget.fromOnboarding &&
-            day['restDay'] != true &&
-            _days.where((d) => d['restDay'] != true).firstOrNull?['date'] ==
-                day['date'] &&
+        if (day['restDay'] != true &&
             _live[day['date']] != null &&
             !_errors.contains(day['date']) &&
             _live[day['date']]!.items.isNotEmpty &&
-            _live[day['date']]?.finished != true) ...[
+            _live[day['date']]?.finished != true &&
+            (_live[day['date']]!.started ||
+                day['date'] == CacheScope.todayKey())) ...[
           LiquidChromeButton(
               key: const ValueKey('onboarding-first-workout-action'),
               solid: true,
@@ -377,15 +597,10 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
               isLoading: _startingFirst,
               title: _live[day['date']]!.started
                   ? 'Resume workout'
-                  : day['date'] == CacheScope.todayKey()
-                      ? 'Start my first workout'
-                      : 'View my first workout',
+                  : 'Start workout',
               onPressed: _startingFirst
                   ? null
-                  : day['date'] == CacheScope.todayKey() ||
-                          _live[day['date']]!.started
-                      ? () => _startFirstWorkout(day['date'] as String)
-                      : () => _viewFirstWorkout(day['date'] as String)),
+                  : () => _startFirstWorkout(day['date'] as String)),
           const SizedBox(height: 14),
         ],
         if (day['date'] == DateFormat('yyyy-MM-dd').format(DateTime.now()) &&
@@ -460,98 +675,123 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   Widget _exercise(Map exercise, int number, String date) {
     final targets =
         (exercise['setPrescriptions'] as List? ?? []).whereType<Map>().toList();
-    final sameTargets = targets.isNotEmpty &&
-        targets.every((set) =>
-            set['repsMin'] == targets.first['repsMin'] &&
-            set['repsMax'] == targets.first['repsMax'] &&
-            set['weightKg'] == targets.first['weightKg']);
     final unit = exercise['weightUnit'] == 'per_hand'
         ? ' per hand'
         : exercise['weightUnit'] == 'total_load'
             ? ' total'
             : '';
-    final weight =
-        sameTargets ? targets.first['weightKg'] : exercise['weightKg'];
-    final load = exercise['weightBasis'] == 'bodyweight'
+    final reps = exercise['targetReps'] ??
+        (exercise['repsMin'] == exercise['repsMax']
+            ? exercise['repsMax']
+            : '${exercise['repsMin']}–${exercise['repsMax']}');
+    String load(num? weight) => exercise['weightBasis'] == 'bodyweight'
         ? 'Bodyweight'
         : weight == null
             ? 'Choose starting load'
-            : exercise['weightBasis'] == 'estimated_start'
-                ? '~$weight kg$unit · suggested start'
-                : '$weight kg$unit · as logged';
-
+            : '$weight kg$unit';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: FitnessCard(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            FitnessText(number.toString().padLeft(2, '0'),
-                style:
-                    const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-            const SizedBox(width: 12),
-            Expanded(
-                child: FitnessText(
-                    '${exercise['displayName'] ?? exercise['name']}',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600))),
-          ]),
-          const SizedBox(height: 14),
-          if (targets.isEmpty || sameTargets)
-            FitnessText(
-                '${sameTargets ? targets.length : exercise['sets']} × ${sameTargets ? (targets.first['repsMin'] == targets.first['repsMax'] ? targets.first['repsMax'] : '${targets.first['repsMin']}–${targets.first['repsMax']}') : exercise['targetReps'] ?? (exercise['repsMin'] == exercise['repsMax'] ? exercise['repsMax'] : '${exercise['repsMin']}–${exercise['repsMax']}')} · $load',
-                style:
-                    const TextStyle(fontSize: 14, color: FitnessTheme.silver)),
-          for (final set in sameTargets ? <Map>[] : targets)
-            Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(children: [
-                  FitnessText('Set ${set['setNumber']}',
-                      style: const TextStyle(
-                          fontSize: 12, color: FitnessTheme.muted)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                      child: FitnessText(
-                          '${set['repsMin'] == set['repsMax'] ? set['repsMax'] : '${set['repsMin']}–${set['repsMax']}'} reps · ${set['weightKg'] == null ? 'Choose starting load' : exercise['weightBasis'] == 'bodyweight' ? 'Bodyweight' : '${set['weightKg']} kg$unit'}',
-                          style: const TextStyle(
-                              fontSize: 14, color: FitnessTheme.silver))),
-                ])),
-          if (targets.isNotEmpty &&
-              exercise['weightBasis'] == 'estimated_start')
-            const FitnessText('Starting estimate · reduce the load if needed',
-                style: TextStyle(fontSize: 11, color: FitnessTheme.muted)),
-          const SizedBox(height: 6),
-          FitnessText(
-              '${exercise['targetRpe'] == null ? '' : 'Effort ${exercise['targetRpe']}/10 · '}${exercise['restSeconds']} s rest',
-              style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-          if (exercise['reason'] is String &&
-              (exercise['reason'] as String).isNotEmpty)
-            Material(
-                color: Colors.transparent,
+        padding: const EdgeInsets.only(bottom: 10),
+        child: FitnessCard(
+            padding: EdgeInsets.zero,
+            child: Material(
+                type: MaterialType.transparency,
                 child: Theme(
-                  data: Theme.of(context)
-                      .copyWith(dividerColor: Colors.transparent),
-                  child: ExpansionTile(
-                    key: ValueKey('plan-exercise-$date-$number'),
-                    tilePadding: EdgeInsets.zero,
-                    dense: true,
-                    title: const FitnessText('Why this exercise',
-                        style:
-                            TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-                    children: [
-                      FitnessText(exercise['reason'] as String,
+                    data: Theme.of(context)
+                        .copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      key: PageStorageKey('plan-exercise-$date-$number'),
+                      tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 3),
+                      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                      leading: Text(number.toString().padLeft(2, '0'),
                           style: const TextStyle(
-                              fontSize: 12,
-                              color: FitnessTheme.muted,
-                              height: 1.5)),
-                    ],
-                  ),
-                )),
-        ]),
-      ),
-    );
+                              fontSize: 12, color: FitnessTheme.muted)),
+                      title: FitnessText(
+                          '${exercise['displayName'] ?? exercise['name']}',
+                          style: const TextStyle(
+                              fontSize: 15,
+                              height: 1.35,
+                              fontWeight: FontWeight.w500)),
+                      subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: FitnessText('{sets} sets · {reps} reps',
+                              values: {
+                                'sets': targets.isEmpty
+                                    ? exercise['sets'] ?? 0
+                                    : targets.length,
+                                'reps': reps ?? ''
+                              },
+                              style: const TextStyle(
+                                  fontSize: 12, color: FitnessTheme.muted))),
+                      children: [
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Divider(
+                                  height: 1, color: FitnessTheme.line),
+                              const SizedBox(height: 12),
+                              if (targets.isEmpty)
+                                FitnessText(load(exercise['weightKg'] as num?),
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        color: FitnessTheme.silver)),
+                              for (final set in targets)
+                                Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 6),
+                                    child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          FitnessText('Set ${set['setNumber']}',
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: FitnessTheme.muted)),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                              child: FitnessText(
+                                                  '${set['repsMin'] == set['repsMax'] ? set['repsMax'] : '${set['repsMin']}–${set['repsMax']}'} reps · ${load(set['weightKg'] as num?)}',
+                                                  style: const TextStyle(
+                                                      fontSize: 13,
+                                                      color: FitnessTheme
+                                                          .silver))),
+                                        ])),
+                              if (exercise['weightBasis'] == 'estimated_start')
+                                const FitnessText(
+                                    'Starting estimate · reduce the load if needed',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: FitnessTheme.muted)),
+                              const SizedBox(height: 10),
+                              FitnessText(
+                                  '${exercise['targetRpe'] == null ? '' : 'Effort ${exercise['targetRpe']}/10 · '}${exercise['restSeconds']} s rest',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: FitnessTheme.muted)),
+                              if (exercise['reason'] is String &&
+                                  (exercise['reason'] as String)
+                                      .isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                const FitnessText('Why this exercise',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 6),
+                                FitnessText(exercise['reason'] as String,
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: FitnessTheme.muted,
+                                        height: 1.5)),
+                              ],
+                            ])
+                      ],
+                    )))));
   }
 
   Widget _food(String date) {
+    if (widget.active && date.compareTo(CacheScope.todayKey()) >= 0) {
+      return PlannedMealsSection(
+          key: ValueKey('weekly-food-$date'), date: DateTime.parse(date));
+    }
     final nutrition = widget.payload['nutrition'] as Map?;
     final foodDay = (nutrition?['days'] as List? ?? [])
         .whereType<Map>()
@@ -607,7 +847,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
                   Padding(
                       padding: const EdgeInsets.only(top: 10),
                       child: FitnessText(
-                          '${foodDisplayName('${food['foodId']}', '${food['name']}')} · ${food['grams']} g',
+                          '${foodDisplayName('${food['foodId']}', '${food['name']}')} · ${food['servings'] != null ? '${food['servings']} × ${food['servingLabel'] ?? 'portion'}' : '${food['grams']} g'}',
                           style: const TextStyle(
                               fontSize: 13, color: FitnessTheme.silver))),
               ])),

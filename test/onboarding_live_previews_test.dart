@@ -5,9 +5,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/theme/fitness_theme.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
-import 'package:fitai_mobile/features/onboarding/components/onboarding_live_previews.dart';
+import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:setcraft/features/onboarding/components/onboarding_live_previews.dart';
 
 Widget page(Widget child,
         {bool reduced = false,

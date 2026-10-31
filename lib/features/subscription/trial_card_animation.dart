@@ -18,8 +18,8 @@ class TrialCardAnimation extends StatefulWidget {
 
 class _TrialCardAnimationState extends State<TrialCardAnimation>
     with SingleTickerProviderStateMixin {
-  late final _controller = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1900));
+  late final _controller =
+      AnimationController(vsync: this, duration: DSMotion.illustration);
   bool _started = false;
   ui.Image? _binImage;
 
@@ -92,7 +92,7 @@ class _TrialCardAnimationState extends State<TrialCardAnimation>
           ),
           FadeTransition(
             opacity: _controller.drive(CurveTween(
-                curve: const Interval(.86, 1, curve: Curves.easeOut))),
+                curve: const Interval(.86, 1, curve: DSMotion.effects))),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -132,9 +132,9 @@ class TrialCardPainter extends CustomPainter {
     canvas.translate(-21, 0);
 
     final time = progress.value;
-    final glide = Curves.easeInOutCubic.transform((time / .56).clamp(0.0, 1.0));
+    final glide = DSMotion.effects.transform((time / .56).clamp(0.0, 1.0));
     final drop =
-        Curves.easeInOutCubic.transform(((time - .56) / .32).clamp(0.0, 1.0));
+        DSMotion.effects.transform(((time - .56) / .32).clamp(0.0, 1.0));
     final settle =
         -math.sin(((time - .88) / .12).clamp(0.0, 1.0) * math.pi) * 1.2;
     const binRect = Rect.fromLTWH(99, 36, 164, 196.8);

@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/features/profile/repositories/mcp_repository.dart';
-import 'package:fitai_mobile/features/profile/views/mcp_connections_view.dart';
+import 'package:setcraft/features/profile/repositories/mcp_repository.dart';
+import 'package:setcraft/features/profile/views/mcp_connections_view.dart';
 import 'helpers/fake_mcp_repository.dart';
 
 Widget app(Widget child, {double scale = 1}) => RepaintBoundary(

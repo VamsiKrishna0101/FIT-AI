@@ -1,10 +1,12 @@
 // MARK: - Backend REST Endpoints Mapping
 class Endpoints {
-  static const String _configuredBaseUrl =
-      String.fromEnvironment('FITAI_API_BASE_URL');
+  static const String _configuredBaseUrl = String.fromEnvironment(
+    'SETCRAFT_API_BASE_URL',
+    defaultValue: String.fromEnvironment('FITAI_API_BASE_URL'),
+  );
   static final String baseUrl = _configuredBaseUrl.isNotEmpty
       ? _configuredBaseUrl
-      : 'https://4266-2401-4900-1cb4-ee3e-a9de-3d34-fc2b-928c.ngrok-free.app';
+      : 'https://1594-2401-4900-1c27-f174-d504-d2f1-613-9731.ngrok-free.app';
 
   // Auth
   static const String sendOtp = '/api/auth/send-otp';

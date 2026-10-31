@@ -1,3 +1,4 @@
+import 'package:setcraft/core/theme/ds_motion.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -148,6 +149,7 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
     final owner = _owner;
     if (owner == null || _revoking != null) return;
     final yes = await showDialog<bool>(
+        animationStyle: DSMotion.dialogStyle(context),
         context: context,
         builder: (c) => AlertDialog(
                 title: const Text('Revoke access?'),

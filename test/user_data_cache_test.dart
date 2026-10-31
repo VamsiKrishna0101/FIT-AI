@@ -1,15 +1,15 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
-import 'package:fitai_mobile/core/network/api_client.dart';
-import 'package:fitai_mobile/features/nutrition/repositories/nutrition_repository.dart';
+import 'package:setcraft/core/network/api_client.dart';
+import 'package:setcraft/features/nutrition/repositories/nutrition_repository.dart';
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:fitai_mobile/core/cache/user_data_cache.dart';
-import 'package:fitai_mobile/core/localization/app_language.dart';
-import 'package:fitai_mobile/core/storage/onboarding_draft.dart';
-import 'package:fitai_mobile/core/localization/language_manager.dart';
-import 'package:fitai_mobile/core/storage/secure_session_store.dart';
+import 'package:setcraft/core/cache/user_data_cache.dart';
+import 'package:setcraft/core/localization/app_language.dart';
+import 'package:setcraft/core/storage/onboarding_draft.dart';
+import 'package:setcraft/core/localization/language_manager.dart';
+import 'package:setcraft/core/storage/secure_session_store.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

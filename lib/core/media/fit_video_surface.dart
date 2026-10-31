@@ -1,3 +1,4 @@
+import 'package:setcraft/core/theme/ds_motion.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -265,8 +266,8 @@ class _FitVideoSurfaceState extends State<FitVideoSurface>
         if (_ctrl != null)
           AnimatedOpacity(
             opacity: _hasFirstFrame ? 1 : 0,
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
+            duration: DSMotion.duration(context, DSMotion.regular),
+            curve: DSMotion.effects,
             child: _CoverVideo(
               controller: _ctrl!,
               alignment: widget.alignment,

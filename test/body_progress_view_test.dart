@@ -1,4 +1,7 @@
-import 'package:fitai_mobile/features/body_scan/models/planned_physique_models.dart';
+import 'fixtures/body_map_fixture.dart';
+import 'package:setcraft/features/body_scan/models/body_map_models.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_measurement_dashboard.dart';
+import 'package:setcraft/features/body_scan/models/planned_physique_models.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:intl/date_symbol_data_local.dart';
@@ -8,21 +11,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_progress_summary.dart';
-import 'package:fitai_mobile/features/body_scan/models/training_map_models.dart';
-import 'package:fitai_mobile/features/body_scan/repositories/body_assessment_repository.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_measurements_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/body_history_view.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/anatomical_training_map.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_controls.dart';
-import 'package:fitai_mobile/features/planner/repositories/weekly_plan_repository.dart';
-import 'package:fitai_mobile/features/planner/views/weekly_plan_view.dart';
-import 'package:fitai_mobile/core/components/animated_tab_stack.dart';
-import 'package:fitai_mobile/features/progress/views/progress_overview_view.dart';
-import 'package:fitai_mobile/features/progress/models/progress_models.dart';
-import 'package:fitai_mobile/features/body_scan/views/widgets/body_physique_home.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/models/body_progress_summary.dart';
+import 'package:setcraft/features/body_scan/models/training_map_models.dart';
+import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
+import 'package:setcraft/features/body_scan/views/body_view.dart';
+import 'package:setcraft/features/body_scan/views/body_measurements_view.dart';
+import 'package:setcraft/features/body_scan/views/body_history_view.dart';
+import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_controls.dart';
+import 'package:setcraft/features/planner/repositories/weekly_plan_repository.dart';
+import 'package:setcraft/core/components/animated_tab_stack.dart';
+import 'package:setcraft/features/progress/views/progress_overview_view.dart';
+import 'package:setcraft/features/progress/models/progress_models.dart';
 
 Map<String, dynamic> _entry(String id, String date, double weight,
         {String source = 'scale', String hour = '10', bool estimate = false}) =>
@@ -72,6 +73,11 @@ BodyOverview _overview() => BodyOverview.fromJson({
     });
 
 class _Repository extends BodyAssessmentRepository {
+  @override
+  Future<BodyMapData> bodyMap(
+          {DateTime? date, BodyDateSelection? selection}) async =>
+      emptyBodyMap(date);
+
   @override
   Future<PlannedPhysiqueData> plannedPhysique({DateTime? date}) async =>
       PlannedPhysiqueData.fromJson({'status': 'none', 'workouts': []});
@@ -218,196 +224,124 @@ void main() {
   });
 
   testWidgets(
-      'Scan history filters dates, opens custom dates and keeps compare disabled',
+      'Measurement history lists entered readings without scan controls',
       (tester) async {
-    await tester.pumpWidget(
-        _app(BodyHistoryView(repository: _Repository(), onRecord: (_) {})));
+    String? opened;
+    await tester.pumpWidget(_app(BodyHistoryView(
+        repository: _Repository(),
+        onRecord: (entry) {
+          opened = entry.id;
+        })));
     await tester.pumpAndSettle();
-    expect(find.text('Report only'), findsNWidgets(2));
-    expect(find.widgetWithText(OutlinedButton, 'Compare'), findsNothing);
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    expect(find.text('Measurement history'), findsOneWidget);
+    expect(find.byType(PopupMenuButton<String>), findsNothing);
+    expect(find.text('Scan history'), findsNothing);
+    expect(find.text('Report only'), findsNothing);
+    await tester.tap(find.text(bodyDate('2026-10-09')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Last month').last);
-    await tester.pumpAndSettle();
-    expect(find.text('No scans in this date range.'), findsOneWidget);
-    await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('All scans').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Report only'), findsNWidgets(2));
-    await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Custom dates').last);
-    await tester.pumpAndSettle();
-    expect(find.byType(DateRangePickerDialog), findsOneWidget);
-    await tester.tap(find.byTooltip('Close'));
-    await tester.pumpAndSettle();
-    expect(find.text('Report only'), findsNWidgets(2));
+    expect(opened, 'current');
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-      'Training and Physique stay separate; measurements and history remain reachable',
+      'Measurements and history remain reachable from the simplified Body home',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final repository = _Repository();
-    await tester.pumpWidget(_app(BodyView(
-        repository: repository, planRepository: _Plans(), onTrain: () {})));
+    await tester
+        .pumpWidget(_app(BodyView(repository: repository, onTrain: () {})));
     await tester.pumpAndSettle();
-    expect(find.text('Training'), findsOneWidget);
-    expect(find.text('Physique'), findsOneWidget);
-    expect(find.byType(AnatomicalTrainingMap), findsOneWidget);
-    expect(repository.maps, 1);
-
-    await tester.tap(find.text('Physique'));
+    expect(find.text('Measurements'), findsOneWidget);
+    expect(find.text('Training'), findsNothing);
+    expect(find.text('Physique'), findsNothing);
+    expect(repository.maps, 0);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('body-measurement-weightKg')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Generate weekly plan'), 160,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text('Generate weekly plan'), findsOneWidget);
-    await tester.ensureVisible(find.text('Generate weekly plan'));
-    await tester.tap(find.text('Generate weekly plan'));
+    await tester.tap(find.byKey(const ValueKey('body-measurement-weightKg')));
     await tester.pumpAndSettle();
-    expect(find.byType(WeeklyPlanView), findsOneWidget);
-    await tester.ensureVisible(find.text('Generate weekly plan'));
-    await tester.tap(find.text('Generate weekly plan'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Add measurements (optional)'), findsOneWidget);
-    expect(find.text('Continue without measurements'), findsOneWidget);
-    await tester.tap(find.byTooltip('Close'));
-    await tester.pumpAndSettle();
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Photo review'), 180,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text('Photo review'), findsOneWidget);
-    expect(find.byType(AnatomicalTrainingMap), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('View'), 220,
-        scrollable: find.byType(Scrollable).last);
-    await tester.tap(find.text('View'));
+    await tester.tap(find.text('All measurements'));
     await tester.pumpAndSettle();
     expect(find.byType(BodyMeasurementsView), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('82–92 cm'), 150,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text('82–92 cm'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Right arm'), -150,
+    expect(find.text('82–92 cm'), findsNothing);
+    await tester.scrollUntilVisible(find.text('Right arm'), 150,
         scrollable: find.byType(Scrollable).last);
     expect(find.text('Right arm'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Explore'));
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('body-measurement-weightKg')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Explore'));
+    await tester.tap(find.byKey(const ValueKey('body-measurement-weightKg')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Measurement history').last);
     await tester.pumpAndSettle();
     expect(find.byType(BodyHistoryView), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Body and Progress stay intact during tab and animation changes',
+  testWidgets('Body and Progress stay intact during tab and motion changes',
       (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     final selected = ValueNotifier(0);
     addTearDown(selected.dispose);
-    final bodyRepository = _Repository();
-    final plans = _Plans();
-
+    final repository = _Repository();
     Widget dashboard({bool reducedMotion = false}) => _app(
-          ValueListenableBuilder<int>(
+        ValueListenableBuilder<int>(
             valueListenable: selected,
-            builder: (context, index, _) => AnimatedTabStack(
-              index: index,
-              children: [
-                TickerMode(
-                  enabled: index == 0,
-                  child: BodyView(
-                    isActive: index == 0,
-                    repository: bodyRepository,
-                    planRepository: plans,
-                    onTrain: () {},
-                  ),
-                ),
-                TickerMode(
-                  enabled: index == 1,
-                  child: ProgressOverviewView(
-                    isActive: index == 1,
-                    initial: const ProgressOverview({}),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          reducedMotion: reducedMotion,
-        );
-
+            builder: (context, index, _) =>
+                AnimatedTabStack(index: index, children: [
+                  BodyView(
+                      isActive: index == 0,
+                      repository: repository,
+                      onTrain: () {}),
+                  ProgressOverviewView(
+                      isActive: index == 1,
+                      initial: const ProgressOverview({})),
+                ])),
+        reducedMotion: reducedMotion);
     await tester.pumpWidget(dashboard());
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Physique'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Your weekly plan'), 160,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text('Your weekly plan'), findsOneWidget);
-    expect(find.byType(BodyPhysiqueHome), findsOneWidget);
-
+    expect(find.byType(BodyMeasurementDashboard), findsOneWidget);
     selected.value = 1;
-    await tester.pump();
     await tester.pump(const Duration(milliseconds: 70));
     await tester.pumpWidget(dashboard(reducedMotion: true));
     await tester.pumpAndSettle();
     expect(find.text('Progress'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-
     selected.value = 0;
     await tester.pumpAndSettle();
-    final physique = find.byType(BodyPhysiqueHome);
-    expect(physique, findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Your weekly plan'), 160,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text('Your weekly plan'), findsOneWidget);
-    expect(find.byType(BodyPhysiqueHome), findsOneWidget);
+    expect(find.byType(BodyMeasurementDashboard), findsOneWidget);
     await tester
         .widget<RefreshIndicator>(find.descendant(
-          of: physique,
-          matching: find.byType(RefreshIndicator),
-        ))
+            of: find.byType(BodyView), matching: find.byType(RefreshIndicator)))
         .onRefresh();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Your weekly plan'), 160,
-        scrollable: find.byType(Scrollable).last);
-    expect(find.text('Your weekly plan'), findsOneWidget);
-    expect(find.byType(BodyPhysiqueHome), findsOneWidget);
+    expect(find.text('Measurements'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Physique preserves the map and fits large text on a small phone',
+  testWidgets('Measurement dashboard fits large text on a small phone',
       (tester) async {
     tester.view.physicalSize = const Size(320, 720);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_app(
-        BodyView(
-            repository: _Repository(),
-            planRepository: _Plans(),
-            onTrain: () {}),
-        scale: 1.8));
+    await tester.pumpWidget(
+        _app(BodyView(repository: _Repository(), onTrain: () {}), scale: 1.8));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Physique'));
+    expect(find.byType(AnatomicalTrainingMap), findsOneWidget);
+    await tester.drag(
+        find.byKey(const ValueKey('body-scroll')), const Offset(0, -400));
     await tester.pumpAndSettle();
-    final map = tester
-        .widget<AnatomicalTrainingMap>(find.byType(AnatomicalTrainingMap));
-    map.onSelected('chest');
-    await tester.pumpAndSettle();
-    expect(find.text('0 direct sets planned this week'), findsOneWidget);
-    expect(find.text('No exercises for this area in the selected plan view.'),
-        findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets(
-      'Measurement and history screens keep ranges and fit enlarged text',
+      'Measurement details exclude photo estimates and fit enlarged text',
       (tester) async {
     tester.view.physicalSize = const Size(320, 720);
     tester.view.devicePixelRatio = 1;
@@ -418,20 +352,17 @@ void main() {
             overview: _overview(), onAdd: () => additions++, onRecord: (_) {}),
         scale: 1.8));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('82–92 cm'), 160,
-        scrollable: find.byType(Scrollable).first);
-    expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Add measurements'));
+    expect(find.text('82–92 cm'), findsNothing);
+    await tester.tap(find.text('Update measurements'));
     await tester.pump();
     expect(additions, 1);
     await tester.pumpWidget(_app(
         BodyHistoryView(repository: _Repository(), onRecord: (_) {}),
         scale: 1.8));
     await tester.pumpAndSettle();
-    expect(find.text('Report only'), findsNWidgets(2));
-    expect(find.text('Waist 82–92 cm'), findsNothing);
+    expect(find.text('Measurement history'), findsOneWidget);
+    expect(find.text('Report only'), findsNothing);
     expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('Capture the silver measurements and history', (tester) async {
@@ -462,7 +393,7 @@ void main() {
     }
   });
 
-  testWidgets('Capture the restored native Physique screen', (tester) async {
+  testWidgets('Capture the simplified Body screen', (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -473,8 +404,6 @@ void main() {
             planRepository: _Plans(),
             onTrain: () {}),
         capture: capture));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Physique'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     final boundary =

@@ -5,15 +5,16 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitai_mobile/core/components/profile_avatar.dart';
-import 'package:fitai_mobile/features/profile/repositories/settings_repository.dart';
-import 'package:fitai_mobile/features/profile/views/profile_view.dart';
-import 'package:fitai_mobile/features/profile/views/profile_details_view.dart';
-import 'package:fitai_mobile/features/profile/views/mcp_connections_view.dart';
-import 'package:fitai_mobile/features/profile/views/privacy_settings_view.dart';
-import 'package:fitai_mobile/features/profile/views/settings_preferences_view.dart';
-import 'package:fitai_mobile/features/body_scan/models/body_assessment_models.dart';
-import 'package:fitai_mobile/features/body_scan/repositories/body_assessment_repository.dart';
+import 'package:setcraft/core/components/profile_avatar.dart';
+import 'package:setcraft/features/profile/repositories/settings_repository.dart';
+import 'package:setcraft/features/profile/views/profile_view.dart';
+import 'package:setcraft/features/profile/views/profile_details_view.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/features/profile/views/mcp_connections_view.dart';
+import 'package:setcraft/features/profile/views/privacy_settings_view.dart';
+import 'package:setcraft/features/profile/views/settings_preferences_view.dart';
+import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
+import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
 import 'helpers/fake_mcp_repository.dart';
 
 class _SettingsRepository extends SettingsRepository {
@@ -200,7 +201,8 @@ void main() {
     expect(repository.saved?['name'], 'Vamsi');
     expect(repository.saved?['age'], 28);
     expect(repository.saved?['weight'], 70.5);
-    expect(repository.saved?['countryCode'], 'GB');
+    expect(repository.saved?.containsKey('countryCode'), false);
+    expect(find.text('Country'), findsNothing);
     expect(repository.saved?.containsKey('foodAllergies'), false);
   });
 
@@ -319,4 +321,41 @@ void main() {
     await _capture(tester, 'settings-claude');
     expect(tester.takeException(), isNull);
   });
+
+  for (final nutrition in [false, true]) {
+    for (final scale in [1.0, 1.8]) {
+      testWidgets(
+          'Editor stays visible above a compact Save button: nutrition=$nutrition scale=$scale',
+          (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(360, 800);
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(_app(
+            ProfileDetailsView(
+                nutrition: nutrition, repository: _SettingsRepository()),
+            scale: scale));
+        await tester.pumpAndSettle();
+        expect(find.text('Country'), findsNothing);
+        expect(
+            find.text('Choose where you live. Your language stays the same.'),
+            findsNothing);
+        final button = find.byType(LiquidChromeButton);
+        expect(tester.getSize(button).height, lessThan(120));
+        expect(find.byType(TextFormField).first.hitTestable(), findsOneWidget);
+        expect(find.text('Save changes').hitTestable(), findsOneWidget);
+        expect(
+            tester.getRect(button).top,
+            greaterThan(
+                tester.getRect(find.byType(TextFormField).first).bottom));
+        if (scale == 1) {
+          await _capture(tester,
+              nutrition ? 'nutrition-editor-fixed' : 'personal-details-fixed');
+        }
+        await tester.drag(find.byType(ListView).first, const Offset(0, -700));
+        await tester.pumpAndSettle();
+        expect(find.text('Save changes').hitTestable(), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 }

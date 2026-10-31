@@ -1,6 +1,6 @@
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
-import 'package:fitai_mobile/core/localization/fitness_text.dart';
+import 'package:setcraft/core/localization/fitness_text.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';

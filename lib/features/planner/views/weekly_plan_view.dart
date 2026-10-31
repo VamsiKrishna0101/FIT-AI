@@ -1,9 +1,9 @@
+import '../../body_scan/models/body_measurement_baseline.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/content_transition.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/cache/cache_scope.dart';
@@ -16,8 +16,6 @@ import 'weekly_plan_history_view.dart';
 import 'widgets/weekly_plan_schedule.dart';
 import '../../body_scan/models/body_assessment_models.dart';
 import '../../body_scan/views/body_entry_view.dart';
-import '../../../core/components/liquid_chrome_button.dart';
-import '../../notifications/views/notification_settings_view.dart';
 import 'widgets/plan_schedule_sheet.dart';
 
 class WeeklyPlanView extends StatefulWidget {
@@ -178,6 +176,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
         'DAYS_6': 6
       };
       final schedule = await showModalBottomSheet<PlanScheduleSelection>(
+          sheetAnimationStyle: DSMotion.sheetStyle(context),
           context: context,
           isScrollControlled: true,
           backgroundColor: FitnessTheme.surface,
@@ -192,18 +191,17 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
         _week = schedule.start;
         _busy = true;
       });
-      BodyOverview? body;
-      try {
-        body = await _repo.bodyOverview();
-      } on DioException catch (error) {
-        if ([401, 403].contains(error.response?.statusCode)) rethrow;
-        // Measurements are optional; their service must not block training.
-      }
+      final body = await _repo.bodyOverview();
       if (!await _sameOwner()) return;
-      if (body != null &&
-          !WeeklyPlanRepository.hasEnteredMeasurements(body, DateTime.now())) {
+      if (!WeeklyPlanRepository.hasEnteredMeasurements(body, DateTime.now())) {
         if (!await _measurementsBeforePlanning(body)) return;
         if (!await _sameOwner()) return;
+        final updated = await _repo.bodyOverview();
+        if (!WeeklyPlanRepository.hasEnteredMeasurements(
+            updated, DateTime.now())) {
+          throw StateError(
+              'Complete your measurements before creating your plan.');
+        }
       }
       final start = schedule.start;
       final monday =
@@ -234,80 +232,14 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
   }
 
   Future<bool> _measurementsBeforePlanning(BodyOverview body) async {
-    final action = await showModalBottomSheet<String>(
-      sheetAnimationStyle: DSMotion.sheetStyle(context),
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => SafeArea(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(12, 24, 12, 12),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: .15)),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF282A2C), Color(0xFF141516)],
-            ),
-          ),
-          child: SingleChildScrollView(
-              child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(children: [
-                const Icon(CupertinoIcons.person_crop_rectangle,
-                    size: 32, color: FitnessTheme.silver),
-                const Spacer(),
-                IconButton(
-                    tooltip: 'Close',
-                    onPressed: () => Navigator.pop(sheetContext),
-                    icon: const Icon(CupertinoIcons.xmark, size: 18)),
-              ]),
-              const SizedBox(height: 20),
-              const FitnessText('Add measurements (optional)',
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -.6,
-                      height: 1.15)),
-              const SizedBox(height: 12),
-              const FitnessText(
-                  'Entered measurements help you track changes. Your training history, equipment and goals guide exercises, weights and reps.',
-                  style: TextStyle(color: FitnessTheme.muted, height: 1.5)),
-              const SizedBox(height: 12),
-              const FitnessText(
-                  'No photos needed. You can add measurements later.',
-                  style: TextStyle(color: FitnessTheme.silver, fontSize: 12)),
-              const SizedBox(height: 24),
-              LiquidChromeButton(
-                  title: 'Add measurements',
-                  onPressed: () => Navigator.pop(sheetContext, 'measure')),
-              const SizedBox(height: 10),
-              TextButton(
-                  onPressed: () => Navigator.pop(sheetContext, 'continue'),
-                  child: const FitnessText('Continue without measurements',
-                      style: TextStyle(color: FitnessTheme.silver))),
-            ],
-          )),
-        ),
-      ),
-    );
-
-    if (!await _sameOwner()) return false;
-    if (action == 'continue') return true;
-    if (action != 'measure') return false;
-    if (!mounted) return false;
-
     final route = AppPageRoute<bool>(
         page: BodyEntryView(
-      profileWeight: (body.profile?['weight'] as num?)?.toDouble(),
+      baseline: BodyMeasurementBaseline(body),
+      requireBaseline: true,
     ));
     final saved = await Navigator.of(context).push(route);
     await route.completed;
-    return saved == true;
+    return saved == true && await _sameOwner();
   }
 
   Future<void> _poll() async {
@@ -329,9 +261,6 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       if (!_running) {
         _timer?.cancel();
         await _load();
-        if (_run?['status'] == 'COMPLETED' && mounted && await _sameOwner()) {
-          if (mounted) await offerNotificationReminders(context);
-        }
       }
     } catch (error) {
       if (await _sameOwner()) setState(() => _error = _message(error));
@@ -355,12 +284,16 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
     await route.completed;
     _progressOpen = false;
     if (!await _sameOwner()) return;
-    if (result != null) setState(() => _run = result);
-    await _poll();
-    await _load();
-    if (_run?['status'] == 'COMPLETED' && mounted && await _sameOwner()) {
-      if (mounted) await offerNotificationReminders(context);
+    if (result != null) {
+      setState(() {
+        _run = result;
+        if (result['status'] == 'COMPLETED' && result['plan'] is Map) {
+          _loading = true;
+          _selectPlan(Map<String, dynamic>.from(result['plan'] as Map));
+        }
+      });
     }
+    await _load();
   }
 
   Future<void> _openHistory() async {
@@ -379,7 +312,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
                 : DSMotion.regular,
-            curve: Curves.easeOutCubic);
+            curve: DSMotion.effects);
       }
     });
   }
@@ -499,7 +432,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
                                       letterSpacing: -.7)),
                               const SizedBox(height: 10),
                               const FitnessText(
-                                  'Choose your start date and training days. We’ll build your workouts and food plan around them.',
+                                  'Choose your start date and training days. We’ll build your workouts and use the food support you choose in Nutrition.',
                                   style: TextStyle(
                                       color: FitnessTheme.muted, height: 1.5)),
                               const SizedBox(height: 24),
@@ -531,30 +464,40 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
                                         style: const TextStyle(
                                             color: FitnessTheme.muted,
                                             fontSize: 12)),
-                                    if (_canGenerate && !_running)
-                                      TextButton(
-                                          onPressed: _busy ? null : _generate,
-                                          child: const FitnessText(
-                                              'Create next plan',
-                                              style: TextStyle(
-                                                  color: FitnessTheme.silver,
-                                                  fontSize: 12))),
                                   ]),
-                              if (_cooldownActive && nextGeneration != null)
-                                Padding(
-                                    padding: const EdgeInsets.only(top: 6),
-                                    child: FitnessText(
-                                        'Next plan available ${DateFormat.yMMMd(locale).add_jm().format(nextGeneration)}',
-                                        style: const TextStyle(
-                                            color: FitnessTheme.muted,
-                                            fontSize: 11,
-                                            height: 1.4))),
                               const SizedBox(height: 20),
                               WeeklyPlanSchedule(
                                   key: ValueKey(_selected!['id']),
                                   active: _selected?['status'] == 'ACTIVE',
                                   fromOnboarding: widget.fromOnboarding,
                                   payload: payload),
+                              const SizedBox(height: 12),
+                              ExpansionTile(
+                                tilePadding: EdgeInsets.zero,
+                                shape: const Border(),
+                                collapsedShape: const Border(),
+                                title: const FitnessText('Plan options',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: FitnessTheme.muted)),
+                                children: [
+                                  if (_canGenerate && !_running)
+                                    TextButton(
+                                        onPressed: _busy ? null : _generate,
+                                        child: const FitnessText(
+                                            'Create next plan')),
+                                  if (_cooldownActive && nextGeneration != null)
+                                    Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 12),
+                                        child: FitnessText(
+                                            'Next plan available ${DateFormat.yMMMd(locale).add_jm().format(nextGeneration)}',
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                height: 1.4,
+                                                color: FitnessTheme.muted))),
+                                ],
+                              ),
                               if ((payload['warnings'] as List? ?? [])
                                   .isNotEmpty) ...[
                                 const SizedBox(height: 16),
