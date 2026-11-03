@@ -1,5 +1,26 @@
 const _locales = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const _copy = <String, List<String>>{
+  'Workout summary': [
+    'Trainingsübersicht',
+    'Résumé de la séance',
+    'Passöversikt',
+    'Øktoversikt',
+    'Træningsoversigt',
+    'Trainingsoverzicht',
+    'Resumen del entrenamiento',
+    'Riepilogo allenamento'
+  ],
+  'No sets logged': [
+    'Keine Sätze erfasst',
+    'Aucune série enregistrée',
+    'Inga set loggade',
+    'Ingen sett registrert',
+    'Ingen sæt registreret',
+    'Geen sets geregistreerd',
+    'No hay series registradas',
+    'Nessuna serie registrata'
+  ],
+  'Set': ['Satz', 'Série', 'Set', 'Sett', 'Sæt', 'Set', 'Serie', 'Serie'],
   "Log set {number}": [
     "Satz {number} erfassen",
     "Enregistrer la série {number}",

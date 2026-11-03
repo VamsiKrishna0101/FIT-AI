@@ -74,14 +74,14 @@ class McpRepository {
   Future<String> currentOwner() async {
     final owner = await CacheScope.userId();
     if (owner == 'anonymous') {
-      throw StateError('Sign in to manage your AI connections.');
+      throw StateError('Sign in to manage MCP connections.');
     }
     return owner;
   }
 
   Future<void> requireOwner(String owner) async {
     if (await currentOwner() != owner) {
-      throw StateError('Your account changed. Reopen AI connections.');
+      throw StateError('Your account changed. Reopen MCP.');
     }
   }
 
@@ -130,7 +130,7 @@ class McpRepository {
       if (data is Map && data['error'] is String) {
         return data['error'] as String;
       }
-      return 'Could not reach your AI connections. Please try again.';
+      return 'Could not reach MCP. Please try again.';
     }
     if (error is StateError) return error.message.toString();
     return 'Could not complete this request. Please try again.';

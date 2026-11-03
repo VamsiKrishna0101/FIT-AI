@@ -13,6 +13,26 @@ void run(LiquidSurfaceSimulation surface, double seconds,
 }
 
 void main() {
+  test('Legacy 41-sample buffers stay safe after a resolution change', () {
+    final surface = LiquidSurfaceSimulation(seed: .7, resolution: 41);
+    expect(LiquidSurfaceSimulation.sampleCount, 65);
+    expect(surface.resolution, 41);
+    surface.disturb(position: .9, velocity: .2);
+    run(surface, 2, ambient: true);
+    expect(surface.heights, hasLength(41));
+    expect(surface.heights.every((height) => height.isFinite), isTrue);
+    expect(peak(surface), lessThan(.09));
+    surface.reset();
+    expect(surface.heights, everyElement(0.0));
+    surface.disturb(position: .1, velocity: .2);
+    run(surface, .2);
+    expect(peak(surface), greaterThan(0));
+    surface.advance(1 / 60, fill: 0);
+    expect(surface.heights, everyElement(0.0));
+    surface.advance(1 / 60, fill: 1);
+    expect(surface.heights, everyElement(0.0));
+  });
+
   test('A disturbance adds momentum without teleporting the surface', () {
     final surface = LiquidSurfaceSimulation();
     surface.disturb(position: .5, velocity: .18);
@@ -49,14 +69,31 @@ void main() {
     }
   });
 
-  test('Independent meters have visible, different rolling waves', () {
+  test('Independent meters have visible, distinct sea swells', () {
     final protein = LiquidSurfaceSimulation(seed: .7);
     final carbs = LiquidSurfaceSimulation(seed: 2.9);
     run(protein, 3, ambient: true);
     run(carbs, 3, ambient: true);
-    expect(peak(protein), greaterThan(.008));
-    expect(peak(protein), lessThan(.055));
+    expect(peak(protein), greaterThan(.03));
+    expect(peak(protein), lessThanOrEqualTo(.085001));
     expect(protein.heights, isNot(orderedEquals(carbs.heights)));
+  });
+
+  test('Sea crests travel across the surface and wind eases back to calm', () {
+    final surface = LiquidSurfaceSimulation(seed: .7);
+    run(surface, 2, ambient: true);
+    final before = surface.heights;
+    int crest(List<double> heights) =>
+        heights.indexOf(heights.reduce(math.min));
+    expect(before.reduce(math.max) - before.reduce(math.min), greaterThan(.09),
+        reason: 'Sea swells must have visible crests and troughs');
+    run(surface, .4, ambient: true);
+    expect(crest(surface.heights) - crest(before), greaterThan(2),
+        reason: 'A crest should travel instead of rocking in place');
+    expect(surface.heights.reduce((a, b) => a + b) / before.length,
+        closeTo(0, .000001));
+    run(surface, 6);
+    expect(peak(surface), lessThan(.00003));
   });
 
   test('Repeated disturbances stay bounded at shallow and nearly full levels',

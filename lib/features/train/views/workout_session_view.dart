@@ -653,6 +653,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
 
   @override
   Widget build(BuildContext context) {
+    final summary = _day.finished && !_editingFinished;
     final item = _day.items.isEmpty
         ? null
         : _day.items[_index.clamp(0, _day.items.length - 1)];
@@ -662,52 +663,70 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
       appBar: AppBar(
         backgroundColor: DSColors.bg,
         surfaceTintColor: Colors.transparent,
-        title: Text(_day.name == 'Workout' ? copy('Your workout') : _day.name,
-            style: const TextStyle(
-                fontSize: 14,
+        centerTitle: summary ? true : null,
+        leading: summary && Navigator.of(context).canPop()
+            ? IconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(CupertinoIcons.chevron_left,
+                    size: 20, color: DSColors.silver))
+            : null,
+        title: Text(
+            summary
+                ? copy('Workout summary')
+                : _day.name == 'Workout'
+                    ? copy('Your workout')
+                    : _day.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: summary ? 17 : 14,
                 fontWeight: FontWeight.w500,
                 color: DSColors.silver)),
         actions: [
           // Live Biometric Heart Rate pill from Apple Watch (if telemetry available)
-          ValueListenableBuilder<WatchBiometrics?>(
-            valueListenable: WatchSyncService.shared.biometricsNotifier,
-            builder: (_, bio, __) {
-              if (bio == null || bio.heartRate <= 0) {
-                return const SizedBox.shrink();
-              }
-              final zoneColor = switch (bio.hrZone) {
-                1 => DSColors.silver,
-                2 => DSColors.blue,
-                3 => DSColors.accentLime,
-                4 => DSColors.gold,
-                _ => DSColors.heat,
-              };
-              return Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: DSColors.bgElevated,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: zoneColor.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(CupertinoIcons.heart_fill, size: 12, color: zoneColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${bio.heartRate}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: zoneColor,
+          if (!_day.finished)
+            ValueListenableBuilder<WatchBiometrics?>(
+              valueListenable: WatchSyncService.shared.biometricsNotifier,
+              builder: (_, bio, __) {
+                if (bio == null || bio.heartRate <= 0) {
+                  return const SizedBox.shrink();
+                }
+                final zoneColor = switch (bio.hrZone) {
+                  1 => DSColors.silver,
+                  2 => DSColors.blue,
+                  3 => DSColors.accentLime,
+                  4 => DSColors.gold,
+                  _ => DSColors.heat,
+                };
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: DSColors.bgElevated,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: zoneColor.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(CupertinoIcons.heart_fill,
+                          size: 12, color: zoneColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${bio.heartRate}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: zoneColor,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
           if (!_day.finished)
             Padding(

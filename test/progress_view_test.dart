@@ -1,6 +1,8 @@
 import 'package:setcraft/features/progress/components/progress_visual_cards.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'helpers/calendar_controls.dart';
+import 'package:setcraft/core/components/app_date_filter.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -13,7 +15,6 @@ import 'package:setcraft/features/progress/components/exercise_progress_content.
 import 'package:setcraft/features/progress/components/progress_chart.dart';
 import 'package:setcraft/features/progress/components/progress_activity.dart';
 import 'package:setcraft/features/progress/components/progress_surface.dart';
-import 'package:setcraft/features/progress/components/progress_weekly_bars.dart';
 import 'package:setcraft/features/progress/components/progress_date_filter.dart';
 import 'package:setcraft/features/progress/components/wellness_progress_content.dart';
 import 'package:setcraft/features/progress/models/progress_models.dart';
@@ -106,7 +107,8 @@ void main() {
         find.byKey(const ValueKey('progress-view-all-history')), 200,
         scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('progress-view-all-history')), findsOneWidget);
+    expect(find.byKey(const ValueKey('progress-view-all-history')),
+        findsOneWidget);
     expect(find.text('Recovery'), findsNothing);
     expect(find.byType(ProgressSetupRow), findsNothing);
     await capture(tester, 'progress-setup-redesign');
@@ -346,11 +348,9 @@ void main() {
     await tester.pumpWidget(page(Scaffold(
         body: ProgressDateFilter(
             period: '4w', onChanged: (value, _) => period = value))));
-    await tester.tap(find.text('4 weeks'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Custom range').last);
-    await tester.pumpAndSettle();
-    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+    await selectCalendarOption(
+        tester, 'progress-period-dropdown', 'Custom range');
+    expect(find.byType(AppCalendar), findsOneWidget);
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
     expect(period, isNull);

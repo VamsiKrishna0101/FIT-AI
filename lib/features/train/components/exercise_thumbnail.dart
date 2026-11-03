@@ -9,16 +9,23 @@ import '../models/workout_exercise_models.dart';
 class ExerciseThumbnail extends StatelessWidget {
   final WorkoutExerciseModel exercise;
   final double size;
-  const ExerciseThumbnail({super.key, required this.exercise, this.size = 62});
+  final bool showPlaceholderIcon;
+  const ExerciseThumbnail(
+      {super.key,
+      required this.exercise,
+      this.size = 62,
+      this.showPlaceholderIcon = true});
 
   @override
   Widget build(BuildContext context) {
     final url = exercise.thumbnailUrl?.trim() ?? '';
-    const fallback = ColoredBox(
-        color: Color(0xFF2A2A2A),
-        child: Center(
-            child: Icon(CupertinoIcons.person,
-                color: Color(0xFF969696), size: 26)));
+    final fallback = ColoredBox(
+        color: const Color(0xFF2A2A2A),
+        child: showPlaceholderIcon
+            ? const Center(
+                child: Icon(CupertinoIcons.person,
+                    color: Color(0xFF969696), size: 26))
+            : null);
     return RepaintBoundary(
         child: ClipRRect(
             borderRadius: BorderRadius.circular(14),

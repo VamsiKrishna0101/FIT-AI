@@ -1,5 +1,135 @@
 const _languages = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const _copy = <String, List<String>>{
+  'Why this plan': [
+    'Warum dieser Plan',
+    'Pourquoi ce programme',
+    'Varför detta program',
+    'Hvorfor denne planen',
+    'Hvorfor denne plan',
+    'Waarom dit plan',
+    'Por qué este plan',
+    'Perché questo piano'
+  ],
+  '{count} steps': [
+    '{count} Schritte',
+    '{count} étapes',
+    '{count} steg',
+    '{count} trinn',
+    '{count} trin',
+    '{count} stappen',
+    '{count} pasos',
+    '{count} passaggi'
+  ],
+  'Before you begin': [
+    'Bevor du beginnst',
+    'Avant de commencer',
+    'Innan du börjar',
+    'Før du begynner',
+    'Før du begynder',
+    'Voordat je begint',
+    'Antes de empezar',
+    'Prima di iniziare'
+  ],
+  '{count} workout': [
+    '{count} Workout',
+    '{count} séance',
+    '{count} pass',
+    '{count} økt',
+    '{count} træningspas',
+    '{count} training',
+    '{count} entrenamiento',
+    '{count} allenamento'
+  ],
+  '{count} workouts': [
+    '{count} Workouts',
+    '{count} séances',
+    '{count} pass',
+    '{count} økter',
+    '{count} træningspas',
+    '{count} trainingen',
+    '{count} entrenamientos',
+    '{count} allenamenti'
+  ],
+  '{count} rest day': [
+    '{count} Ruhetag',
+    '{count} jour de repos',
+    '{count} vilodag',
+    '{count} hviledag',
+    '{count} hviledag',
+    '{count} rustdag',
+    '{count} día de descanso',
+    '{count} giorno di riposo'
+  ],
+  '{count} rest days': [
+    '{count} Ruhetage',
+    '{count} jours de repos',
+    '{count} vilodagar',
+    '{count} hviledager',
+    '{count} hviledage',
+    '{count} rustdagen',
+    '{count} días de descanso',
+    '{count} giorni di riposo'
+  ],
+  '{completed} of {total} complete': [
+    '{completed} von {total} abgeschlossen',
+    '{completed} sur {total} terminées',
+    '{completed} av {total} klara',
+    '{completed} av {total} fullført',
+    '{completed} af {total} fuldført',
+    '{completed} van {total} voltooid',
+    '{completed} de {total} completados',
+    '{completed} di {total} completati'
+  ],
+  'Active plan': [
+    'Aktiver Plan',
+    'Programme actif',
+    'Aktivt program',
+    'Aktiv plan',
+    'Aktiv plan',
+    'Actief plan',
+    'Plan activo',
+    'Piano attivo'
+  ],
+  'Archived plan': [
+    'Archivierter Plan',
+    'Programme archivé',
+    'Arkiverat program',
+    'Arkivert plan',
+    'Arkiveret plan',
+    'Gearchiveerd plan',
+    'Plan archivado',
+    'Piano archiviato'
+  ],
+  'Saved plan': [
+    'Gespeicherter Plan',
+    'Programme enregistré',
+    'Sparat program',
+    'Lagret plan',
+    'Gemt plan',
+    'Opgeslagen plan',
+    'Plan guardado',
+    'Piano salvato'
+  ],
+  'About this plan': [
+    'Über diesen Plan',
+    'À propos de ce programme',
+    'Om detta program',
+    'Om denne planen',
+    'Om denne plan',
+    'Over dit plan',
+    'Acerca de este plan',
+    'Informazioni sul piano'
+  ],
+  'Saved to My workouts': [
+    'In Meine Workouts gespeichert',
+    'Enregistré dans Mes séances',
+    'Sparat i Mina pass',
+    'Lagret i Mine økter',
+    'Gemt i Mine træningspas',
+    'Opgeslagen in Mijn trainingen',
+    'Guardado en Mis entrenamientos',
+    'Salvato in I miei allenamenti'
+  ],
   'Not started': [
     'Nicht begonnen',
     'Non commencé',

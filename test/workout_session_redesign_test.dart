@@ -84,12 +84,13 @@ class _Adapter implements HttpClientAdapter {
       });
     } else if (o.method != 'GET') {
       writes.add(o);
-      if (rejectSave && o.method == 'PUT')
+      if (rejectSave && o.method == 'PUT') {
         return ResponseBody.fromString(
             '{"error":"Not saved yet. Tap save to retry."}', 503,
             headers: {
               Headers.contentTypeHeader: ['application/json']
             });
+      }
       final item = (day['items'] as List)
           .cast<Map>()
           .where((item) => o.path.contains('/items/${item['id']}/'))
@@ -414,6 +415,53 @@ void main() {
     action['data'] = {'setNumber': 1, 'reps': 10, 'weight': null};
     expect(store.project(sample(bodyweight: true), [action]).loggedReps, 10);
   });
+  testWidgets(
+      'Summary expands actual sets, preserves missing loads, and separates skipped exercises',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final day = sample(finished: true, two: true);
+    final items = day['items'] as List;
+    items.first['setLogs'] = [
+      {'setNumber': 3, 'reps': 6, 'weight': null},
+      {'setNumber': 1, 'reps': 10, 'weight': 20},
+      {'setNumber': 2, 'reps': 8, 'weight': 22.5},
+    ];
+    items.last['status'] = 'SKIPPED';
+    await tester.pumpWidget(screen(day));
+    await settle(tester);
+    expect(find.text('380 kg'), findsOneWidget);
+    expect(find.text('24'), findsOneWidget);
+    expect(
+        find.text(
+            'Some sets have no recorded load. Edit your sets to complete the volume.'),
+        findsOneWidget);
+    final first = find.byType(ExpansionTile).first;
+    await tester.ensureVisible(first);
+    await tester.pumpAndSettle();
+    await tester.tap(first);
+    await settle(tester);
+    expect(find.text('20 kg'), findsOneWidget);
+    expect(find.text('22.5 kg'), findsOneWidget);
+    expect(find.text('—'), findsOneWidget);
+    expect(tester.getTopLeft(find.text('10')).dy,
+        lessThan(tester.getTopLeft(find.text('8')).dy));
+    expect(tester.getTopLeft(find.text('8')).dy,
+        lessThan(tester.getTopLeft(find.text('6')).dy));
+    await capture(tester, 'workout-summary-set-details');
+    final skipped = find.byType(ExpansionTile).last;
+    await tester.ensureVisible(skipped);
+    await tester.pumpAndSettle();
+    await tester.tap(skipped);
+    await settle(tester);
+    expect(find.text('Skipped'), findsOneWidget);
+    expect(find.text('No sets logged'), findsOneWidget);
+    expect(adapter.writes, isEmpty);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   for (final summary in [false, true]) {
     for (final large in [false, true]) {
       testWidgets(

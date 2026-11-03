@@ -1,5 +1,35 @@
 const _languages = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const _copy = <String, List<String>>{
+  "Time range": [
+    "Zeitraum",
+    "Période",
+    "Tidsperiod",
+    "Tidsperiode",
+    "Tidsperiode",
+    "Periode",
+    "Período",
+    "Periodo"
+  ],
+  "Choose dates": [
+    "Datum auswählen",
+    "Choisir des dates",
+    "Välj datum",
+    "Velg datoer",
+    "Vælg datoer",
+    "Kies datums",
+    "Elegir fechas",
+    "Scegli le date"
+  ],
+  "This month": [
+    "Dieser Monat",
+    "Ce mois-ci",
+    "Denna månad",
+    "Denne måneden",
+    "Denne måned",
+    "Deze maand",
+    "Este mes",
+    "Questo mese"
+  ],
   "Month": ["Monat", "Mois", "Månad", "Måned", "Måned", "Maand", "Mes", "Mese"],
   "Year": ["Jahr", "Année", "År", "År", "År", "Jaar", "Año", "Anno"],
   "Select a day to choose its week.": [

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +10,16 @@ class WatchSyncService extends ChangeNotifier {
     _loadPreferences();
   }
   static final WatchSyncService shared = WatchSyncService._();
+
+  bool get isSupported =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  String get statusLabel {
+    if (!isSupported) return 'Unavailable';
+    if (!_isPaired) return 'Not paired';
+    if (!_isAppInstalled) return 'Install watch app';
+    return _isReachable ? 'Available' : 'Offline';
+  }
 
   static const MethodChannel _channel = MethodChannel('setcraft/watch');
 
@@ -72,16 +81,17 @@ class WatchSyncService extends ChangeNotifier {
   }
 
   void _initChannel() {
-    if (!kIsWeb && Platform.isIOS) {
+    if (isSupported) {
       _channel.setMethodCallHandler(_handleNativeCall);
       checkWatchState();
     }
   }
 
   Future<Map<String, dynamic>> checkWatchState() async {
-    if (!kIsWeb && Platform.isIOS) {
+    if (isSupported) {
       try {
-        final res = await _channel.invokeMapMethod<String, dynamic>('checkWatchState');
+        final res =
+            await _channel.invokeMapMethod<String, dynamic>('checkWatchState');
         if (res != null) {
           _isPaired = res['isPaired'] == true;
           _isAppInstalled = res['isAppInstalled'] == true;
@@ -91,6 +101,10 @@ class WatchSyncService extends ChangeNotifier {
         }
       } catch (_) {}
     }
+    if (_isReachable) {
+      _isReachable = false;
+      notifyListeners();
+    }
     return {
       'isPaired': _isPaired,
       'isAppInstalled': _isAppInstalled,
@@ -99,9 +113,9 @@ class WatchSyncService extends ChangeNotifier {
   }
 
   /// Sends wake/launch signal to Apple Watch via HealthKit
-  Future<bool> startWatchApp() async {
-    if (!_autoLaunchWatch) return false;
-    if (!kIsWeb && Platform.isIOS) {
+  Future<bool> startWatchApp({bool manual = false}) async {
+    if (!_autoLaunchWatch && !manual) return false;
+    if (isSupported) {
       try {
         final success = await _channel.invokeMethod<bool>('startWatchApp');
         return success == true;
@@ -114,7 +128,7 @@ class WatchSyncService extends ChangeNotifier {
 
   /// Deep links to iOS Apple Watch app if installation is needed
   Future<bool> openWatchSettings() async {
-    if (!kIsWeb && Platform.isIOS) {
+    if (isSupported) {
       try {
         final success = await _channel.invokeMethod<bool>('openWatchSettings');
         return success == true;
@@ -127,7 +141,9 @@ class WatchSyncService extends ChangeNotifier {
 
   Future<dynamic> _handleNativeCall(MethodCall call) async {
     try {
-      final args = call.arguments is Map ? Map<String, dynamic>.from(call.arguments as Map) : <String, dynamic>{};
+      final args = call.arguments is Map
+          ? Map<String, dynamic>.from(call.arguments as Map)
+          : <String, dynamic>{};
       switch (call.method) {
         case 'onLogSet':
           final action = WatchLogSetAction(
@@ -181,7 +197,7 @@ class WatchSyncService extends ChangeNotifier {
     _latestSnapshot = snapshot;
     notifyListeners();
 
-    if (!kIsWeb && Platform.isIOS) {
+    if (isSupported) {
       try {
         await _channel.invokeMethod('updateWorkoutState', snapshot.toJson());
       } catch (e) {
@@ -195,7 +211,7 @@ class WatchSyncService extends ChangeNotifier {
     _latestRest = rest;
     notifyListeners();
 
-    if (!kIsWeb && Platform.isIOS) {
+    if (isSupported) {
       try {
         await _channel.invokeMethod('updateRestState', rest?.toJson());
       } catch (e) {
@@ -220,9 +236,8 @@ class WatchSyncService extends ChangeNotifier {
     biometricsNotifier.value = null;
     notifyListeners();
 
-    if (!kIsWeb && Platform.isIOS) {
+    if (isSupported) {
       _channel.invokeMethod('clearSession').catchError((_) {});
     }
   }
 }
-

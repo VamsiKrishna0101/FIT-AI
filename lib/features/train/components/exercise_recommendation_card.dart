@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/fitness_theme.dart';
+import '../models/workout_exercise_models.dart';
+import 'exercise_thumbnail.dart';
 
 /// The same prescription follows an exercise from Body into the weekly plan.
 /// Keep the working targets visible; reveal coaching only when requested.
@@ -9,11 +11,20 @@ class ExerciseRecommendationCard extends StatelessWidget {
   final Map<String, dynamic> exercise;
   final int? number;
   final VoidCallback? onOpenExercise;
+  final bool embedded, showIcons;
+  final WorkoutExerciseModel? previewExercise;
+  final VoidCallback? onTap;
+  final String? subtitleOverride;
   const ExerciseRecommendationCard({
     super.key,
     required this.exercise,
     this.number,
     this.onOpenExercise,
+    this.embedded = false,
+    this.showIcons = true,
+    this.previewExercise,
+    this.onTap,
+    this.subtitleOverride,
   });
 
   String _number(num value) =>
@@ -62,110 +73,170 @@ class ExerciseRecommendationCard extends StatelessWidget {
             : _reps(exercise);
     final reason = (exercise['reason'] as String? ?? '').trim();
     final progression = (exercise['progression'] as String? ?? '').trim();
-    return FitnessCard(
-      padding: EdgeInsets.zero,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          key: PageStorageKey(
-              'prescription-${exercise['date'] ?? ''}-${exercise['itemId'] ?? exercise['exerciseId']}-${number ?? 0}'),
-          shape: const Border(),
-          collapsedShape: const Border(),
-          iconColor: FitnessTheme.muted,
-          collapsedIconColor: FitnessTheme.muted,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-          leading: number == null
-              ? null
-              : Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF272A2E),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text('$number'.padLeft(2, '0'),
-                      style: const TextStyle(
-                          fontSize: 10, color: FitnessTheme.muted)),
-                ),
-          title: Text(
-              '${exercise['displayName'] ?? exercise['name'] ?? 'Exercise'}',
-              style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w600, height: 1.4)),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 7),
-            child: Wrap(spacing: 10, runSpacing: 4, children: [
-              FitnessText('{sets} \u00d7 {reps}',
-                  values: {'sets': count, 'reps': reps},
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-              FitnessText(load,
-                  style: const TextStyle(
-                      fontSize: 12, color: FitnessTheme.silver)),
-            ]),
-          ),
-          children: [
-            const Divider(height: 1, color: FitnessTheme.line),
-            const SizedBox(height: 14),
-            if (sets.isNotEmpty) ...[
-              _setRow(context, 'Set', 'Reps', 'Load', heading: true),
-              const SizedBox(height: 4),
-              for (var i = 0; i < sets.length; i++)
-                _setRow(context, '${sets[i]['setNumber'] ?? i + 1}',
-                    _reps(sets[i]), _load(sets[i]['weightKg'] as num?)),
-              const SizedBox(height: 10),
+    if (onTap != null) {
+      final row = InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(children: [
+            if (previewExercise != null) ...[
+              ExerciseThumbnail(
+                  exercise: previewExercise!,
+                  size: 52,
+                  showPlaceholderIcon: false),
+              const SizedBox(width: 12),
             ],
-            Wrap(spacing: 14, runSpacing: 6, children: [
-              if (exercise['restSeconds'] case final num rest)
-                _cue(context, CupertinoIcons.timer, '${_number(rest)} s rest'),
-              if (exercise['targetRpe'] case final num rpe)
-                _cue(context, CupertinoIcons.speedometer,
-                    'Effort ${_number(rpe)}/10'),
-            ]),
-            if (exercise['weightBasis'] == 'estimated_start') ...[
-              const SizedBox(height: 10),
-              const FitnessText(
-                  'Starting estimate \u00b7 adjust to your effort',
-                  style: TextStyle(fontSize: 11, color: FitnessTheme.muted)),
-            ],
-            if (reason.isNotEmpty || progression.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF121416),
-                  borderRadius: BorderRadius.circular(14),
-                ),
+            Expanded(
                 child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (reason.isNotEmpty) _coaching('Why this fits', reason),
-                      if (reason.isNotEmpty && progression.isNotEmpty)
-                        const SizedBox(height: 14),
-                      if (progression.isNotEmpty)
-                        _coaching('Next step', progression),
+                  Text(
+                      previewExercise?.displayName ??
+                          '${exercise['displayName'] ?? exercise['name'] ?? 'Exercise'}',
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.35)),
+                  const SizedBox(height: 5),
+                  if (subtitleOverride != null)
+                    FitnessText(subtitleOverride!,
+                        style: const TextStyle(
+                            fontSize: 11,
+                            color: FitnessTheme.muted,
+                            height: 1.4))
+                  else
+                    Wrap(spacing: 10, runSpacing: 4, children: [
+                      FitnessText('{sets} × {reps}',
+                          values: {'sets': count, 'reps': reps},
+                          style: const TextStyle(
+                              fontSize: 11, color: FitnessTheme.muted)),
+                      FitnessText(load,
+                          style: const TextStyle(
+                              fontSize: 11, color: FitnessTheme.silver)),
                     ]),
-              ),
-            ],
-            if (onOpenExercise != null) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  onPressed: onOpenExercise,
-                  icon: const Icon(CupertinoIcons.play_circle, size: 17),
-                  label: const FitnessText('Form & history',
-                      style: TextStyle(fontSize: 12)),
-                  style: TextButton.styleFrom(
-                      foregroundColor: FitnessTheme.silver),
-                ),
-              ),
-            ],
-          ],
+                ])),
+            const SizedBox(width: 10),
+            const Icon(CupertinoIcons.chevron_right,
+                size: 12, color: FitnessTheme.muted),
+          ]),
         ),
+      );
+      return embedded ? row : FitnessCard(padding: EdgeInsets.zero, child: row);
+    }
+    final content = Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        key: PageStorageKey(
+            'prescription-${exercise['date'] ?? ''}-${exercise['itemId'] ?? exercise['exerciseId']}-${number ?? 0}'),
+        shape: const Border(),
+        collapsedShape: const Border(),
+        iconColor: FitnessTheme.muted,
+        collapsedIconColor: FitnessTheme.muted,
+        tilePadding: EdgeInsets.symmetric(
+            horizontal: embedded ? 14 : 16, vertical: embedded ? 4 : 9),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+        leading: number == null
+            ? null
+            : embedded
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text('$number'.padLeft(2, '0'),
+                        style: const TextStyle(
+                            fontSize: 11, color: FitnessTheme.muted)))
+                : Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF272A2E),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text('$number'.padLeft(2, '0'),
+                        style: const TextStyle(
+                            fontSize: 10, color: FitnessTheme.muted)),
+                  ),
+        title: Text(
+            '${exercise['displayName'] ?? exercise['name'] ?? 'Exercise'}',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: embedded ? FontWeight.w500 : FontWeight.w600,
+                height: 1.4)),
+        subtitle: Padding(
+          padding: EdgeInsets.only(top: embedded ? 4 : 7),
+          child: Wrap(spacing: 10, runSpacing: 4, children: [
+            FitnessText('{sets} \u00d7 {reps}',
+                values: {'sets': count, 'reps': reps},
+                style:
+                    const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+            FitnessText(load,
+                style:
+                    const TextStyle(fontSize: 12, color: FitnessTheme.silver)),
+          ]),
+        ),
+        children: [
+          const Divider(height: 1, color: FitnessTheme.line),
+          const SizedBox(height: 14),
+          if (sets.isNotEmpty) ...[
+            _setRow(context, 'Set', 'Reps', 'Load', heading: true),
+            const SizedBox(height: 4),
+            for (var i = 0; i < sets.length; i++)
+              _setRow(context, '${sets[i]['setNumber'] ?? i + 1}',
+                  _reps(sets[i]), _load(sets[i]['weightKg'] as num?)),
+            const SizedBox(height: 10),
+          ],
+          Wrap(spacing: 14, runSpacing: 6, children: [
+            if (exercise['restSeconds'] case final num rest)
+              _cue(context, CupertinoIcons.timer, '${_number(rest)} s rest'),
+            if (exercise['targetRpe'] case final num rpe)
+              _cue(context, CupertinoIcons.speedometer,
+                  'Effort ${_number(rpe)}/10'),
+          ]),
+          if (exercise['weightBasis'] == 'estimated_start') ...[
+            const SizedBox(height: 10),
+            const FitnessText('Starting estimate \u00b7 adjust to your effort',
+                style: TextStyle(fontSize: 11, color: FitnessTheme.muted)),
+          ],
+          if (reason.isNotEmpty || progression.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: embedded
+                    ? const Color(0xFF2A2A2A)
+                    : const Color(0xFF121416),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (reason.isNotEmpty) _coaching('Why this fits', reason),
+                    if (reason.isNotEmpty && progression.isNotEmpty)
+                      const SizedBox(height: 14),
+                    if (progression.isNotEmpty)
+                      _coaching('Next step', progression),
+                  ]),
+            ),
+          ],
+          if (onOpenExercise != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: onOpenExercise,
+                icon: const Icon(CupertinoIcons.play_circle, size: 17),
+                label: const FitnessText('Form & history',
+                    style: TextStyle(fontSize: 12)),
+                style:
+                    TextButton.styleFrom(foregroundColor: FitnessTheme.silver),
+              ),
+            ),
+          ],
+        ],
       ),
     );
+    return embedded
+        ? content
+        : FitnessCard(padding: EdgeInsets.zero, child: content);
   }
 
   Widget _setRow(BuildContext context, String set, String reps, String load,
@@ -189,8 +260,10 @@ class ExerciseRecommendationCard extends StatelessWidget {
 
   Widget _cue(BuildContext context, IconData icon, String text) =>
       Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 13, color: FitnessTheme.muted),
-        const SizedBox(width: 5),
+        if (showIcons) ...[
+          Icon(icon, size: 13, color: FitnessTheme.muted),
+          const SizedBox(width: 5),
+        ],
         FitnessText(text,
             style: const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
       ]);

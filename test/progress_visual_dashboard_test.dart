@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'helpers/calendar_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -201,7 +202,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('progress-calendar-button')));
     await tester.pumpAndSettle();
     expect(find.byType(BodyCalendar), findsOneWidget);
-    await tester.tap(find.text('Multiple days'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'Multiple days');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('body-calendar-2026-10-26')));
     await tester.tap(find.byKey(const ValueKey('body-calendar-2026-10-30')));

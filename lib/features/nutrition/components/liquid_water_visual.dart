@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/motion/device_tilt.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'liquid_pool_painter.dart';
 import 'liquid_surface_simulation.dart';
+import 'liquid_water_optics.dart';
 
 /// Hosts rendering still previews can suppress the ambient loop independently
 /// of recorded-value transitions and sensor-driven motion.
@@ -61,6 +63,7 @@ class _LiquidWaterVisualState extends State<LiquidWaterVisual>
   double _target = 0, _targetDepth = 0;
   bool _active = false;
   bool _ambient = false;
+  ui.FragmentShader? _optics;
 
   @override
   void initState() {
@@ -69,6 +72,23 @@ class _LiquidWaterVisualState extends State<LiquidWaterVisual>
     _foreground = WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _phase.addListener(_advanceSurface);
+    _optics = LiquidWaterOptics.create();
+    if (_optics == null) _loadOptics();
+  }
+
+  Future<void> _loadOptics() async {
+    final program = await LiquidWaterOptics.load();
+    if (!mounted || program == null) return;
+    setState(() => _optics = program.fragmentShader());
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    // Development reloads retain the old State, including simulation buffers.
+    // Recreate the grid before the rebuilt meter paints with the new code.
+    _surface = LiquidSurfaceSimulation(seed: widget.phaseOffset);
+    _lastSurfaceTime = null;
   }
 
   @override
@@ -236,7 +256,11 @@ class _LiquidWaterVisualState extends State<LiquidWaterVisual>
     if (previous == null || elapsed < previous) return;
     final seconds = (elapsed - previous).inMicroseconds / 1000000;
     _coastRemaining -= seconds;
-    _surface.advance(seconds, fill: _level.value, ambient: _ambient);
+    // Simulate the vessel's air gap so completed meters retain sea waves.
+    _surface.advance(seconds,
+        fill: liquidVesselFill(_level.value, perspective: widget.perspective),
+        aspectRatio: widget.size.width / widget.size.height,
+        ambient: _ambient);
     if (!_ambient &&
         _coastRemaining <= 0 &&
         !_angle.isAnimating &&
@@ -282,6 +306,7 @@ class _LiquidWaterVisualState extends State<LiquidWaterVisual>
     _routeAnimation?.removeListener(_measureVisibility);
     _coverAnimation?.removeListener(_measureVisibility);
     _motion?.cancel();
+    _optics?.dispose();
     _level.dispose();
     _angle.dispose();
     _depth.dispose();
@@ -323,7 +348,8 @@ class _LiquidWaterVisualState extends State<LiquidWaterVisual>
                                 fraction: _level.value,
                                 tilt: _angle.value,
                                 depthTilt: _depth.value,
-                                wave: _phase.value,
+                                wave: _phase.value + widget.phaseOffset,
+                                optics: _optics,
                                 surface: _surface.heights,
                                 settle: _ripple.value.abs() > .00001 ? 0 : 1,
                                 energy: _ripple.value.clamp(0.0, 1.0),
@@ -337,6 +363,7 @@ class LiquidWaterPainter extends CustomPainter {
   final bool perspective;
   final Color tint;
   final List<double>? surface;
+  final ui.FragmentShader? optics;
   const LiquidWaterPainter(
       {required this.fraction,
       this.tilt = 0,
@@ -346,6 +373,7 @@ class LiquidWaterPainter extends CustomPainter {
       this.wave = 0,
       this.settle = 1,
       this.energy = .4,
+      this.optics,
       this.surface});
   @override
   void paint(Canvas canvas, Size size) {
@@ -358,6 +386,7 @@ class LiquidWaterPainter extends CustomPainter {
         energy: energy,
         tint: tint,
         surface: surface,
+        optics: optics,
         perspective: perspective);
   }
 
@@ -371,5 +400,11 @@ class LiquidWaterPainter extends CustomPainter {
       old.wave != wave ||
       old.settle != settle ||
       old.energy != energy ||
+      old.optics != optics ||
       old.surface != surface;
+
+  // The canvas is decorative. Parent labels announce the logged amounts;
+  // moving waves must not dirty the accessibility tree on every frame.
+  @override
+  bool shouldRebuildSemantics(LiquidWaterPainter oldDelegate) => false;
 }

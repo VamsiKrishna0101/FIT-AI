@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:setcraft/core/theme/fitness_theme.dart';
+import 'package:setcraft/features/train/models/workout_exercise_models.dart';
 import 'package:setcraft/features/planner/views/widgets/weekly_plan_schedule.dart';
 
 final _payload = <String, dynamic>{
@@ -23,6 +24,7 @@ final _payload = <String, dynamic>{
             ? []
             : [
                 {
+                  'exerciseId': day == 2 ? 'row' : 'press',
                   'name': day == 2 ? 'Cable row' : 'Dumbbell floor press',
                   'sets': 3,
                   'repsMin': 10,
@@ -99,34 +101,44 @@ Widget _app({double scale = 1, bool reduced = false, Key? capture}) =>
                         style: TextStyle(
                             fontSize: 24, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 20),
-                    WeeklyPlanSchedule(payload: _payload, showOverview: false),
+                    WeeklyPlanSchedule(
+                        payload: _payload,
+                        showOverview: false,
+                        loadExercise: (id) async {
+                          final exercise = (_payload['workouts'] as List)
+                              .expand((day) => day['exercises'] as List)
+                              .cast<Map>()
+                              .firstWhere((e) => e['exerciseId'] == id);
+                          return WorkoutExerciseModel.fromJson({
+                            'id': id,
+                            'name': exercise['displayName'] ?? exercise['name'],
+                          });
+                        }),
                   ]),
             )),
       )),
     );
 
 void main() {
-  testWidgets('Workout cards reveal once without replaying on refresh',
+  testWidgets('Refreshing the planner preserves the selected day',
       (tester) async {
     await tester.pumpWidget(_app());
-    final card = find.byKey(const ValueKey('plan-card-reveal-0'));
-    expect(
-        tester.widget<SlideTransition>(card).position.value.dy, greaterThan(0));
     await tester.pumpAndSettle();
-    expect(tester.widget<SlideTransition>(card).position.value, Offset.zero);
+    await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-14')));
+    await tester.pumpAndSettle();
+    expect(find.text('Cable row'), findsOneWidget);
     await tester.pumpWidget(_app());
-    expect(tester.widget<SlideTransition>(card).position.value, Offset.zero);
+    await tester.pumpAndSettle();
+    expect(find.text('Cable row'), findsOneWidget);
+    expect(find.text('Dumbbell floor press'), findsNothing);
   });
-  testWidgets('Reduced motion shows workout cards in their final position',
+  testWidgets('Reduced motion leaves the day controls immediately usable',
       (tester) async {
     await tester.pumpWidget(_app(reduced: true));
-    expect(
-        tester
-            .widget<SlideTransition>(
-                find.byKey(const ValueKey('plan-card-reveal-0')))
-            .position
-            .value,
-        Offset.zero);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-13')));
+    await tester.pumpAndSettle();
+    expect(find.text('Rest & recharge'), findsOneWidget);
     expect(tester.hasRunningAnimations, isFalse);
   });
   testWidgets('Localized exercise names display without changing set targets',
@@ -139,9 +151,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Brystpres med håndvægte'), findsOneWidget);
     expect(find.text('Dumbbell floor press'), findsNothing);
-    await tester.tap(find.text('Brystpres med håndvægte'));
-    await tester.pumpAndSettle();
-    expect(find.text('10 reps · 12 kg per hand'), findsOneWidget);
+    expect(find.text('12–14 kg / hand'), findsOneWidget);
     expect(exercise['name'], 'Dumbbell floor press');
   });
 
@@ -163,18 +173,12 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     expect(find.text('Dumbbell floor press'), findsOneWidget);
-    expect(find.text('10 reps · 12 kg per hand'), findsNothing);
-    await tester.tap(find.text('Dumbbell floor press'));
-    await tester.pumpAndSettle();
-    expect(find.text('10 reps · 12 kg per hand'), findsOneWidget);
-    expect(find.text('10 reps · 14 kg per hand'), findsNWidgets(2));
-    expect(find.text('A familiar movement from your previous logs.'),
-        findsOneWidget);
+    expect(find.text('12–14 kg / hand'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-13')));
     await tester.pumpAndSettle();
-    expect(find.text('Recovery day'), findsOneWidget);
+    expect(find.text('Rest & recharge'), findsOneWidget);
     expect(find.text('Dumbbell floor press'), findsNothing);
-    await tester.tap(find.text('Food'));
+    await tester.tap(find.text('Nutrition'));
     await tester.pumpAndSettle();
     expect(find.text('Greek yogurt · 80 g'), findsOneWidget);
     expect(find.text('2200 kcal · 131 g protein'), findsOneWidget);
@@ -182,7 +186,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Oats · 80 g'), findsOneWidget);
     expect(find.text('2300 kcal · 132 g protein'), findsOneWidget);
-    await tester.tap(find.text('Workout'));
+    await tester.tap(find.text('Training'));
     await tester.pumpAndSettle();
     expect(find.text('Cable row'), findsOneWidget);
     expect(find.text('Back and biceps'), findsOneWidget);
@@ -197,14 +201,7 @@ void main() {
     await tester.pumpWidget(_app(scale: 1.8));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Dumbbell floor press'));
-    await tester.tap(find.text('Dumbbell floor press'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Why this exercise'), 150,
-        scrollable: find.byType(Scrollable).first);
-    await tester.tap(find.text('Why this exercise'));
-    await tester.pumpAndSettle();
-    expect(find.text('A familiar movement from your previous logs.'),
-        findsOneWidget);
+    expect(find.text('12–14 kg / hand'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

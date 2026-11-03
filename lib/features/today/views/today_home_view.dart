@@ -12,6 +12,11 @@ import '../../nutrition/views/nutrition_view.dart';
 import '../../nutrition/views/food_library_view.dart';
 import '../../nutrition/views/hydration_view.dart';
 import '../../train/views/train_view.dart';
+import '../../train/views/saved_routines_view.dart';
+import '../../train/models/training_session.dart';
+import '../../train/repositories/training_repository.dart';
+import '../../train/components/workout_saved_notice.dart';
+import '../../../core/localization/fitness_copy.dart';
 import '../components/today_dashboard.dart';
 import '../repositories/today_repository.dart';
 import '../../wellness/views/daily_check_in_sheet.dart';
@@ -56,6 +61,8 @@ class _TodayHomeViewState extends State<TodayHomeView>
   int _request = 0;
   String _locale = '';
   bool _checkingPrompt = false, _checkInOpen = false;
+  bool _savingWorkout = false;
+  final _savedWorkouts = <String, TrainingDay>{};
 
   @override
   void initState() {
@@ -303,6 +310,34 @@ class _TodayHomeViewState extends State<TodayHomeView>
         AppPageRoute<void>(builder: (_) => page),
       );
 
+  Future<void> _saveWorkout() async {
+    if (_savingWorkout) return;
+    final date = CacheScope.todayKey(_selectedDate);
+    final existing = _savedWorkouts[date];
+    if (existing != null) {
+      _open(SavedRoutinesView(initial: existing));
+      return;
+    }
+    setState(() => _savingWorkout = true);
+    try {
+      final saved = await TrainingRepository.shared.saveWorkout(date);
+      if (mounted) {
+        setState(() => _savedWorkouts[date] = saved);
+        showWorkoutSavedNotice(context, saved);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(fitnessText(
+                context,
+                TrainingRepository.errorMessage(
+                    error, 'Could not save. Please try again.')))));
+      }
+    } finally {
+      if (mounted) setState(() => _savingWorkout = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: DSColors.dashboardBg,
@@ -320,6 +355,10 @@ class _TodayHomeViewState extends State<TodayHomeView>
             refreshFailed: _refreshFailed,
             onRefresh: () => _loadHome(refresh: true),
             onProfile: widget.onOpenProfile,
+            onSaveWorkout: _saveWorkout,
+            savingWorkout: _savingWorkout,
+            workoutSaved:
+                _savedWorkouts.containsKey(CacheScope.todayKey(_selectedDate)),
             onSession: () => _open(TrainView(
                 standalone: true,
                 initialDate: CacheScope.todayKey(_selectedDate))),

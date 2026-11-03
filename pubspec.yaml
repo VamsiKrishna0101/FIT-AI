@@ -55,6 +55,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  shaders:
+    - shaders/water_optics.frag
   fonts:
     - family: Inter
       fonts:

@@ -5,6 +5,7 @@ import '../../../../core/localization/fitness_copy.dart';
 import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/ds_motion.dart';
 import '../../../../core/theme/fitness_theme.dart';
+import '../../../../core/components/app_date_filter.dart';
 import '../../models/body_map_models.dart';
 import 'anatomical_training_map.dart';
 import 'body_controls.dart';
@@ -79,36 +80,18 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
 
   Future<void> _calendar() async {
     if (!_trained) {
-      final selection = await showModalBottomSheet<BodyDateSelection>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          showDragHandle: true,
-          backgroundColor: FitnessTheme.surface,
-          sheetAnimationStyle: DSMotion.sheetStyle(context),
-          constraints:
-              BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .9),
-          builder: (_) => BodyCalendar(
-              planned: true,
-              selection: BodyDateSelection(
-                  mode: BodyDateMode.range,
-                  start: bodyMapWeek(widget.week),
-                  end: widget.week)));
+      final selection = await showBodyDateFilter(context,
+          planned: true,
+          selection: BodyDateSelection(
+              mode: BodyDateMode.range,
+              start: bodyMapWeek(widget.week),
+              end: widget.week));
       if (selection != null && mounted) {
         widget.onWeekChanged(bodyMapWeek(selection.start!));
       }
       return;
     }
-    final selection = await showModalBottomSheet<BodyDateSelection>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        showDragHandle: true,
-        backgroundColor: FitnessTheme.surface,
-        sheetAnimationStyle: DSMotion.sheetStyle(context),
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .9),
-        builder: (_) => BodyCalendar(selection: _selection));
+    final selection = await showBodyDateFilter(context, selection: _selection);
     if (selection != null && mounted) {
       widget.onSelectionChanged?.call(selection);
     }
@@ -190,17 +173,9 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                         }))),
             const SizedBox(width: 12),
             if (widget.loading) const CupertinoActivityIndicator(radius: 7),
-            IconButton(
+            AppDateFilterButton(
                 key: const ValueKey('body-calendar-button'),
-                tooltip: fitnessText(context, 'Calendar'),
-                onPressed: _calendar,
-                style: IconButton.styleFrom(
-                    minimumSize: const Size(44, 44),
-                    backgroundColor: const Color(0xFF17191C),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(13))),
-                icon: const Icon(CupertinoIcons.calendar,
-                    size: 19, color: FitnessTheme.silver)),
+                onPressed: _calendar),
           ]),
           const SizedBox(height: 14),
           Wrap(

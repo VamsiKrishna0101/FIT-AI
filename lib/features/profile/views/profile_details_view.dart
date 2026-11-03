@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../../../core/cache/cache_scope.dart';
-import '../../../core/components/liquid_chrome_button.dart';
+import '../../../core/components/profile_avatar.dart';
+import '../../../core/theme/fitness_theme.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../body_scan/repositories/body_assessment_repository.dart';
 import '../repositories/settings_repository.dart';
 import 'settings_components.dart';
+import 'settings_editor_components.dart';
 
 /// Each editor sends only its own fields, preserving the rest of the profile.
 class ProfileDetailsView extends StatefulWidget {
@@ -29,11 +32,14 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   final _customDiet = TextEditingController();
   final _allergies = TextEditingController();
   final _dislikes = TextEditingController();
+  final _budget = TextEditingController();
   bool _loading = true, _saving = false, _loadFailed = false;
   String? _error;
   String? _owner;
   String _gender = 'OTHER', _goal = 'BUILD_MUSCLE', _experience = 'BEGINNER';
   String _diet = 'NO_PREFERENCE';
+  String _budgetCurrency = 'EUR';
+  bool _budgetChanged = false;
 
   @override
   void initState() {
@@ -67,6 +73,18 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
       _customDiet.text = data['customEatingStyle'] as String? ?? '';
       _allergies.text = (data['foodAllergies'] as List? ?? []).join(', ');
       _dislikes.text = (data['dislikedFoods'] as List? ?? []).join(', ');
+      _budget.text = data['foodBudgetAmount']?.toString() ?? '';
+      _budgetCurrency = data['foodBudgetCurrency'] as String? ??
+          switch (data['countryCode']) {
+            'GB' => 'GBP',
+            'CH' => 'CHF',
+            'SE' => 'SEK',
+            'NO' => 'NOK',
+            'DK' => 'DKK',
+            'IN' => 'INR',
+            'US' => 'USD',
+            _ => 'EUR',
+          };
       setState(() => _loading = false);
     } catch (error) {
       if (mounted) {
@@ -88,6 +106,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
 
   Future<void> _save() async {
     if (_saving || !_form.currentState!.validate()) return;
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _saving = true;
       _error = null;
@@ -99,6 +118,14 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                 _diet == 'OTHER' ? _customDiet.text.trim() : null,
             'foodAllergies': _foodList(_allergies.text),
             'dislikedFoods': _foodList(_dislikes.text),
+            if (_budgetChanged) ...{
+              'foodBudgetAmount': _budget.text.trim().isEmpty
+                  ? null
+                  : double.parse(_budget.text.trim().replaceAll(',', '.')),
+              'foodBudgetCurrency':
+                  _budget.text.trim().isEmpty ? null : _budgetCurrency,
+              'weeklyFoodBudget': null,
+            },
           }
         : <String, dynamic>{
             'name': _name.text.trim(),
@@ -133,39 +160,83 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
     bool number = false,
     String? Function(String?)? validator,
     int maxLines = 1,
+    int? minLines,
+    String? hint,
+    ValueChanged<String>? onChanged,
   }) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: TextFormField(
-          controller: controller,
-          enabled: !_saving,
-          maxLines: maxLines,
-          keyboardType: number
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : TextInputType.text,
-          decoration: InputDecoration(labelText: fitnessText(context, label)),
-          validator: (value) {
-            final error = validator?.call(value);
-            return error == null ? null : fitnessText(context, error);
-          },
-        ),
+      TextFormField(
+        key: ValueKey('profile-field-$label'),
+        controller: controller,
+        enabled: !_saving,
+        maxLines: maxLines,
+        minLines: minLines,
+        onChanged: onChanged,
+        textInputAction: TextInputAction.next,
+        textCapitalization: controller == _name
+            ? TextCapitalization.words
+            : TextCapitalization.none,
+        autofillHints: controller == _name ? const [AutofillHints.name] : null,
+        style: const TextStyle(fontSize: 14, color: FitnessTheme.silver),
+        cursorColor: FitnessTheme.silver,
+        keyboardType: number
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
+        decoration: _decoration(label).copyWith(
+            hintText: hint == null ? null : fitnessText(context, hint)),
+        validator: (value) {
+          final error = validator?.call(value);
+          return error == null ? null : fitnessText(context, error);
+        },
       );
 
   Widget _choices(String label, String selected, Map<String, String> choices,
           ValueChanged<String> onChanged) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: DropdownButtonFormField<String>(
-          initialValue: choices.containsKey(selected) ? selected : null,
-          isExpanded: true,
-          decoration: InputDecoration(labelText: fitnessText(context, label)),
-          borderRadius: BorderRadius.circular(18),
-          items: choices.entries
-              .map((choice) => DropdownMenuItem(
-                  value: choice.key, child: FitnessText(choice.value)))
-              .toList(),
+      SettingsDropdown(
+          key: ValueKey('profile-choice-$label'),
+          label: label,
+          value: selected,
+          choices: choices,
           onChanged:
-              _saving ? null : (value) => setState(() => onChanged(value!)),
+              _saving ? null : (value) => setState(() => onChanged(value)));
+
+  InputDecoration _decoration(String label) =>
+      settingsFieldDecoration(context, label);
+
+  Widget _section(String title, List<Widget> children) =>
+      SettingsEditorSection(title: title, children: children);
+
+  Widget _pair(Widget first, Widget second) =>
+      SettingsFieldPair(first: first, second: second);
+
+  Widget _identity() => ValueListenableBuilder<TextEditingValue>(
+        valueListenable: _name,
+        builder: (context, value, _) => Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: FitnessCard(
+              child: Row(children: [
+            ProfileAvatar(name: value.text, size: 46, label: 'Profile'),
+            const SizedBox(width: 14),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  value.text.trim().isEmpty
+                      ? const FitnessText('Your profile',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w500))
+                      : Text(value.text.trim(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -.4)),
+                  const SizedBox(height: 5),
+                  const FitnessText('Your profile',
+                      style:
+                          TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+                ])),
+          ])),
         ),
       );
 
@@ -195,32 +266,42 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
         : null;
   }
 
+  String? _budgetValidation(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    final value = double.tryParse(text.trim().replaceAll(',', '.'));
+    return value == null || !value.isFinite || value <= 0 || value > 100000
+        ? 'Enter a valid weekly budget, or leave it blank.'
+        : null;
+  }
+
   @override
   Widget build(BuildContext context) => SettingsPage(
-        title: widget.nutrition ? 'Nutrition preferences' : 'Personal details',
-        subtitle: widget.nutrition
-            ? 'Food choices that fit your life.'
-            : 'The details behind your personal plan.',
+        title: widget.nutrition ? 'Nutrition' : 'Edit profile',
+        centerTitle: true,
+        subtitle: '',
         bottom: _loading || _loadFailed
             ? null
-            : LiquidChromeButton(
-                title: 'Save changes',
-                isLoading: _saving,
-                onPressed: _saving ? null : _save),
+            : SettingsSaveButton(
+                buttonKey: const ValueKey('profile-save'),
+                saving: _saving,
+                onPressed: _save),
         children: [
           if (_loading)
-            const Center(child: CircularProgressIndicator())
+            const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: CupertinoActivityIndicator()))
           else if (_loadFailed) ...[
             SettingsNotice(_error!, error: true),
             TextButton(onPressed: _load, child: const FitnessText('Try again')),
           ] else
             Form(
-                key: _form,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_error != null) SettingsNotice(_error!, error: true),
-                      if (widget.nutrition) ...[
+              key: _form,
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_error != null) SettingsNotice(_error!, error: true),
+                    if (widget.nutrition) ...[
+                      _section('Food preferences', [
                         _choices(
                             'Eating style',
                             _diet,
@@ -240,41 +321,88 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                                   ? 'Use 1–80 characters.'
                                   : null),
                         _field('Food allergies', _allergies,
-                            maxLines: 2, validator: _foodValidation),
+                            minLines: 1,
+                            maxLines: 3,
+                            hint: 'None',
+                            validator: _foodValidation),
                         _field('Foods you avoid or dislike', _dislikes,
-                            maxLines: 2, validator: _foodValidation),
-                        const SettingsNotice(
-                            'Separate foods with commas. These preferences guide future recommendations.'),
-                      ] else ...[
+                            minLines: 1,
+                            maxLines: 3,
+                            hint: 'None',
+                            validator: _foodValidation),
+                      ]),
+                      const SettingsNotice('Separate foods with commas.'),
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _budget,
+                        builder: (context, value, _) => SettingsDisclosure(
+                          key: const ValueKey('nutrition-budget'),
+                          title: 'Weekly budget',
+                          summary: value.text.trim().isEmpty
+                              ? 'Optional'
+                              : '$_budgetCurrency ${value.text.trim()}',
+                          children: [
+                            _field('Amount', _budget,
+                                number: true,
+                                hint: 'Optional',
+                                validator: _budgetValidation,
+                                onChanged: (_) => _budgetChanged = true),
+                            _choices('Currency', _budgetCurrency, const {
+                              'GBP': 'GBP',
+                              'EUR': 'EUR',
+                              'CHF': 'CHF',
+                              'SEK': 'SEK',
+                              'NOK': 'NOK',
+                              'DKK': 'DKK',
+                              'USD': 'USD',
+                              'INR': 'INR',
+                            }, (value) {
+                              _budgetCurrency = value;
+                              _budgetChanged = true;
+                            }),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      _identity(),
+                      _section('Personal details', [
                         _field('Name', _name,
                             validator: (text) => text == null ||
                                     text.trim().length < 2 ||
                                     text.trim().length > 50
                                 ? 'Use 2–50 characters.'
                                 : null),
-                        _field('Age', _age,
-                            number: true,
-                            validator: (text) =>
-                                _number(text, 13, 100, whole: true)),
-                        _choices(
-                            'Gender',
-                            _gender,
-                            const {
-                              'MALE': 'Male',
-                              'FEMALE': 'Female',
-                              'OTHER': 'Other'
-                            },
-                            (value) => _gender = value),
-                        _field('Height (cm)', _height,
-                            number: true,
-                            validator: (text) => _number(text, 120, 230)),
-                        _field('Current weight (kg)', _weight,
-                            number: true,
-                            validator: (text) => _number(text, 30, 250)),
+                        _pair(
+                          _field('Age', _age,
+                              number: true,
+                              validator: (text) =>
+                                  _number(text, 13, 100, whole: true)),
+                          _choices(
+                              'Gender',
+                              _gender,
+                              const {
+                                'MALE': 'Male',
+                                'FEMALE': 'Female',
+                                'OTHER': 'Other'
+                              },
+                              (value) => _gender = value),
+                        ),
+                      ]),
+                      _section('Measurements', [
+                        _pair(
+                          _field('Height (cm)', _height,
+                              number: true,
+                              validator: (text) => _number(text, 120, 230)),
+                          _field('Current weight (kg)', _weight,
+                              number: true,
+                              validator: (text) => _number(text, 30, 250)),
+                        ),
                         _field('Target weight (kg)', _targetWeight,
                             number: true,
+                            hint: 'Optional',
                             validator: (text) =>
                                 _number(text, 30, 250, optional: true)),
+                      ]),
+                      _section('Training', [
                         _choices(
                             'Fitness goal',
                             _goal,
@@ -296,10 +424,12 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                               'ADVANCED': 'Advanced'
                             },
                             (value) => _experience = value),
-                        const SettingsNotice(
-                            'Updates guide future plans. Your logged workouts and measurements stay intact.'),
-                      ],
-                    ])),
+                      ]),
+                      const SettingsNotice(
+                          'Updates guide future plans. Your logged workouts and measurements stay intact.'),
+                    ],
+                  ]),
+            ),
         ],
       );
 
@@ -313,7 +443,8 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
       _targetWeight,
       _customDiet,
       _allergies,
-      _dislikes
+      _dislikes,
+      _budget,
     ]) {
       controller.dispose();
     }

@@ -17,6 +17,7 @@ import 'readiness_summary.dart';
 import '../views/readiness_detail_view.dart';
 import '../models/session_guidance.dart';
 import '../../../core/localization/fitness_text.dart';
+import '../../../core/localization/fitness_copy.dart';
 import '../../../core/components/profile_avatar.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../wellness/models/sleep_edit_window.dart';
@@ -45,6 +46,8 @@ class TodayDashboard extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final VoidCallback onProfile;
   final VoidCallback onSession;
+  final VoidCallback? onSaveWorkout;
+  final bool savingWorkout, workoutSaved;
   final VoidCallback onTrain;
   final VoidCallback onNutrition;
   final VoidCallback? onAddMeal;
@@ -68,6 +71,9 @@ class TodayDashboard extends StatelessWidget {
     required this.onRefresh,
     required this.onProfile,
     required this.onSession,
+    this.onSaveWorkout,
+    this.savingWorkout = false,
+    this.workoutSaved = false,
     required this.onTrain,
     required this.onNutrition,
     this.onAddMeal,
@@ -266,7 +272,9 @@ class TodayDashboard extends StatelessWidget {
                       onDateSelected: onDateSelected),
                   const SizedBox(height: 24),
                 ],
-                ContentTransition(
+                // One live dashboard prevents the outgoing day's nutrition
+                // meters from overlapping the current day during updates.
+                ContentResize(
                     child: Column(
                         key: ValueKey(
                             'today-content-${DateFormat('yyyy-MM-dd').format(date)}-${loading ? 'loading' : loadFailed ? 'error' : 'ready'}'),
@@ -313,6 +321,11 @@ class TodayDashboard extends StatelessWidget {
                         _SessionCard(
                             key: const ValueKey('today-session-card'),
                             workout: data?.todayWorkout,
+                            past: DateUtils.dateOnly(date).isBefore(
+                                DateUtils.dateOnly(now ?? DateTime.now())),
+                            onSaveWorkout: onSaveWorkout,
+                            saving: savingWorkout,
+                            saved: workoutSaved,
                             copy: copy,
                             onSession: onSession,
                             onTrain: onTrain),
@@ -460,9 +473,15 @@ class _SessionCard extends StatelessWidget {
   final HomeTodayWorkout? workout;
   final SetcraftCopy copy;
   final VoidCallback onSession, onTrain;
+  final VoidCallback? onSaveWorkout;
+  final bool past, saving, saved;
   const _SessionCard(
       {super.key,
       required this.workout,
+      required this.past,
+      required this.onSaveWorkout,
+      required this.saving,
+      required this.saved,
       required this.copy,
       required this.onSession,
       required this.onTrain});
@@ -472,6 +491,8 @@ class _SessionCard extends StatelessWidget {
     final complete = w?.status == 'COMPLETED';
     final rest = w == null || w.status == 'REST_DAY';
     final progress = w?.status == 'IN_PROGRESS';
+    final missed =
+        past && !rest && !complete && !progress && w.exerciseCount > 0;
     final guidance = SessionGuidance.fromNote(w?.aiNote,
         fallback: copy.text('todayAdaptiveEffort'));
     final actionLabel = copy.text(rest
@@ -506,9 +527,16 @@ class _SessionCard extends StatelessWidget {
               key: const ValueKey('today-effort-pill'),
               style: const TextStyle(color: _muted, fontSize: 11))
           : null,
-      actionLabel: actionLabel,
-      onAction: rest ? onTrain : onSession,
+      actionLabel: missed
+          ? fitnessText(context, saved ? 'My workouts' : 'Save workout')
+          : actionLabel,
+      onAction: missed
+          ? onSaveWorkout
+          : rest
+              ? onTrain
+              : onSession,
       onTap: rest ? onTrain : onSession,
+      busy: missed && saving,
       primary: !rest,
     );
   }

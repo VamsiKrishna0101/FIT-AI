@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:setcraft/features/profile/repositories/mcp_repository.dart';
 import 'package:setcraft/features/profile/views/mcp_connections_view.dart';
+import 'package:setcraft/features/profile/views/settings_components.dart';
 import 'helpers/fake_mcp_repository.dart';
 
 Widget app(Widget child, {double scale = 1}) => RepaintBoundary(
@@ -61,12 +62,19 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('Create access token'));
     await t.pumpAndSettle();
+    expect(find.byType(SettingsPage), findsOneWidget);
+    await t.ensureVisible(find.text('Permissions'));
+    await t.tap(find.text('Permissions'));
+    await t.pumpAndSettle();
     final switches =
         t.widgetList<SwitchListTile>(find.byType(SwitchListTile)).toList();
     expect(switches.map((s) => s.value), [true, true, true, false, false]);
-    await t.ensureVisible(find.text('7 days'));
-    await t.tap(find.text('7 days'));
+    await t.ensureVisible(find.byKey(const ValueKey('mcp-expiry')));
+    await t.tap(find.byKey(const ValueKey('mcp-expiry')));
     await t.pumpAndSettle();
+    await t.tap(find.text('7 days').last);
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.text('Generate token'));
     await t.tap(find.text('Generate token'));
     await t.pumpAndSettle();
     expect(repo.creates, 1);
@@ -78,7 +86,11 @@ void main() {
     await t.pumpAndSettle();
     expect(copied.single, 'sc_mcp_fixture-only-not-a-real-token');
     expect(find.text('Token copied'), findsOneWidget);
+    await t.ensureVisible(find.text('Done'));
     await t.tap(find.text('Done'));
+    await t.pumpAndSettle();
+    expect(find.byType(SettingsPage), findsOneWidget);
+    await t.tap(find.byKey(ValueKey('mcp-token-${repo.tokens.single.id}')));
     await t.pumpAndSettle();
     expect(find.text('Not used yet'), findsOneWidget);
     expect(find.textContaining('fixture-only-not-a-real-token'), findsNothing);
@@ -131,6 +143,8 @@ void main() {
     repo.tokens.add(repo.issue().token);
     await t.pumpWidget(app(ClaudeConnectionView(repository: repo)));
     await t.pumpAndSettle();
+    await t.tap(find.byKey(ValueKey('mcp-token-${repo.tokens.single.id}')));
+    await t.pumpAndSettle();
     await t.ensureVisible(find.text('Revoke'));
     await t.tap(find.text('Revoke'));
     await t.pumpAndSettle();
@@ -142,7 +156,8 @@ void main() {
     await t.tap(find.text('Revoke').last);
     await t.pumpAndSettle();
     expect(repo.revocations, 1);
-    expect(find.text('Ready when you are'), findsOneWidget);
+    expect(find.text('No access tokens. Create one to set up Claude.'),
+        findsOneWidget);
   });
   testWidgets(
       'Unconfigured server disables generation without claiming a connection',
@@ -171,22 +186,118 @@ void main() {
       expect(t.takeException(), isNull);
     }
   });
-  testWidgets('Capture the token manager using fixture metadata only',
+
+  testWidgets('Permissions require a selection and Cancel stays on the manager',
+      (t) async {
+    await size(t);
+    final repo = FakeMcpRepository();
+    await t.pumpWidget(app(McpConnectionsView(repository: repo)));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Create access token'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Permissions'));
+    await t.pumpAndSettle();
+    for (final scope in ['training:read', 'plans:read', 'workouts:read']) {
+      final control = find.byKey(ValueKey('mcp-permission-$scope'));
+      await t.ensureVisible(control);
+      await t.tap(control);
+      await t.pumpAndSettle();
+    }
+    await t.ensureVisible(find.text('Generate token'));
+    await t.tap(find.text('Generate token'));
+    await t.pumpAndSettle();
+    expect(repo.creates, 0);
+    expect(find.text('Choose at least one permission.'), findsOneWidget);
+    await t.ensureVisible(find.text('Cancel'));
+    await t.tap(find.text('Cancel'));
+    await t.pumpAndSettle();
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(CreateMcpTokenView), findsNothing);
+    expect(find.byKey(const ValueKey('mcp-create')), findsOneWidget);
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets('Replacement works at the token limit without adding a screen',
+      (t) async {
+    await size(t);
+    final repo = FakeMcpRepository();
+    for (var i = 0; i < 5; i++) {
+      repo.tokens.add(repo.issue(name: 'Fixture $i').token);
+    }
+    final previousId = repo.tokens.first.id;
+    await t.pumpWidget(app(McpConnectionsView(repository: repo)));
+    await t.pumpAndSettle();
+    expect(
+        t
+            .widget<FilledButton>(find.byKey(const ValueKey('mcp-create')))
+            .onPressed,
+        isNull);
+    await t.tap(find.byKey(ValueKey('mcp-token-$previousId')));
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.text('Replace token'));
+    await t.tap(find.text('Replace token'));
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.text('Create replacement'));
+    await t.tap(find.text('Create replacement'));
+    await t.pumpAndSettle();
+    expect(repo.replaced, previousId);
+    expect(repo.tokens.length, 5);
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.text('Ready to connect'), findsOneWidget);
+    await t.ensureVisible(find.text('Done'));
+    await t.tap(find.text('Done'));
+    await t.pumpAndSettle();
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets('Inline generation refuses an account changed during editing',
+      (t) async {
+    await size(t);
+    final repo = FakeMcpRepository();
+    await t.pumpWidget(app(McpConnectionsView(repository: repo)));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Create access token'));
+    await t.pumpAndSettle();
+    repo.owner = 'other-owner';
+    await t.ensureVisible(find.text('Generate token'));
+    await t.tap(find.text('Generate token'));
+    await t.pumpAndSettle();
+    expect(repo.creates, 0);
+    expect(find.text('Your account changed. Reopen MCP.'), findsOneWidget);
+    expect(find.byType(McpTokenCreatedView), findsNothing);
+    expect(t.takeException(), isNull);
+  });
+  testWidgets('Capture compact MCP screens with a masked fixture token',
       (t) async {
     await size(t);
     final repo = FakeMcpRepository();
     repo.tokens.add(repo.issue().token);
     await t.pumpWidget(app(ClaudeConnectionView(repository: repo)));
     await t.pumpAndSettle();
-    await t.runAsync(() async {
-      final boundary = t.renderObject<RenderRepaintBoundary>(
-          find.byKey(const ValueKey('mcp-preview')));
-      final image = await boundary.toImage(pixelRatio: 2);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      File('build/mcp-token-manager-preview.png')
-          .writeAsBytesSync(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
+    Future<void> capture(String path) async {
+      await t.pump(const Duration(milliseconds: 300));
+      await t.runAsync(() async {
+        final boundary = t.renderObject<RenderRepaintBoundary>(
+            find.byKey(const ValueKey('mcp-preview')));
+        final image = await boundary.toImage(pixelRatio: 2);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        final file = File(path);
+        await file.parent.create(recursive: true);
+        await file.writeAsBytes(bytes!.buffer.asUint8List());
+        image.dispose();
+      });
+    }
+
+    await capture('build/mcp-token-manager-preview.png');
+    await t.tap(find.text('Create access token'));
+    await t.pumpAndSettle();
+    await capture('build/previews/mcp-create-compact.png');
+    await t.ensureVisible(find.text('Generate token'));
+    await t.tap(find.text('Generate token'));
+    await t.pumpAndSettle();
+    expect(find.textContaining('fixture-only-not-a-real-token'), findsNothing);
+    await capture('build/previews/mcp-created-compact.png');
     expect(t.takeException(), isNull);
   });
 }

@@ -5,6 +5,8 @@ class FakeMcpRepository extends McpRepository {
   String owner = 'settings-user';
   bool configured = true;
   int creates = 0, revocations = 0;
+  int _issuedCount = 0;
+  String? replaced;
   int? days;
   List<String>? granted;
   final tokens = <McpAccessToken>[];
@@ -21,7 +23,7 @@ class FakeMcpRepository extends McpRepository {
       List<String> scopes = const ['plans:read'],
       int days = 30}) {
     final token = McpAccessToken(
-        id: 'fixture-${creates + 1}',
+        id: 'fixture-${++_issuedCount}',
         name: name,
         lastFour: 'TEST',
         scopes: scopes,
@@ -43,6 +45,7 @@ class FakeMcpRepository extends McpRepository {
       String? replaceId}) async {
     await requireOwner(expectedOwner);
     creates++;
+    replaced = replaceId;
     this.days = days;
     granted = scopes;
     if (pending != null) return pending!.future;

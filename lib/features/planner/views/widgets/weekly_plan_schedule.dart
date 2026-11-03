@@ -1,10 +1,10 @@
-import '../../../../core/components/liquid_glass.dart';
 import 'weekly_nutrition_card.dart';
 import '../../../train/components/workout_warmup.dart';
-import '../../../train/components/exercise_recommendation_card.dart';
+import '../../../train/components/planned_exercise_row.dart';
+import '../../../train/models/workout_exercise_models.dart';
 import '../../../nutrition/components/planned_meals_section.dart';
 import '../../../../core/cache/cache_scope.dart';
-import '../../../../core/components/liquid_chrome_button.dart';
+import '../../../train/components/training_widgets.dart';
 import '../../../train/views/workout_session_view.dart';
 import '../../../train/components/reschedule_workout_sheet.dart';
 import 'dart:async';
@@ -28,6 +28,7 @@ class WeeklyPlanSchedule extends StatefulWidget {
   final bool active;
   final Future<TrainingDay> Function(String)? loadDay;
   final Future<TrainingDay> Function(String)? startDay;
+  final Future<WorkoutExerciseModel?> Function(String)? loadExercise;
   final bool fromOnboarding;
   final bool showOverview;
   final String? initialDate;
@@ -38,6 +39,7 @@ class WeeklyPlanSchedule extends StatefulWidget {
       this.active = false,
       this.loadDay,
       this.startDay,
+      this.loadExercise,
       this.fromOnboarding = false,
       this.showOverview = true,
       this.initialDate});
@@ -281,13 +283,6 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
           selected: _section,
           onChanged: (section) => setState(() => _section = section)),
       const SizedBox(height: 20),
-      if (widget.initialDate == null) ...[
-        FitnessText(
-            DateFormat.MMMMEEEEd()
-                .format(DateTime.parse(selected['date'] as String)),
-            style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-        const SizedBox(height: 8),
-      ],
       ContentTransition(
         child: KeyedSubtree(
           key: ValueKey('${selected['date']}:$_section'),
@@ -309,60 +304,54 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
         training.every((day) => day['status'] is String);
     final selected = days[_day.clamp(0, days.length - 1)];
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      LiquidGlass(
-          radius: 26,
-          surfaceColor: const Color(0xFF171717),
-          padding: const EdgeInsets.fromLTRB(18, 20, 18, 14),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    const FitnessText('Training week',
-                        style:
-                            TextStyle(fontSize: 11, color: FitnessTheme.muted)),
-                    const SizedBox(height: 6),
-                    FitnessText('{count} workouts',
-                        values: {'count': training.length},
-                        style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -.7)),
-                  ])),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                const Icon(CupertinoIcons.calendar,
-                    size: 19, color: Colors.white),
-                const SizedBox(height: 8),
-                FitnessText('{count} rest days',
-                    values: {'count': days.length - training.length},
-                    style: const TextStyle(
-                        fontSize: 10, color: FitnessTheme.muted)),
-              ]),
-            ]),
-            if (progressKnown) ...[
-              const SizedBox(height: 16),
-              Row(children: [
-                for (var index = 0; index < training.length; index++) ...[
-                  if (index > 0) const SizedBox(width: 5),
-                  Expanded(
-                      child: Container(
-                          height: 3,
-                          decoration: BoxDecoration(
-                              color: index < completed
-                                  ? Colors.white
-                                  : const Color(0xFF3A3A3A),
-                              borderRadius: BorderRadius.circular(3)))),
-                ],
-              ]),
+      TrainingSurface(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 6,
+            children: [
+              FitnessText(
+                  training.length == 1 ? '{count} workout' : '{count} workouts',
+                  values: {'count': training.length},
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w500)),
+              FitnessText(
+                  days.length - training.length == 1
+                      ? '{count} rest day'
+                      : '{count} rest days',
+                  values: {'count': days.length - training.length},
+                  style:
+                      const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
             ],
-            const SizedBox(height: 20),
-            _weekStrip(days),
-          ])),
-      const SizedBox(height: 22),
+          ),
+          if (progressKnown) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: completed / training.length,
+                minHeight: 3,
+                color: FitnessTheme.silver,
+                backgroundColor: const Color(0xFF363636),
+              ),
+            ),
+            const SizedBox(height: 7),
+            FitnessText('{completed} of {total} complete',
+                values: {'completed': completed, 'total': training.length},
+                style:
+                    const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
+          ],
+          const SizedBox(height: 10),
+          _weekStrip(days),
+        ]),
+      ),
+      const SizedBox(height: 14),
       _sectionTabs(),
-      const SizedBox(height: 22),
+      const SizedBox(height: 16),
       ContentTransition(
           child: KeyedSubtree(
         key: ValueKey('week-detail-${selected['date']}-$_section'),
@@ -372,69 +361,26 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
     ]);
   }
 
-  Widget _sectionTabs() => Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-            color: const Color(0xFF191919),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: FitnessTheme.line, width: .7)),
-        child: Row(children: [
-          for (var i = 0; i < 2; i++)
-            Expanded(
-                child: Semantics(
-              selected: _section == i,
-              button: true,
-              child: Material(
-                color: _section == i ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: () => setState(() => _section = i),
-                  child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 13),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                                i == 0
-                                    ? Icons.fitness_center_outlined
-                                    : Icons.restaurant_outlined,
-                                size: 16,
-                                color: _section == i
-                                    ? Colors.black
-                                    : FitnessTheme.muted),
-                            const SizedBox(width: 8),
-                            Flexible(
-                                child: FitnessText(
-                                    i == 0 ? 'Training' : 'Nutrition',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: _section == i
-                                            ? Colors.black
-                                            : FitnessTheme.muted))),
-                          ])),
-                ),
-              ),
-            )),
-        ]),
-      );
+  Widget _sectionTabs() => BodySegment(
+      labels: const ['Training', 'Nutrition'],
+      selected: _section,
+      onChanged: (section) => setState(() => _section = section));
 
   Widget _weekStrip(List<Map<String, dynamic>> days) => LayoutBuilder(
         builder: (context, box) {
           final largeText = MediaQuery.textScalerOf(context).scale(10) > 14;
           final width = !largeText && days.length <= 7
               ? box.maxWidth / days.length
-              : 54.0;
+              : 60.0;
           return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [
-                for (var index = 0; index < days.length; index++)
-                  SizedBox(
-                      width: width,
-                      child: _dayButton(_currentWorkout(days[index]), index)),
-              ]));
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              for (var index = 0; index < days.length; index++)
+                SizedBox(
+                    width: width,
+                    child: _dayButton(_currentWorkout(days[index]), index)),
+            ]),
+          );
         },
       );
 
@@ -442,50 +388,47 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
     final selected = _day == index;
     final date = DateTime.parse('${day['date']}');
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final complete = day['status'] == 'COMPLETED';
+    void select() {
+      setState(() => _day = index);
+      unawaited(_loadSelected());
+    }
+
     return Semantics(
       button: true,
       selected: selected,
       label: '${DateFormat.yMMMMEEEEd(locale).format(date)} · ${day['name']}',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            key: ValueKey('plan-day-${day['date']}'),
-            borderRadius: BorderRadius.circular(17),
-            onTap: () {
-              setState(() => _day = index);
-              unawaited(_loadSelected());
-            },
-            child: AnimatedContainer(
-              duration: DSMotion.duration(context, DSMotion.selection),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                  color: selected ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(17)),
-              child: Column(children: [
-                Text(DateFormat.E(locale).format(date),
+      onTap: select,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: ValueKey('plan-day-${day['date']}'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: select,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+            child: Column(children: [
+              Text(DateFormat('EEEEE', locale).format(date),
+                  style:
+                      const TextStyle(fontSize: 10, color: FitnessTheme.muted)),
+              const SizedBox(height: 6),
+              Container(
+                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+                decoration: BoxDecoration(
+                  color: selected ? FitnessTheme.silver : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(DateFormat.d(locale).format(date),
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 9,
-                        color: selected ? Colors.black54 : FitnessTheme.muted)),
-                const SizedBox(height: 8),
-                Text(DateFormat.d(locale).format(date),
-                    style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w600,
-                        color: selected ? Colors.black : Colors.white)),
-                const SizedBox(height: 8),
-                Icon(
-                    complete
-                        ? CupertinoIcons.checkmark
-                        : day['restDay'] == true
-                            ? CupertinoIcons.minus
-                            : CupertinoIcons.circle_fill,
-                    size: day['restDay'] == true || complete ? 9 : 4,
-                    color: selected ? Colors.black54 : FitnessTheme.muted),
-              ]),
-            ),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: selected
+                            ? FitnessTheme.canvas
+                            : FitnessTheme.silver)),
+              ),
+            ]),
           ),
         ),
       ),
@@ -517,152 +460,167 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
         date == CacheScope.todayKey() &&
         live?.json['canReschedule'] == true;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      LiquidGlass(
-          radius: 26,
-          surfaceColor: const Color(0xFF1C1C1C),
-          padding: const EdgeInsets.all(22),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Row(children: [
-              Expanded(
-                  child: Text(
-                      DateFormat.MMMEd(
-                              Localizations.localeOf(context).toLanguageTag())
-                          .format(DateTime.parse(date)),
-                      style: const TextStyle(
-                          fontSize: 11, color: FitnessTheme.muted))),
-              if (live?.finished == true)
-                const Icon(CupertinoIcons.checkmark_circle_fill,
-                    color: Colors.white, size: 20)
-              else if (widget.active && live == null && !_errors.contains(date))
-                const CupertinoActivityIndicator(
-                    color: Colors.white, radius: 8),
-              if (canEdit || canRest)
-                PopupMenuButton<String>(
-                  tooltip: fitnessText(context, 'Workout options'),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(CupertinoIcons.ellipsis,
-                      size: 22, color: Colors.white),
-                  onSelected: (value) =>
-                      value == 'rest' ? _restToday(date) : _editDay(date),
-                  itemBuilder: (context) => [
-                    if (canEdit)
-                      PopupMenuItem(
-                          value: 'edit', child: FitnessText('Edit workout')),
-                    if (canRest)
-                      PopupMenuItem(
-                          value: 'rest', child: FitnessText('Rest today')),
-                  ],
+      TrainingSurface(
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Expanded(
+                child: Text(
+                    DateFormat.MMMEd(
+                            Localizations.localeOf(context).toLanguageTag())
+                        .format(DateTime.parse(date)),
+                    style: const TextStyle(
+                        fontSize: 11, color: FitnessTheme.muted))),
+            if (live?.finished == true)
+              const FitnessText('Completed',
+                  style: TextStyle(fontSize: 11, color: FitnessTheme.silver))
+            else if (widget.active && live == null && !_errors.contains(date))
+              const CupertinoActivityIndicator(radius: 7),
+            if (canEdit || canRest)
+              PopupMenuButton<String>(
+                tooltip: fitnessText(context, 'Workout options'),
+                color: FitnessTheme.surface,
+                onSelected: (value) =>
+                    value == 'rest' ? _restToday(date) : _editDay(date),
+                itemBuilder: (context) => [
+                  if (canEdit)
+                    const PopupMenuItem(
+                        value: 'edit', child: FitnessText('Edit workout')),
+                  if (canRest)
+                    const PopupMenuItem(
+                        value: 'rest', child: FitnessText('Rest today')),
+                ],
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  child: const Center(
+                      child: FitnessText('Edit',
+                          style: TextStyle(
+                              fontSize: 12, color: FitnessTheme.silver))),
                 ),
+              ),
+          ]),
+          const SizedBox(height: 10),
+          FitnessText(rest ? 'Rest & recharge' : planWorkoutTitle(day),
+              style: const TextStyle(
+                  fontSize: 23,
+                  height: 1.2,
+                  letterSpacing: -.65,
+                  fontWeight: FontWeight.w500)),
+          const SizedBox(height: 12),
+          if (rest)
+            const FitnessText(
+                'Room to recover. Your next session is on the calendar.',
+                style: TextStyle(
+                    fontSize: 12, color: FitnessTheme.muted, height: 1.5))
+          else ...[
+            Wrap(spacing: 12, runSpacing: 6, children: [
+              FitnessText(
+                  exercises.length == 1
+                      ? '{count} exercise'
+                      : '{count} exercises',
+                  values: {'count': exercises.length},
+                  style:
+                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+              if (minutes > 0)
+                FitnessText('About {minutes} min',
+                    values: {'minutes': minutes},
+                    style: const TextStyle(
+                        fontSize: 12, color: FitnessTheme.muted)),
+              FitnessText('{count} sets',
+                  values: {'count': sets},
+                  style:
+                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
             ]),
-            const SizedBox(height: 16),
-            Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Expanded(
-                  child: FitnessText(
-                      rest ? 'Rest & recharge' : planWorkoutTitle(day),
-                      style: const TextStyle(
-                          fontSize: 29,
-                          height: 1.2,
-                          letterSpacing: -1,
-                          fontWeight: FontWeight.w500))),
-              const SizedBox(width: 14),
-              Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                      color: const Color(0xFF303030),
-                      borderRadius: BorderRadius.circular(17)),
-                  child: Icon(
-                      rest
-                          ? CupertinoIcons.moon
-                          : Icons.fitness_center_outlined,
-                      color: Colors.white,
-                      size: 23)),
-            ]),
-            if (rest) ...[
-              const SizedBox(height: 12),
-              const FitnessText(
-                  'Room to recover. Your next session is on the calendar.',
-                  style: TextStyle(
-                      fontSize: 12, color: FitnessTheme.muted, height: 1.5)),
-            ] else ...[
-              const SizedBox(height: 22),
-              Row(children: [
-                Expanded(
-                    child: _workoutStat('${exercises.length}', 'Exercises')),
-                if (minutes > 0)
-                  Expanded(child: _workoutStat('$minutes', 'Minutes')),
-                Expanded(child: _workoutStat('$sets', 'Sets')),
-              ]),
-              if (canStart || canEdit) ...[
-                const SizedBox(height: 24),
-                LiquidChromeButton(
-                    key: const ValueKey('onboarding-first-workout-action'),
-                    solid: true,
-                    pill: true,
-                    showArrow: true,
-                    isLoading: _startingFirst,
-                    title: canStart
-                        ? (live.started ? 'Resume workout' : 'Start workout')
-                        : 'Edit workout',
-                    onPressed: _startingFirst
-                        ? null
-                        : canStart
-                            ? () => _startFirstWorkout(date)
-                            : () => _editDay(date)),
-              ],
+            if (canStart || canEdit) ...[
+              const SizedBox(height: 18),
+              FilledButton(
+                key: const ValueKey('onboarding-first-workout-action'),
+                onPressed: _startingFirst
+                    ? null
+                    : canStart
+                        ? () => _startFirstWorkout(date)
+                        : () => _editDay(date),
+                style: FilledButton.styleFrom(
+                  backgroundColor: FitnessTheme.silver,
+                  foregroundColor: FitnessTheme.canvas,
+                  minimumSize: const Size(double.infinity, 50),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _startingFirst
+                    ? const CupertinoActivityIndicator(
+                        color: FitnessTheme.canvas)
+                    : FitnessText(
+                        canStart
+                            ? (live.started
+                                ? 'Resume workout'
+                                : 'Start workout')
+                            : 'Edit workout',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.3,
+                            fontWeight: FontWeight.w600)),
+              ),
             ],
-          ])),
+          ],
+        ]),
+      ),
       if (_errors.contains(date))
-        TextButton.icon(
+        TextButton(
             onPressed: _loadSelected,
-            icon: const Icon(CupertinoIcons.refresh, size: 15),
-            label: const FitnessText('Could not sync. Tap to retry.',
+            child: const FitnessText('Could not sync. Tap to retry.',
                 style: TextStyle(fontSize: 12))),
       if (!rest && exercises.isNotEmpty) ...[
-        const SizedBox(height: 24),
-        Row(children: [
-          const Expanded(
-              child: FitnessText('Your exercises',
+        const SizedBox(height: 20),
+        const Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 6,
+            children: [
+              FitnessText('Your exercises',
                   style: TextStyle(
                       fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -.3))),
-          FitnessText('Tap for details',
-              style: const TextStyle(fontSize: 10, color: FitnessTheme.muted)),
-        ]),
-        const SizedBox(height: 14),
-        WorkoutWarmup(warmup: (day['warmup'] as Map?)?.cast<String, dynamic>()),
-        for (var i = 0; i < exercises.length; i++)
-          _exercise(exercises[i], i + 1, date),
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -.3)),
+              FitnessText('Tap for details',
+                  style: TextStyle(fontSize: 11, color: FitnessTheme.muted)),
+            ]),
+        const SizedBox(height: 12),
+        WorkoutWarmup(
+            warmup: (day['warmup'] as Map?)?.cast<String, dynamic>(),
+            compact: true,
+            loadExercise: widget.loadExercise),
+        TrainingSurface(
+            padding: EdgeInsets.zero,
+            child: Column(children: [
+              for (var i = 0; i < exercises.length; i++) ...[
+                if (i > 0)
+                  const Divider(
+                      height: 1,
+                      indent: 14,
+                      endIndent: 14,
+                      color: FitnessTheme.line),
+                _exercise(exercises[i], i + 1, date),
+              ],
+            ])),
       ],
     ]);
   }
 
-  Widget _workoutStat(String value, String label) => Container(
-      padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-      margin: const EdgeInsets.only(right: 6),
-      decoration: BoxDecoration(
-          color: const Color(0xFF141414),
-          borderRadius: BorderRadius.circular(14)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(value,
-            style: const TextStyle(
-                fontSize: 24,
-                height: 1.1,
-                letterSpacing: -.7,
-                fontWeight: FontWeight.w500)),
-        const SizedBox(height: 7),
-        FitnessText(label,
-            style: const TextStyle(fontSize: 10, color: FitnessTheme.muted)),
-      ]));
-
-  Widget _exercise(Map exercise, int number, String date) => Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: ExerciseRecommendationCard(
-          key: ValueKey('plan-exercise-$date-$number'),
-          number: number,
-          exercise: {...Map<String, dynamic>.from(exercise), 'date': date}));
+  Widget _exercise(Map exercise, int number, String date) => PlannedExerciseRow(
+      key: ValueKey('plan-exercise-$date-$number'),
+      loadExercise: widget.loadExercise,
+      initial: _live[date]
+          ?.items
+          .where((item) => item.exercise.id == exercise['exerciseId'])
+          .firstOrNull
+          ?.exercise,
+      exercise: {...Map<String, dynamic>.from(exercise), 'date': date});
 
   Widget _food(String date) {
     final nutrition = widget.payload["nutrition"] as Map?;
@@ -699,7 +657,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
     final totals = foodDay['totals'] as Map;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       const FitnessText('Food for the day',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
       const SizedBox(height: 8),
       FitnessText(
           '${(totals['calories'] as num).round()} kcal · ${(totals['protein'] as num).round()} g protein',

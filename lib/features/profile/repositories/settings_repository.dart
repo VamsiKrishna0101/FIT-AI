@@ -40,6 +40,7 @@ class SettingsRepository {
       throw StateError('Your session changed. Reopen Settings.');
     }
     await UserDataCache.shared.invalidate('profile');
+    await UserDataCache.shared.invalidate('training_map');
     await WorkoutRepository.shared.invalidateExerciseMedia();
     await UserDataCache.shared.invalidate('body');
     TodayRepository.shared.invalidate();

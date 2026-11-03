@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'helpers/calendar_controls.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -209,7 +210,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('exercise-progress-calendar')));
     await tester.pumpAndSettle();
     expect(find.byType(BodyCalendar), findsOneWidget);
-    await tester.tap(find.text('This week'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'This week');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('body-calendar-apply')));
     await tester.pumpAndSettle();

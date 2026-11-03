@@ -13,31 +13,54 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:setcraft/core/network/api_client.dart';
 import 'package:setcraft/core/storage/secure_session_store.dart';
 import 'package:setcraft/features/train/models/training_session.dart';
+import 'package:setcraft/features/train/repositories/training_repository.dart';
+import 'package:setcraft/features/train/components/workout_completion_summary.dart';
 import 'package:setcraft/features/train/views/train_view.dart';
 import 'package:setcraft/features/train/views/create_workout_view.dart';
 import 'package:setcraft/features/train/views/saved_routines_view.dart';
 import 'package:setcraft/features/today/components/weekly_rhythm_calendar.dart';
+import 'package:setcraft/core/components/session_overview_card.dart';
+import 'package:setcraft/features/today/views/today_home_view.dart';
+import 'today_date_filter_test.dart' show DateAdapter;
 import 'training_session_test.dart' as training;
 import 'saved_routines_view_test.dart' show RoutineAdapter;
 
 class HubAdapter extends RoutineAdapter {
   Completer<void>? holdCreate;
-  bool failCreate = false, completed = false, rest = false;
+  bool failCreate = false, completed = false, rest = false, started = false;
+  bool todayHome = false;
+  int completedSets = 0;
+  final home = DateAdapter()..recordedReadiness = true;
+  final savedWorkouts = <Map<String, dynamic>>[];
   String workoutName = 'Push day';
   @override
   Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? stream,
       Future<void>? cancel) async {
+    if (todayHome &&
+        (options.path == '/api/home' ||
+            options.path == '/api/history/recovery')) {
+      return home.fetch(options, stream, cancel);
+    }
     if (options.method == 'GET' &&
         Uri.parse(options.path).path.endsWith('/training')) {
       final date = Uri.parse(options.path).queryParameters['date']!;
-      final day = training.fixture(date)
-        ..['session'] =
-            completed ? {'status': 'COMPLETED', 'durationSeconds': 1200} : null
-        ..['restDay'] = rest
-        ..['name'] = workoutName;
+      final day =
+          training.fixture(date, finished: completed, sets: completedSets)
+            ..['session'] = completed
+                ? {'status': 'COMPLETED', 'durationSeconds': 1200}
+                : started
+                    ? {'status': 'IN_PROGRESS'}
+                    : null
+            ..['restDay'] = rest
+            ..['name'] = workoutName;
       (day['items'] as List).first['setTargets'] = targets;
-      day['routines'] = List.generate(5,
-          (i) => {'id': 'routine-$i', 'name': 'Saved workout $i', 'count': 1});
+      day['routines'] = [
+        ...List.generate(
+            5,
+            (i) =>
+                {'id': 'routine-$i', 'name': 'Saved workout $i', 'count': 1}),
+        ...savedWorkouts,
+      ];
       return ResponseBody.fromString(jsonEncode({'data': day}), 200, headers: {
         Headers.contentTypeHeader: ['application/json']
       });
@@ -91,6 +114,7 @@ class HubAdapter extends RoutineAdapter {
       writes.add({
         'path': Uri.parse(options.path).path,
         'method': 'POST',
+        'date': options.uri.queryParameters['date'],
         'data': options.data
       });
       if (holdCreate != null) await holdCreate!.future;
@@ -106,14 +130,16 @@ class HubAdapter extends RoutineAdapter {
     if (options.method == 'POST' &&
         Uri.parse(options.path).path.endsWith('/routines')) {
       final date = Uri.parse(options.path).queryParameters['date']!;
-      final day = training.fixture(date)..['session'] = null;
-      day['routines'] = [
-        {
-          'id': 'new-routine',
-          'name': options.data['name'],
-          'count': (options.data['items'] as List).length
-        }
-      ];
+      final day = training.fixture(date)
+        ..['session'] = null
+        ..['name'] = workoutName;
+      (day['items'] as List).first['setTargets'] = targets;
+      savedWorkouts.add({
+        'id': 'new-routine-${savedWorkouts.length}',
+        'name': options.data['name'],
+        'count': (options.data['items'] as List).length
+      });
+      day['routines'] = [...savedWorkouts];
       return ResponseBody.fromString(jsonEncode({'data': day}), 200, headers: {
         Headers.contentTypeHeader: ['application/json']
       });
@@ -234,7 +260,202 @@ void main() {
     await tester.pumpAndSettle();
     final day = find.byKey(ValueKey(
         'week-calendar-day-${future.toIso8601String().substring(0, 10)}'));
-    expect(tester.widget<InkWell>(day).onTap, isNotNull);
+    expect(tester.widget<TextButton>(day).onPressed, isNotNull);
+    await close(tester);
+  });
+
+  testWidgets(
+      'An unstarted past workout saves its exact prescription once and opens My workouts',
+      (tester) async {
+    phone(tester);
+    const date = '2026-10-19';
+    adapter.holdCreate = Completer<void>();
+    await tester.pumpWidget(app(const TrainView(initialDate: date)));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const ValueKey('train-session-card'));
+    final action =
+        find.descendant(of: card, matching: find.byType(FilledButton));
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<SessionOverviewCard>(card).actionLabel, 'Save workout');
+    await tester.tap(action);
+    await tester.tap(action);
+    await tester.pump();
+    for (var i = 0; i < 50 && adapter.writes.isEmpty; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(adapter.writes, hasLength(1));
+    expect(adapter.writes.single['path'], endsWith('/routines'));
+    expect(adapter.writes.single['date'], date);
+    final data = adapter.writes.single['data'];
+    expect(data['name'], 'Push day');
+    expect(data['items'].single, {
+      'workoutId': 'exercise',
+      'targetSets': 3,
+      'targetReps': '8-12',
+      'targetWeight': 0.0,
+      'restSeconds': 60,
+      'setTargets': adapter.targets,
+    });
+    adapter.holdCreate!.complete();
+    await tester.pumpAndSettle();
+    expect(tester.widget<SessionOverviewCard>(card).actionLabel, 'My workouts');
+    expect(find.text('Saved to My workouts'), findsOneWidget);
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    final library =
+        tester.widget<SavedRoutinesView>(find.byType(SavedRoutinesView));
+    expect(library.initial.routines.last['name'], 'Push day');
+    expect(library.initial.session, isNull);
+    expect(library.initial.date, date);
+    expect(library.initial.items.single.status, 'NOT_STARTED');
+    expect(library.initial.loggedEntries, isEmpty);
+    expect(adapter.writes, hasLength(1));
+    expect(tester.takeException(), isNull);
+    await close(tester);
+  });
+
+  testWidgets('A failed past-workout save can retry without starting a session',
+      (tester) async {
+    phone(tester);
+    adapter.failCreate = true;
+    await tester.pumpWidget(app(const TrainView(initialDate: '2026-10-19')));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const ValueKey('train-session-card'));
+    final action =
+        find.descendant(of: card, matching: find.byType(FilledButton));
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(find.text('Could not save routine.'), findsOneWidget);
+    expect(
+        tester.widget<SessionOverviewCard>(card).actionLabel, 'Save workout');
+    adapter.failCreate = false;
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(tester.widget<SessionOverviewCard>(card).actionLabel, 'My workouts');
+    expect(adapter.writes, hasLength(2));
+    expect(
+        adapter.writes.every((row) => '${row['path']}'.endsWith('/routines')),
+        isTrue);
+    expect(tester.takeException(), isNull);
+    await close(tester);
+  });
+
+  testWidgets('Only unstarted past sessions change their primary action',
+      (tester) async {
+    phone(tester);
+    final now = DateTime.now();
+    final today = now.toIso8601String().substring(0, 10);
+    final future = DateTime(now.year, now.month, now.day + 7)
+        .toIso8601String()
+        .substring(0, 10);
+    for (final (date, started, completed, rest, label, enabled) in [
+      (today, false, false, false, 'Start workout', true),
+      (future, false, false, false, 'Start workout', false),
+      ('2026-10-19', true, false, false, 'Resume workout', true),
+      ('2026-10-20', false, true, false, 'View summary', true),
+      ('2026-10-21', false, false, true, 'Build a workout', true),
+    ]) {
+      adapter.started = started;
+      adapter.completed = completed;
+      adapter.rest = rest;
+      await tester.pumpWidget(app(TrainView(initialDate: date)));
+      await tester.pumpAndSettle();
+      final card = tester.widget<SessionOverviewCard>(
+          find.byKey(const ValueKey('train-session-card')));
+      expect(card.actionLabel, label);
+      expect(card.onAction != null, enabled);
+      expect(adapter.writes, isEmpty);
+      await close(tester);
+    }
+  });
+
+  testWidgets('Today saves the workout from the selected historical week',
+      (tester) async {
+    phone(tester);
+    adapter.todayHome = true;
+    await tester.pumpWidget(app(TodayHomeView(
+        clock: () => DateTime(2026, 10, 28),
+        onSelectTab: (_) {},
+        onOpenProfile: () {})));
+    await tester.pumpAndSettle();
+    final calendar = find.byKey(const ValueKey('weekly-rhythm-calendar'));
+    await tester.scrollUntilVisible(calendar, -180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(calendar);
+    await tester.pumpAndSettle();
+    await tester.tap(calendar);
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('week-calendar-day-2026-10-19')));
+    await tester.tap(find.byKey(const ValueKey('week-calendar-view-week')));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const ValueKey('today-session-card'));
+    final action =
+        find.descendant(of: card, matching: find.byType(FilledButton));
+    await tester.scrollUntilVisible(action, 180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: card, matching: find.text('Save workout')),
+        findsOneWidget);
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(adapter.writes, hasLength(1));
+    expect(adapter.writes.single['date'], '2026-10-19');
+    expect(adapter.writes.single['path'], endsWith('/routines'));
+    expect(adapter.writes.single['data']['items'].single['setTargets'],
+        adapter.targets);
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    final library =
+        tester.widget<SavedRoutinesView>(find.byType(SavedRoutinesView));
+    expect(library.initial.date, '2026-10-19');
+    expect(library.initial.routines.single['name'], 'Push day');
+    expect(library.initial.session, isNull);
+    expect(adapter.writes, hasLength(1));
+    expect(tester.takeException(), isNull);
+    await close(tester);
+  });
+
+  testWidgets(
+      'View summary opens the completed workout and Done returns to Train',
+      (tester) async {
+    phone(tester);
+    adapter.completed = true;
+    adapter.completedSets = 3;
+    await tester.pumpWidget(app(const TrainView(initialDate: '2026-10-20')));
+    await tester.pumpAndSettle();
+    final action = find.descendant(
+        of: find.byKey(const ValueKey('train-session-card')),
+        matching: find.byType(FilledButton));
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutCompletionSummary), findsOneWidget);
+    expect(find.text('Workout summary'), findsOneWidget);
+    expect(find.text('600 kg'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    final exercise = find.byType(ExpansionTile);
+    await tester.ensureVisible(exercise);
+    await tester.pumpAndSettle();
+    await tester.tap(exercise);
+    await tester.pumpAndSettle();
+    expect(find.text('20 kg'), findsNWidgets(3));
+    expect(adapter.writes, isEmpty);
+    await capture(tester, 'train-completed-summary-preview');
+    await tester.tap(find.byKey(const ValueKey('workout-primary-action')));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutCompletionSummary), findsNothing);
+    expect(find.byKey(const ValueKey('train-session-card')), findsOneWidget);
+    expect(adapter.writes, isEmpty);
+    expect(tester.takeException(), isNull);
     await close(tester);
   });
 
@@ -271,6 +492,40 @@ void main() {
     await capture(tester, 'my-workouts-preview');
     expect(
         adapter.writes.single['data']['items'].single['workoutId'], 'pushup');
+    await close(tester);
+  });
+
+  testWidgets('My workouts refreshes saves made from another cached week',
+      (tester) async {
+    phone(tester);
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    await tester.pumpWidget(app(const TrainView()));
+    await tester.pumpAndSettle();
+    await close(tester);
+    adapter.workoutName = 'Saved from October';
+    final repo = TrainingRepository.shared;
+    await tester.runAsync(() => repo.saveWorkout('2026-10-19'));
+    expect(
+        (await repo.cached(today))!
+            .routines
+            .any((r) => r['name'] == 'Saved from October'),
+        isFalse,
+        reason: 'The other date still has its earlier 30-second cache entry');
+    await tester.pumpWidget(app(const TrainView()));
+    await tester.pumpAndSettle();
+    final libraryButton = find.byKey(const ValueKey('train-my-workouts'));
+    await tester.scrollUntilVisible(libraryButton, 180,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(libraryButton);
+    await tester.pumpAndSettle();
+    await tester.tap(libraryButton);
+    await tester.pumpAndSettle();
+    final library =
+        tester.widget<SavedRoutinesView>(find.byType(SavedRoutinesView));
+    expect(library.initial.date, today);
+    expect(library.initial.routines.last['name'], 'Saved from October');
+    expect(adapter.writes, hasLength(1));
+    expect(tester.takeException(), isNull);
     await close(tester);
   });
 

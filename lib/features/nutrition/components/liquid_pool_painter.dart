@@ -3,6 +3,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'liquid_wave_path.dart';
 
+/// Vessel capacity includes a small air gap above the recorded daily goal.
+double liquidVesselFill(double fraction, {required bool perspective}) =>
+    fraction.clamp(0.0, 1.0) * (perspective ? .92 : .94);
+
 /// A gravity-aligned free surface inside a sealed, rounded tank.
 class GravityWaterSurface {
   GravityWaterSurface(
@@ -74,9 +78,22 @@ class GravityWaterSurface {
     if (samples != null && samples.length >= 2) {
       final position = ((u - minU) / (maxU - minU)).clamp(0.0, 1.0);
       final index = position * (samples.length - 1);
-      final lower = index.floor(), upper = index.ceil();
-      final height =
-          ui.lerpDouble(samples[lower], samples[upper], index - lower)!;
+      final lower = index.floor();
+      final t = index - lower;
+      double at(int i) => samples[i.clamp(0, samples.length - 1)];
+      final a = at(lower - 1),
+          b = at(lower),
+          c = at(lower + 1),
+          d = at(lower + 2);
+      final height = b +
+          t *
+              (.5 * (c - a) +
+                  t *
+                      (a -
+                          2.5 * b +
+                          2 * c -
+                          .5 * d +
+                          t * (.5 * (d - a) + 1.5 * (b - c))));
       final meniscus =
           -.003 * (math.exp(-position * 24) + math.exp(-(1 - position) * 24));
       return size.shortestSide * (height + meniscus);
@@ -143,12 +160,13 @@ void paintLiquidPool(Canvas canvas, Size size,
     required double energy,
     required Color tint,
     List<double>? surface,
+    ui.FragmentShader? optics,
     bool perspective = true}) {
   if (size.isEmpty) return;
   final tank = GravityWaterSurface(
       size: size,
       // Leave air for the surface to move even at the daily goal.
-      fill: fraction.clamp(0.0, 1.0) * (perspective ? .92 : 1),
+      fill: liquidVesselFill(fraction, perspective: perspective),
       angle: roll,
       phase: phase,
       surface: surface,
@@ -174,50 +192,74 @@ void paintLiquidPool(Canvas canvas, Size size,
     final deepest = math.max(tank.level + 1, tank.maxV);
     final bounds = Rect.fromLTRB(tank.minU, tank.level - tank.waveExtent,
         tank.maxU, deepest + tank.waveExtent);
-    canvas.drawPath(
-        body,
-        Paint()
-          ..shader =
-              ui.Gradient.linear(Offset(0, tank.level), Offset(0, deepest), [
-            Color.lerp(tint, Colors.white, .06)!.withValues(alpha: .72),
-            Color.lerp(
-                    tint,
-                    perspective ? const Color(0xFF123847) : Colors.black,
-                    perspective ? .6 : .28)!
-                .withValues(alpha: .94)
-          ]));
-    canvas.save();
-    canvas.clipPath(body);
-    canvas.drawRect(
-        bounds,
-        Paint()
-          ..shader = RadialGradient(
-              center: Alignment(.3 * math.sin(phase * .3), -.35),
-              radius: .9,
-              colors: [
-                Colors.white.withValues(alpha: .045),
-                Colors.transparent
-              ]).createShader(bounds));
-    for (var band = 0; band < (perspective ? 2 : 0); band++) {
-      final points = crest
-          .map((point) => Offset(
-              point.dx,
-              point.dy +
-                  (deepest - point.dy) * (.2 + band * .23) +
-                  math.sin(point.dx / size.width * 8 - phase * .6 + band) *
-                      1.5))
-          .toList();
-      canvas.drawPath(
-          liquidCurve(points),
-          Paint()
-            ..color = Colors.white.withValues(alpha: .018)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.1);
+    final waterPaint = Paint();
+    if (optics != null) {
+      // Keep uniform order in sync with shaders/water_optics.frag.
+      final uniforms = [
+        size.width,
+        size.height,
+        tank.minU,
+        tank.maxU,
+        deepest,
+        phase,
+        pitch,
+        energy,
+        tint.r,
+        tint.g,
+        tint.b,
+        perspective ? 1.0 : 0.0,
+        for (var i = 0; i <= 64; i++)
+          tank.surfaceAt(tank.minU + (tank.maxU - tank.minU) * i / 64),
+      ];
+      for (var i = 0; i < uniforms.length; i++) {
+        optics.setFloat(i, uniforms[i]);
+      }
+      waterPaint.shader = optics;
+    } else {
+      waterPaint.shader =
+          ui.Gradient.linear(Offset(0, tank.level), Offset(0, deepest), [
+        Color.lerp(tint, Colors.white, .06)!.withValues(alpha: .72),
+        Color.lerp(tint, perspective ? const Color(0xFF123847) : Colors.black,
+                perspective ? .6 : .28)!
+            .withValues(alpha: .94)
+      ]);
     }
-    canvas.restore();
+    canvas.drawPath(body, waterPaint);
+    if (optics == null) {
+      canvas.save();
+      canvas.clipPath(body);
+      canvas.drawRect(
+          bounds,
+          Paint()
+            ..shader = RadialGradient(
+                center: Alignment(.3 * math.sin(phase * .3), -.35),
+                radius: .9,
+                colors: [
+                  Colors.white.withValues(alpha: .045),
+                  Colors.transparent
+                ]).createShader(bounds));
+      for (var band = 0; band < (perspective ? 2 : 0); band++) {
+        final points = crest
+            .map((point) => Offset(
+                point.dx,
+                point.dy +
+                    (deepest - point.dy) * (.2 + band * .23) +
+                    math.sin(point.dx / size.width * 8 - phase * .6 + band) *
+                        1.5))
+            .toList();
+        canvas.drawPath(
+            liquidCurve(points),
+            Paint()
+              ..color = Colors.white.withValues(alpha: .018)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.1);
+      }
+      canvas.restore();
+    }
     // The meniscus follows the fluid and refracts light at its surface.
     final rimDepth = math.min(
-        2.0, size.shortestSide * (.015 + .012 * math.sin(pitch).abs()));
+        (deepest - tank.level).clamp(0.0, size.shortestSide) * .38,
+        size.shortestSide * (.065 + .012 * math.sin(pitch)));
     final rim = liquidCurve(crest);
     appendLiquidCurve(
         rim, crest.reversed.map((p) => p + Offset(0, rimDepth)).toList(),
@@ -230,7 +272,7 @@ void paintLiquidPool(Canvas canvas, Size size,
         Paint()
           ..shader = ui.Gradient.linear(
               Offset(0, tank.level), Offset(0, tank.level + rimDepth), [
-            Colors.white.withValues(alpha: .16),
+            Colors.white.withValues(alpha: optics == null ? .22 : .06),
             tint.withValues(alpha: 0)
           ]));
     canvas.restore();
@@ -240,8 +282,8 @@ void paintLiquidPool(Canvas canvas, Size size,
           ..shader = ui.Gradient.linear(
               Offset(tank.minU, tank.level),
               Offset(tank.maxU, tank.level),
-              const [Color(0x12FFFFFF), Color(0x50FFFFFF), Color(0x20FFFFFF)],
-              const [0, .5, 1])
+              const [Color(0x0CFFFFFF), Color(0x70FFFFFF), Color(0x14FFFFFF)],
+              [0, .5 + .18 * math.sin(phase * .2), 1])
           ..style = PaintingStyle.stroke
           ..strokeWidth = .65);
     canvas.restore();

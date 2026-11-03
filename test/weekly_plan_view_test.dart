@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +20,8 @@ class _Repository extends WeeklyPlanRepository {
   int activations = 0;
   int generations = 0;
   bool currentScan = true;
+  bool archived = false, withNutrition = false;
+  bool wholeWeek = false;
 
   @override
   Future<BodyOverview> bodyOverview() async => BodyOverview.fromJson({
@@ -55,37 +62,69 @@ class _Repository extends WeeklyPlanRepository {
         'id': 'saved-plan',
         'weekStart': '2026-10-12',
         'version': 1,
-        'status': 'ACTIVE',
+        'status': archived ? 'ARCHIVED' : 'ACTIVE',
         'synthetic': synthetic,
         'payload': {
           'synthetic': synthetic,
+          'summary':
+              'This week uses familiar exercises and recovery between training days.',
           'warnings': [],
           'workouts': [
-            {
-              'date': '2026-10-12',
-              'name': 'Full body',
-              'restDay': false,
-              'estimatedMinutes': 30,
-              'exercises': [
-                {
-                  'name': 'Dumbbell floor press',
-                  'sets': 2,
-                  'repsMin': 10,
-                  'repsMax': 12,
-                  'weightKg': 12,
-                  'weightBasis': 'as_logged',
-                  'targetRpe': 7.5,
-                  'restSeconds': 120,
-                  'reason':
-                      'Keep a familiar movement using your available equipment.',
-                }
-              ],
-            }
+            for (var day = 0; day < (wholeWeek ? 7 : 1); day++)
+              {
+                'date': '2026-10-${12 + day}',
+                'name': wholeWeek && (day == 1 || day > 3)
+                    ? 'Rest day'
+                    : 'Full body',
+                'restDay': wholeWeek && (day == 1 || day > 3),
+                'estimatedMinutes': 30,
+                'exercises': wholeWeek && (day == 1 || day > 3)
+                    ? []
+                    : [
+                        {
+                          'exerciseId': 'press',
+                          'name': 'Dumbbell floor press',
+                          'sets': 2,
+                          'repsMin': 10,
+                          'repsMax': 12,
+                          'weightKg': 12,
+                          'weightBasis': 'as_logged',
+                          'targetRpe': 7.5,
+                          'restSeconds': 120,
+                          'reason':
+                              'Keep a familiar movement using your available equipment.',
+                        }
+                      ],
+              }
           ],
-          'nutrition': {
-            'status': 'NEEDS_INPUT',
-            'reason': 'Review your food preferences.'
-          },
+          'nutrition': withNutrition
+              ? {
+                  'status': 'RECOMMENDED',
+                  'targets': {
+                    'calories': 2100,
+                    'protein': 150,
+                    'carbs': 240,
+                    'fat': 60
+                  },
+                  'days': [
+                    {
+                      'date': '2026-10-12',
+                      'totals': {'calories': 2100, 'protein': 150},
+                      'meals': [
+                        {
+                          'mealType': 'BREAKFAST',
+                          'foods': [
+                            {'name': 'Oats', 'grams': 80}
+                          ]
+                        }
+                      ],
+                    }
+                  ],
+                }
+              : {
+                  'status': 'NEEDS_INPUT',
+                  'reason': 'Review your food preferences.'
+                },
         },
       };
 
@@ -287,8 +326,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-12')));
     await tester.pumpAndSettle();
     expect(find.text('Dumbbell floor press'), findsOneWidget);
-    await tester.tap(find.text('Dumbbell floor press'));
-    await tester.pumpAndSettle();
     expect(find.text('12 kg'), findsOneWidget);
     expect(find.text('Use this weekly plan'), findsNothing);
     expect(repository.activations, 0);
@@ -312,11 +349,11 @@ void main() {
         .ensureVisible(find.byKey(const ValueKey('plan-day-2026-10-12')));
     await tester.tap(find.byKey(const ValueKey('plan-day-2026-10-12')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Food'), 250,
+    await tester.scrollUntilVisible(find.text('Nutrition'), 250,
         scrollable: find.byType(Scrollable).first);
-    await tester.ensureVisible(find.text('Food'));
+    await tester.ensureVisible(find.text('Nutrition'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Food'));
+    await tester.tap(find.text('Nutrition'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -334,10 +371,21 @@ void main() {
     expect(find.text('Generate weekly plan'), findsNothing);
     expect(find.text('View weekly plan'), findsNothing);
     expect(find.textContaining('Next plan available'), findsNothing);
-    await tester.ensureVisible(find.text('Plan options'));
-    await tester.tap(find.text('Plan options'));
+    expect(
+        find.text(
+            'This week uses familiar exercises and recovery between training days.'),
+        findsNothing);
+    await tester.ensureVisible(find.text('Why this plan'));
+    await tester.tap(find.text('Why this plan'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Next plan available'), findsOneWidget);
+    expect(
+        find.text(
+            'This week uses familiar exercises and recovery between training days.'),
+        findsOneWidget);
+    expect(
+        find.text('Keep a familiar movement using your available equipment.'),
+        findsOneWidget);
     expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsOneWidget);
 
     expect(repository.generations, 0);
@@ -412,4 +460,76 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  for (final large in [false, true]) {
+    testWidgets(
+        'Weekly plan training and nutrition fit ${large ? 'large German text' : 'a phone'}',
+        (tester) async {
+      tester.view.physicalSize =
+          large ? const Size(320, 720) : const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      for (final font in {
+        'Inter': 'assets/fonts/Inter.ttf',
+        'MaterialIcons': 'fonts/MaterialIcons-Regular.otf',
+        'packages/cupertino_icons/CupertinoIcons':
+            'packages/cupertino_icons/assets/CupertinoIcons.ttf',
+      }.entries) {
+        await (FontLoader(font.key)..addFont(rootBundle.load(font.value)))
+            .load();
+      }
+      final repository = _Repository()
+        ..generated = true
+        ..archived = true
+        ..withNutrition = true
+        ..wholeWeek = true;
+      const captureKey = ValueKey('weekly-plan-screen');
+      await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(),
+        debugShowCheckedModeBanner: false,
+        locale: Locale(large ? 'de' : 'en'),
+        supportedLocales: const [Locale('en'), Locale('de')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(large ? 1.8 : 1),
+                disableAnimations: true),
+            child: child!),
+        home: RepaintBoundary(
+            key: captureKey, child: WeeklyPlanView(repository: repository)),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Dumbbell floor press'), findsOneWidget);
+      expect(find.byIcon(Icons.fitness_center_outlined), findsNothing);
+      expect(find.byIcon(Icons.restaurant_outlined), findsNothing);
+      expect(tester.takeException(), isNull);
+      Future<void> capture(String section) => tester.runAsync(() async {
+            final boundary = tester
+                .renderObject<RenderRepaintBoundary>(find.byKey(captureKey));
+            final image = await boundary.toImage(pixelRatio: 2);
+            final bytes =
+                await image.toByteData(format: ui.ImageByteFormat.png);
+            final file = File(
+                'build/previews/weekly-plan-$section-${large ? 'large-de' : 'phone'}.png');
+            await file.parent.create(recursive: true);
+            await file.writeAsBytes(bytes!.buffer.asUint8List());
+            image.dispose();
+          });
+      await capture('training');
+      final nutrition = find.text(large ? 'Ernährung' : 'Nutrition');
+      await tester.ensureVisible(nutrition);
+      await tester.pumpAndSettle();
+      await tester.tap(nutrition);
+      await tester.pumpAndSettle();
+      expect(find.text('2100'), findsOneWidget);
+      expect(find.text('150 g'), findsOneWidget);
+      expect(find.text('240 g'), findsOneWidget);
+      expect(find.text('60 g'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await capture('nutrition');
+      expect(repository.activations, 0);
+      expect(repository.generations, 0);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 }

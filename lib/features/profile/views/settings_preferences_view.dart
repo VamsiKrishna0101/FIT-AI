@@ -111,7 +111,7 @@ class SettingsAboutView extends StatelessWidget {
                 icon: CupertinoIcons.heart,
                 title: 'Missing health readings?',
                 subtitle:
-                    'Check Health & sleep → Health connection. A connected app can only read data that your health provider has saved.'),
+                    'Check Health connection in Settings. A connected app can only read data that your health provider has saved.'),
             SettingsRow(
                 icon: CupertinoIcons.calendar,
                 title: 'When can I generate again?',

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../core/localization/fitness_copy.dart';
 import '../../../core/theme/ds_colors.dart';
+import '../../../core/components/app_date_filter.dart';
 import '../../body_scan/models/body_map_models.dart';
 import '../../body_scan/views/widgets/body_calendar.dart';
 import '../models/progress_chart_data.dart';
@@ -47,12 +47,7 @@ Map<String, dynamic> progressExerciseQuery(
 
 Future<BodyDateSelection?> showProgressExerciseCalendar(
         BuildContext context, BodyDateSelection selection) =>
-    showModalBottomSheet<BodyDateSelection>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) =>
-            BodyCalendar(selection: selection, title: 'Progress dates'));
+    showBodyDateFilter(context, selection: selection);
 
 /// The same quiet header and calendar used by the Progress overview.
 class ProgressExerciseHeader extends StatelessWidget {
@@ -92,16 +87,8 @@ class ProgressExerciseHeader extends StatelessWidget {
                   color: DSColors.muted, fontSize: 11, height: 1.4)),
         ])),
         const SizedBox(width: 12),
-        IconButton(
+        AppDateFilterButton(
             key: const ValueKey('exercise-progress-calendar'),
-            tooltip: fitnessText(context, 'Calendar'),
-            onPressed: onCalendar,
-            style: IconButton.styleFrom(
-                minimumSize: const Size(44, 44),
-                backgroundColor: const Color(0xFF17191C),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13))),
-            icon: const Icon(CupertinoIcons.calendar,
-                size: 19, color: DSColors.silver)),
+            onPressed: onCalendar),
       ]));
 }

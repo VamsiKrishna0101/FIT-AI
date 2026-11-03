@@ -8,6 +8,7 @@ import 'package:setcraft/features/body_scan/views/widgets/body_muscle_map_card.d
 import 'package:setcraft/features/body_scan/views/widgets/body_progress_style.dart';
 import 'package:setcraft/features/body_scan/views/widgets/anatomical_training_map.dart';
 import 'dart:io';
+import 'helpers/calendar_controls.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -498,7 +499,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('body-calendar-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Multiple days'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'Multiple days');
     await tester.pumpAndSettle();
     final now = DateTime.now();
     final dates = [
@@ -528,7 +529,7 @@ void main() {
         dates.map((d) => d.toIso8601String().substring(0, 10)).join(','));
     await tester.tap(find.byKey(const ValueKey('body-calendar-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('All time'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'All time');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();

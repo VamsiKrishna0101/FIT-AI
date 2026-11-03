@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'helpers/calendar_controls.dart';
+import 'package:setcraft/core/components/app_date_filter.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -141,7 +143,7 @@ void main() {
                 today: today,
                 onSelected: (date) => selected = date)))));
     final trigger = find.byKey(const ValueKey('weekly-rhythm-calendar'));
-    expect(tester.widget<IconButton>(trigger).tooltip, 'Calendar');
+    expect(tester.widget<AppDateFilterButton>(trigger).tooltip, 'Calendar');
     expect(tester.getSize(trigger).width, greaterThanOrEqualTo(44));
     expect(tester.getSize(trigger).height, greaterThanOrEqualTo(44));
     expect(
@@ -154,25 +156,24 @@ void main() {
     expect(find.descendant(of: trigger, matching: find.text('Calendar')),
         findsNothing);
     await tap(tester, 'weekly-rhythm-calendar');
+    expect(find.byType(AppCalendar), findsOneWidget);
     expect(
-        find.descendant(
-            of: find.byType(WeeklyRhythmCalendar), matching: find.byType(Icon)),
-        findsNothing);
+        tester
+            .widget<DropdownButton<int>>(
+                find.byKey(const ValueKey('week-calendar-month-picker')))
+            .items!
+            .singleWhere((item) => item.value == 11)
+            .enabled,
+        isFalse);
     expect(
         tester
             .widget<TextButton>(
-                find.byKey(const ValueKey('week-calendar-next-month')))
-            .onPressed,
-        isNull);
-    expect(
-        tester
-            .widget<InkWell>(
                 find.byKey(const ValueKey('week-calendar-day-2026-10-29')))
-            .onTap,
+            .onPressed,
         isNull);
     await capture(tester, 'weekly-calendar-current');
     await tap(tester, 'week-calendar-day-2026-10-19');
-    expect(find.text('Sleep · Read-only'), findsOneWidget);
+    expect(find.text('Oct 19 – Oct 25'), findsOneWidget);
     expect(selected, isNull,
         reason: 'Browsing never changes Today before View week');
     await capture(tester, 'weekly-calendar-past');
@@ -192,13 +193,41 @@ void main() {
                 today: today,
                 onSelected: (date) => selected = date)))));
     await tap(tester, 'weekly-rhythm-calendar');
-    expect(find.text('September 2026'), findsOneWidget);
-    await tap(tester, 'week-calendar-previous-month');
-    expect(find.text('August 2026'), findsOneWidget);
-    await tap(tester, 'week-calendar-this-week');
-    expect(find.text('October 2026'), findsOneWidget);
+    expect(find.text('September'), findsOneWidget);
+    await selectCalendarOption(tester, 'week-calendar-month-picker', 'August');
+    expect(find.text('August'), findsOneWidget);
+    await selectCalendarOption(tester, 'week-calendar-filter', 'This week');
+    expect(find.text('October'), findsOneWidget);
     await tap(tester, 'week-calendar-view-week');
     expect(selected, DateUtils.dateOnly(today));
+  });
+
+  testWidgets(
+      'Single day filters Today nutrition, training, and recovery together',
+      (tester) async {
+    phone(tester);
+    await tester.pumpWidget(app(TodayHomeView(
+        clock: () => today, onSelectTab: (_) {}, onOpenProfile: () {})));
+    await tester.pumpAndSettle();
+    await tap(tester, 'weekly-rhythm-calendar');
+    await selectCalendarOption(tester, 'week-calendar-filter', 'Single day');
+    await tap(tester, 'week-calendar-day-2026-10-21');
+    await tap(tester, 'week-calendar-view-week');
+    final dashboard =
+        tester.widget<TodayDashboard>(find.byType(TodayDashboard));
+    expect(dashboard.selectedDate, DateTime(2026, 10, 21));
+    expect(dashboard.data!.calendarDate, '2026-10-21');
+    expect(dashboard.data!.todayWorkout!.workoutTitle, 'Session 2026-10-21');
+    expect(dashboard.data!.nutrition.calories.consumed, 2100);
+    expect(dashboard.data!.readiness!.date, '2026-10-21');
+    expect(
+        adapter.requests
+            .lastWhere((r) => r.path == '/api/history/recovery')
+            .uri
+            .queryParameters['date'],
+        '2026-10-21');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets(
@@ -241,7 +270,7 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tap(tester, 'weekly-rhythm-calendar');
-    await tap(tester, 'week-calendar-this-week');
+    await selectCalendarOption(tester, 'week-calendar-filter', 'This week');
     await tap(tester, 'week-calendar-view-week');
     dashboard = tester.widget<TodayDashboard>(find.byType(TodayDashboard));
     expect(dashboard.selectedDate, DateUtils.dateOnly(today));
@@ -277,7 +306,7 @@ void main() {
     expect(
         find.byKey(const ValueKey('weekly-rhythm-calendar')), findsOneWidget);
     await tap(tester, 'weekly-rhythm-calendar');
-    await tap(tester, 'week-calendar-this-week');
+    await selectCalendarOption(tester, 'week-calendar-filter', 'This week');
     await tap(tester, 'week-calendar-view-week');
     expect(
         tester.widget<TodayDashboard>(find.byType(TodayDashboard)).loadFailed,

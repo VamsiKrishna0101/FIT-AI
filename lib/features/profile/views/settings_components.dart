@@ -11,19 +11,22 @@ class SettingsPage extends StatelessWidget {
   final String subtitle;
   final List<Widget> children;
   final Widget? bottom;
+  final bool? centerTitle;
 
   const SettingsPage(
       {super.key,
       required this.title,
       required this.subtitle,
       required this.children,
-      this.bottom});
+      this.bottom,
+      this.centerTitle});
 
   @override
   Widget build(BuildContext context) => FitnessTheme(
         child: Scaffold(
           backgroundColor: FitnessTheme.canvas,
           appBar: AppBar(
+            centerTitle: centerTitle,
             backgroundColor: FitnessTheme.canvas,
             surfaceTintColor: Colors.transparent,
             title: FitnessText(title,
@@ -64,7 +67,9 @@ class SettingsPage extends StatelessWidget {
 class SettingsGroup extends StatelessWidget {
   final String? title;
   final List<Widget> children;
-  const SettingsGroup({super.key, this.title, required this.children});
+  final double dividerIndent;
+  const SettingsGroup(
+      {super.key, this.title, required this.children, this.dividerIndent = 60});
 
   @override
   Widget build(BuildContext context) => Column(
@@ -91,11 +96,11 @@ class SettingsGroup extends StatelessWidget {
               for (var index = 0; index < children.length; index++) ...[
                 children[index],
                 if (index < children.length - 1)
-                  const Divider(
+                  Divider(
                       height: 1,
-                      indent: 60,
+                      indent: dividerIndent,
                       endIndent: 16,
-                      color: Color(0x14FFFFFF)),
+                      color: const Color(0x14FFFFFF)),
               ],
             ]),
           ),
@@ -105,7 +110,7 @@ class SettingsGroup extends StatelessWidget {
 }
 
 class SettingsRow extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
   final String title;
   final String? subtitle;
   final String? value;
@@ -117,7 +122,7 @@ class SettingsRow extends StatelessWidget {
 
   const SettingsRow(
       {super.key,
-      required this.icon,
+      this.icon,
       required this.title,
       this.subtitle,
       this.value,
@@ -129,8 +134,8 @@ class SettingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveIconColor = iconColor ??
-        (destructive ? FitnessTheme.coral : FitnessTheme.silver);
+    final effectiveIconColor =
+        iconColor ?? (destructive ? FitnessTheme.coral : FitnessTheme.silver);
     final effectiveBgColor = iconBgColor != null
         ? iconBgColor!.withValues(alpha: .15)
         : Colors.white.withValues(alpha: .045);
@@ -144,16 +149,18 @@ class SettingsRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
             child: Row(children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: effectiveBgColor,
-                  borderRadius: BorderRadius.circular(10),
+              if (icon != null) ...[
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: effectiveBgColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 17, color: effectiveIconColor),
                 ),
-                child: Icon(icon, size: 17, color: effectiveIconColor),
-              ),
-              const SizedBox(width: 13),
+                const SizedBox(width: 13),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

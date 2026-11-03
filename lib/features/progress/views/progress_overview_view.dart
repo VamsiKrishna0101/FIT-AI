@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/liquid_silver_bottom_bar.dart';
+import '../../../core/components/app_date_filter.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/ds_colors.dart';
-import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../body_scan/models/body_map_models.dart';
 import '../../body_scan/views/widgets/body_calendar.dart';
@@ -171,17 +171,8 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
   }
 
   Future<void> _calendar() async {
-    final selection = await showModalBottomSheet<BodyDateSelection>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        showDragHandle: true,
-        backgroundColor: FitnessTheme.surface,
-        sheetAnimationStyle: DSMotion.sheetStyle(context),
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .9),
-        builder: (_) => BodyCalendar(
-            selection: _selection, today: _now, title: 'Progress dates'));
+    final selection =
+        await showBodyDateFilter(context, selection: _selection, today: _now);
     if (!mounted || selection == null) return;
     setState(() {
       _selection = selection;
@@ -414,17 +405,9 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                                     height: 1.4)),
                           ])),
                       const SizedBox(width: 12),
-                      IconButton(
+                      AppDateFilterButton(
                           key: const ValueKey('progress-calendar-button'),
-                          tooltip: fitnessText(context, 'Calendar'),
-                          onPressed: _calendar,
-                          style: IconButton.styleFrom(
-                              minimumSize: const Size(44, 44),
-                              backgroundColor: const Color(0xFF17191C),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(13))),
-                          icon: const Icon(CupertinoIcons.calendar,
-                              size: 19, color: progressSilver)),
+                          onPressed: _calendar),
                     ])),
                 SizedBox(
                     height: 2,

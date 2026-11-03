@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../features/profile/views/settings_components.dart';
 import '../../theme/ds_colors.dart';
@@ -15,246 +13,196 @@ class AppleWatchSettingsView extends StatefulWidget {
   State<AppleWatchSettingsView> createState() => _AppleWatchSettingsViewState();
 }
 
-class _AppleWatchSettingsViewState extends State<AppleWatchSettingsView> {
+class _AppleWatchSettingsViewState extends State<AppleWatchSettingsView>
+    with WidgetsBindingObserver {
   final _service = WatchSyncService.shared;
-  bool _refreshing = false;
+  bool _refreshing = false, _waking = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _service.addListener(_onServiceChanged);
-    _refreshState();
+    WidgetsBinding.instance.addObserver(this);
+    _service.addListener(_changed);
+    if (_service.isSupported) _refresh();
   }
 
-  void _onServiceChanged() {
+  void _changed() {
     if (mounted) setState(() {});
   }
 
-  Future<void> _refreshState() async {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _service.isSupported) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    if (_refreshing) return;
     setState(() => _refreshing = true);
     await _service.checkWatchState();
     if (mounted) setState(() => _refreshing = false);
   }
 
+  Future<void> _preference(Future<void> Function() update) async {
+    try {
+      await update();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Could not save this preference. Try again.');
+      }
+    }
+  }
+
+  Future<void> _openWatch() async {
+    final opened = await _service.openWatchSettings();
+    if (!opened && mounted) {
+      setState(() =>
+          _error = 'Open the Watch app on your iPhone to manage your watch.');
+    }
+  }
+
+  Future<void> _wake() async {
+    if (_waking) return;
+    setState(() => _waking = true);
+    final sent = await _service.startWatchApp(manual: true);
+    if (!mounted) return;
+    setState(() {
+      _waking = false;
+      _error = sent
+          ? null
+          : 'Could not reach your watch. Open Setcraft on Apple Watch and try again.';
+    });
+    await _refresh();
+  }
+
   @override
   void dispose() {
-    _service.removeListener(_onServiceChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    _service.removeListener(_changed);
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isIOS = !kIsWeb && Platform.isIOS;
-    final isPaired = _service.isPaired;
-    final isInstalled = _service.isAppInstalled;
+  String get _statusDescription {
+    if (!_service.isPaired) {
+      return 'Pair an Apple Watch with this iPhone to use wrist controls.';
+    }
+    if (!_service.isAppInstalled) {
+      return 'Install Setcraft on your paired Apple Watch.';
+    }
+    if (!_service.isReachable) {
+      return 'Open Setcraft on your watch to reconnect.';
+    }
+    return 'Your watch is available for workouts.';
+  }
 
-    return SettingsPage(
-      title: 'Apple Watch',
-      subtitle: '',
-      children: [
-        _buildHeroCard(isIOS, isPaired, isInstalled),
-        const SizedBox(height: 14),
-
-        SettingsGroup(
-          title: 'Workout',
-          children: [
-            _buildSwitchRow(
-              icon: CupertinoIcons.arrow_up_right_square,
-              title: 'Auto-launch',
-              subtitle: 'Opens on workout start',
-              value: _service.autoLaunchWatch,
-              onChanged: (val) => _service.setAutoLaunchWatch(val),
-            ),
-            _buildSwitchRow(
-              icon: CupertinoIcons.waveform_path,
-              title: 'Haptic alerts',
-              subtitle: 'Buzz on rest completion',
-              value: _service.hapticRestAlerts,
-              onChanged: (val) => _service.setHapticRestAlerts(val),
-            ),
-            _buildSwitchRow(
-              icon: CupertinoIcons.heart,
-              title: 'Heart rate',
-              subtitle: 'Live wrist telemetry',
-              value: _service.opticalHrEnabled,
-              onChanged: (val) => _service.setOpticalHrEnabled(val),
-            ),
-          ],
-        ),
-
-        if (isIOS) ...[
-          SettingsGroup(
-            title: 'Device',
+  Widget _switch(String title, String subtitle, bool value,
+          ValueChanged<bool>? onChanged) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(children: [
+          Expanded(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SettingsRow(
-                icon: CupertinoIcons.antenna_radiowaves_left_right,
-                title: 'Wake Apple Watch',
-                subtitle: 'Send immediate launch signal',
-                onTap: () async {
-                  final success = await _service.startWatchApp();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(success
-                          ? 'Signal sent to Apple Watch'
-                          : 'Could not reach Apple Watch'),
-                    ),
-                  );
-                },
-              ),
-              SettingsRow(
-                icon: CupertinoIcons.gear_alt,
-                title: 'Watch app settings',
-                subtitle: 'iOS system preferences',
-                onTap: () => _service.openWatchSettings(),
-              ),
+              FitnessText(title,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 4),
+              FitnessText(subtitle,
+                  style: const TextStyle(
+                      fontSize: 12, height: 1.4, color: FitnessTheme.muted)),
             ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildHeroCard(bool isIOS, bool isPaired, bool isInstalled) {
-    final statusText = switch ((isIOS, isPaired, isInstalled)) {
-      (false, _, _) => 'Ready to Pair',
-      (true, true, true) => 'Connected & Ready',
-      (true, true, false) => 'Install Setcraft on Watch',
-      (true, false, _) => 'Not Connected',
-    };
-    final isReady = isIOS && isPaired && isInstalled;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: BoxDecoration(
-        color: DSColors.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: DSColors.border, width: .7),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.watch_outlined,
-                color: FitnessTheme.silver, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Apple Watch',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color:
-                            isReady ? FitnessTheme.silver : FitnessTheme.muted,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      statusText,
-                      style: const TextStyle(
-                        color: FitnessTheme.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (_refreshing)
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: FitnessTheme.muted),
-            )
-          else
-            IconButton(
-              icon: const Icon(CupertinoIcons.arrow_clockwise,
-                  size: 16, color: FitnessTheme.muted),
-              onPressed: _refreshState,
-              tooltip: 'Refresh',
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSwitchRow({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .045),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 16, color: FitnessTheme.silver),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FitnessText(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: DSColors.textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                FitnessText(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: FitnessTheme.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
+          )),
+          const SizedBox(width: 16),
           CupertinoSwitch(
             value: value,
-            activeTrackColor: FitnessTheme.silver,
+            activeTrackColor: Colors.white,
+            inactiveTrackColor: DSColors.bgRaised,
+            thumbColor: value ? FitnessTheme.canvas : FitnessTheme.silver,
             onChanged: onChanged,
           ),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final supported = _service.isSupported;
+    final canConfigure =
+        supported && _service.isPaired && _service.isAppInstalled;
+    return SettingsPage(
+      title: 'Apple Watch',
+      centerTitle: true,
+      subtitle: '',
+      children: [
+        if (!supported)
+          const SettingsNotice('Apple Watch is available on iPhone.')
+        else ...[
+          FitnessCard(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Expanded(
+                    child: FitnessText(_service.statusLabel,
+                        key: const ValueKey('watch-status'),
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w500))),
+                TextButton(
+                    onPressed: _refreshing ? null : _refresh,
+                    child: _refreshing
+                        ? const CupertinoActivityIndicator(radius: 8)
+                        : const FitnessText('Refresh',
+                            style: TextStyle(fontSize: 12))),
+              ]),
+              const SizedBox(height: 6),
+              FitnessText(_statusDescription,
+                  style: const TextStyle(
+                      fontSize: 13, height: 1.5, color: FitnessTheme.muted)),
+              if (!canConfigure) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                    onPressed: _openWatch,
+                    child: const FitnessText('Open Watch app')),
+              ],
+            ],
+          )),
+          const SizedBox(height: 24),
+          SettingsGroup(title: 'Workout', dividerIndent: 16, children: [
+            _switch(
+                'Open automatically',
+                'When a workout starts',
+                _service.autoLaunchWatch,
+                canConfigure
+                    ? (value) =>
+                        _preference(() => _service.setAutoLaunchWatch(value))
+                    : null),
+            _switch(
+                'Rest alerts',
+                'Haptics when rest ends',
+                _service.hapticRestAlerts,
+                canConfigure
+                    ? (value) =>
+                        _preference(() => _service.setHapticRestAlerts(value))
+                    : null),
+            _switch(
+                'Heart rate',
+                'During workouts',
+                _service.opticalHrEnabled,
+                canConfigure
+                    ? (value) =>
+                        _preference(() => _service.setOpticalHrEnabled(value))
+                    : null),
+          ]),
+          if (canConfigure)
+            SettingsGroup(dividerIndent: 16, children: [
+              SettingsRow(
+                  title: _waking ? 'Opening…' : 'Open on watch',
+                  onTap: _waking ? null : _wake),
+              SettingsRow(title: 'Watch app settings', onTap: _openWatch),
+            ]),
+          if (_error != null) SettingsNotice(_error!, error: true),
         ],
-      ),
+      ],
     );
   }
 }

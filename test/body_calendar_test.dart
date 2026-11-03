@@ -13,6 +13,7 @@ import 'package:setcraft/features/body_scan/views/body_view.dart';
 import 'package:setcraft/features/body_scan/views/widgets/body_calendar.dart';
 import 'package:setcraft/features/body_scan/views/widgets/body_muscle_map_card.dart';
 import 'body_measurement_dashboard_test.dart' as fixtures;
+import 'helpers/calendar_controls.dart';
 
 final today = DateTime(2026, 11, 2);
 const captureKey = ValueKey('body-calendar-capture');
@@ -128,7 +129,7 @@ void main() {
     BodyDateSelection? result;
     await tester.pumpWidget(picker(onResult: (s) => result = s));
     await tap(tester, find.text('Open calendar'));
-    await tap(tester, find.text('Date range'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'Date range');
     await choose(tester, 'body-calendar-year-picker', '2024');
     await choose(tester, 'body-calendar-month-picker', 'December');
     await tap(tester, find.byKey(const ValueKey('body-calendar-2024-12-29')));
@@ -151,7 +152,7 @@ void main() {
     BodyDateSelection? result;
     await tester.pumpWidget(picker(onResult: (s) => result = s));
     await tap(tester, find.text('Open calendar'));
-    await tap(tester, find.text('Multiple days'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'Multiple days');
     await choose(tester, 'body-calendar-year-picker', '2025');
     await choose(tester, 'body-calendar-month-picker', 'December');
     await tap(tester, find.byKey(const ValueKey('body-calendar-2025-12-10')));
@@ -196,7 +197,7 @@ void main() {
     expect(repo.selections[plannedCall], isNull);
     await tap(tester, find.byKey(const ValueKey('body-map-trained')));
     await tap(tester, find.byKey(const ValueKey('body-calendar-button')));
-    await tap(tester, find.text('Single day'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'Single day');
     await choose(tester, 'body-calendar-year-picker', '2025');
     await choose(tester, 'body-calendar-month-picker', 'January', delta: -120);
     await tap(tester, find.byKey(const ValueKey('body-calendar-2025-01-04')));

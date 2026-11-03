@@ -12,11 +12,8 @@ import '../theme/ds_colors.dart';
 import '../theme/ds_motion.dart';
 import 'navigation_glyph.dart';
 
-/// Whether the current platform has Impeller-quality shader support that can
-/// render chromatic aberration and refraction without visible artefacts.
-/// On Android the shader filter is technically supported but chromatic
-/// aberration bleeds vivid red/yellow fringes at the small nav-bar scale, so
-/// we opt into the premium software fallback instead.
+/// Use backdrop refraction on iOS when Impeller supports shader filters.
+/// Other renderers use the same translucent finish over a blurred backdrop.
 bool get _supportsLiquidOptics =>
     ui.ImageFilter.isShaderFilterSupported &&
     defaultTargetPlatform == TargetPlatform.iOS;
@@ -311,10 +308,8 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
           highlightColor: Colors.transparent,
           child: TweenAnimationBuilder<Color?>(
             tween: ColorTween(
-                // Inactive: warm silver-blue so it reads distinctly against
-                // the dark dock on Android. Active: near-white for contrast.
                 end:
-                    selected ? DSColors.navGlassText : const Color(0xFF8A9199)),
+                    selected ? DSColors.navGlassText : const Color(0xFFB3B3B3)),
             duration: duration,
             curve: DSMotion.effects,
             builder: (context, color, _) => SizedBox(
@@ -356,9 +351,8 @@ class _GlassCapsule extends StatelessWidget {
       );
 }
 
-/// Refraction is confined to the moving lens, which paints as a sibling above
-/// the blurred shell and its icons, so the optics bend real content and the
-/// two passes never nest.
+/// The shell refracts the page; the moving lens refracts the shell and icons.
+/// They paint as siblings so the two backdrop passes never nest.
 class _NavigationGlass extends StatelessWidget {
   const _NavigationGlass({
     required this.highContrast,
@@ -372,8 +366,6 @@ class _NavigationGlass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final optics = lens && _supportsLiquidOptics;
-
     if (highContrast) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(100),
@@ -383,126 +375,65 @@ class _NavigationGlass extends StatelessWidget {
       );
     }
 
-    if (optics) {
-      // Real liquid-glass shader path (iOS / shader-capable).
-      final finish = DecoratedBox(
-        key: const ValueKey('navigation-lens-finish'),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(100),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.lerp(
-                  const Color(0x1AFFFFFF), const Color(0x26FFFFFF), pressure)!,
-              Color.lerp(
-                  const Color(0x06FFFFFF), const Color(0x0DFFFFFF), pressure)!,
-            ],
-          ),
-        ),
-        child: child,
-      );
-      return ClipRRect(
+    // Black translucent glass keeps the original dark dock. Refraction and
+    // the fine rim supply the glass effect without a silver surface fill.
+    final finish = DecoratedBox(
+      key: ValueKey(lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(100),
-        child: glass.LiquidGlass.withOwnLayer(
-          shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
-          settings: glass.LiquidGlassSettings(
-            glassColor: const Color(0x0AFFFFFF),
-            thickness: 16 + pressure * 6,
-            blur: .6,
-            refractiveIndex: 1.4,
-            chromaticAberration: .35,
-            lightAngle: -math.pi / 3,
-            lightIntensity: .45 + pressure * .25,
-            ambientStrength: .08,
-            saturation: 1.25,
-          ),
-          child: finish,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: lens
+              ? [
+                  Color.lerp(const Color(0x80404040), const Color(0x88484848),
+                      pressure)!,
+                  Color.lerp(const Color(0x70242424), const Color(0x782C2C2C),
+                      pressure)!,
+                  Color.lerp(const Color(0x80303030), const Color(0x88383838),
+                      pressure)!,
+                ]
+              : const [
+                  Color(0xAA202020),
+                  Color(0x99121212),
+                  Color(0xAA0A0A0A),
+                ],
+          stops: const [0, .55, 1],
         ),
+      ),
+      child: child,
+    );
+
+    final Widget surface;
+    if (_supportsLiquidOptics) {
+      surface = glass.LiquidGlass.withOwnLayer(
+        shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
+        settings: glass.LiquidGlassSettings(
+          glassColor: const Color(0x08000000),
+          thickness: lens ? 8 + pressure * 4 : 12,
+          blur: lens ? .6 : 12,
+          refractiveIndex: lens ? 1.16 + pressure * .04 : 1.12,
+          // Dispersion splits the icon edges into RGB fringes at this scale.
+          chromaticAberration: 0,
+          lightAngle: -math.pi / 3,
+          lightIntensity: lens ? .12 + pressure * .08 : .08,
+          ambientStrength: .01,
+          saturation: 1,
+        ),
+        child: finish,
+      );
+    } else {
+      final blurSigma = lens ? .6 : 22.0;
+      surface = BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: finish,
       );
     }
 
-    // ── Android / software-fallback premium glass path ──────────────────────
-    // Layered approach: frosted backdrop → rich gradient body → specular sheen.
-    final blurSigma = lens ? 18.0 : 22.0;
-
-    // Body gradient differs between the floating dock and the active lens pill.
-    final bodyGradient = lens
-        ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              // Pressed lens brightens like a water droplet catching light.
-              Color.lerp(
-                  const Color(0x52A8B4BE), const Color(0x70BCC8D4), pressure)!,
-              Color.lerp(
-                  const Color(0x3D6E7A84), const Color(0x5C8A97A2), pressure)!,
-              Color.lerp(
-                  const Color(0x283A4248), const Color(0x42506068), pressure)!,
-            ],
-            stops: const [0.0, 0.52, 1.0],
-          )
-        : const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            // Obsidian-dark dock: slightly lighter at top-left for specularity.
-            colors: [
-              Color(0xCC2C3035),
-              Color(0xCC1A1D21),
-              Color(0xD4141618),
-            ],
-            stops: [0.0, 0.50, 1.0],
-          );
-
-    // Vertical sheen overlay — simulates light hitting a curved glass surface.
-    final sheenGradient = lens
-        ? LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white.withValues(alpha: .28 + pressure * .10),
-              Colors.white.withValues(alpha: .06),
-              Colors.white.withValues(alpha: .00),
-              Colors.white.withValues(alpha: .04),
-            ],
-            stops: const [0.0, 0.30, 0.65, 1.0],
-          )
-        : const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0x18FFFFFF),
-              Color(0x04FFFFFF),
-              Color(0x00FFFFFF),
-              Color(0x06FFFFFF),
-            ],
-            stops: [0.0, 0.28, 0.62, 1.0],
-          );
-
-    final Widget surface = ClipRRect(
+    return ClipRRect(
       borderRadius: BorderRadius.circular(100),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: DecoratedBox(
-          key: ValueKey(
-              lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(100),
-            gradient: bodyGradient,
-          ),
-          child: DecoratedBox(
-            // Vertical specular sheen on top of the body colour.
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100),
-              gradient: sheenGradient,
-            ),
-            child: child,
-          ),
-        ),
-      ),
+      child: surface,
     );
-
-    return surface;
   }
 }
 
@@ -607,9 +538,8 @@ class _LiquidSelectionState extends State<_LiquidSelection>
           final slot = widget.width / 4;
           // Holding swells the lens past the dock like a drop of glass;
           // speed squashes it, wide and short, in the direction of travel.
-          final width =
-              math.min(slot - 4, 48.0) * (1 + stretch + pressure * .32);
-          final height = 42 * (1 + pressure * .3 - stretch * .22);
+          final width = (slot - 8) * (1 + stretch + pressure * .14);
+          final height = 42 * (1 + pressure * .20 - stretch * .22);
           final center = ((physicalPosition + .5) * slot)
               .clamp(width / 2, widget.width - width / 2);
           final lens = Rect.fromLTWH(center - width / 2,

@@ -257,6 +257,27 @@ class TrainingRepository {
     return day;
   }
 
+  /// Copies the selected day's prescription into the user's saved workouts.
+  /// No session, logs, or scheduled exercises are changed.
+  Future<TrainingDay> saveWorkout(String date, {TrainingDay? day}) async {
+    final token = await SecureSessionStore.shared.accessToken;
+    final source = day ?? await load(date, refresh: true);
+    if (source.date != date ||
+        !SecureSessionStore.shared
+            .sameOwner(token, await SecureSessionStore.shared.accessToken)) {
+      throw StateError('Session changed');
+    }
+    final items = source.items;
+    if (items.isEmpty) {
+      throw const FormatException('Add at least one exercise.');
+    }
+    final name = source.name.trim();
+    return mutate(date, 'POST', '/routines', data: {
+      'name': name.isEmpty ? 'Workout' : name,
+      'items': items.map(TrainingDay.targets).toList(),
+    });
+  }
+
   Future<TrainingDay> mutate(String date, String method, String suffix,
       {Map<String, dynamic>? data}) async {
     final key = await _key(date);

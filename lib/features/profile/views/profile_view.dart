@@ -11,10 +11,7 @@ import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../auth/views/auth_view.dart';
 import '../../health/views/health_connection_view.dart';
-import '../../onboarding/views/equipment_selection_view.dart';
-import '../../onboarding/views/training_preferences_view.dart';
 import '../../today/repositories/today_repository.dart';
-import '../../wellness/views/sleep_preferences_view.dart';
 import '../repositories/settings_repository.dart';
 import '../repositories/mcp_repository.dart';
 import 'mcp_connections_view.dart';
@@ -22,6 +19,7 @@ import 'privacy_settings_view.dart';
 import 'profile_details_view.dart';
 import 'settings_components.dart';
 import 'settings_preferences_view.dart';
+import 'training_settings_view.dart';
 import '../../notifications/views/notification_settings_view.dart';
 import '../../subscription/subscription_view.dart';
 import '../../../core/watch/views/apple_watch_settings_view.dart';
@@ -70,93 +68,16 @@ class _ProfileViewState extends State<ProfileView> {
     if (mounted) unawaited(_load());
   }
 
-  Widget _trainingPage() => SettingsPage(
-        title: 'Training',
-        subtitle: 'Your schedule. Your way to train.',
-        children: [
-          SettingsGroup(children: [
-            SettingsRow(
-                icon: CupertinoIcons.calendar,
-                title: 'Training preferences',
-                subtitle: 'Split, days, priorities and limitations',
-                onTap: () =>
-                    _open(const TrainingPreferencesView(editProfile: true))),
-            SettingsRow(
-                icon: CupertinoIcons.slider_horizontal_3,
-                title: 'Equipment',
-                subtitle: 'Choose what you can train with',
-                onTap: () =>
-                    _open(const EquipmentSelectionView(editProfile: true))),
-            SettingsRow(
-                icon: CupertinoIcons.person,
-                title: 'Experience & goal',
-                subtitle: 'Update your training baseline',
-                onTap: () =>
-                    _open(ProfileDetailsView(repository: _repository))),
-          ]),
-          const SettingsNotice(
-              'Preference changes guide your next generated plan.'),
-        ],
-      );
-
-  Widget _healthPage() => SettingsPage(
-        title: 'Health & sleep',
-        subtitle: 'Keep your readings and sleep setup in one place.',
-        children: [
-          SettingsGroup(children: [
-            SettingsRow(
-                icon: CupertinoIcons.heart,
-                title: 'Health connection',
-                subtitle: 'Access, saved readings and sync controls',
-                onTap: () => _open(const HealthConnectionView())),
-            SettingsRow(
-                icon: CupertinoIcons.moon,
-                title: 'Sleep preferences',
-                subtitle: 'Wearable readings and manual sleep setup',
-                onTap: () => _open(const SleepPreferencesView())),
-          ]),
-        ],
-      );
-
   Widget _buildWatchStatusPill() {
     return AnimatedBuilder(
       animation: WatchSyncService.shared,
-      builder: (context, _) {
-        final isConnected =
-            WatchSyncService.shared.isAppInstalled || kDebugMode;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08), width: 0.5),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: isConnected ? FitnessTheme.silver : FitnessTheme.muted,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                isConnected ? 'Ready' : 'Setup',
-                style: const TextStyle(
-                  color: FitnessTheme.silver,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context, _) => ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 110),
+          child: FitnessText(WatchSyncService.shared.statusLabel,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: const TextStyle(fontSize: 12, color: FitnessTheme.muted))),
     );
   }
 
@@ -275,22 +196,15 @@ class _ProfileViewState extends State<ProfileView> {
 
           SettingsGroup(
             title: 'Personal',
+            dividerIndent: 16,
             children: [
               SettingsRow(
-                icon: CupertinoIcons.person,
-                title: 'Personal details',
-                onTap: () => _open(ProfileDetailsView(repository: _repository)),
-              ),
-              SettingsRow(
-                icon: CupertinoIcons.flame,
                 title: 'Training',
-                subtitle: 'Split, workout days & equipment',
-                onTap: () => _open(_trainingPage()),
+                onTap: () =>
+                    _open(TrainingSettingsView(repository: _repository)),
               ),
               SettingsRow(
-                icon: CupertinoIcons.cart,
                 title: 'Nutrition',
-                subtitle: 'Dietary style, allergens & food choices',
                 onTap: () => _open(ProfileDetailsView(
                     nutrition: true, repository: _repository)),
               ),
@@ -299,24 +213,23 @@ class _ProfileViewState extends State<ProfileView> {
 
           SettingsGroup(
             title: 'Connections',
+            dividerIndent: 16,
             children: [
+              if (WatchSyncService.shared.isSupported)
+                SettingsRow(
+                  title: 'Apple Watch',
+                  trailingWidget: _buildWatchStatusPill(),
+                  onTap: () => _open(const AppleWatchSettingsView()),
+                ),
               SettingsRow(
-                icon: Icons.watch_outlined,
-                title: 'Apple Watch',
-                subtitle: 'Live workout mirroring & wrist set logging',
-                trailingWidget: _buildWatchStatusPill(),
-                onTap: () => _open(const AppleWatchSettingsView()),
+                title: 'Health connection',
+                subtitle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                    ? 'Apple Health'
+                    : 'Health Connect',
+                onTap: () => _open(const HealthConnectionView()),
               ),
               SettingsRow(
-                icon: CupertinoIcons.heart,
-                title: 'Health & sleep',
-                subtitle: 'Apple Health sync & wearable sleep setup',
-                onTap: () => _open(_healthPage()),
-              ),
-              SettingsRow(
-                icon: CupertinoIcons.link,
-                title: 'MCP & integrations',
-                subtitle: 'AI agent tools & developer bridges',
+                title: 'MCP',
                 onTap: () =>
                     _open(McpConnectionsView(repository: widget.mcpRepository)),
               ),

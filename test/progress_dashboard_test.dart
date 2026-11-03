@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'helpers/calendar_controls.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -107,7 +108,7 @@ void main() {
     expect(repository.calls.single.period, 'custom');
     await tester.tap(find.byKey(const ValueKey('progress-calendar-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('All time'));
+    await selectCalendarOption(tester, 'body-calendar-filter', 'All time');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('body-calendar-apply')));
     await tester.pumpAndSettle();

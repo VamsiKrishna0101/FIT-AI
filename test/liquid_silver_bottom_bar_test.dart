@@ -78,6 +78,29 @@ Future<void> capture(WidgetTester tester, String name) async {
   });
 }
 
+Future<List<Color>> samplePixels(
+    WidgetTester tester, Iterable<Offset> points) async {
+  return (await tester.runAsync(() async {
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(const ValueKey('navigation-preview')));
+    final image = await boundary.toImage(pixelRatio: 1);
+    try {
+      final bytes =
+          (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+      return points.map((point) {
+        final offset = (point.dy.round() * image.width + point.dx.round()) * 4;
+        return Color.fromARGB(
+            bytes.getUint8(offset + 3),
+            bytes.getUint8(offset),
+            bytes.getUint8(offset + 1),
+            bytes.getUint8(offset + 2));
+      }).toList();
+    } finally {
+      image.dispose();
+    }
+  }))!;
+}
+
 Color iconColor(WidgetTester tester, String label) => tester
     .widget<NavigationGlyph>(find.descendant(
         of: find.byTooltip(label), matching: find.byType(NavigationGlyph)))
@@ -199,7 +222,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('The dock and silver lens stay visible over a black screen',
+  testWidgets('The dock and lens stay black with a visible glass selection',
       (tester) async {
     phone(tester);
     await tester.pumpWidget(const _NavigationPreview());
@@ -225,16 +248,74 @@ void main() {
         }
 
         final shell = pixel(train + const Offset(17, 0));
-        final silver = pixel(lens.center + const Offset(16, 0));
-        expect(shell.computeLuminance(), greaterThan(.012),
+        final selection = pixel(lens.center + const Offset(16, 0));
+        expect(shell.computeLuminance(), greaterThan(.0015),
             reason: 'The shell must separate from pure black');
-        expect(silver.computeLuminance(),
-            greaterThan(shell.computeLuminance() + .025),
+        expect(shell.computeLuminance(), lessThan(.012),
+            reason: 'The dock must retain its black finish');
+        expect(selection.computeLuminance(),
+            greaterThan(shell.computeLuminance() + .002),
             reason: 'The selection must separate from the dark shell');
+        expect(selection.computeLuminance(), lessThan(.03),
+            reason: 'The selection must be dark glass rather than silver');
       } finally {
         image.dispose();
       }
     });
+  });
+
+  testWidgets('Page colours remain visible through the glass shell',
+      (tester) async {
+    phone(tester);
+    final backdrop = ValueNotifier(const Color(0xFFD03030));
+    addTearDown(backdrop.dispose);
+    await tester.pumpWidget(_NavigationPreview(
+        body: ValueListenableBuilder<Color>(
+            valueListenable: backdrop,
+            builder: (_, colour, __) =>
+                SizedBox.expand(child: ColoredBox(color: colour)))));
+    await tester.pumpAndSettle();
+    final sample =
+        tester.getCenter(find.byTooltip('Train')) + const Offset(20, 8);
+    final red = (await samplePixels(tester, [sample])).single;
+    backdrop.value = const Color(0xFF3030D0);
+    await tester.pumpAndSettle();
+    final blue = (await samplePixels(tester, [sample])).single;
+    expect(red.r - blue.r, greaterThan(40 / 255),
+        reason: 'The shell must transmit the page instead of hiding its blur');
+    expect(blue.b - red.b, greaterThan(40 / 255));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('The resting and pressed glass have no coloured halo',
+      (tester) async {
+    phone(tester);
+    await tester.pumpWidget(const _NavigationPreview());
+    await tester.pumpAndSettle();
+    Future<void> expectNeutralLens() async {
+      final lens = tester
+          .getRect(find.byKey(const ValueKey('navigation-active-pill')))
+          .inflate(2);
+      final pixels = await samplePixels(tester, [
+        for (var y = lens.top.ceil(); y < lens.bottom.floor(); y++)
+          for (var x = lens.left.ceil(); x < lens.right.floor(); x++)
+            Offset(x.toDouble(), y.toDouble()),
+      ]);
+      for (final pixel in pixels) {
+        final channels = [pixel.r, pixel.g, pixel.b]..sort();
+        expect(channels.last - channels.first, lessThanOrEqualTo(8 / 255),
+            reason: 'A neutral page must not acquire tinted glass edges');
+      }
+    }
+
+    await expectNeutralLens();
+    final touch =
+        await tester.startGesture(tester.getCenter(find.byTooltip('Today')));
+    await tester.pumpAndSettle();
+    await expectNeutralLens();
+    await touch.up();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Rapid tab changes retarget the lens without jumping',

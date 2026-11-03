@@ -59,6 +59,7 @@ const _data = HomeData(
 Widget _app(
         {HomeData? data = _data,
         double textScale = 1,
+        DateTime? selectedDate,
         VoidCallback? onProfile,
         VoidCallback? onSession,
         VoidCallback? onTrain}) =>
@@ -71,6 +72,7 @@ Widget _app(
                     backgroundColor: DSColors.dashboardBg,
                     body: TodayDashboard(
                       data: data,
+                      selectedDate: selectedDate,
                       now: DateTime(2026, 10, 6, 10),
                       onRefresh: () async {},
                       onProfile: onProfile ?? () {},
@@ -123,6 +125,37 @@ void main() {
         .toList();
     for (var i = 1; i < tops.length; i++) {
       expect(tops[i], greaterThan(tops[i - 1]));
+    }
+  });
+
+  testWidgets(
+      'Today keeps only one nutrition section during rapid date changes',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_app(selectedDate: DateTime(2026, 10, 6)));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Protein'), 250,
+          scrollable: find.byType(Scrollable).first);
+      for (final day in [5, 6, 4]) {
+        await tester.pumpWidget(_app(selectedDate: DateTime(2026, 10, day)));
+        for (final elapsed in [0, 40, 100]) {
+          await tester.pump(Duration(milliseconds: elapsed));
+          expect(find.byType(NutritionSummaryCard), findsOneWidget);
+          for (final label in ['Protein', 'Carbs', 'Fat']) {
+            expect(find.text(label), findsOneWidget,
+                reason:
+                    'The outgoing day must not duplicate the nutrition row');
+          }
+        }
+      }
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    } finally {
+      semantics.dispose();
     }
   });
 

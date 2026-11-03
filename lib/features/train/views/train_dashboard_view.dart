@@ -13,6 +13,7 @@ import '../../../core/components/liquid_silver_bottom_bar.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../components/training_widgets.dart';
+import '../components/workout_saved_notice.dart';
 import '../../../core/components/session_overview_card.dart';
 import '../components/training_exercise_row.dart';
 import '../components/training_targets.dart';
@@ -56,6 +57,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   Timer? _syncTimer;
   StreamSubscription<TrainingDay>? _subscription;
   final _repo = TrainingRepository.shared;
+  final _savedWorkouts = <String>{};
   String copy(String key, {Map<String, Object> values = const {}}) =>
       fitnessText(context, key, values: values);
 
@@ -249,6 +251,23 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _savePastWorkout() async {
+    final day = _day;
+    if (_busy || _opening || day == null || day.items.isEmpty) return;
+    if (_savedWorkouts.contains(day.date)) {
+      await _myWorkouts();
+      return;
+    }
+    await _action(() async {
+      final saved = await _repo.saveWorkout(day.date, day: day);
+      if (mounted) {
+        setState(() => _savedWorkouts.add(day.date));
+        showWorkoutSavedNotice(context, saved);
+      }
+      return saved;
+    });
+  }
+
   Future<void> _renameWorkout() async {
     final day = _day;
     if (_busy || _opening || day == null || day.finished) return;
@@ -296,10 +315,24 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Future<void> _myWorkouts() async {
-    if (_busy || _day == null) return;
-    await Navigator.of(context)
-        .push(AppPageRoute<void>(page: SavedRoutinesView(initial: _day!)));
-    if (mounted) await _load(refresh: true);
+    if (_busy || _opening || _day == null) return;
+    final date = _date;
+    setState(() => _opening = true);
+    try {
+      final fresh = await _repo.load(date, refresh: true);
+      if (!mounted) return;
+      await Navigator.of(context)
+          .push(AppPageRoute<void>(page: SavedRoutinesView(initial: fresh)));
+      if (mounted) await _load(refresh: true);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(copy(TrainingRepository.errorMessage(
+                error, 'Could not sync. Pull to retry.')))));
+      }
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
   }
 
   Future<void> _editWorkout() async {
@@ -448,7 +481,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                       TrainingSurface(
                           key: const ValueKey('train-my-workouts'),
                           padding: EdgeInsets.zero,
-                          onTap: _busy ? null : _myWorkouts,
+                          onTap: _busy || _opening ? null : _myWorkouts,
                           child: _resource(
                               'My workouts',
                               day.routines.isEmpty
@@ -605,12 +638,12 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
 
   Widget _week(String locale) {
     final selected = DateTime.parse(_date);
-    final monday = selected.subtract(Duration(days: selected.weekday - 1));
+    final monday = DateTime(
+        selected.year, selected.month, selected.day - selected.weekday + 1);
     return Column(children: [
       Row(children: [
         Expanded(
-            child: Text(
-                '${DateFormat.MMMd(locale).format(monday)} – ${DateFormat.MMMd(locale).format(monday.add(const Duration(days: 6)))}',
+            child: Text(rhythmWeekRange(selected, locale),
                 style: const TextStyle(fontSize: 11, color: trainingMuted))),
         WeeklyRhythmCalendarButton(
             selectedDate: selected,
@@ -624,7 +657,8 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
           child: Row(
               children: List.generate(7, (index) {
-            final date = monday.add(Duration(days: index));
+            final date =
+                DateTime(monday.year, monday.month, monday.day + index);
             final key = CacheScope.todayKey(date), active = key == _date;
             final status = _day?.week
                 .where((row) => row['date'] == key)
@@ -691,6 +725,10 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Widget _sessionCard(TrainingDay day) {
+    final missed = day.date.compareTo(CacheScope.todayKey()) < 0 &&
+        !day.started &&
+        !day.restDay &&
+        day.items.isNotEmpty;
     final title = day.name != 'Workout'
         ? day.name
         : copy(day.finished
@@ -704,10 +742,14 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
             ? 'Build a workout'
             : day.items.isEmpty
                 ? 'Add exercise'
-                : day.started
-                    ? 'Resume workout'
-                    : 'Start workout';
-    final VoidCallback? action = _busy
+                : missed
+                    ? _savedWorkouts.contains(day.date)
+                        ? 'My workouts'
+                        : 'Save workout'
+                    : day.started
+                        ? 'Resume workout'
+                        : 'Start workout';
+    final VoidCallback? action = _busy || _opening
         ? null
         : day.finished
             ? () => Navigator.of(context).push(AppPageRoute<void>(
@@ -717,9 +759,11 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                     .mutate(_date, 'PATCH', '/day', data: {'restDay': false}))
                 : day.items.isEmpty
                     ? _add
-                    : (!day.started && _date != CacheScope.todayKey())
-                        ? null
-                        : _start;
+                    : missed
+                        ? _savePastWorkout
+                        : (!day.started && _date != CacheScope.todayKey())
+                            ? null
+                            : _start;
     return SessionOverviewCard(
       key: const ValueKey('train-session-card'),
       status: day.finished

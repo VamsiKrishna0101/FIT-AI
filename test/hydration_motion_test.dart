@@ -11,6 +11,7 @@ import 'package:setcraft/core/motion/device_tilt.dart';
 import 'package:setcraft/features/nutrition/components/liquid_water_visual.dart';
 import 'package:setcraft/features/nutrition/components/liquid_pool_painter.dart';
 import 'package:setcraft/features/nutrition/components/liquid_surface_simulation.dart';
+import 'package:setcraft/features/nutrition/components/liquid_water_optics.dart';
 import 'package:setcraft/features/nutrition/components/nutrition_summary_card.dart';
 import 'package:setcraft/features/nutrition/components/water_intake_card.dart';
 
@@ -32,6 +33,10 @@ Widget host(Stream<GravitySample> stream,
                             fraction: fraction, motion: stream))))));
 
 void main() {
+  setUpAll(() async {
+    expect(await LiquidWaterOptics.load(), isNotNull,
+        reason: 'The production water shader must compile and load');
+  });
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized()
         .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -119,6 +124,63 @@ void main() {
         image.dispose();
         picture.dispose();
       }
+    });
+  });
+
+  testWidgets('Water optics move smoothly inside the water and loop seamlessly',
+      (tester) async {
+    await tester.runAsync(() async {
+      Future<List<int>> render(double phase) async {
+        final shader = LiquidWaterOptics.create()!;
+        final recorder = ui.PictureRecorder();
+        LiquidWaterPainter(
+                fraction: .62,
+                wave: phase,
+                energy: 0,
+                surface: List.filled(LiquidSurfaceSimulation.sampleCount, 0),
+                optics: shader)
+            .paint(Canvas(recorder), const Size(160, 84));
+        final picture = recorder.endRecording();
+        final image = await picture.toImage(160, 84);
+        try {
+          final bytes =
+              (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+          return bytes.buffer.asUint8List().toList();
+        } finally {
+          image.dispose();
+          picture.dispose();
+          shader.dispose();
+        }
+      }
+
+      final first = await render(0);
+      final next = await render(.016);
+      final flowing = await render(.8);
+      final loop = await render(LiquidMotion.phaseSpan);
+      var changed = 0, frameDifference = 0, seamDifference = 0;
+      for (var y = 0; y < 84; y++) {
+        for (var x = 0; x < 160; x++) {
+          final i = (y * 160 + x) * 4;
+          for (var channel = 0; channel < 3; channel++) {
+            final at = i + channel;
+            frameDifference += (first[at] - next[at]).abs();
+            seamDifference =
+                math.max(seamDifference, (first[at] - loop[at]).abs());
+            if (y < 20) {
+              expect(flowing[at], first[at],
+                  reason: 'Light flow must stay inside the water');
+            } else if ((first[at] - flowing[at]).abs() > 2) {
+              changed++;
+            }
+          }
+        }
+      }
+      expect(changed, greaterThan(200),
+          reason: 'Reflections must visibly flow through the fluid');
+      expect(frameDifference / (160 * 84 * 3), lessThan(1.5),
+          reason: 'Adjacent frames must change smoothly');
+      expect(seamDifference, lessThanOrEqualTo(2),
+          reason: 'The lighting loop must not flash when the clock wraps');
     });
   });
 
@@ -242,6 +304,60 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets(
+      'Water hot reload stays stable with accessibility semantics enabled',
+      (tester) async {
+    LiquidMotion.ambientEnabled = true;
+    addTearDown(() => LiquidMotion.ambientEnabled = false);
+    final semantics = tester.ensureSemantics();
+    try {
+      Widget preview(int protein) => MaterialApp(
+          home: Scaffold(
+              body: Center(
+                  child: SizedBox(
+                      width: 361,
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        NutritionSummaryCard(
+                            calories: 1480,
+                            calorieTarget: 2200,
+                            protein: protein,
+                            proteinTarget: 160,
+                            carbs: 160,
+                            carbTarget: 250,
+                            fat: 40,
+                            fatTarget: 65),
+                        const SizedBox(height: 16),
+                        const WaterIntakeCard(consumedMl: 400, targetMl: 2800),
+                      ])))));
+      await tester.pumpWidget(preview(100));
+      for (var reload = 0; reload < 3; reload++) {
+        await tester.pumpWidget(preview(100 + reload * 5));
+        unawaited(tester.binding.reassembleApplication());
+        for (var frame = 0; frame < 40; frame++) {
+          await tester.pump(const Duration(milliseconds: 16));
+          expect(tester.takeException(), isNull);
+        }
+        final painters = tester.widgetList<CustomPaint>(
+            find.byKey(const ValueKey('liquid-water-paint')));
+        expect(painters, hasLength(4));
+        for (final paint in painters) {
+          expect((paint.painter! as LiquidWaterPainter).surface,
+              hasLength(LiquidSurfaceSimulation.sampleCount));
+        }
+        for (final label in ['Protein', 'Carbs', 'Fat']) {
+          expect(find.text(label), findsOneWidget);
+        }
+      }
+      expect(find.text('110 / 160 g'), findsOneWidget);
+      expect(
+          find.bySemanticsLabel(RegExp('Protein: 110 / 160 g')), findsWidgets);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox());
+      semantics.dispose();
+    }
+  });
+
   testWidgets('A full phone rotation moves water around every wall',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
@@ -360,6 +476,37 @@ void main() {
     await capture('today-water-tides-second');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Completed water and nutrient goals retain moving sea waves',
+      (tester) async {
+    LiquidMotion.ambientEnabled = true;
+    addTearDown(() => LiquidMotion.ambientEnabled = false);
+    final stream = StreamController<GravitySample>.broadcast();
+    addTearDown(stream.close);
+    for (final perspective in [true, false]) {
+      await tester.pumpWidget(MaterialApp(
+          home: Center(
+              child: LiquidWaterVisual(
+                  fraction: 1,
+                  motion: stream.stream,
+                  perspective: perspective,
+                  size:
+                      perspective ? const Size(80, 96) : const Size(32, 46)))));
+      for (var frame = 0; frame < 120; frame++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final first = water(tester).surface!;
+      expect(first.map((height) => height.abs()).reduce(math.max),
+          greaterThan(.002));
+      for (var frame = 0; frame < 30; frame++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(water(tester).surface, isNot(orderedEquals(first)));
+      expect(water(tester).fraction, 1);
+      await tester.pumpWidget(const SizedBox());
+    }
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Native depth samples produce forward and backward motion',

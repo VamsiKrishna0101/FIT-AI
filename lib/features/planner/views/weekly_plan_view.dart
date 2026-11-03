@@ -386,8 +386,16 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
     return FitnessTheme(
         child: Scaffold(
       appBar: AppBar(
+        centerTitle: true,
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(CupertinoIcons.chevron_left,
+                    size: 20, color: FitnessTheme.silver))
+            : null,
         title: const FitnessText('Weekly plan',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
         backgroundColor: FitnessTheme.canvas,
         surfaceTintColor: Colors.transparent,
         actions: [
@@ -399,20 +407,15 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       ),
       backgroundColor: FitnessTheme.canvas,
       body: DecoratedBox(
-          decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF111111), Colors.black],
-                  stops: [0, .35])),
+          decoration: const BoxDecoration(color: FitnessTheme.canvas),
           child: RefreshIndicator(
               color: Colors.white,
-              backgroundColor: Color(0xFF242424),
+              backgroundColor: FitnessTheme.surface,
               onRefresh: _load,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics()),
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
                 child: ContentTransition(
                     key: ValueKey(_owner),
                     child: _loading && payload == null
@@ -464,13 +467,13 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
                                   SizedBox(key: _planKey, height: 0),
                                   _pageHeading(
                                       payload, status, start, end, locale),
+                                  _planDetails(payload, nextGeneration, locale),
+                                  const SizedBox(height: 14),
                                   WeeklyPlanSchedule(
                                       key: ValueKey(_selected!['id']),
                                       active: _selected?['status'] == 'ACTIVE',
                                       fromOnboarding: widget.fromOnboarding,
                                       payload: payload),
-                                  const SizedBox(height: 12),
-                                  _planDetails(payload, nextGeneration, locale),
                                   if (_selected?['status'] == 'DRAFT' &&
                                       _selected?['synthetic'] != true &&
                                       !pastWeek)
@@ -515,16 +518,16 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
   Widget _pageHeading(Map<String, dynamic> payload, String status,
           DateTime? start, DateTime? end, String locale) =>
       Padding(
-        padding: const EdgeInsets.only(top: 2, bottom: 24),
+        padding: const EdgeInsets.only(top: 2, bottom: 16),
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const FitnessText('Your week.',
+          const FitnessText('Your week',
               style: TextStyle(
-                  fontSize: 36,
-                  height: 1.15,
+                  fontSize: 23,
+                  height: 1.2,
                   fontWeight: FontWeight.w500,
-                  letterSpacing: -1.5)),
-          const SizedBox(height: 12),
+                  letterSpacing: -.65)),
+          const SizedBox(height: 8),
           Wrap(
               spacing: 12,
               runSpacing: 8,
@@ -557,49 +560,78 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
           String locale) =>
       FitnessCard(
         padding: EdgeInsets.zero,
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            shape: const Border(),
-            collapsedShape: const Border(),
-            iconColor: FitnessTheme.muted,
-            collapsedIconColor: FitnessTheme.muted,
-            tilePadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            leading: const Icon(CupertinoIcons.info_circle,
-                size: 18, color: FitnessTheme.muted),
-            title: const FitnessText('About this plan',
-                style: TextStyle(fontSize: 13, color: FitnessTheme.silver)),
-            children: [
-              if (payload['summary'] case final String summary
-                  when summary.isNotEmpty)
-                Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: FitnessText(summary,
-                        style: const TextStyle(
-                            fontSize: 12,
-                            color: FitnessTheme.muted,
-                            height: 1.5))),
-              for (final warning in payload['warnings'] as List? ?? [])
-                Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: FitnessText('$warning',
-                        style: const TextStyle(
-                            fontSize: 12,
-                            color: FitnessTheme.muted,
-                            height: 1.5))),
-              if (_cooldownActive && nextGeneration != null)
-                FitnessText(
-                    'Next plan available ${DateFormat.yMMMd(locale).add_jm().format(nextGeneration)}',
-                    style: const TextStyle(
-                        fontSize: 11, color: FitnessTheme.muted, height: 1.4)),
-              if (_canGenerate && !_running)
-                TextButton(
-                    onPressed: _busy ? null : _generate,
-                    child: const FitnessText('Create next plan')),
-            ],
-          ),
+        child: ExpansionTile(
+          key: const ValueKey('weekly-plan-why'),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          iconColor: FitnessTheme.muted,
+          collapsedIconColor: FitnessTheme.muted,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          title: const FitnessText('Why this plan',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: FitnessTheme.silver)),
+          children: [
+            if (payload['summary'] case final String summary
+                when summary.isNotEmpty)
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: FitnessText(summary,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: FitnessTheme.muted,
+                          height: 1.5))),
+            ..._planReasons(payload),
+            for (final warning in payload['warnings'] as List? ?? [])
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: FitnessText('$warning',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: FitnessTheme.muted,
+                          height: 1.5))),
+            if (_cooldownActive && nextGeneration != null)
+              FitnessText(
+                  'Next plan available ${DateFormat.yMMMd(locale).add_jm().format(nextGeneration)}',
+                  style: const TextStyle(
+                      fontSize: 11, color: FitnessTheme.muted, height: 1.4)),
+            if (_canGenerate && !_running)
+              TextButton(
+                  onPressed: _busy ? null : _generate,
+                  child: const FitnessText('Create next plan')),
+          ],
         ),
       );
+
+  List<Widget> _planReasons(Map<String, dynamic> payload) {
+    final seen = <String>{};
+    final reasons = <Widget>[];
+    for (final day in (payload['workouts'] as List? ?? []).whereType<Map>()) {
+      for (final exercise
+          in (day['exercises'] as List? ?? []).whereType<Map>()) {
+        final reason = '${exercise['reason'] ?? ''}'.trim();
+        final name =
+            '${exercise['displayName'] ?? exercise['name'] ?? day['name'] ?? ''}';
+        if (reason.isEmpty || !seen.add('$name:$reason')) continue;
+        reasons.add(Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            if (name.isNotEmpty) ...[
+              Text(name,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 5),
+            ],
+            FitnessText(reason,
+                style: const TextStyle(
+                    fontSize: 12, color: FitnessTheme.muted, height: 1.5)),
+          ]),
+        ));
+      }
+    }
+    return reasons;
+  }
 }
