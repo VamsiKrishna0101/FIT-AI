@@ -8,7 +8,7 @@ on:
       backend_url:
         description: 'Backend Base URL (ngrok)'
         required: false
-        default: 'https://1594-2401-4900-1c27-f174-d504-d2f1-613-9731.ngrok-free.app'
+        default: 'https://4ac5-2401-4900-1c27-feeb-8a9-4f63-4c4d-14d5.ngrok-free.app'
 
 jobs:
   build-ipa:
@@ -48,12 +48,15 @@ jobs:
 
       - name: Build iOS Application (Release, No Codesign)
         env:
-          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://1594-2401-4900-1c27-f174-d504-d2f1-613-9731.ngrok-free.app' }}
+          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://4ac5-2401-4900-1c27-feeb-8a9-4f63-4c4d-14d5.ngrok-free.app' }}
         run: |
           if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
             cd mobile
           fi
           echo "Building iOS with backend URL: $BACKEND_URL"
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
+            -H "ngrok-skip-browser-warning: true" -H "Accept: application/json" \
+            "${BACKEND_URL%/}/health" | python3 -c 'import json, sys; health = json.load(sys.stdin); assert health.get("status") == "ok", "Backend health check failed"; print("Backend health check passed")'
           flutter build ios --release --no-codesign --no-pub --dart-define=FITAI_API_BASE_URL="$BACKEND_URL"
 
       - name: Package Unsigned IPA for Cloud Testing
