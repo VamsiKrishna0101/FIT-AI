@@ -1,4 +1,3 @@
-import 'onboarding_scaffold.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -19,13 +18,11 @@ class TrainingStylePicker extends StatefulWidget {
   final OnboardingDraft draft;
   final ValueChanged<String> onChanged;
   final Widget? customDayEditor;
-  final bool compact;
   const TrainingStylePicker(
       {super.key,
       required this.draft,
       required this.onChanged,
-      this.customDayEditor,
-      this.compact = false});
+      this.customDayEditor});
 
   @override
   State<TrainingStylePicker> createState() => _TrainingStylePickerState();
@@ -33,8 +30,6 @@ class TrainingStylePicker extends StatefulWidget {
 
 class _TrainingStylePickerState extends State<TrainingStylePicker> {
   final _alternatives = ExpansibleController();
-  bool _showWeek = false;
-  bool _showStyles = false;
 
   @override
   void dispose() {
@@ -46,7 +41,6 @@ class _TrainingStylePickerState extends State<TrainingStylePicker> {
   Widget build(BuildContext context) {
     final draft = widget.draft;
     final preview = TrainingStylePreview(draft);
-    if (widget.compact) return _compact(preview);
     final groups = preview.groups;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       FitnessText(
@@ -76,12 +70,7 @@ class _TrainingStylePickerState extends State<TrainingStylePicker> {
       ],
       if (preview.resolved != 'CUSTOM') ...[
         const SizedBox(height: 18),
-        for (var i = 0;
-            i <
-                (widget.compact && !_showWeek
-                    ? preview.selectedDays.length.clamp(0, 2)
-                    : preview.selectedDays.length);
-            i++)
+        for (var i = 0; i < preview.selectedDays.length; i++)
           Container(
               padding: const EdgeInsets.symmetric(vertical: 13),
               decoration: const BoxDecoration(
@@ -118,16 +107,6 @@ class _TrainingStylePickerState extends State<TrainingStylePicker> {
                         style: const TextStyle(fontSize: 13, height: 1.5))),
               ])),
       ],
-      if (widget.compact &&
-          preview.resolved != 'CUSTOM' &&
-          preview.selectedDays.length > 2)
-        Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-                onPressed: () => setState(() => _showWeek = !_showWeek),
-                child: FitnessText(_showWeek ? 'Show less' : 'View full week',
-                    style: const TextStyle(
-                        fontSize: 12, color: FitnessTheme.silver)))),
       if (preview.incompleteCustom) ...[
         const SizedBox(height: 14),
         const FitnessText('Include chest, back and legs across your week',
@@ -178,88 +157,6 @@ class _TrainingStylePickerState extends State<TrainingStylePicker> {
                                                     : FontWeight.w400)))))))),
         ],
       ),
-    ]);
-  }
-
-  Widget _compact(TrainingStylePreview preview) {
-    final draft = widget.draft;
-    final alternatives = trainingStyleLabels.keys
-        .where((key) => key != 'AUTO' && key != preview.recommended)
-        .toList();
-    // A restored manual choice stays visible even before more styles are opened.
-    if (draft.trainingSplit != 'AUTO' &&
-        trainingStyleLabels.containsKey(draft.trainingSplit)) {
-      alternatives.remove(draft.trainingSplit);
-      alternatives.insert(0, draft.trainingSplit);
-    }
-    final visible = [
-      'AUTO',
-      ...(_showStyles ? alternatives : alternatives.take(2))
-    ];
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      for (final key in visible)
-        Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: OnboardingChoice(
-                key: ValueKey('training-style-$key'),
-                title: trainingStyleLabels[
-                    key == 'AUTO' ? preview.recommended : key]!,
-                subtitle: key == 'AUTO' ? 'Recommended for you' : null,
-                selected: draft.trainingSplit == key,
-                onTap: () => widget.onChanged(key))),
-      Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-              key: const ValueKey('training-style-more'),
-              onPressed: () => setState(() => _showStyles = !_showStyles),
-              child: FitnessText(
-                  _showStyles ? 'Show less' : 'More training styles',
-                  style: const TextStyle(
-                      fontSize: 13, color: FitnessTheme.silver)))),
-      if (preview.resolved == 'CUSTOM' && widget.customDayEditor != null)
-        widget.customDayEditor!
-      else
-        ExpansionTile(
-            key: const ValueKey('training-week-preview'),
-            tilePadding: EdgeInsets.zero,
-            childrenPadding: EdgeInsets.zero,
-            shape: const Border(),
-            collapsedShape: const Border(),
-            title: const FitnessText('Preview your week',
-                style: TextStyle(fontSize: 13)),
-            children: [
-              for (var i = 0; i < preview.selectedDays.length; i++)
-                Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                              width: 58,
-                              child: draft.trainingDays.isEmpty
-                                  ? FitnessText('Day {number}',
-                                      values: {'number': i + 1},
-                                      style: const TextStyle(
-                                          fontSize: 12,
-                                          color: FitnessTheme.muted))
-                                  : FitnessText(
-                                      preview.selectedDays[i][0] +
-                                          preview.selectedDays[i]
-                                              .substring(1, 3)
-                                              .toLowerCase(),
-                                      style: const TextStyle(
-                                          fontSize: 12,
-                                          color: FitnessTheme.muted))),
-                          Expanded(
-                              child: Text(
-                                  preview.groups[i]
-                                      .map((m) => fitnessText(context,
-                                          m[0].toUpperCase() + m.substring(1)))
-                                      .join(' + '),
-                                  style: const TextStyle(
-                                      fontSize: 13, height: 1.5))),
-                        ])),
-            ]),
     ]);
   }
 }

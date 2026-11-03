@@ -32,7 +32,6 @@ void main() {
     expect(controller.draft.focusMuscles.length, 4);
     final balanced = find.byKey(const ValueKey('focus-full-body'));
     await tester.ensureVisible(balanced);
-    await tester.pumpAndSettle();
     await tester.tap(balanced);
     await tester.pumpAndSettle();
     expect(controller.draft.focusMuscles, isEmpty);
@@ -104,58 +103,6 @@ void main() {
     expect(find.text('Upper / lower'), findsNothing);
     expect(tester.takeException(), isNull);
   });
-  testWidgets(
-      'Coached split choices stay compact and keep custom styles available',
-      (tester) async {
-    tester.view.physicalSize = const Size(320, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    final draft = OnboardingDraft(
-        daysPerWeek: 'DAYS_3',
-        trainingDays: ['MONDAY', 'WEDNESDAY', 'FRIDAY'],
-        experienceLevel: 'BEGINNER');
-    await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-            body: SingleChildScrollView(
-                child: MediaQuery(
-                    data: const MediaQueryData(
-                        textScaler: TextScaler.linear(1.5)),
-                    child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: StatefulBuilder(
-                            builder: (context, update) => TrainingStylePicker(
-                                compact: true,
-                                draft: draft,
-                                customDayEditor:
-                                    const Text('Custom day editor'),
-                                onChanged: (value) => update(
-                                    () => draft.trainingSplit = value)))))))));
-    expect(find.byType(OnboardingChoice), findsNWidgets(3));
-    expect(find.text('3 training days'), findsNothing);
-    expect(find.text('Mon'), findsNothing);
-    final fullBody = find.byKey(const ValueKey('training-style-FULL_BODY'));
-    await tester.ensureVisible(fullBody);
-    await tester.tap(fullBody);
-    await tester.pumpAndSettle();
-    expect(draft.trainingSplit, 'FULL_BODY');
-    final preview = find.byKey(const ValueKey('training-week-preview'));
-    await tester.ensureVisible(preview);
-    await tester.tap(preview);
-    await tester.pumpAndSettle();
-    expect(find.text('Mon'), findsOneWidget);
-    final more = find.byKey(const ValueKey('training-style-more'));
-    await tester.ensureVisible(more);
-    await tester.tap(more);
-    await tester.pumpAndSettle();
-    final custom = find.byKey(const ValueKey('training-style-CUSTOM'));
-    await tester.ensureVisible(custom);
-    await tester.tap(custom);
-    await tester.pumpAndSettle();
-    expect(draft.trainingSplit, 'CUSTOM');
-    expect(find.text('Custom day editor'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets(
       'Training days require two selections before continuing and before saving',
       (tester) async {

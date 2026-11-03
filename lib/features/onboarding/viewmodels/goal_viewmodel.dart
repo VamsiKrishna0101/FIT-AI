@@ -15,11 +15,10 @@ class GoalViewModel extends ChangeNotifier {
 
   final OnboardingController controller;
   final bool _ownsController;
-  final bool preselectGoal;
   OnboardingDraft get draft => controller.draft;
   bool _isDisposed = false;
 
-  GoalViewModel({OnboardingController? controller, this.preselectGoal = true})
+  GoalViewModel({OnboardingController? controller})
       : controller = controller ?? OnboardingController(),
         _ownsController = controller == null {
     _loadState();
@@ -33,8 +32,8 @@ class GoalViewModel extends ChangeNotifier {
 
     if (draft.workingToward != null) {
       _selectedGoal = WorkingTowardGoal.fromBackend(draft.workingToward);
-    } else if (preselectGoal) {
-      // The legacy standalone flow can retain its default.
+    } else {
+      // Default to first goal (Build Muscle) or null
       _selectedGoal = WorkingTowardGoal.buildMuscle;
       draft.workingToward = _selectedGoal!.backendValue;
       controller.checkpoint();

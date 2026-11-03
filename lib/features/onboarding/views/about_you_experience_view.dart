@@ -1,6 +1,5 @@
-import '../../../core/localization/fitness_copy.dart';
-import 'package:flutter/cupertino.dart';
 import '../viewmodels/onboarding_controller.dart';
+import '../../../core/localization/fitness_copy.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +9,6 @@ import '../components/about_you_controls.dart';
 import '../components/biometric_ruler_card.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/training_hero.dart';
-import '../components/onboarding_answer_flow.dart';
 import '../components/onboarding_focus_body.dart';
 import '../models/experience_level.dart';
 import '../viewmodels/about_you_viewmodel.dart';
@@ -21,35 +19,35 @@ import '../../../core/theme/fitness_theme.dart';
 class AboutYouExperienceView extends StatefulWidget {
   final OnboardingController? controller;
   final VoidCallback? onContinue;
-  final bool coaching;
-  final List<int> questionParts;
-  final String? previousAnswer;
+  final bool collectMeasurements;
   const AboutYouExperienceView(
       {super.key,
       this.controller,
       this.onContinue,
-      this.coaching = false,
-      this.questionParts = const [0, 1, 2, 3],
-      this.previousAnswer});
+      this.collectMeasurements = false});
 
   @override
   State<AboutYouExperienceView> createState() => _AboutYouExperienceViewState();
 }
 
-class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
-    with OnboardingAnswerFlow<AboutYouExperienceView> {
+class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   bool _advancing = false;
   int _part = 0;
   late final AboutYouViewModel _viewModel;
   late final TextEditingController _nameController;
   late final TextEditingController _ageController;
   String _selectedMetric = 'weight';
-  bool _editingMeasurement = false;
+  List<int> get _parts =>
+      widget.collectMeasurements ? const [0, 1, 2, 3] : const [0, 1, 4, 3];
+
+  bool get _validAge {
+    final age = int.tryParse(_ageController.text);
+    return age != null && age >= 13 && age <= 100;
+  }
 
   @override
   void initState() {
     super.initState();
-    _part = widget.questionParts.first;
     _viewModel = AboutYouViewModel(controller: widget.controller)
       ..addListener(_rebuild);
     _nameController = TextEditingController(text: _viewModel.name);
@@ -82,15 +80,9 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
     super.dispose();
   }
 
-  bool get _validAge {
-    final age = int.tryParse(_ageController.text);
-    return age != null && age >= 13 && age <= 100;
-  }
-
   void _onBack() {
-    if (widget.questionParts.indexOf(_part) > 0) {
-      setState(() => _part =
-          widget.questionParts[widget.questionParts.indexOf(_part) - 1]);
+    if (_parts.indexOf(_part) > 0) {
+      setState(() => _part = _parts[_parts.indexOf(_part) - 1]);
     } else {
       Navigator.of(context).pop();
     }
@@ -98,25 +90,17 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
 
   Future<void> _onContinue() async {
     if (_advancing || (_part == 4 && !_validAge)) return;
-    if (widget.questionParts.indexOf(_part) < widget.questionParts.length - 1) {
+    if (_parts.indexOf(_part) < _parts.length - 1) {
       FocusScope.of(context).unfocus();
-      setState(() => _part =
-          widget.questionParts[widget.questionParts.indexOf(_part) + 1]);
+      setState(() => _part = _parts[_parts.indexOf(_part) + 1]);
       return;
     }
-    final experienceOnly = widget.questionParts.length == 1 && _part == 3;
-    if (!experienceOnly && !_viewModel.isValid) return;
+    if (!_viewModel.isValid) return;
 
     setState(() => _advancing = true);
     try {
-      if (experienceOnly) {
-        _viewModel.draft.experienceLevel =
-            _viewModel.selectedExperience?.backendValue;
-        _viewModel.controller.checkpoint();
-      } else {
-        await _viewModel.continueToNextStep(
-            includeMeasurements: widget.questionParts.contains(2));
-      }
+      await _viewModel.continueToNextStep(
+          includeMeasurements: widget.collectMeasurements);
       if (!mounted) return;
       if (widget.onContinue != null) {
         widget.onContinue!();
@@ -151,35 +135,13 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
       step: _viewModel.currentStep,
       totalSteps: _viewModel.totalSteps,
       sectionLabel: 'About you',
-      part: _part,
-      parts: 5,
-      canPop: _part == widget.questionParts.first,
-      title: widget.coaching
-          ? [
-              'What should we call you?',
-              'Which profile fits you?',
-              'Your body stats',
-              language.experienceSectionTitle,
-              'How old are you?',
-            ][_part]
-          : titles[_part],
-      subtitle: widget.coaching ? '' : subtitles[_part],
-      animateQuestion: widget.coaching,
-      previousAnswer: widget.coaching
-          ? (_part == 0 || _part == 3
-              ? widget.previousAnswer
-              : _part == 1
-                  ? _viewModel.name
-                  : (_viewModel.gender == 'FEMALE'
-                      ? language.genderFemale
-                      : language.genderMale))
-          : null,
-      showContinue: !widget.coaching || (_part != 1 && _part != 3),
-      footer: widget.coaching && (_part == 1 || _part == 3)
-          ? 'You can change this later.'
-          : null,
+      part: _parts.indexOf(_part),
+      parts: 4,
+      canPop: _part == 0,
+      title: titles[_part],
+      subtitle: subtitles[_part],
       actionTitle: language.continueButtonTitle,
-      loading: _advancing || choosingAnswer,
+      loading: _advancing,
       onBack: _onBack,
       onContinue: !_viewModel.controller.ready ||
               (_part == 0 && _viewModel.name.trim().length < 2) ||
@@ -241,19 +203,15 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
           ]),
         ],
         if (_part == 2) ...[
-          if (widget.coaching)
-            _measurementSummary()
-          else ...[
-            BiometricsHeaderWithUnits(
-                title: language.biometricsSectionTitle,
-                showUnitSelector: _selectedMetric != 'age',
-                isImperial: _viewModel.isImperial,
-                imperialLabel: language.unitImperialLabel,
-                metricLabel: language.unitMetricLabel,
-                onUnitChanged: _viewModel.setImperial),
-            const SizedBox(height: 16),
-            _biometrics(),
-          ],
+          BiometricsHeaderWithUnits(
+              title: language.biometricsSectionTitle,
+              showUnitSelector: _selectedMetric != 'age',
+              isImperial: _viewModel.isImperial,
+              imperialLabel: language.unitImperialLabel,
+              metricLabel: language.unitMetricLabel,
+              onUnitChanged: _viewModel.setImperial),
+          const SizedBox(height: 16),
+          _biometrics(),
         ],
         if (_part == 3)
           for (final level in ExperienceLevel.values)
@@ -261,21 +219,10 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
                 padding: const EdgeInsets.only(bottom: 12),
                 child: OnboardingChoice(
                     title: language.experienceTitle(level),
-                    subtitle: widget.coaching
-                        ? null
-                        : language.experienceSubtitle(level),
-                    selected: (!widget.coaching ||
-                            _viewModel.draft.experienceLevel != null) &&
-                        _viewModel.selectedExperience == level,
-                    onTap: () {
-                      if (widget.coaching) {
-                        chooseAnswer(() => _viewModel.selectExperience(level),
-                            _onContinue);
-                      } else {
-                        _viewModel.selectExperience(level);
-                      }
-                    })),
-        if (_part == 3 && !widget.coaching) ...[
+                    subtitle: language.experienceSubtitle(level),
+                    selected: _viewModel.selectedExperience == level,
+                    onTap: () => _viewModel.selectExperience(level))),
+        if (_part == 3) ...[
           const SizedBox(height: 8),
           OnboardingContextNote(
               title: 'The right starting point matters.',
@@ -296,198 +243,49 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
 
   Widget _genderChoice(String gender, String label) {
     final selected = _viewModel.gender == gender;
-    return OnboardingMonochrome(
-        enabled: widget.coaching,
-        child: Semantics(
-            button: true,
-            selected: selected,
-            label: label,
-            child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                    key: ValueKey('onboarding-gender-$gender'),
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: () {
-                      if (widget.coaching) {
-                        chooseAnswer(
-                            () => _viewModel.setGender(gender), _onContinue);
-                      } else {
-                        _viewModel.setGender(gender);
-                      }
-                    },
-                    child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(children: [
-                          Opacity(
-                              opacity: selected ? 1 : .38,
-                              child: SizedBox(
-                                  height:
-                                      ((MediaQuery.sizeOf(context).width - 80) /
-                                              2 *
-                                              2.2)
-                                          .clamp(240.0, 360.0),
-                                  child: Image.asset(
-                                      onboardingBodyAsset(
-                                          female: gender == 'FEMALE'),
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                      cacheWidth: 500,
-                                      excludeFromSemantics: true))),
-                          const SizedBox(height: 20),
-                          Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                  color: selected
-                                      ? FitnessTheme.silver
-                                      : FitnessTheme.surface,
-                                  borderRadius: BorderRadius.circular(30)),
-                              child: FitnessText(label,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: selected
-                                          ? Colors.black
-                                          : Colors.white))),
-                        ]))))));
-  }
-
-  Widget _measurementSummary() {
-    final language = _viewModel.selectedLanguage;
-    return ValueListenableBuilder<int>(
-        valueListenable: _viewModel.measurements,
-        builder: (context, value, child) =>
-            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Align(
-                  alignment: Alignment.centerRight,
-                  child: CupertinoSlidingSegmentedControl<bool>(
-                      key: const ValueKey('measurement-units'),
-                      groupValue: _viewModel.isImperial,
-                      backgroundColor: const Color(0xFF222225),
-                      thumbColor: const Color(0xFF45454A),
-                      padding: const EdgeInsets.all(4),
-                      onValueChanged: (value) {
-                        if (value != null) _viewModel.setImperial(value);
-                      },
-                      children: {
-                        false: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 9),
-                            child: FitnessText(language.unitMetricLabel,
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500))),
-                        true: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 9),
-                            child: FitnessText(language.unitImperialLabel,
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500))),
-                      })),
-              const SizedBox(height: 20),
-              _measurementRow('age', language.ageLabel,
-                  '${_viewModel.age} ${language.yearsUnit}'),
-              _measurementRow('height', language.heightLabel,
-                  '${_viewModel.heightDisplay} ${_viewModel.heightUnitDisplay ?? ''}'),
-              _measurementRow('weight', language.weightLabel,
-                  '${_viewModel.weightDisplay} ${_viewModel.weightUnitDisplay}'),
-              _measurementRow('target', language.targetWeightLabel,
-                  '${_viewModel.targetWeightDisplay} ${_viewModel.weightUnitDisplay}'),
-            ]));
-  }
-
-  Widget _measurementRow(String metric, String label, String value) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Semantics(
-          button: true,
-          child: Material(
-              color: const Color(0xFF232326),
-              borderRadius: BorderRadius.circular(24),
-              child: InkWell(
-                key: ValueKey('select-biometric-$metric'),
+    return Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+                key: ValueKey('onboarding-gender-$gender'),
                 borderRadius: BorderRadius.circular(24),
-                onTap: _viewModel.controller.ready && !_advancing
-                    ? () => _editMeasurement(metric)
-                    : null,
-                child: Container(
-                    constraints: const BoxConstraints(minHeight: 72),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 18),
-                    child: LayoutBuilder(builder: (context, bounds) {
-                      final stacked = bounds.maxWidth < 360 &&
-                          MediaQuery.textScalerOf(context).scale(16) > 20;
-                      final labelText = FitnessText(label,
-                          style: const TextStyle(
-                              fontSize: 16,
-                              height: 1.4,
-                              color: Color(0xFFC7C7CC)));
-                      final valueText = Text(value.trim(),
-                          textAlign: stacked ? TextAlign.left : TextAlign.right,
-                          style: const TextStyle(
-                              fontSize: 18,
-                              height: 1.4,
-                              fontWeight: FontWeight.w600,
-                              fontFeatures: [FontFeature.tabularFigures()]));
-                      const arrow = Icon(Icons.chevron_right_rounded,
-                          size: 19, color: Color(0xFF77777E));
-                      if (stacked) {
-                        return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              labelText,
-                              const SizedBox(height: 8),
-                              Row(children: [
-                                Expanded(child: valueText),
-                                const SizedBox(width: 10),
-                                arrow
-                              ]),
-                            ]);
-                      }
-                      return Row(children: [
-                        Expanded(flex: 3, child: labelText),
-                        const SizedBox(width: 12),
-                        Expanded(flex: 2, child: valueText),
-                        const SizedBox(width: 10),
-                        arrow
-                      ]);
-                    })),
-              ))));
-
-  Future<void> _editMeasurement(String metric) async {
-    if (_editingMeasurement) return;
-    _editingMeasurement = true;
-    HapticFeedback.selectionClick();
-    setState(() => _selectedMetric = metric);
-    try {
-      await showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          showDragHandle: true,
-          backgroundColor: const Color(0xFF171719),
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-          builder: (sheetContext) => ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxWidth: 520,
-                  maxHeight: MediaQuery.sizeOf(sheetContext).height * .85),
-              child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                  child: ValueListenableBuilder<int>(
-                      valueListenable: _viewModel.measurements,
-                      builder: (context, value, child) =>
-                          Column(mainAxisSize: MainAxisSize.min, children: [
-                            _ruler(plain: true),
-                            const SizedBox(height: 24),
-                            OnboardingContinueButton(
-                                title: 'Done',
-                                onPressed: () =>
-                                    Navigator.of(sheetContext).pop()),
-                          ])))));
-    } finally {
-      _editingMeasurement = false;
-    }
+                onTap: () => _viewModel.setGender(gender),
+                child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(children: [
+                      Opacity(
+                          opacity: selected ? 1 : .38,
+                          child: SizedBox(
+                              height: ((MediaQuery.sizeOf(context).width - 80) /
+                                      2 *
+                                      2.2)
+                                  .clamp(240.0, 360.0),
+                              child: Image.asset(
+                                  onboardingBodyAsset(
+                                      female: gender == 'FEMALE'),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 500,
+                                  excludeFromSemantics: true))),
+                      const SizedBox(height: 20),
+                      Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                              color: selected
+                                  ? FitnessTheme.silver
+                                  : FitnessTheme.surface,
+                              borderRadius: BorderRadius.circular(30)),
+                          child: FitnessText(label,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color:
+                                      selected ? Colors.black : Colors.white))),
+                    ])))));
   }
 
   Widget _biometrics() {
@@ -527,7 +325,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
     );
   }
 
-  Widget _ruler({bool plain = false}) {
+  Widget _ruler() {
     final model = _viewModel;
     final language = model.selectedLanguage;
     final imperial = model.isImperial;
@@ -535,7 +333,6 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
 
     if (_selectedMetric == 'age') {
       return BiometricRulerCard(
-          plain: plain,
           key: rulerKey,
           label: language.ageLabel,
           value: model.age.toDouble(),
@@ -551,7 +348,6 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
 
     if (_selectedMetric == 'height') {
       return BiometricRulerCard(
-          plain: plain,
           key: rulerKey,
           label: language.heightLabel,
           value: imperial
@@ -573,7 +369,6 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView>
     final target = _selectedMetric == 'target';
     final weight = target ? model.targetWeightKg : model.weightKg;
     return BiometricRulerCard(
-        plain: plain,
         key: rulerKey,
         label: target ? language.targetWeightLabel : language.weightLabel,
         value: imperial ? (weight * 2.20462).roundToDouble() : weight,

@@ -382,7 +382,7 @@ void main() {
       await tester.pumpWidget(schedule(true));
       await tester.pumpAndSettle();
       expect(starts, 0);
-      expect(find.text(offset == 0 ? 'Start workout' : 'View workout'),
+      expect(find.text(offset == 0 ? 'Start workout' : 'Edit workout'),
           findsOneWidget);
       if (offset == 0) {
         await tester.tap(find.text('Start workout'));

@@ -159,7 +159,8 @@ void main() {
             weightKg: 80.7,
             targetWeightKg: 74.8)
         .save();
-    await tester.pumpWidget(_app(const AboutYouExperienceView()));
+    await tester.pumpWidget(
+        _app(const AboutYouExperienceView(collectMeasurements: true)));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();

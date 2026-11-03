@@ -103,7 +103,9 @@ void main() {
         heightCm: 168, weightKg: 64, age: 28, targetWeightKg: 62));
     var continued = false;
     await tester.pumpWidget(app(AboutYouExperienceView(
-        controller: model, onContinue: () => continued = true)));
+        controller: model,
+        collectMeasurements: true,
+        onContinue: () => continued = true)));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('onboarding-country')), findsNothing);
     expect(find.byType(DropdownButtonFormField<String>), findsNothing);

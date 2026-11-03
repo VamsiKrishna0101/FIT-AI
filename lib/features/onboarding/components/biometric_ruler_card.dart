@@ -11,13 +11,11 @@ class BiometricRulerCard extends StatefulWidget {
   final String? unit, secondaryDisplay;
   final double value, min, max, step;
   final int majorEvery;
-  final bool plain;
   final String Function(double) tickLabel;
   final ValueChanged<double> onChanged;
 
   const BiometricRulerCard({
     super.key,
-    this.plain = false,
     required this.label,
     required this.valueDisplay,
     this.unit,
@@ -124,19 +122,15 @@ class _BiometricRulerCardState extends State<BiometricRulerCard> {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: widget.plain
-            ? EdgeInsets.zero
-            : const EdgeInsets.fromLTRB(20, 20, 20, 14),
-        decoration: widget.plain
-            ? null
-            : BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: .12)),
-                gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF292B2D), Color(0xFF1B1C1E)]),
-              ),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: .12)),
+          gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF292B2D), Color(0xFF1B1C1E)]),
+        ),
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           FitnessText(widget.label,

@@ -201,7 +201,8 @@ void main() {
     await controller.initialize();
     await tester.pumpWidget(MaterialApp(
         theme: ThemeData.dark(),
-        home: AboutYouExperienceView(controller: controller)));
+        home: AboutYouExperienceView(
+            controller: controller, collectMeasurements: true)));
     await tester.pumpAndSettle();
     final scaffold =
         tester.widget<OnboardingScaffold>(find.byType(OnboardingScaffold));

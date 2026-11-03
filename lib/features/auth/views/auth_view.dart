@@ -1,10 +1,7 @@
-import '../../onboarding/components/onboarding_question_reveal.dart';
 import '../../onboarding/viewmodels/onboarding_controller.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/fitness_theme.dart';
-import '../../onboarding/components/onboarding_chrome.dart';
-import '../../onboarding/components/onboarding_scaffold.dart'
-    show OnboardingCoachIndicator;
+import '../../../core/branding/setcraft_brand.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
 
@@ -262,13 +259,18 @@ class _AuthViewState extends State<AuthView> {
                 padding: EdgeInsets.only(
                     bottom: MediaQuery.viewInsetsOf(context).bottom),
                 child: Column(children: [
-                  OnboardingTopBar(
-                      currentStep: 8,
-                      totalSteps: 8,
-                      sectionLabel: 'Your account',
-                      onBack: _isSubmitting
-                          ? null
-                          : () => Navigator.of(context).maybePop()),
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                          padding: const EdgeInsets.only(left: 12, top: 4),
+                          child: IconButton(
+                              tooltip: MaterialLocalizations.of(context)
+                                  .backButtonTooltip,
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () => Navigator.of(context).maybePop(),
+                              icon: const Icon(Icons.arrow_back_rounded,
+                                  color: Colors.white)))),
                   Expanded(
                       child: LayoutBuilder(
                           builder: (context, constraints) =>
@@ -283,26 +285,42 @@ class _AuthViewState extends State<AuthView> {
                                           .clamp(0, double.infinity)),
                                   child: Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.start,
+                                          MainAxisAlignment.center,
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        const Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: OnboardingCoachIndicator()),
-                                        const SizedBox(height: 24),
-                                        OnboardingQuestionReveal(
-                                            key: ValueKey(_isSignIn),
-                                            title: copy.title(_isSignIn),
-                                            controlsGap: 0,
-                                            child: const SizedBox.shrink()),
-                                        const SizedBox(height: 10),
-                                        FitnessText(
-                                            _isSignIn
-                                                ? 'Pick up where you left off.'
-                                                : 'Save your setup and keep going.',
-                                            textAlign: TextAlign.left,
+                                        const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              ExcludeSemantics(
+                                                  child:
+                                                      SetcraftMark(size: 34)),
+                                              SizedBox(width: 9),
+                                              Text('SETCRAFT',
+                                                  textScaler:
+                                                      TextScaler.noScaling,
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.white,
+                                                      letterSpacing: 2.6)),
+                                            ]),
+                                        const SizedBox(height: 30),
+                                        Text(copy.title(_isSignIn),
+                                            textAlign: TextAlign.center,
                                             style: const TextStyle(
+                                                fontSize: 30,
+                                                height: 1.15,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: -.9,
+                                                color: Colors.white)),
+                                        const SizedBox(height: 10),
+                                        const FitnessText(
+                                            'Your plan, your progress, together',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
                                                 fontSize: 13,
                                                 height: 1.5,
                                                 color: Color(0xFF999999))),
@@ -721,7 +739,7 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
         child: SingleChildScrollView(
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF151517),
+              color: const Color(0xFF121316),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border.all(
@@ -856,9 +874,6 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
                   const SizedBox(height: 12),
                   LiquidChromeButton(
                     title: widget.copy.verify,
-                    solid: true,
-                    pill: true,
-                    showArrow: false,
                     isLoading: _isVerifying,
                     onPressed: _isVerifying ? null : _verify,
                   ),

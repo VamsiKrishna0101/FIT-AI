@@ -1,10 +1,10 @@
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:setcraft/core/storage/onboarding_draft.dart';
@@ -88,7 +88,6 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     await LanguageManager.shared.selectLanguage(AppLanguage.uk);
-    await OnboardingDraft.clear();
   });
   test('all 19 supplied assets are bundled, with independent paired choices',
       () async {
@@ -150,7 +149,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('5 / 8'), findsNothing);
     expect(
-        find.byKey(const ValueKey('onboarding-progress-fill')), findsNothing);
+        find.byKey(const ValueKey('onboarding-progress-fill')), findsOneWidget);
     expect(find.text('0 selected'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('equipment-dumbbells')));
     await tester.pumpAndSettle();
@@ -159,9 +158,10 @@ void main() {
     expect((await OnboardingDraft.load()).equipmentIds, ['dumbbells']);
     await tester.ensureVisible(
         find.byKey(const ValueKey('equipment-adjustable_bench')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('equipment-adjustable_bench')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     final saved = await OnboardingDraft.load();
     expect(saved.equipmentIds, ['adjustable_bench', 'dumbbells']);
@@ -181,7 +181,7 @@ void main() {
     await tester.pumpWidget(_app(EquipmentSelectionView(onContinue: () {})));
     await tester.pumpAndSettle();
     expect(find.text('4 selected'), findsOneWidget);
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     expect((await OnboardingDraft.load()).equipmentIds,
         ['barbell', 'pec_deck', 'rear_delt', 'squat_rack']);
@@ -236,94 +236,96 @@ void main() {
     await tester.pumpAndSettle();
     expect(repository.saved, ['bodyweight_only']);
   });
-  testWidgets('catalogue uses image rows, sections and square selections',
+  testWidgets('real WebPs render in proportional cards with premium previews',
       (tester) async {
     await _size(tester);
-    await OnboardingDraft(
-        equipmentIds: ['dumbbells', 'adjustable_bench', 'seated_row']).save();
-    await tester.pumpWidget(_app(const EquipmentSelectionView(coaching: true)));
+    tester.view.physicalSize = const Size(786, 1704);
+    tester.view.devicePixelRatio = 2;
+    await OnboardingDraft(equipmentIds: [
+      'dumbbells',
+      'adjustable_bench',
+      'seated_row',
+      'resistance_bands'
+    ]).save();
+    await tester.pumpWidget(_app(const EquipmentSelectionView()));
     await tester.pumpAndSettle();
-    expect(find.text('Review your equipment'), findsOneWidget);
-    expect(find.text('Free weights'), findsOneWidget);
-    expect(find.text('Machines & cables'), findsOneWidget);
-    expect(find.text('Let’s check your equipment.'), findsNothing);
-    expect(find.byType(Checkbox), findsNWidgets(EquipmentCatalog.byId.length));
     await _capture(tester, 'onboarding-equipment-preview');
-    await tester
-        .ensureVisible(find.byKey(const ValueKey('equipment-cable_station')));
+    await tester.tap(find.text('Machines · 1'));
+    await tester.pumpAndSettle();
     await _capture(tester, 'onboarding-equipment-machines-preview');
+    await tester.ensureVisible(find.text('More machines'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('More machines'));
+    await tester.pumpAndSettle();
     await tester
         .ensureVisible(find.byKey(const ValueKey('equipment-leg_curl')));
     await _capture(tester, 'onboarding-equipment-extra-preview');
-    await tester.ensureVisible(
-        find.byKey(const ValueKey('equipment-resistance_bands')));
+    await tester.drag(
+        find.byKey(const ValueKey('onboarding-scroll')), const Offset(0, 2000));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Home · 1'));
+    await tester.pumpAndSettle();
     await _capture(tester, 'onboarding-equipment-home-preview');
     expect(tester.takeException(), isNull);
   });
-  testWidgets('search includes every machine and preserves hidden selections',
-      (tester) async {
-    await _size(tester);
-    await tester.pumpWidget(_app(const EquipmentSelectionView()));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('equipment-dumbbells')));
-    await tester.pumpAndSettle();
-    final search = find.byKey(const ValueKey('equipment-search'));
-    await tester.enterText(search, 'leg curl');
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('equipment-dumbbells')), findsNothing);
-    final curl = find.byKey(const ValueKey('equipment-leg_curl'));
-    await tester.ensureVisible(curl);
-    await tester.tap(curl);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('equipment-clear-search')));
-    await tester.pumpAndSettle();
-    final dumbbells = find.byKey(const ValueKey('equipment-dumbbells'));
-    expect(
-        tester
-            .widget<Checkbox>(
-                find.descendant(of: dumbbells, matching: find.byType(Checkbox)))
-            .value,
-        isTrue);
-    expect(find.text('2 selected'), findsOneWidget);
-    await tester.enterText(search, 'no such item');
-    await tester.pumpAndSettle();
-    expect(find.text('No equipment found'), findsOneWidget);
-    await tester.enterText(search, 'leg_extension');
-    await tester.pumpAndSettle();
-    expect(
-        find.byKey(const ValueKey('equipment-leg_extension')), findsOneWidget);
-    // Human-readable ID queries are supported with spaces too.
-    await tester.enterText(search, 'leg extension');
-    await tester.pumpAndSettle();
-    expect(
-        find.byKey(const ValueKey('equipment-leg_extension')), findsOneWidget);
-    expect(find.text('2 selected'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
   testWidgets(
-      'translated catalogue and search fit a narrow phone with keyboard',
+      'all categories and long translations fit small phones with larger text',
       (tester) async {
     await _size(tester, width: 320, height: 640);
-    await LanguageManager.shared.selectLanguage(AppLanguage.germany);
     await OnboardingDraft(languageCode: 'de').save();
+    await LanguageManager.shared
+        .selectLanguage(AppLanguage.germany, persistDraft: false);
     await tester.pumpWidget(_app(const EquipmentSelectionView(),
         scale: 1.4, locale: const Locale('de', 'DE')));
     await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    await _capture(tester, 'onboarding-equipment-german-preview');
+    for (final group in EquipmentGroup.values) {
+      tester
+          .state<ScrollableState>(find
+              .descendant(
+                  of: find.byKey(const ValueKey('onboarding-scroll')),
+                  matching: find.byType(Scrollable))
+              .first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
+      final label = EquipmentCopy.tab(AppLanguage.germany, group);
+      final tab = find.byWidgetPredicate((w) =>
+          w is Text &&
+          (w.data == label || w.data?.startsWith('$label · ') == true));
+      await tester.scrollUntilVisible(tab, 120,
+          scrollable: find
+              .descendant(
+                  of: find.byKey(const ValueKey('onboarding-scroll')),
+                  matching: find.byType(Scrollable))
+              .first);
+      expect(tab, findsOneWidget,
+          reason: '$label category must remain available after scrolling');
+      await tester.ensureVisible(tab);
+      await tester.pumpAndSettle();
+      await tester.tap(tab);
+      await tester.pumpAndSettle();
+      if (group == EquipmentGroup.machines) {
+        final more = find.text('Weitere Maschinen');
+        await tester.scrollUntilVisible(more, 160,
+            scrollable: find
+                .descendant(
+                    of: find.byKey(const ValueKey('onboarding-scroll')),
+                    matching: find.byType(Scrollable))
+                .first);
+        await tester.pumpAndSettle();
+        await tester.tap(more);
+        await tester.pumpAndSettle();
+      }
+      await tester.drag(find.byKey(const ValueKey('onboarding-scroll')),
+          const Offset(0, -2000));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byKey(const ValueKey('onboarding-scroll')),
+          const Offset(0, 2500));
+      await tester.pumpAndSettle();
+    }
     tester.view.viewInsets = const FakeViewPadding(bottom: 260);
-    await tester.pumpAndSettle();
-    final search = find.byKey(const ValueKey('equipment-search'));
-    await tester.enterText(search, 'dumbbells');
-    await tester.pumpAndSettle();
-    final row = find.byKey(const ValueKey('equipment-dumbbells'));
-    await tester.ensureVisible(row);
-    await tester.pumpAndSettle();
-    await tester.tap(row);
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('equipment-dumbbells')), findsOneWidget);
-    expect(find.text('Fertig').hitTestable(), findsOneWidget);
+    await tester.pump();
     expect(tester.takeException(), isNull);
-    await _capture(tester, 'onboarding-equipment-german-keyboard-preview');
   });
 }

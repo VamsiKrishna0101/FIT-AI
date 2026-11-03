@@ -1,8 +1,10 @@
 import '../../../core/localization/fitness_copy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/fitness_theme.dart';
+import 'onboarding_progress_bar.dart';
+import '../../../core/branding/setcraft_brand.dart';
 
-/// Quiet brand header; progress remains available to assistive technology.
 class OnboardingTopBar extends StatelessWidget {
   final int currentStep, totalSteps;
   final String sectionLabel;
@@ -18,49 +20,46 @@ class OnboardingTopBar extends StatelessWidget {
       this.onBack});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          SizedBox(
-              width: 44,
-              child: onBack == null
-                  ? null
-                  : OnboardingBackButton(onPressed: onBack!)),
-          Expanded(
-              child: Semantics(
-            label: fitnessText(context, 'Step {step} of {total}',
-                values: {'step': currentStep, 'total': totalSteps}),
-            child: const ExcludeSemantics(
-                child: Text('SETCRAFT',
-                    textAlign: TextAlign.center,
-                    textScaler: TextScaler.noScaling,
-                    style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                        fontStyle: FontStyle.italic,
-                        letterSpacing: -.8,
-                        color: Color(0xFF606066)))),
-          )),
-          const SizedBox(width: 44, height: 56),
-        ]),
-      );
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Row(children: [
+            if (onBack != null)
+              OnboardingBackButton(onPressed: onBack!)
+            else
+              const SetcraftMark(),
+            const SizedBox(width: 14),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                  Semantics(
+                      label: fitnessText(context, 'Step {step} of {total}',
+                          values: {'step': currentStep, 'total': totalSteps}),
+                      child: ExcludeSemantics(
+                          child: OnboardingProgressBar(
+                              currentStep: currentStep,
+                              totalSteps: totalSteps,
+                              progress: ((currentStep - 1) + part / parts) /
+                                  totalSteps))),
+                ])),
+          ])));
 }
 
 class OnboardingBackButton extends StatelessWidget {
   final VoidCallback onPressed;
   const OnboardingBackButton({super.key, required this.onPressed});
   @override
-  Widget build(BuildContext context) => SizedBox.square(
-        dimension: 44,
-        child: IconButton(
-          style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF19191B),
-              foregroundColor: const Color(0xFFDDDDDD)),
+  Widget build(BuildContext context) => SizedBox(
+      width: 44,
+      height: 44,
+      child: IconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () {
             HapticFeedback.selectionClick();
             onPressed();
           },
-          icon: const Icon(Icons.chevron_left_rounded, size: 24),
-        ),
-      );
+          icon: const Icon(Icons.chevron_left_rounded,
+              size: 24, color: FitnessTheme.silver)));
 }

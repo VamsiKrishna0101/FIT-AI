@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/training_hero.dart';
-import '../components/onboarding_answer_flow.dart';
 import '../models/working_toward_goal.dart';
 import '../viewmodels/goal_viewmodel.dart';
 import 'about_you_experience_view.dart';
@@ -12,25 +11,20 @@ import 'about_you_experience_view.dart';
 // MARK: - Screen 01 — Your Goal (Apple Liquid Glass & 3D Metallic UI)
 class GoalSelectionView extends StatefulWidget {
   final OnboardingController? controller;
-  final VoidCallback? onContinue;
-  final bool coaching;
-  const GoalSelectionView(
-      {super.key, this.controller, this.onContinue, this.coaching = false});
+  const GoalSelectionView({super.key, this.controller});
 
   @override
   State<GoalSelectionView> createState() => _GoalSelectionViewState();
 }
 
-class _GoalSelectionViewState extends State<GoalSelectionView>
-    with OnboardingAnswerFlow<GoalSelectionView> {
+class _GoalSelectionViewState extends State<GoalSelectionView> {
   bool _advancing = false;
   late final GoalViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = GoalViewModel(
-        controller: widget.controller, preselectGoal: !widget.coaching)
+    _viewModel = GoalViewModel(controller: widget.controller)
       ..addListener(_rebuild);
   }
 
@@ -55,10 +49,6 @@ class _GoalSelectionViewState extends State<GoalSelectionView>
     try {
       await _viewModel.continueToNextStep();
       if (!mounted) return;
-      if (widget.onContinue != null) {
-        widget.onContinue!();
-        return;
-      }
       await OnboardingPageRoute(
               page: AboutYouExperienceView(controller: _viewModel.controller))
           .open(context);
@@ -76,49 +66,28 @@ class _GoalSelectionViewState extends State<GoalSelectionView>
       step: _viewModel.currentStep,
       sectionLabel: 'Your goals',
       totalSteps: _viewModel.totalSteps,
-      title: widget.coaching
-          ? 'What’s your main\nfitness goal?'
-          : language.headlineGoal,
-      subtitle: widget.coaching ? '' : language.subtitleGoal,
-      greeting: widget.coaching ? 'Let’s build your training plan.' : null,
-      showContinue: !widget.coaching,
-      footer: widget.coaching ? 'You can change this later.' : null,
+      title: language.headlineGoal,
+      subtitle: language.subtitleGoal,
       actionTitle: language.continueButtonTitle,
-      loading: _advancing || choosingAnswer,
+      loading: _advancing,
       onBack: _onBack,
       onContinue: selectedGoal == null ? null : _onContinue,
       children: [
         for (final goal in const [
           WorkingTowardGoal.buildMuscle,
-          WorkingTowardGoal.getStronger,
           WorkingTowardGoal.loseBodyFat,
+          WorkingTowardGoal.getStronger,
           WorkingTowardGoal.getFitter,
           WorkingTowardGoal.buildConsistency
         ])
           Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: OnboardingChoice(
-                  title: widget.coaching
-                      ? switch (goal) {
-                          WorkingTowardGoal.buildMuscle => 'Build muscle',
-                          WorkingTowardGoal.getStronger => 'Get stronger',
-                          WorkingTowardGoal.loseBodyFat => 'Lose body fat',
-                          WorkingTowardGoal.getFitter => 'Improve fitness',
-                          _ => 'Build consistency',
-                        }
-                      : language.goalTitle(goal),
-                  subtitle:
-                      widget.coaching ? null : language.goalSubtitle(goal),
+                  title: language.goalTitle(goal),
+                  subtitle: language.goalSubtitle(goal),
                   selected: selectedGoal == goal,
-                  onTap: () {
-                    if (widget.coaching) {
-                      chooseAnswer(
-                          () => _viewModel.selectGoal(goal), _onContinue);
-                    } else {
-                      _viewModel.selectGoal(goal);
-                    }
-                  })),
-        if (!widget.coaching && selectedGoal != null) ...[
+                  onTap: () => _viewModel.selectGoal(goal))),
+        if (selectedGoal != null) ...[
           const SizedBox(height: 12),
           OnboardingContextNote(
               title: 'A clear goal. A plan with direction.',
