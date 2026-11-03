@@ -12,6 +12,7 @@ import '../../../core/health/phone_sleep_service.dart';
 import '../../wellness/repositories/wellness_repository.dart';
 import '../../body_scan/views/body_view.dart';
 import '../../history/views/progress_view.dart';
+import '../../progress/views/progress_overview_view.dart';
 import '../../profile/views/profile_view.dart';
 import '../../today/views/today_home_view.dart';
 import '../../train/views/train_view.dart';
@@ -115,11 +116,23 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
       case 'TRIAL_EXPIRED':
         _openRoute(const SubscriptionView());
         break;
+      case 'REST_FINISHED':
       case 'WORKOUT':
-        _onTabSelected(1);
+        final date = DateTime.tryParse(data['date'] ?? '');
+        if (date == null) break;
+        _openRoute(TrainView(
+            standalone: true,
+            initialDate: data['date'],
+            notificationId:
+                data['type'] == 'WORKOUT' ? data['notificationId'] : null));
         break;
       case 'SUMMARY':
-        _onTabSelected(3);
+        final end = DateTime.tryParse(data['date'] ?? '');
+        if (end == null) break;
+        _openRoute(ProgressOverviewView(
+            standalone: true,
+            initialRange: DateTimeRange(
+                start: DateTime(end.year, end.month, end.day - 6), end: end)));
         break;
       case 'PLAN_READY':
       case 'PLAN_AVAILABLE':
@@ -133,6 +146,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
         break;
       case 'MEAL':
         _openRoute(FoodLibraryView(
+            initialDate: DateTime.tryParse(data['date'] ?? ''),
             initialMealType: data['targetId'] ?? 'LUNCH',
             onMealAdded: () => TodayRepository.shared.invalidate()));
         break;

@@ -1,202 +1,150 @@
-import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../core/components/motion.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 import 'progress_chart.dart';
 import 'progress_surface.dart';
 import 'progress_weekly_bars.dart';
 
-/// The Summary scoreboard: a large workout count that counts up, its change
-/// against the previous period, the weekly rhythm and two supporting stats.
+/// The headline, comparison and chart all count completed workouts.
 class ProgressTrainingHero extends StatelessWidget {
   final ProgressJson summary;
   final List<ProgressJson> weeks;
-  final String? rangeLabel;
+  final String? rangeLabel, previousRangeLabel;
+  final String period;
   final VoidCallback onOpen;
-  const ProgressTrainingHero(
-      {super.key,
-      required this.summary,
-      required this.weeks,
-      required this.onOpen,
-      this.rangeLabel});
+
+  const ProgressTrainingHero({
+    super.key,
+    required this.summary,
+    required this.weeks,
+    required this.onOpen,
+    this.rangeLabel,
+    this.previousRangeLabel,
+    this.period = '4w',
+  });
 
   @override
   Widget build(BuildContext context) {
     final workouts = progressNumber(summary['workouts']) ?? 0;
+    final sets = progressNumber(summary['sets']) ?? 0;
     final change = progressNumber(summary['workoutChange']);
+    final canCompare = summary['hasPreviousTraining'] == true ||
+        (progressNumber(summary['previousWorkouts']) ?? 0) > 0;
     final points = ProgressPoint.parse(weeks, 'workouts');
-    // Stats sit beside the headline so the card stays one compact block;
-    // larger text gives them their own row instead.
-    final stacked = MediaQuery.textScalerOf(context).scale(14) > 17;
-    final stats = [
-      _Stat(
-          icon: CupertinoIcons.square_stack_3d_up_fill,
-          color: progressStrength,
-          value: progressNumber(summary['sets']) ?? 0,
-          label: 'Logged sets'),
-      _Stat(
-          icon: CupertinoIcons.rosette,
-          color: progressRecord,
-          value: progressNumber(summary['records']) ?? 0,
-          label: 'New records'),
-    ];
-    final headline = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-              spacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.end,
-              children: [
-                MotionValue(
-                    value: workouts.toDouble(),
-                    builder: (context, value) => Text(
-                        progressValue(context, value.roundToDouble(),
-                            digits: 0),
-                        style: const TextStyle(
-                            fontSize: 48,
-                            height: 1,
-                            letterSpacing: -1.8,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: [ui.FontFeature.tabularFigures()]))),
-                Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: Text(fitnessText(context, 'Workouts'),
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: progressMuted))),
-              ]),
-          const SizedBox(height: 9),
-          if (change != null && change.isFinite)
-            _ChangePill(change: change)
-          else if (rangeLabel != null)
-            Text(rangeLabel!,
-                style: const TextStyle(color: progressMuted, fontSize: 12)),
-        ]);
+    final title = switch (period) {
+      '4w' => 'Your last 4 weeks',
+      '3m' => 'Your last 3 months',
+      '1y' => 'Your last year',
+      'all' => 'Your training so far',
+      _ => 'Your selected dates',
+    };
+
     return ProgressSurface(
-        accent: progressTraining,
-        radius: 28,
-        padding: EdgeInsets.zero,
-        child: InkWell(
-            key: const ValueKey('progress-open-activity'),
-            onTap: onOpen,
-            child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Expanded(child: headline),
-                        if (!stacked) ...[
-                          const SizedBox(width: 12),
-                          Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                stats[0],
-                                const SizedBox(height: 10),
-                                stats[1],
-                              ]),
-                        ],
-                        if (weeks.any((week) => week['partial'] == true))
-                          Tooltip(
-                              message: fitnessText(context,
-                                  'Edge weeks include only the selected dates.'),
-                              child: const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 6),
-                                  child: Icon(CupertinoIcons.info_circle,
-                                      size: 14, color: progressMuted))),
-                        const Padding(
-                            padding: EdgeInsets.only(top: 3),
-                            child: Icon(CupertinoIcons.chevron_right,
-                                size: 13, color: progressMuted)),
-                      ]),
-                      if (stacked) ...[
-                        const SizedBox(height: 12),
-                        Wrap(spacing: 16, runSpacing: 10, children: stats),
-                      ],
-                      if (points.isNotEmpty) ...[
-                        const SizedBox(height: 14),
-                        LayoutBuilder(builder: (context, box) {
-                          final labelWidth =
-                              MediaQuery.textScalerOf(context).scale(12) * 4;
-                          if (points.length <= 6 &&
-                              box.maxWidth / points.length >= labelWidth) {
-                            return ProgressWeeklyBars(
-                                points: points,
-                                metric: 'Workouts',
-                                color: progressTraining,
-                                compact: true);
-                          }
-                          return SizedBox(
-                              height: 64,
-                              width: double.infinity,
-                              child: ProgressSparkline(
-                                  points: points,
-                                  bars: true,
-                                  color: progressTraining));
-                        }),
-                      ],
-                    ]))));
-  }
-}
-
-/// The period-over-period workout change as a direction-tinted chip.
-class _ChangePill extends StatelessWidget {
-  final num change;
-  const _ChangePill({required this.change});
-
-  @override
-  Widget build(BuildContext context) => ProgressChangeChip(
-      change: change,
-      label: fitnessText(
-          context,
-          change.abs() == 1
-              ? '{change} workout vs previous period'
-              : '{change} workouts vs previous period',
-          values: {
-            'change':
-                '${change > 0 ? '+' : ''}${progressValue(context, change, digits: 0)}'
-          }));
-}
-
-class _Stat extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final num value;
-  final String label;
-  const _Stat(
-      {required this.icon,
-      required this.color,
-      required this.value,
-      required this.label});
-
-  @override
-  Widget build(BuildContext context) =>
-      Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-                color: color.withValues(alpha: .15),
-                borderRadius: BorderRadius.circular(9)),
-            child: Icon(icon, size: 14, color: color)),
-        const SizedBox(width: 8),
-        Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(progressValue(context, value, digits: 0),
+      hero: true,
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        key: const ValueKey('progress-open-activity'),
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(fitnessText(context, title),
+                style: const TextStyle(
+                    fontSize: 13, color: progressMuted, height: 1.4)),
+            const SizedBox(height: 10),
+            Text(
+                fitnessText(
+                    context,
+                    workouts == 1
+                        ? '{count} workout completed'
+                        : '{count} workouts completed',
+                    values: {
+                      'count': progressValue(context, workouts, digits: 0)
+                    }),
+                style: const TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -.6,
+                    height: 1.2,
+                    color: progressSilver)),
+            const SizedBox(height: 8),
+            if (canCompare && change != null && change.isFinite) ...[
+              Text(
+                  fitnessText(
+                      context,
+                      change.abs() == 1
+                          ? '{change} workout vs previous period'
+                          : '{change} workouts vs previous period',
+                      values: {
+                        'change':
+                            '${change > 0 ? '+' : ''}${progressValue(context, change, digits: 0)}'
+                      }),
                   style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.1,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -.3,
-                      fontFeatures: [ui.FontFeature.tabularFigures()])),
-              Text(fitnessText(context, label),
+                      color: progressSilver, fontSize: 12, height: 1.4)),
+              if (previousRangeLabel != null) ...[
+                const SizedBox(height: 3),
+                Text(previousRangeLabel!,
+                    style: const TextStyle(
+                        color: progressMuted, fontSize: 11, height: 1.4)),
+              ],
+            ] else if (workouts == 0 && sets > 0)
+              Text(
+                  fitnessText(context,
+                      'Your sets are saved. Finish a workout to add it here.'),
                   style: const TextStyle(
-                      fontSize: 10.5, height: 1.25, color: progressMuted)),
+                      color: progressMuted, fontSize: 12, height: 1.5))
+            else if (period != 'all')
+              Text(
+                  fitnessText(context,
+                      'Keep logging to build your comparison over time.'),
+                  style: const TextStyle(
+                      color: progressMuted, fontSize: 12, height: 1.5)),
+            if (points.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text(fitnessText(context, 'Workouts per week'),
+                  style: const TextStyle(
+                      fontSize: 12, color: progressMuted, height: 1.4)),
+              const SizedBox(height: 12),
+              if (points.length <= 6)
+                ProgressWeeklyBars(
+                    points: points,
+                    metric: 'Workouts',
+                    color: progressSilver,
+                    compact: true)
+              else
+                ProgressChart(
+                    points: points,
+                    bars: true,
+                    digits: 0,
+                    compactHeader: true,
+                    color: progressSilver,
+                    height: 72),
+              if (weeks.any((week) => week['partial'] == true)) ...[
+                const SizedBox(height: 10),
+                Text(
+                    fitnessText(
+                        context, 'Edge weeks include only the selected dates.'),
+                    style: const TextStyle(
+                        color: progressMuted, fontSize: 11, height: 1.4)),
+              ],
+            ],
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(
+                  child: Text(fitnessText(context, 'Training details'),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: progressSilver))),
+              const Icon(CupertinoIcons.chevron_right,
+                  size: 12, color: progressMuted),
             ]),
-      ]);
+          ]),
+        ),
+      ),
+    );
+  }
 }

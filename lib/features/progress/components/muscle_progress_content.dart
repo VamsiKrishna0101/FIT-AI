@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -75,37 +76,40 @@ class _MuscleDistributionContentState extends State<MuscleDistributionContent> {
   Widget _row(BuildContext context, ProgressJson row, double maximum) {
     final value = progressNumber(row[_metric]) ?? 0;
     final color = progressMuscleColor(row['id'] as String? ?? '');
-    return InkWell(
-        onTap: () => widget.onMuscle(row),
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7),
-            child: Column(children: [
-              Row(children: [
-                Expanded(
-                    child: Text(progressMuscleLabel(context, row),
+    return MotionPress(
+        child: InkWell(
+            onTap: () => widget.onMuscle(row),
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: Column(children: [
+                  Row(children: [
+                    Expanded(
+                        child: Text(progressMuscleLabel(context, row),
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w500))),
+                    const SizedBox(width: 12),
+                    Text(progressValue(context, value, digits: 0),
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500))),
-                const SizedBox(width: 12),
-                Text(progressValue(context, value, digits: 0),
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: progressSilver)),
-                const SizedBox(width: 10),
-                const Icon(Icons.chevron_right, size: 17, color: progressMuted),
-              ]),
-              const SizedBox(height: 11),
-              ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: MotionValue(
-                      value: value / maximum,
-                      builder: (context, animated) => LinearProgressIndicator(
-                          value: animated,
-                          minHeight: 8,
-                          color: color,
-                          backgroundColor: DSColors.bgRaised))),
-            ])));
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: progressSilver)),
+                    const SizedBox(width: 10),
+                    const Icon(CupertinoIcons.chevron_right,
+                        size: 13, color: DSColors.muted),
+                  ]),
+                  const SizedBox(height: 11),
+                  ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: MotionValue(
+                          value: value / maximum,
+                          builder: (context, animated) =>
+                              LinearProgressIndicator(
+                                  value: animated,
+                                  minHeight: 8,
+                                  color: color,
+                                  backgroundColor: DSColors.bgRaised))),
+                ]))));
   }
 }
 

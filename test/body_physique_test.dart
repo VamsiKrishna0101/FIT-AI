@@ -640,7 +640,7 @@ void main() {
     expect(updates, 0);
     await tester.scrollUntilVisible(find.text('Update body report'), 200,
         scrollable: find.byType(Scrollable).first);
-    expect(find.text('Uses saved measurements with Google Gemini.'),
+    expect(find.text('Uses saved measurements with OpenAI.'),
         findsOneWidget);
     await tester.tap(find.text('Update body report'));
     await tester.pump();

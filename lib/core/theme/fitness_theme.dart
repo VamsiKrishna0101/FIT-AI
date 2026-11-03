@@ -37,6 +37,10 @@ class FitnessTheme extends StatelessWidget {
               onSurface: Colors.white,
               onSurfaceVariant: muted,
               surfaceTint: Colors.transparent),
+          progressIndicatorTheme: const ProgressIndicatorThemeData(
+              color: Colors.white,
+              linearTrackColor: Color(0x14FFFFFF),
+              circularTrackColor: Color(0x14FFFFFF)),
           scaffoldBackgroundColor: canvas,
           canvasColor: canvas,
           appBarTheme: theme.appBarTheme.copyWith(

@@ -106,7 +106,8 @@ class ProgressHistoryFeedState extends State<ProgressHistoryFeed> {
         if (_loading && _sessions.isEmpty)
           const ProgressSkeleton(heights: [150, 110, 110, 110])
         else ...[
-          if (_sessions.isNotEmpty) ProgressTrainingHeatmap(sessions: _sessions),
+          if (_sessions.isNotEmpty)
+            ProgressTrainingHeatmap(sessions: _sessions),
           ProgressWorkoutHistory(
               sessions: _sessions, onSession: widget.onSession),
         ],

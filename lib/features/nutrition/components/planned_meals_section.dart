@@ -18,13 +18,15 @@ class PlannedMealsSection extends StatefulWidget {
   final Future<Map<String, dynamic>> Function()? loader;
   final Future<void> Function(String, String, Map<String, dynamic>?)? action;
   final int refreshVersion;
+  final bool showIntakeHint;
   const PlannedMealsSection(
       {super.key,
       required this.date,
       this.onChanged,
       this.loader,
       this.action,
-      this.refreshVersion = 0});
+      this.refreshVersion = 0,
+      this.showIntakeHint = false});
   @override
   State<PlannedMealsSection> createState() => _PlannedMealsSectionState();
 }
@@ -140,19 +142,24 @@ class _PlannedMealsSectionState extends State<PlannedMealsSection> {
                       style: TextStyle(fontSize: 11)))
           ]),
       const SizedBox(height: 12),
-      if (_loading) const LinearProgressIndicator(),
+      if (_loading) const LinearProgressIndicator(color: Colors.white),
       if (!_loading && _error == null && meals.isEmpty)
         FitnessCard(
             padding: const EdgeInsets.all(20),
             child: Column(children: [
-              const FitnessText('No meals planned',
+              FitnessText(
+                  (_day?['settings'] as Map?)?['mode'] == 'TRACK'
+                      ? 'Manual food tracking'
+                      : 'Choose your meals',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               FitnessText(
                   (_day?['settings'] as Map?)?['mode'] == 'TRACK'
-                      ? 'Log meals as you go.'
-                      : 'Save a routine or explore meal suggestions.',
+                      ? (widget.showIntakeHint
+                          ? 'Use the daily targets above as you log your meals.'
+                          : 'Log meals as you go.')
+                      : 'Choose AI suggestions for a meal plan, or add the meals you repeat.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                       color: FitnessTheme.muted, fontSize: 12, height: 1.5)),
@@ -165,7 +172,7 @@ class _PlannedMealsSectionState extends State<PlannedMealsSection> {
                       side: const BorderSide(color: FitnessTheme.line),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12))),
-                  child: const FitnessText('Meals & routine',
+                  child: const FitnessText('Set up meals',
                       style: TextStyle(fontSize: 12))),
             ])),
       if (_error != null)

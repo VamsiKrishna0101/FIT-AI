@@ -266,9 +266,10 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
   }
 
   void _changeWeek(DateTime week) {
-    if (_week == week) return;
+    final normalizedWeek = bodyMapWeek(week);
+    if (_week == normalizedWeek) return;
     setState(() {
-      _week = week;
+      _week = normalizedWeek;
       _mapData = _peekMap(_trained);
       _shownMapKey = _mapData == null ? null : _mapKey(_trained);
       _mapLoading = _mapData == null;
@@ -295,17 +296,39 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
     unawaited(_load());
   }
 
-  Future<void> _openExercise(String id) async {
+  Future<void> _openExercise(String id) =>
+      _openExerciseSelection(BodyExerciseSelection(id));
+
+  Future<void> _openExerciseSelection(BodyExerciseSelection selection) async {
     if (_openingExercise) return;
     _openingExercise = true;
     final owner = _owner;
     try {
-      final exercise = await WorkoutRepository.shared.getExerciseDetail(id);
+      final exercise = await WorkoutRepository.shared
+          .getExerciseDetail(selection.exerciseId);
       final currentOwner = await CacheScope.userId();
       if (!mounted || owner != currentOwner) return;
       if (exercise == null) throw StateError('Could not open this exercise.');
-      final route =
-          AppPageRoute<void>(page: ExerciseDetailView(exercise: exercise));
+      final candidates = [
+        for (final day in _mapData?.workouts ?? [])
+          for (final target in day.exercises)
+            if (target.exerciseId == selection.exerciseId)
+              (date: day.date, exercise: target),
+      ]..sort((a, b) => a.date.compareTo(b.date));
+      final next = candidates
+              .where((row) => row.date.compareTo(CacheScope.todayKey()) >= 0)
+              .firstOrNull ??
+          candidates.lastOrNull;
+      final target = selection.recommendation ?? next?.exercise;
+      final route = AppPageRoute<void>(
+          page: ExerciseDetailView(
+              exercise: exercise,
+              recommendation: target == null
+                  ? null
+                  : {
+                      ...target.toRecommendation(),
+                      'date': selection.date ?? next?.date,
+                    }));
       await Navigator.of(context).push(route);
       await route.completed;
       if (mounted) await _load(refresh: true);
@@ -425,6 +448,7 @@ class _BodyViewState extends State<BodyView> with WidgetsBindingObserver {
                         week: _week,
                         onWeekChanged: _changeWeek,
                         onExercise: _openExercise,
+                        onExerciseSelection: _openExerciseSelection,
                         selection: _selection,
                         onSelectionChanged: _changeSelection,
                         onModeChanged: _changeMode,

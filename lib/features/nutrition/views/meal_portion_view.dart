@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -16,9 +17,14 @@ import '../repositories/nutrition_repository.dart';
 class MealPortionView extends StatefulWidget {
   final NutritionFoodItemModel? food;
   final String initialMealType;
+  final DateTime? date;
   final Future<bool> Function(Map<String, dynamic> payload)? saveMeal;
   const MealPortionView(
-      {super.key, this.food, this.initialMealType = 'LUNCH', this.saveMeal});
+      {super.key,
+      this.food,
+      this.initialMealType = 'LUNCH',
+      this.saveMeal,
+      this.date});
   @override
   State<MealPortionView> createState() => _MealPortionViewState();
 }
@@ -150,12 +156,18 @@ class _MealPortionViewState extends State<MealPortionView> {
     try {
       ok = widget.saveMeal != null
           ? await widget.saveMeal!({
+              if (widget.date != null) ...{
+                'day': widget.date!.day.toString(),
+                'month': widget.date!.month.toString(),
+                'year': widget.date!.year.toString(),
+              },
               'mealType': _slot,
               'servings': _factor,
               if (custom != null) 'customFood': custom,
               if (!_custom) 'nutritionId': widget.food!.id
             })
           : await NutritionRepository.shared.logMeal(
+              date: widget.date,
               mealType: _slot,
               servings: _factor,
               nutritionId: widget.food?.id,
@@ -246,6 +258,16 @@ class _MealPortionViewState extends State<MealPortionView> {
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
                     children: [
+                      if (widget.date != null)
+                        Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(
+                                DateFormat.yMMMMEEEEd(
+                                        Localizations.localeOf(context)
+                                            .toLanguageTag())
+                                    .format(widget.date!),
+                                style: const TextStyle(
+                                    color: FitnessTheme.muted, fontSize: 12))),
                       if (food != null) ...[
                         Row(
                             crossAxisAlignment: CrossAxisAlignment.start,

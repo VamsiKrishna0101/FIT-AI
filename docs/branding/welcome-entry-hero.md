@@ -1,0 +1,9 @@
+# Welcome entry hero
+
+Original artwork generated with the built-in imagegen tool on 2026-11-01.
+
+App asset: `assets/branding/setcraft-welcome-training-v2.png`. The photo is decorative; all text and the workout preview are native Flutter widgets.
+
+## Generation prompt
+
+Use case: photorealistic-natural. Asset type: premium mobile strength-training app welcome hero, a photographic background asset only, no UI. Create one exceptionally art-directed black-and-white editorial fitness campaign photograph. An adult athletic woman with dark tied-back hair wearing an opaque matte black sleeveless athletic top and black training shorts is performing a controlled dumbbell reverse lunge in a refined dark strength gym. Show a physically credible exercise with two ordinary dark dumbbells held at her sides, natural hands and joint positions, focused expression, realistic attainable athletic build. Three-quarter side view, natural documentary 50mm lens, head, torso, arms, dumbbells, and bent knees clearly visible, athlete is the single focal point. Rich silver midtones, deep charcoal background, directional soft white light from high camera-left outlining shoulders and face, convincing skin and fabric texture, quiet blurred gym architecture, subtle photographic grain. Portrait composition approximately 3:4; keep the top 12 percent dark and quiet for a brand header, athlete occupies the upper and middle 70 percent with room around head and hands, lower quarter naturally falls away into a completely black #000000 background for native white typography placed separately in the app. The image must feel energetic, candid, confident and human. Strictly monochrome, silver, charcoal and pure black. No green, no teal, no neon, no colored rim lighting, no sci-fi treatment, no smoke, no chalk clouds, no visible brand marks, no text, no lettering, no logos, no watermark, no app interface.

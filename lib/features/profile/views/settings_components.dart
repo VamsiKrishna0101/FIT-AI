@@ -72,19 +72,20 @@ class SettingsGroup extends StatelessWidget {
         children: [
           if (title != null) ...[
             Padding(
-                padding: const EdgeInsets.only(left: 2, bottom: 9),
-                child: FitnessText(title!,
+                padding: const EdgeInsets.only(left: 4, bottom: 9),
+                child: FitnessText(title!.toUpperCase(),
                     style: const TextStyle(
-                        color: FitnessTheme.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500))),
+                        color: DSColors.textTertiary,
+                        fontSize: 11,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w700))),
           ],
           Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: DSColors.bgCard,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: DSColors.border, width: .7),
+              color: DSColors.bgElevated,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: DSColors.border, width: .8),
             ),
             child: Column(children: [
               for (var index = 0; index < children.length; index++) ...[
@@ -92,9 +93,9 @@ class SettingsGroup extends StatelessWidget {
                 if (index < children.length - 1)
                   const Divider(
                       height: 1,
-                      indent: 58,
+                      indent: 60,
                       endIndent: 16,
-                      color: FitnessTheme.line),
+                      color: Color(0x14FFFFFF)),
               ],
             ]),
           ),
@@ -108,6 +109,9 @@ class SettingsRow extends StatelessWidget {
   final String title;
   final String? subtitle;
   final String? value;
+  final Widget? trailingWidget;
+  final Color? iconColor;
+  final Color? iconBgColor;
   final VoidCallback? onTap;
   final bool destructive;
 
@@ -117,69 +121,106 @@ class SettingsRow extends StatelessWidget {
       required this.title,
       this.subtitle,
       this.value,
+      this.trailingWidget,
+      this.iconColor,
+      this.iconBgColor,
       this.onTap,
       this.destructive = false});
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: MotionPress(
-            enabled: onTap != null,
-            child: InkWell(
-              onTap: onTap,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                child: Row(children: [
-                  Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .045),
-                          borderRadius: BorderRadius.circular(9)),
-                      child: Icon(icon,
-                          size: 18,
-                          color: destructive
-                              ? FitnessTheme.coral
-                              : FitnessTheme.silver)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        FitnessText(title,
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: destructive
-                                    ? FitnessTheme.coral
-                                    : FitnessTheme.silver)),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 5),
-                          FitnessText(subtitle!,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: FitnessTheme.muted,
-                                  height: 1.4)),
-                        ],
-                      ])),
-                  if (value != null) ...[
-                    const SizedBox(width: 8),
-                    Flexible(
-                        child: FitnessText(value!,
-                            textAlign: TextAlign.end,
-                            style: const TextStyle(
-                                fontSize: 12, color: FitnessTheme.muted))),
-                  ],
-                  if (onTap != null) ...[
-                    const SizedBox(width: 10),
-                    const Icon(CupertinoIcons.chevron_right,
-                        size: 13, color: FitnessTheme.muted),
-                  ],
-                ]),
+  Widget build(BuildContext context) {
+    final effectiveIconColor = iconColor ??
+        (destructive ? FitnessTheme.coral : FitnessTheme.silver);
+    final effectiveBgColor = iconBgColor != null
+        ? iconBgColor!.withValues(alpha: .15)
+        : Colors.white.withValues(alpha: .045);
+
+    return Material(
+      color: Colors.transparent,
+      child: MotionPress(
+        enabled: onTap != null,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            child: Row(children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: effectiveBgColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 17, color: effectiveIconColor),
               ),
-            )),
-      );
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FitnessText(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: destructive
+                            ? FitnessTheme.coral
+                            : DSColors.textPrimary,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      FitnessText(
+                        subtitle!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: FitnessTheme.muted,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailingWidget != null) ...[
+                const SizedBox(width: 8),
+                trailingWidget!,
+              ] else if (value != null) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .06),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: FitnessText(
+                      value!,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: FitnessTheme.silver,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+              if (onTap != null) ...[
+                const SizedBox(width: 10),
+                const Icon(CupertinoIcons.chevron_right,
+                    size: 13, color: DSColors.textTertiary),
+              ],
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class SettingsNotice extends StatelessWidget {

@@ -1,5 +1,17 @@
 const _languages = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const _copy = <String, List<String>>{
+  "Month": ["Monat", "Mois", "Månad", "Måned", "Måned", "Maand", "Mes", "Mese"],
+  "Year": ["Jahr", "Année", "År", "År", "År", "Jaar", "Año", "Anno"],
+  "Select a day to choose its week.": [
+    "Wähle einen Tag, um die Woche auszuwählen.",
+    "Sélectionnez un jour pour choisir sa semaine.",
+    "Välj en dag för att välja dess vecka.",
+    "Velg en dag for å velge uken.",
+    "Vælg en dag for at vælge dens uge.",
+    "Selecteer een dag om de week te kiezen.",
+    "Selecciona un día para elegir su semana.",
+    "Seleziona un giorno per scegliere la settimana."
+  ],
   "Sets per muscle": [
     "Sätze pro Muskel",
     "Séries par muscle",

@@ -1,16 +1,42 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/cache/cache_scope.dart';
 import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/fitness_theme.dart';
 
-/// A week can be understood without opening every date or exercise.
+String planWorkoutTitle(Map day) {
+  if (day['restDay'] == true) return 'Recovery';
+  final name = '${day['name'] ?? 'Workout'}';
+  if (name.split('+').length < 3) return name.replaceAll(' + ', ' & ');
+  final lower = name.toLowerCase();
+  final upper =
+      RegExp(r'chest|shoulder|bicep|tricep|forearm|upper|push|pull|back')
+          .hasMatch(lower);
+  final legs =
+      RegExp(r'legs|quads|hamstring|glute|calves|lower').hasMatch(lower);
+  return upper && legs
+      ? 'Full body'
+      : legs
+          ? 'Lower body'
+          : upper
+              ? 'Upper body'
+              : name;
+}
+
+String? planWorkoutFocus(Map day) {
+  final name = '${day['name'] ?? ''}';
+  return name.split('+').length >= 3
+      ? name.replaceAll(' + ', ' \u00b7 ')
+      : null;
+}
+
 class PlanWeekList extends StatelessWidget {
   final List<Map> days;
   final Map<String, String> statuses;
   final String? selectedDate;
   final ValueChanged<String>? onSelected;
-  final bool locked;
-  final bool compact;
+  final bool locked, compact;
   final String keyPrefix;
   const PlanWeekList(
       {super.key,
@@ -27,117 +53,130 @@ class PlanWeekList extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final valid =
         days.where((d) => DateTime.tryParse('${d['date']}') != null).toList();
-    return FitnessCard(
-        padding: EdgeInsets.zero,
-        child: Column(children: [
-          for (var n = 0; n < valid.length; n++) ...[
-            if (n > 0)
-              const Divider(
-                  height: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: FitnessTheme.line),
-            Builder(builder: (context) {
-              final day = valid[n];
+    return Column(children: [
+      for (final day in valid)
+        Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Builder(builder: (context) {
               final date = DateTime.parse('${day['date']}');
               final rest = day['restDay'] == true;
               final complete = statuses[day['date']] == 'COMPLETED';
+              final inProgress = statuses[day['date']] == 'IN_PROGRESS';
+              final today = day['date'] == CacheScope.todayKey();
+              final selected = selectedDate == day['date'];
               final count =
                   day['exerciseCount'] ?? (day['exercises'] as List?)?.length;
-              final minutes = day['estimatedMinutes'] as num? ?? 0;
-              final selected = selectedDate == day['date'];
-              return Material(
-                  color:
-                      selected ? const Color(0xFF2D2D2D) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                  child: InkWell(
-                    key: ValueKey('$keyPrefix-${day['date']}'),
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: onSelected == null
-                        ? null
-                        : () => onSelected!('${day['date']}'),
-                    child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 16, vertical: compact ? 11 : 13),
-                        child: Row(children: [
-                          SizedBox(
-                              width: 76,
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(DateFormat.EEEE(locale).format(date),
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500)),
-                                    if (!compact) ...[
-                                      const SizedBox(height: 4),
-                                      Text(DateFormat.MMMd(locale).format(date),
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: FitnessTheme.muted)),
-                                    ],
-                                  ])),
-                          const SizedBox(width: 10),
-                          Expanded(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                FitnessText(
-                                    rest
-                                        ? 'Rest day'
-                                        : '${day['name'] ?? 'Workout'}',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        height: 1.35,
-                                        fontWeight: FontWeight.w500,
-                                        color: rest
-                                            ? FitnessTheme.muted
-                                            : Colors.white)),
-                                if (!compact &&
-                                    !rest &&
-                                    (count != null || minutes > 0)) ...[
-                                  const SizedBox(height: 4),
-                                  Wrap(spacing: 8, runSpacing: 3, children: [
-                                    if (count != null)
-                                      FitnessText(
-                                          count == 1
-                                              ? '{count} exercise'
-                                              : '{count} exercises',
-                                          values: {'count': count},
-                                          style: const TextStyle(
-                                              fontSize: 11,
-                                              color: FitnessTheme.muted)),
-                                    if (minutes > 0)
-                                      FitnessText('{minutes} min',
-                                          values: {'minutes': minutes.round()},
-                                          style: const TextStyle(
-                                              fontSize: 11,
-                                              color: FitnessTheme.muted)),
-                                  ]),
-                                ],
-                                if (complete)
-                                  const FitnessText('Completed',
+              final minutes = (day['estimatedMinutes'] as num? ?? 0).round();
+              return Semantics(
+                  selected: selected,
+                  child: Material(
+                    color: selected
+                        ? const Color(0xFF282B2F)
+                        : rest
+                            ? Colors.transparent
+                            : FitnessTheme.surface,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                            color:
+                                rest ? Colors.transparent : FitnessTheme.line,
+                            width: .7)),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      key: ValueKey('$keyPrefix-${day['date']}'),
+                      onTap: onSelected == null
+                          ? null
+                          : () => onSelected!('${day['date']}'),
+                      child: Padding(
+                          padding: EdgeInsets.all(compact ? 12 : 15),
+                          child: Row(children: [
+                            Container(
+                                width: compact ? 42 : 46,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 9),
+                                decoration: BoxDecoration(
+                                  color: today
+                                      ? FitnessTheme.silver
+                                      : const Color(0xFF23262A),
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                                child: Column(children: [
+                                  Text(DateFormat.E(locale).format(date),
                                       style: TextStyle(
-                                          fontSize: 11,
-                                          color: FitnessTheme.silver)),
-                              ])),
-                          const SizedBox(width: 8),
-                          Icon(
-                              complete
-                                  ? Icons.check_circle_outline
-                                  : rest
-                                      ? Icons.nights_stay_outlined
-                                      : locked
-                                          ? Icons.lock_outline
-                                          : onSelected != null
-                                              ? Icons.chevron_right
-                                              : Icons.fitness_center,
-                              size: 17,
-                              color: FitnessTheme.muted),
-                        ])),
+                                          fontSize: 9,
+                                          color: today
+                                              ? FitnessTheme.canvas
+                                              : FitnessTheme.muted)),
+                                  const SizedBox(height: 4),
+                                  Text(DateFormat.d(locale).format(date),
+                                      style: TextStyle(
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w600,
+                                          color: today
+                                              ? FitnessTheme.canvas
+                                              : FitnessTheme.silver)),
+                                ])),
+                            const SizedBox(width: 14),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  FitnessText(planWorkoutTitle(day),
+                                      maxLines: 2,
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.3,
+                                          color: rest
+                                              ? FitnessTheme.muted
+                                              : Colors.white)),
+                                  const SizedBox(height: 5),
+                                  if (rest)
+                                    const FitnessText('Rest day',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: FitnessTheme.muted))
+                                  else if (!compact)
+                                    Wrap(spacing: 10, runSpacing: 4, children: [
+                                      if (count != null)
+                                        FitnessText('{count} exercises',
+                                            values: {'count': count},
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                color: FitnessTheme.muted)),
+                                      if (minutes > 0)
+                                        FitnessText('{minutes} min',
+                                            values: {'minutes': minutes},
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                color: FitnessTheme.muted)),
+                                    ]),
+                                  if (inProgress) ...[
+                                    const SizedBox(height: 5),
+                                    const FitnessText('In progress',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            color: FitnessTheme.silver)),
+                                  ],
+                                ])),
+                            const SizedBox(width: 10),
+                            Icon(
+                                complete
+                                    ? CupertinoIcons.checkmark_circle_fill
+                                    : rest
+                                        ? CupertinoIcons.moon
+                                        : locked
+                                            ? CupertinoIcons.lock
+                                            : CupertinoIcons.chevron_right,
+                                size: complete ? 21 : 15,
+                                color: complete
+                                    ? const Color(0xFF80B69E)
+                                    : FitnessTheme.muted),
+                          ])),
+                    ),
                   ));
-            }),
-          ],
-        ]));
+            })),
+    ]);
   }
 }

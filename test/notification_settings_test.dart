@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:setcraft/features/notifications/repositories/notifications_repository.dart';
 import 'package:setcraft/features/notifications/services/notification_service.dart';
+import 'package:setcraft/features/notifications/services/rest_notification_service.dart';
 import 'package:setcraft/features/notifications/views/notification_settings_view.dart';
 
 class FakeNotifications extends NotificationsRepository {
@@ -20,6 +21,9 @@ class FakeNotifications extends NotificationsRepository {
     'checkIns': false,
     'summaries': false,
     'meals': false,
+    'billing': true,
+    'pausedUntil': null,
+    'nextWorkoutReminder': {'date': '2026-11-03', 'time': '18:00'},
     'workoutTime': '18:00',
     'checkInTime': '09:00',
     'summaryTime': '18:00',
@@ -66,6 +70,23 @@ class FakePush extends NotificationService {
   Future<String> installationId() async => 'test-installation';
 }
 
+class FakeRest extends RestNotificationService {
+  @override
+  bool get supported => true;
+  @override
+  Future<void> initialize() async {}
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<void> setEnabled(bool value) async {
+    enabled = value;
+  }
+}
+
+final remoteSwitch = find.descendant(
+  of: find.byKey(const ValueKey('remote-notifications')),
+  matching: find.byType(CupertinoSwitch),
+);
 const preview = ValueKey('notification-preview');
 Widget app(FakeNotifications data, FakePush service, {double scale = 1}) =>
     MaterialApp(
@@ -78,7 +99,9 @@ Widget app(FakeNotifications data, FakePush service, {double scale = 1}) =>
                 child: RepaintBoundary(
                     key: preview,
                     child: NotificationSettingsView(
-                        repository: data, service: service)),
+                        repository: data,
+                        service: service,
+                        restService: FakeRest())),
               )),
     );
 
@@ -99,14 +122,13 @@ void main() {
     final push = FakePush(data);
     await tester.pumpWidget(app(data, push));
     await tester.pumpAndSettle();
-    expect(tester.widget<CupertinoSwitch>(find.byType(CupertinoSwitch)).value,
-        false);
+    expect(tester.widget<CupertinoSwitch>(remoteSwitch).value, false);
     expect(data.values['checkIns'], false);
     expect(data.values['meals'], false);
-    await tester.tap(find.byType(CupertinoSwitch));
+    await tester.tap(remoteSwitch);
     await tester.pumpAndSettle();
     expect(data.values['enabled'], true);
-    await tester.tap(find.byType(CupertinoSwitch));
+    await tester.tap(remoteSwitch);
     await tester.pumpAndSettle();
     expect(data.values['enabled'], false);
   });
@@ -116,10 +138,9 @@ void main() {
     final data = FakeNotifications()..fail = true;
     await tester.pumpWidget(app(data, FakePush(data)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(CupertinoSwitch));
+    await tester.tap(remoteSwitch);
     await tester.pumpAndSettle();
-    expect(tester.widget<CupertinoSwitch>(find.byType(CupertinoSwitch)).value,
-        false);
+    expect(tester.widget<CupertinoSwitch>(remoteSwitch).value, false);
     expect(find.text('Could not save. Please try again.'), findsOneWidget);
   });
 
@@ -178,5 +199,42 @@ void main() {
       await file.writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();
     });
+  });
+
+  testWidgets('Rest alerts can be enabled independently of remote reminders',
+      (tester) async {
+    final data = FakeNotifications();
+    await tester.pumpWidget(app(data, FakePush(data)));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Rest timer alerts'), 250);
+    final toggle = find.descendant(
+        of: find.byKey(const ValueKey('rest-notifications')),
+        matching: find.byType(CupertinoSwitch));
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<CupertinoSwitch>(toggle).value, true);
+    expect(data.values['enabled'], false);
+  });
+
+  testWidgets('Pause and resume preserve category choices and billing',
+      (tester) async {
+    final data = FakeNotifications()..values['enabled'] = true;
+    await tester.pumpWidget(app(data, FakePush(data)));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Pause reminders'), 250);
+    await tester.ensureVisible(find.text('Pause reminders'));
+    await tester.tap(find.text('Pause reminders'));
+    await tester.pumpAndSettle();
+    expect(
+        DateTime.parse(data.values['pausedUntil'] as String)
+            .isAfter(DateTime.now()),
+        true);
+    expect(data.values['billing'], true);
+    expect(data.values['workouts'], true);
+    await tester.ensureVisible(find.text('Resume reminders'));
+    await tester.tap(find.text('Resume reminders'));
+    await tester.pumpAndSettle();
+    expect(data.values['pausedUntil'], null);
   });
 }

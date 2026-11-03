@@ -1,4 +1,6 @@
 import '../../today/components/weekly_rhythm_calendar.dart';
+import '../../notifications/services/notification_service.dart';
+import '../../notifications/views/notification_settings_view.dart';
 import 'package:setcraft/core/theme/ds_motion.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
@@ -32,18 +34,21 @@ class TrainView extends StatefulWidget {
   final bool editOnly;
   final bool isActive;
   final String? initialDate;
+  final String? notificationId;
   const TrainView(
       {super.key,
       this.standalone = false,
       this.editOnly = false,
       this.isActive = true,
-      this.initialDate});
+      this.initialDate,
+      this.notificationId});
   @override
   State<TrainView> createState() => _TrainViewState();
 }
 
 class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   String _date = CacheScope.todayKey();
+  bool _reminderSnoozed = false, _snoozing = false;
   TrainingDay? _day;
   bool _loading = true, _busy = false, _opening = false;
   String? _error;
@@ -187,6 +192,27 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
     await _load();
   }
 
+  Future<void> _snoozeReminder() async {
+    setState(() => _snoozing = true);
+    try {
+      final service = NotificationService.shared;
+      await service.repository
+          .snooze(widget.notificationId!, await service.installationId());
+      if (mounted) {
+        setState(() => _reminderSnoozed = true);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(copy('Reminder snoozed.'))));
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(copy(notificationError(error)))));
+      }
+    } finally {
+      if (mounted) setState(() => _snoozing = false);
+    }
+  }
+
   Future<void> _restToday() async {
     if (_busy || _opening) return;
     setState(() => _opening = true);
@@ -325,6 +351,23 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                     _week(locale),
                     const SizedBox(height: 18)
                   ],
+                  if (widget.notificationId != null &&
+                      day != null &&
+                      !day.finished &&
+                      !_reminderSnoozed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: _snoozing ? null : _snoozeReminder,
+                            icon: const Icon(CupertinoIcons.bell,
+                                size: 15, color: trainingSilver),
+                            label: Text(copy('Remind me in 15 minutes'),
+                                style: const TextStyle(
+                                    color: trainingSilver, fontSize: 13)),
+                          )),
+                    ),
                   if (day?.pendingSync == true) ...[
                     WorkoutSyncNotice(
                         blocked: day!.syncBlocked,

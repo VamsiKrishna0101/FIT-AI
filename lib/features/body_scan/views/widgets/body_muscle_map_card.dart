@@ -1,7 +1,6 @@
 import 'package:flutter/semantics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/localization/fitness_copy.dart';
 import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/ds_motion.dart';
@@ -12,7 +11,6 @@ import 'body_controls.dart';
 import 'body_calendar.dart';
 import 'body_muscle_details_sheet.dart';
 import 'body_training_scale.dart';
-import '../../../today/components/weekly_rhythm_calendar.dart';
 
 class BodyMapPalette {
   static const planned = Color(0xFF8BA9CC);
@@ -29,6 +27,7 @@ class BodyMuscleMapCard extends StatefulWidget {
   final VoidCallback onRetry, onPreparePlan, onTrain;
   final ValueChanged<DateTime> onWeekChanged;
   final ValueChanged<String> onExercise;
+  final ValueChanged<BodyExerciseSelection>? onExerciseSelection;
   final BodyDateSelection? selection;
   final ValueChanged<BodyDateSelection>? onSelectionChanged;
   final ValueChanged<bool>? onModeChanged;
@@ -39,6 +38,7 @@ class BodyMuscleMapCard extends StatefulWidget {
       required this.week,
       required this.onWeekChanged,
       required this.onExercise,
+      this.onExerciseSelection,
       this.selection,
       this.onSelectionChanged,
       this.onModeChanged,
@@ -72,25 +72,31 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
 
   String get _period {
     if (_trained) return bodySelectionLabel(context, _selection);
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return '${DateFormat.MMMd(locale).format(widget.week)} – ${DateFormat.MMMd(locale).format(widget.week.add(const Duration(days: 6)))}';
+    final week = bodyMapWeek(widget.week);
+    return bodyDateRangeLabel(
+        context, week, DateTime(week.year, week.month, week.day + 6));
   }
 
   Future<void> _calendar() async {
     if (!_trained) {
-      final week = await showModalBottomSheet<DateTime>(
+      final selection = await showModalBottomSheet<BodyDateSelection>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
           showDragHandle: true,
           backgroundColor: FitnessTheme.surface,
           sheetAnimationStyle: DSMotion.sheetStyle(context),
-          builder: (_) => FitnessTheme(
-              child: WeeklyRhythmCalendar(
-                  selectedDate: widget.week,
-                  today: DateTime.now(),
-                  allowFuture: true)));
-      if (week != null && mounted) widget.onWeekChanged(week);
+          constraints:
+              BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .9),
+          builder: (_) => BodyCalendar(
+              planned: true,
+              selection: BodyDateSelection(
+                  mode: BodyDateMode.range,
+                  start: bodyMapWeek(widget.week),
+                  end: widget.week)));
+      if (selection != null && mounted) {
+        widget.onWeekChanged(bodyMapWeek(selection.start!));
+      }
       return;
     }
     final selection = await showModalBottomSheet<BodyDateSelection>(
@@ -110,7 +116,7 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
 
   Future<void> _details(String id) async {
     final region = widget.data?.regions.where((r) => r.id == id).firstOrNull;
-    final exerciseId = await showModalBottomSheet<String>(
+    final selection = await showModalBottomSheet<BodyExerciseSelection>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -122,7 +128,7 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
         clipBehavior: Clip.antiAlias,
         sheetAnimationStyle: DSMotion.sheetStyle(context),
         constraints: BoxConstraints(
-            maxWidth: 560, maxHeight: MediaQuery.sizeOf(context).height * .76),
+            maxWidth: 560, maxHeight: MediaQuery.sizeOf(context).height * .88),
         builder: (_) => BodyMuscleDetailsSheet(
             id: id,
             region: region,
@@ -130,7 +136,14 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
             accent: region == null ? FitnessTheme.silver : _color(region),
             period: _period,
             workouts: widget.data?.workouts ?? []));
-    if (exerciseId != null && mounted) widget.onExercise(exerciseId);
+    if (selection != null && mounted) {
+      final onSelection = widget.onExerciseSelection;
+      if (onSelection != null) {
+        onSelection(selection);
+      } else {
+        widget.onExercise(selection.exerciseId);
+      }
+    }
   }
 
   @override

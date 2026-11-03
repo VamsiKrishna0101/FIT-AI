@@ -34,12 +34,6 @@ class TrainingStylePreview {
     final limitedHome = draft.trainingLocation == 'HOME' &&
         !draft.equipmentIds
             .any((id) => !['bodyweight_only', 'yoga_mat'].contains(id));
-    if (draft.experienceLevel == 'BEGINNER' &&
-        count >= 3 &&
-        minutes >= 30 &&
-        !limitedHome) {
-      return 'MUSCLE_FOCUSED';
-    }
     if (count <= 3 || (limitedHome && minutes < 30)) return 'FULL_BODY';
     if (count == 6 &&
         draft.experienceLevel != null &&

@@ -152,11 +152,17 @@ class NutritionRepository {
   Future<bool> logMeal(
       // Saved routines and suggestions use their own dated confirmation endpoint.
       {String? nutritionId,
+      DateTime? date,
       Map<String, dynamic>? customFood,
       required String mealType,
       double servings = 1,
       String status = 'LOGGED'}) {
-    final (day, month, year) = getTodayDateStrings();
+    final selected = date ?? DateTime.now();
+    final (day, month, year) = (
+      selected.day.toString(),
+      selected.month.toString(),
+      selected.year.toString()
+    );
     return _mutate(() => ApiClient.shared.post(Endpoints.logMeal, data: {
           if (nutritionId != null) 'nutritionId': nutritionId,
           if (customFood != null) 'customFood': customFood,

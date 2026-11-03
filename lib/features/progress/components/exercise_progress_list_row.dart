@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 import 'progress_chart.dart';
@@ -14,84 +14,97 @@ class ExerciseProgressListRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final latest = exercise['latest'] as Map?;
     final weight = progressNumber(latest?['weight']);
-    final reps = progressNumber(latest?['reps']);
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final latestDate = exercise['latestDate'] as String?;
+    final load = exercise['metric'] == 'load' ||
+        (exercise['metric'] == null && (weight ?? 0) > 0);
     final points =
         ProgressPoint.parse(progressRows(exercise['sparkline']), 'value');
-    final loadTrend = exercise['metric'] == 'load';
-    final change = progressNumber(exercise['change']);
-    final target = latest == null
-        ? fitnessText(context, 'No sets in this period')
-        : '${fitnessText(context, 'Latest')}: ${weight != null && weight > 0 ? '${progressValue(context, weight, unit: 'kg')} × ' : ''}${progressValue(context, reps)} ${fitnessText(context, 'reps')}';
-    final caption = [
-      if (latestDate != null)
-        progressDate(latestDate, locale,
-            year: DateTime.tryParse(latestDate)?.year != DateTime.now().year),
-      if (latest != null && weight == null)
-        fitnessText(context, 'Weight not recorded'),
-      if (latest != null && weight == 0)
-        fitnessText(context, 'No external load'),
-    ].join(' · ');
-    return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 2),
-              child: LayoutBuilder(builder: (context, box) {
-                final showTrend = points.length > 1 &&
-                    box.maxWidth >= 280 &&
-                    MediaQuery.textScalerOf(context).scale(14) < 21;
-                return Row(children: [
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(progressTitle(exercise['name'] as String? ?? ''),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                height: 1.35)),
-                        const SizedBox(height: 5),
-                        Text(target,
-                            style: const TextStyle(
-                                color: progressSilver,
-                                fontSize: 12,
-                                height: 1.4)),
-                        if (caption.isNotEmpty)
-                          Padding(
-                              padding: const EdgeInsets.only(top: 3),
-                              child: Text(caption,
-                                  style: const TextStyle(
-                                      color: progressMuted,
-                                      fontSize: 11,
-                                      height: 1.35))),
-                      ])),
-                  if (showTrend) ...[
-                    const SizedBox(width: 16),
-                    SizedBox(
-                        width: 76,
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              ExcludeSemantics(
-                                  child: ProgressSparkline(
-                                      points: points, color: progressSilver)),
-                              const SizedBox(height: 5),
-                              Text(
-                                  loadTrend && change != null && change.isFinite
-                                      ? '${fitnessText(context, 'Load')} ${change > 0 ? '+' : ''}${progressValue(context, change)}%'
-                                      : fitnessText(context,
-                                          loadTrend ? 'Load · kg' : 'Reps'),
-                                  style: const TextStyle(
-                                      color: progressMuted, fontSize: 10)),
-                            ])),
-                  ],
-                ]);
-              })),
-        ));
+    final change =
+        points.length > 1 ? points.last.value - points.first.value : null;
+    final sessions = progressNumber(exercise['sessions']);
+    final date = exercise['latestDate'] as String?;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final large = MediaQuery.textScalerOf(context).scale(14) > 19;
+    final trend = SizedBox(
+        width: 66,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          if (change != null && change.isFinite)
+            Text(
+                '${change > 0 ? '+' : ''}${progressValue(context, change, unit: load ? 'kg' : 'reps', digits: load ? 1 : 0)}',
+                style: const TextStyle(
+                    fontSize: 11, color: progressSilver, height: 1.3)),
+          const SizedBox(height: 6),
+          SizedBox(
+              height: 28,
+              width: 66,
+              child: ExcludeSemantics(
+                  child: ProgressSparkline(
+                      points: points, color: progressStrength))),
+        ]));
+    return ProgressSurface(
+        key: ValueKey('exercise-progress-row-${exercise['id']}'),
+        onTap: onTap,
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(
+                child: Text(exercise['name'] as String? ?? '',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: progressSilver,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.35,
+                        letterSpacing: -.2))),
+            const SizedBox(width: 10),
+            const Icon(CupertinoIcons.chevron_right,
+                size: 12, color: progressMuted),
+          ]),
+          const SizedBox(height: 12),
+          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(
+                      latest == null
+                          ? fitnessText(
+                              context, 'No sets logged in this period')
+                          : progressSetValue(
+                              context, Map<String, dynamic>.from(latest)),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          height: 1.25,
+                          color: progressSilver,
+                          letterSpacing: -.4,
+                          fontFeatures: [FontFeature.tabularFigures()])),
+                  const SizedBox(height: 5),
+                  Text(
+                      date == null
+                          ? fitnessText(context, 'Last session')
+                          : progressDate(date, locale,
+                              year: DateTime.tryParse(date)?.year !=
+                                  DateTime.now().year),
+                      style: const TextStyle(
+                          fontSize: 11, color: progressMuted, height: 1.4)),
+                ])),
+            if (points.length > 1 && !large) ...[
+              const SizedBox(width: 12),
+              trend,
+            ],
+          ]),
+          if (sessions != null && sessions > 0) ...[
+            const SizedBox(height: 10),
+            Text(
+                fitnessText(context,
+                    sessions == 1 ? '{count} session' : '{count} sessions',
+                    values: {
+                      'count': progressValue(context, sessions, digits: 0)
+                    }),
+                style: const TextStyle(
+                    color: progressMuted, fontSize: 10, height: 1.4)),
+          ],
+        ]));
   }
 }

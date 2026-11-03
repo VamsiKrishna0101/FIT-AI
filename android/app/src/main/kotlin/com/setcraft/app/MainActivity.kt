@@ -79,6 +79,12 @@ class MainActivity : FlutterFragmentActivity() {
             description = "Workout reminders, check-ins and plan updates"
             lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
         })
+        notifications.createNotificationChannel(NotificationChannel(
+            "setcraft_insights", "Progress insights", NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE })
+        notifications.createNotificationChannel(NotificationChannel(
+            "setcraft_account", "Account updates", NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE })
         phoneSleep = PhoneSleepTracking(this)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "fitai/sleep_estimate")
             .setMethodCallHandler { call, result -> phoneSleep.handle(call, result) }

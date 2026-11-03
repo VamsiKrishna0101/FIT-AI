@@ -521,8 +521,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Photo ranges are unvalidated estimates, not tape or body-composition measurements.",
     "Photo review": "Photo review",
     "Photos": "Photos",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.",
     "Physique": "Physique",
     "Plan": "Plan",
     "Planned sets due": "Planned sets due",
@@ -641,10 +641,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Use the same measuring technique and similar conditions when comparing entries.",
     "Use up to 20 short food names in each field.":
         "Use up to 20 short food names in each field.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Uses saved measurements, profile & training with Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Uses saved photos, measurements, profile & training with Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Uses saved measurements, profile & training with OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Uses saved photos, measurements, profile & training with OpenAI.",
     "Vegan": "Vegan",
     "Vegetarian": "Vegetarian",
     "Very sore": "Very sore",
@@ -1078,8 +1078,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Keep private photos for comparison. Delete them anytime.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft keeps your report, not your uploaded photos.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -1102,10 +1102,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "No photo assessment yet. Add four views to get your body report.",
     "Report saved · Photos not kept": "Report saved · Photos not kept",
     "Update body report": "Update body report",
-    "Uses saved photos with Google Gemini.":
-        "Uses saved photos with Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Uses saved measurements with Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Uses saved photos with OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Uses saved measurements with OpenAI.",
     "Add another assessment to compare your progress.":
         "Add another assessment to compare your progress.",
     "Photo notes": "Photo notes",
@@ -1117,8 +1117,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.",
     "Preparing your body report…": "Preparing your body report…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.",
     "No saved photos": "No saved photos",
     "Food type": "Food type",
     "Nutrition focus": "Nutrition focus",
@@ -2615,8 +2615,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Foto-Bereiche sind unvalidierte Schätzungen, keine Messungen mit Maßband oder Körperzusammensetzung.",
     "Photo review": "Foto-Überprüfung",
     "Photos": "Fotos",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Fotos werden privat gespeichert und auf unserem Server verarbeitet. Ich stimme zu, diese vier Fotos, verwertbare Messungen, das Profil und den Trainingskontext für Fokusvorschläge an Google Gemini zu senden. Foto-Messungen sind annähernd.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Fotos werden privat gespeichert und auf unserem Server verarbeitet. Ich stimme zu, diese vier Fotos, verwertbare Messungen, das Profil und den Trainingskontext für Fokusvorschläge an OpenAI zu senden. Foto-Messungen sind annähernd.",
     "Physique": "Körperbau",
     "Plan": "Plan",
     "Planned sets due": "Geplante Sätze fällig",
@@ -2737,10 +2737,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Verwende beim Vergleichen von Einträgen dieselbe Messmethode und ähnliche Bedingungen.",
     "Use up to 20 short food names in each field.":
         "Verwende bis zu 20 kurze Lebensmittelnamen in jedem Feld.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Verwendet gespeicherte Messungen, Profil und Training mit Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Verwendet gespeicherte Fotos, Messungen, Profil und Training mit Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Verwendet gespeicherte Messungen, Profil und Training mit OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Verwendet gespeicherte Fotos, Messungen, Profil und Training mit OpenAI.",
     "Vegan": "Vegan",
     "Vegetarian": "Vegetarisch",
     "Very sore": "Starker Muskelkater",
@@ -3183,8 +3183,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Private Fotos zum Vergleichen speichern. Jederzeit löschbar.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft speichert deinen Bericht, aber keine hochgeladenen Fotos.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Ich stimme der Verarbeitung auf dem Server und der Übermittlung meiner Fotos, Messwerte, Profildaten und Trainingsdaten an Google Gemini für meinen Körperbericht zu. Fotomessungen sind Näherungswerte.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Ich stimme der Verarbeitung auf dem Server und der Übermittlung meiner Fotos, Messwerte, Profildaten und Trainingsdaten an OpenAI für meinen Körperbericht zu. Fotomessungen sind Näherungswerte.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Ganzer Körper im Bild. Kamera waagerecht. Anliegende Kleidung. Arme vom Oberkörper weg halten, bei Seitenansichten leicht nach hinten.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -3208,10 +3208,10 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Report saved · Photos not kept":
         "Bericht gespeichert · Fotos nicht gespeichert",
     "Update body report": "Körperbericht aktualisieren",
-    "Uses saved photos with Google Gemini.":
-        "Verwendet gespeicherte Fotos mit Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Verwendet gespeicherte Messwerte mit Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Verwendet gespeicherte Fotos mit OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Verwendet gespeicherte Messwerte mit OpenAI.",
     "Add another assessment to compare your progress.":
         "Füge eine weitere Bewertung hinzu, um deinen Fortschritt zu vergleichen.",
     "Photo notes": "Fotonotizen",
@@ -3223,8 +3223,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Nur gleiche Quellen. Überlappende Fotobereiche bestätigen keine Veränderung. Messwerte unterscheiden Fett nicht von Muskeln.",
     "Preparing your body report…": "Dein Körperbericht wird erstellt…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Ich stimme zu, dass Setcraft und Google Gemini meine Fotos, Messwerte, Profil- und Trainingsdaten für meinen Bericht analysieren.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Ich stimme zu, dass Setcraft und OpenAI meine Fotos, Messwerte, Profil- und Trainingsdaten für meinen Bericht analysieren.",
     "No saved photos": "Keine gespeicherten Fotos",
     "Food type": "Lebensmittelart",
     "Nutrition focus": "Nährstofffokus",
@@ -4746,8 +4746,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Les plages photo sont des estimations non validées, et non des mesures au mètre ruban ou de composition corporelle.",
     "Photo review": "Révision des photos",
     "Photos": "Photos",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Les photos sont stockées de manière privée et traitées sur notre serveur. J'accepte d'envoyer ces quatre photos, les mesures exploitables, le profil et le contexte d'entraînement à Google Gemini pour obtenir des suggestions de ciblage. Les mesures des photos sont approximatives.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Les photos sont stockées de manière privée et traitées sur notre serveur. J'accepte d'envoyer ces quatre photos, les mesures exploitables, le profil et le contexte d'entraînement à OpenAI pour obtenir des suggestions de ciblage. Les mesures des photos sont approximatives.",
     "Physique": "Silhouette",
     "Plan": "Programme",
     "Planned sets due": "Séries prévues dues",
@@ -4868,10 +4868,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Utilisez la même technique de mesure et des conditions similaires lors de la comparaison des entrées.",
     "Use up to 20 short food names in each field.":
         "Utilisez jusqu'à 20 noms d'aliments courts dans chaque champ.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Utilise les mesures enregistrées, le profil et l'entraînement avec Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Utilise les photos enregistrées, les mesures, le profil et l'entraînement avec Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Utilise les mesures enregistrées, le profil et l'entraînement avec OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Utilise les photos enregistrées, les mesures, le profil et l'entraînement avec OpenAI.",
     "Vegan": "Vegan",
     "Vegetarian": "Végétarien",
     "Very sore": "Fortes courbatures",
@@ -5315,8 +5315,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Gardez des photos privées pour comparer. Supprimez-les à tout moment.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft conserve votre rapport, mais pas les photos envoyées.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "J’accepte le traitement sur le serveur et l’envoi de mes photos, mesures, profil et données d’entraînement à Google Gemini pour mon bilan corporel. Les mesures photo sont approximatives.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "J’accepte le traitement sur le serveur et l’envoi de mes photos, mesures, profil et données d’entraînement à OpenAI pour mon bilan corporel. Les mesures photo sont approximatives.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Corps entier dans le cadre. Appareil à niveau. Vêtements ajustés. Écartez les bras du buste, légèrement en arrière pour les vues de profil.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -5340,10 +5340,10 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Report saved · Photos not kept":
         "Rapport enregistré · Photos non conservées",
     "Update body report": "Actualiser le bilan corporel",
-    "Uses saved photos with Google Gemini.":
-        "Utilise les photos enregistrées avec Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Utilise les mesures enregistrées avec Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Utilise les photos enregistrées avec OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Utilise les mesures enregistrées avec OpenAI.",
     "Add another assessment to compare your progress.":
         "Ajoutez une autre évaluation pour comparer votre progression.",
     "Photo notes": "Observations photo",
@@ -5355,8 +5355,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Sources identiques uniquement. Des plages photo qui se chevauchent ne confirment aucun changement. Les mesures ne distinguent pas graisse et muscle.",
     "Preparing your body report…": "Préparation de votre bilan corporel…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "J’accepte que Setcraft et Google Gemini analysent mes photos, mesures, profil et données d’entraînement pour mon rapport.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "J’accepte que Setcraft et OpenAI analysent mes photos, mesures, profil et données d’entraînement pour mon rapport.",
     "No saved photos": "Aucune photo enregistrée",
     "Food type": "Type d’aliment",
     "Nutrition focus": "Priorité nutritionnelle",
@@ -6873,8 +6873,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Fotonivåer är ej validerade uppskattningar, inte måttbands- eller kroppssammansättningsmätningar.",
     "Photo review": "Fotogranskning",
     "Photos": "Foton",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Foton lagras privat och behandlas på vår server. Jag godkänner att skicka dessa fyra foton, användbara mätningar, profil och träningskontext till Google Gemini för fokusförslag. Fotomätningar är ungefärliga.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Foton lagras privat och behandlas på vår server. Jag godkänner att skicka dessa fyra foton, användbara mätningar, profil och träningskontext till OpenAI för fokusförslag. Fotomätningar är ungefärliga.",
     "Physique": "Kroppsform",
     "Plan": "Schema",
     "Planned sets due": "Planerade set som förfaller",
@@ -6994,10 +6994,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Använd samma mätteknik och liknande förhållanden när du jämför mätvärden.",
     "Use up to 20 short food names in each field.":
         "Använd upp till 20 korta livsmedelsnamn i varje fält.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Använder sparade mätvärden, profil och träning med Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Använder sparade bilder, mätvärden, profil och träning med Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Använder sparade mätvärden, profil och träning med OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Använder sparade bilder, mätvärden, profil och träning med OpenAI.",
     "Vegan": "Vegansk",
     "Vegetarian": "Vegetarisk",
     "Very sore": "Mycket träningsvärk",
@@ -7434,8 +7434,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Spara privata foton för jämförelse. Radera dem när du vill.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft sparar din rapport, men inte dina uppladdade foton.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Jag godkänner serverbehandling och att mina foton, mått, profil och träningsuppgifter skickas till Google Gemini för min kroppsrapport. Fotomått är ungefärliga.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Jag godkänner serverbehandling och att mina foton, mått, profil och träningsuppgifter skickas till OpenAI för min kroppsrapport. Fotomått är ungefärliga.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Hela kroppen i bild. Kameran i våg. Åtsittande kläder. Håll armarna från kroppen, något bakom dig i sidovyer.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -7458,10 +7458,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Ingen fotobedömning ännu. Lägg till fyra vyer för din kroppsrapport.",
     "Report saved · Photos not kept": "Rapport sparad · Foton inte sparade",
     "Update body report": "Uppdatera kroppsrapport",
-    "Uses saved photos with Google Gemini.":
-        "Använder sparade foton med Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Använder sparade mått med Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Använder sparade foton med OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Använder sparade mått med OpenAI.",
     "Add another assessment to compare your progress.":
         "Lägg till en bedömning till för att jämföra din utveckling.",
     "Photo notes": "Fotoanteckningar",
@@ -7473,8 +7473,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Endast samma källor. Överlappande fotointervall bekräftar ingen förändring. Mått skiljer inte fett från muskler.",
     "Preparing your body report…": "Förbereder din kroppsrapport…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Jag godkänner att Setcraft och Google Gemini analyserar mina foton, mått, profil och träningsuppgifter för min rapport.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Jag godkänner att Setcraft och OpenAI analyserar mina foton, mått, profil och träningsuppgifter för min rapport.",
     "No saved photos": "Inga sparade foton",
     "Food type": "Livsmedelstyp",
     "Nutrition focus": "Näringsfokus",
@@ -8969,8 +8969,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Fotobaserte intervaller er uvaliderte anslag, ikke målinger med målebånd eller kroppssammensetning.",
     "Photo review": "Fotogjennomgang",
     "Photos": "Bilder",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Bilder lagres privat og behandles på serveren vår. Jeg samtykker i å sende disse fire bildene, brukbare målinger, profil og treningskontekst til Google Gemini for fokusforslag. Fotomålinger er omtrentlige.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Bilder lagres privat og behandles på serveren vår. Jeg samtykker i å sende disse fire bildene, brukbare målinger, profil og treningskontekst til OpenAI for fokusforslag. Fotomålinger er omtrentlige.",
     "Physique": "Kroppsform",
     "Plan": "Plan",
     "Planned sets due": "Planlagte sett forfaller",
@@ -9090,10 +9090,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Bruk samme måleteknikk og lignende forhold når du sammenligner oppføringer.",
     "Use up to 20 short food names in each field.":
         "Bruk opptil 20 korte matnavn i hvert felt.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Bruker lagrede mål, profil og trening med Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Bruker lagrede bilder, mål, profil og trening med Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Bruker lagrede mål, profil og trening med OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Bruker lagrede bilder, mål, profil og trening med OpenAI.",
     "Vegan": "Vegansk",
     "Vegetarian": "Vegetarisk",
     "Very sore": "Veldig støl",
@@ -9527,8 +9527,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Lagre private bilder for sammenligning. Slett dem når som helst.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft beholder rapporten, men ikke bildene du laster opp.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Jeg samtykker til behandling på serveren og til at bildene, målene, profilen og treningsopplysningene mine sendes til Google Gemini for kroppsrapporten min. Fotomål er omtrentlige.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Jeg samtykker til behandling på serveren og til at bildene, målene, profilen og treningsopplysningene mine sendes til OpenAI for kroppsrapporten min. Fotomål er omtrentlige.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Hele kroppen i bildet. Rett kamera. Tettsittende klær. Hold armene fra kroppen, litt bak deg i sidebildene.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -9551,10 +9551,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Ingen bildevurdering ennå. Legg til fire vinkler for kroppsrapporten din.",
     "Report saved · Photos not kept": "Rapport lagret · Bilder ikke beholdt",
     "Update body report": "Oppdater kroppsrapport",
-    "Uses saved photos with Google Gemini.":
-        "Bruker lagrede bilder med Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Bruker lagrede mål med Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Bruker lagrede bilder med OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Bruker lagrede mål med OpenAI.",
     "Add another assessment to compare your progress.":
         "Legg til en ny vurdering for å sammenligne fremgangen din.",
     "Photo notes": "Bildenotater",
@@ -9566,8 +9566,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Kun like kilder. Overlappende fotointervaller bekrefter ikke en endring. Mål skiller ikke fett fra muskler.",
     "Preparing your body report…": "Forbereder kroppsrapporten din…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Jeg samtykker til at Setcraft og Google Gemini analyserer bildene, målene, profilen og treningsopplysningene mine for rapporten min.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Jeg samtykker til at Setcraft og OpenAI analyserer bildene, målene, profilen og treningsopplysningene mine for rapporten min.",
     "No saved photos": "Ingen lagrede bilder",
     "Food type": "Matvaretype",
     "Nutrition focus": "Ernæringsfokus",
@@ -11059,8 +11059,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Fotoniveauer er ikke-validerede skøn, ikke målebånd- eller kropssammensætningsmålinger.",
     "Photo review": "Fotogennemgang",
     "Photos": "Billeder",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Billeder gemmes privat og behandles på vores server. Jeg accepterer at sende disse fire billeder, brugbare målinger, profil og træningskontekst til Google Gemini for fokusforslag. Fotomålinger er omtrentlige.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Billeder gemmes privat og behandles på vores server. Jeg accepterer at sende disse fire billeder, brugbare målinger, profil og træningskontekst til OpenAI for fokusforslag. Fotomålinger er omtrentlige.",
     "Physique": "Kropsform",
     "Plan": "Plan",
     "Planned sets due": "Planlagte sæt forfalder",
@@ -11179,10 +11179,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Brug samme måleteknik og lignende forhold ved sammenligning af poster.",
     "Use up to 20 short food names in each field.":
         "Brug op til 20 korte madnavne i hvert felt.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Bruger gemte målinger, profil og træning med Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Bruger gemte billeder, målinger, profil og træning med Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Bruger gemte målinger, profil og træning med OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Bruger gemte billeder, målinger, profil og træning med OpenAI.",
     "Vegan": "Vegansk",
     "Vegetarian": "Vegetarisk",
     "Very sore": "Meget øm",
@@ -11617,8 +11617,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Gem private billeder til sammenligning. Slet dem når som helst.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft gemmer din rapport, men ikke dine uploadede billeder.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Jeg accepterer behandling på serveren og at mine billeder, mål, profil og træningsoplysninger sendes til Google Gemini til min kropsrapport. Fotomål er omtrentlige.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Jeg accepterer behandling på serveren og at mine billeder, mål, profil og træningsoplysninger sendes til OpenAI til min kropsrapport. Fotomål er omtrentlige.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Hele kroppen i billedet. Kameraet vandret. Tætsiddende tøj. Hold armene fra kroppen, lidt bag dig i sidebilleder.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -11641,10 +11641,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Ingen billedvurdering endnu. Tilføj fire vinkler for din kropsrapport.",
     "Report saved · Photos not kept": "Rapport gemt · Billeder ikke gemt",
     "Update body report": "Opdater kropsrapport",
-    "Uses saved photos with Google Gemini.":
-        "Bruger gemte billeder med Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Bruger gemte mål med Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Bruger gemte billeder med OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Bruger gemte mål med OpenAI.",
     "Add another assessment to compare your progress.":
         "Tilføj en ny vurdering for at sammenligne dine fremskridt.",
     "Photo notes": "Billednoter",
@@ -11656,8 +11656,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Kun ens kilder. Overlappende fotointervaller bekræfter ikke en ændring. Mål skelner ikke fedt fra muskler.",
     "Preparing your body report…": "Forbereder din kropsrapport…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Jeg accepterer, at Setcraft og Google Gemini analyserer mine billeder, mål, profil og træningsoplysninger til min rapport.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Jeg accepterer, at Setcraft og OpenAI analyserer mine billeder, mål, profil og træningsoplysninger til min rapport.",
     "No saved photos": "Ingen gemte billeder",
     "Food type": "Fødevaretype",
     "Nutrition focus": "Ernæringsfokus",
@@ -13151,8 +13151,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Fotobereiken zijn onbevestigde schattingen, geen omtrek- of lichaamssamenstellingsmetingen.",
     "Photo review": "Fotoreview",
     "Photos": "Foto's",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Foto's worden privé opgeslagen en verwerkt op onze server. Ik ga ermee akkoord om deze vier foto's, bruikbare metingen, profiel- en trainingscontext naar Google Gemini te sturen voor focussuggesties. Fotometingen zijn bij benadering.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Foto's worden privé opgeslagen en verwerkt op onze server. Ik ga ermee akkoord om deze vier foto's, bruikbare metingen, profiel- en trainingscontext naar OpenAI te sturen voor focussuggesties. Fotometingen zijn bij benadering.",
     "Physique": "Lichaamsbouw",
     "Plan": "Schema",
     "Planned sets due": "Geplande sets verschuldigd",
@@ -13270,10 +13270,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Gebruik dezelfde meettechniek en vergelijkbare omstandigheden bij het vergelijken van invoeren.",
     "Use up to 20 short food names in each field.":
         "Gebruik maximaal 20 korte voedingsnamen in elk veld.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Gebruikt opgeslagen metingen, profiel en training met Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Gebruikt opgeslagen foto's, metingen, profiel en training met Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Gebruikt opgeslagen metingen, profiel en training met OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Gebruikt opgeslagen foto's, metingen, profiel en training met OpenAI.",
     "Vegan": "Veganistisch",
     "Vegetarian": "Vegetarisch",
     "Very sore": "Veel spierpijn",
@@ -13712,8 +13712,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Bewaar privéfoto's om te vergelijken. Verwijder ze wanneer je wilt.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft bewaart je rapport, maar niet je geüploade foto's.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Ik ga akkoord met verwerking op de server en het verzenden van mijn foto's, metingen, profiel en trainingsgegevens naar Google Gemini voor mijn lichaamsrapport. Fotometingen zijn bij benadering.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Ik ga akkoord met verwerking op de server en het verzenden van mijn foto's, metingen, profiel en trainingsgegevens naar OpenAI voor mijn lichaamsrapport. Fotometingen zijn bij benadering.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Je hele lichaam in beeld. Camera recht. Aansluitende kleding. Houd je armen van je romp af, iets achter je bij zijaanzichten.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -13736,10 +13736,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Nog geen fotobeoordeling. Voeg vier aanzichten toe voor je lichaamsrapport.",
     "Report saved · Photos not kept": "Rapport bewaard · Foto's niet bewaard",
     "Update body report": "Lichaamsrapport bijwerken",
-    "Uses saved photos with Google Gemini.":
-        "Gebruikt opgeslagen foto's met Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Gebruikt opgeslagen metingen met Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Gebruikt opgeslagen foto's met OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Gebruikt opgeslagen metingen met OpenAI.",
     "Add another assessment to compare your progress.":
         "Voeg nog een beoordeling toe om je voortgang te vergelijken.",
     "Photo notes": "Foto-observaties",
@@ -13751,8 +13751,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Alleen dezelfde bronnen. Overlappende fotobereiken bevestigen geen verandering. Metingen onderscheiden vet niet van spieren.",
     "Preparing your body report…": "Je lichaamsrapport wordt voorbereid…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Ik ga akkoord met de analyse van mijn foto’s, metingen, profiel en trainingsgegevens door Setcraft en Google Gemini voor mijn rapport.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Ik ga akkoord met de analyse van mijn foto’s, metingen, profiel en trainingsgegevens door Setcraft en OpenAI voor mijn rapport.",
     "No saved photos": "Geen opgeslagen foto's",
     "Food type": "Voedseltype",
     "Nutrition focus": "Voedingsfocus",
@@ -15263,8 +15263,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Los rangos de las fotos son estimaciones no validadas, no mediciones con cinta o de composición corporal.",
     "Photo review": "Revisión de fotos",
     "Photos": "Fotos",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Las fotos se almacenan de forma privada y se procesan en nuestro servidor. Acepto enviar estas cuatro fotos, las mediciones utilizables, el perfil y el contexto de entrenamiento a Google Gemini para obtener sugerencias de enfoque. Las mediciones de las fotos son aproximadas.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Las fotos se almacenan de forma privada y se procesan en nuestro servidor. Acepto enviar estas cuatro fotos, las mediciones utilizables, el perfil y el contexto de entrenamiento a OpenAI para obtener sugerencias de enfoque. Las mediciones de las fotos son aproximadas.",
     "Plan": "Plan",
     "Planned sets due": "Series planificadas pendientes",
     "Plant-based with dairy & eggs": "A base de plantas con lácteos y huevos",
@@ -15382,10 +15382,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Usa la misma técnica de medición y condiciones similares para comparar registros.",
     "Use up to 20 short food names in each field.":
         "Usa hasta 20 nombres cortos de alimentos en cada campo.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Usa las medidas, el perfil y el entrenamiento guardados con Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Usa las fotos, las medidas, el perfil y el entrenamiento guardados con Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Usa las medidas, el perfil y el entrenamiento guardados con OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Usa las fotos, las medidas, el perfil y el entrenamiento guardados con OpenAI.",
     "Vegan": "Vegano",
     "Vegetarian": "Vegetariano",
     "Very sore": "Mucho dolor muscular",
@@ -15825,8 +15825,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Guarda fotos privadas para comparar. Bórralas cuando quieras.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft guarda tu informe, pero no las fotos que subes.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Acepto el procesamiento en el servidor y el envío de mis fotos, medidas, perfil y datos de entrenamiento a Google Gemini para mi informe corporal. Las medidas de las fotos son aproximadas.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Acepto el procesamiento en el servidor y el envío de mis fotos, medidas, perfil y datos de entrenamiento a OpenAI para mi informe corporal. Las medidas de las fotos son aproximadas.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Cuerpo entero en el encuadre. Cámara nivelada. Ropa ajustada. Separa los brazos del torso, ligeramente hacia atrás en las vistas laterales.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -15849,10 +15849,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Aún no hay evaluación fotográfica. Añade cuatro vistas para tu informe corporal.",
     "Report saved · Photos not kept": "Informe guardado · Fotos no conservadas",
     "Update body report": "Actualizar informe corporal",
-    "Uses saved photos with Google Gemini.":
-        "Usa las fotos guardadas con Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Usa las medidas guardadas con Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Usa las fotos guardadas con OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Usa las medidas guardadas con OpenAI.",
     "Add another assessment to compare your progress.":
         "Añade otra evaluación para comparar tu progreso.",
     "Photo notes": "Observaciones fotográficas",
@@ -15864,8 +15864,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Solo fuentes coincidentes. Los rangos fotográficos superpuestos no confirman cambios. Las medidas no distinguen grasa de músculo.",
     "Preparing your body report…": "Preparando tu informe corporal…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Acepto que Setcraft y Google Gemini analicen mis fotos, medidas, perfil y datos de entrenamiento para mi informe.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Acepto que Setcraft y OpenAI analicen mis fotos, medidas, perfil y datos de entrenamiento para mi informe.",
     "No saved photos": "No hay fotos guardadas",
     "Food type": "Tipo de alimento",
     "Nutrition focus": "Enfoque nutricional",
@@ -17379,8 +17379,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Le stime fotografiche sono approssimative e non validate, non sostituiscono le misurazioni con metro o della composizione corporea.",
     "Photo review": "Revisione foto",
     "Photos": "Foto",
-    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to Google Gemini for focus suggestions. Photo measurements are approximate.":
-        "Le foto sono memorizzate privatamente ed elaborate sul nostro server. Acconsento all'invio di queste quattro foto, delle misurazioni utilizzabili, del profilo e del contesto di allenamento a Google Gemini per ricevere suggerimenti personalizzati. Le misurazioni fotografiche sono approssimative.",
+    "Photos are stored privately and processed on our server. I agree to send these four photos, usable measurements, profile and training context to OpenAI for focus suggestions. Photo measurements are approximate.":
+        "Le foto sono memorizzate privatamente ed elaborate sul nostro server. Acconsento all'invio di queste quattro foto, delle misurazioni utilizzabili, del profilo e del contesto di allenamento a OpenAI per ricevere suggerimenti personalizzati. Le misurazioni fotografiche sono approssimative.",
     "Plan": "Piano",
     "Planned sets due": "Serie programmate da eseguire",
     "Plant-based with dairy & eggs": "A base vegetale con latticini e uova",
@@ -17497,10 +17497,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Usa la stessa tecnica di misurazione e condizioni simili quando confronti gli inserimenti.",
     "Use up to 20 short food names in each field.":
         "Usa fino a 20 nomi brevi di alimenti in ciascun campo.",
-    "Uses saved measurements, profile & training with Gemini.":
-        "Utilizza le misurazioni salvate, il profilo e l'allenamento con Gemini.",
-    "Uses saved photos, measurements, profile & training with Gemini.":
-        "Utilizza le foto, le misurazioni, il profilo e l'allenamento salvati con Gemini.",
+    "Uses saved measurements, profile & training with OpenAI.":
+        "Utilizza le misurazioni salvate, il profilo e l'allenamento con OpenAI.",
+    "Uses saved photos, measurements, profile & training with OpenAI.":
+        "Utilizza le foto, le misurazioni, il profilo e l'allenamento salvati con OpenAI.",
     "Vegan": "Vegano",
     "Vegetarian": "Vegetariano",
     "Very sore": "Molto indolenzimento",
@@ -17943,8 +17943,8 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Conserva foto private per il confronto. Eliminale quando vuoi.",
     "Setcraft keeps your report, not your uploaded photos.":
         "Setcraft conserva il rapporto, ma non le foto caricate.",
-    "I agree to server processing and sending my photos, measurements, profile and training context to Google Gemini for my body report. Photo measurements are approximate.":
-        "Acconsento al trattamento sul server e all’invio di foto, misure, profilo e dati di allenamento a Google Gemini per il mio rapporto corporeo. Le misure fotografiche sono approssimative.",
+    "I agree to server processing and sending my photos, measurements, profile and training context to OpenAI for my body report. Photo measurements are approximate.":
+        "Acconsento al trattamento sul server e all’invio di foto, misure, profilo e dati di allenamento a OpenAI per il mio rapporto corporeo. Le misure fotografiche sono approssimative.",
     "Full body in frame. Level camera. Fitted clothing. Keep arms away from your torso, gently behind you in side views.":
         "Corpo intero nell’inquadratura. Fotocamera dritta. Abiti aderenti. Tieni le braccia lontane dal busto, leggermente dietro nelle viste laterali.",
     "Turn on Save my progress photos to keep a journal without AI analysis.":
@@ -17967,10 +17967,10 @@ const fitnessCopyData = <String, Map<String, String>>{
         "Nessuna valutazione fotografica. Aggiungi quattro viste per il rapporto corporeo.",
     "Report saved · Photos not kept": "Rapporto salvato · Foto non conservate",
     "Update body report": "Aggiorna rapporto corporeo",
-    "Uses saved photos with Google Gemini.":
-        "Usa le foto salvate con Google Gemini.",
-    "Uses saved measurements with Google Gemini.":
-        "Usa le misure salvate con Google Gemini.",
+    "Uses saved photos with OpenAI.":
+        "Usa le foto salvate con OpenAI.",
+    "Uses saved measurements with OpenAI.":
+        "Usa le misure salvate con OpenAI.",
     "Add another assessment to compare your progress.":
         "Aggiungi un’altra valutazione per confrontare i progressi.",
     "Photo notes": "Osservazioni fotografiche",
@@ -17982,8 +17982,8 @@ const fitnessCopyData = <String, Map<String, String>>{
     "Matching sources only. Overlapping photo ranges do not confirm a change. Measurements cannot separate fat from muscle.":
         "Solo fonti uguali. Intervalli fotografici sovrapposti non confermano cambiamenti. Le misure non distinguono grasso e muscolo.",
     "Preparing your body report…": "Preparazione del rapporto corporeo…",
-    "I agree to Setcraft and Google Gemini analyzing my photos, measurements, profile and training data for my report.":
-        "Acconsento all’analisi di foto, misure, profilo e dati di allenamento da parte di Setcraft e Google Gemini per il mio rapporto.",
+    "I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.":
+        "Acconsento all’analisi di foto, misure, profilo e dati di allenamento da parte di Setcraft e OpenAI per il mio rapporto.",
     "No saved photos": "Nessuna foto salvata",
     "Food type": "Tipo di alimento",
     "Nutrition focus": "Obiettivo nutrizionale",

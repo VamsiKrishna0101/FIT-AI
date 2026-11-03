@@ -25,6 +25,7 @@ class ProgressExplore extends StatelessWidget {
         Widget tile((String, IconData, VoidCallback) item) => ProgressSurface(
               padding: EdgeInsets.zero,
               child: InkWell(
+                key: ValueKey('progress-explore-${item.$1}'),
                 onTap: item.$3,
                 child: Padding(
                   padding:

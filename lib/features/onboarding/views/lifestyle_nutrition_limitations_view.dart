@@ -7,6 +7,7 @@ import '../../../core/theme/fitness_theme.dart';
 import '../components/nutrition_budget_controls.dart';
 import '../models/lifestyle_nutrition_models.dart';
 import '../components/onboarding_scaffold.dart';
+import '../components/onboarding_answer_flow.dart';
 import '../viewmodels/lifestyle_nutrition_viewmodel.dart';
 import 'training_preferences_view.dart';
 
@@ -14,8 +15,14 @@ import 'training_preferences_view.dart';
 class LifestyleNutritionLimitationsView extends StatefulWidget {
   final OnboardingController? controller;
   final VoidCallback? onContinue;
+  final bool coaching;
+  final String? previousAnswer;
   const LifestyleNutritionLimitationsView(
-      {super.key, this.controller, this.onContinue});
+      {super.key,
+      this.controller,
+      this.onContinue,
+      this.coaching = false,
+      this.previousAnswer});
 
   @override
   State<LifestyleNutritionLimitationsView> createState() =>
@@ -23,9 +30,15 @@ class LifestyleNutritionLimitationsView extends StatefulWidget {
 }
 
 class _LifestyleNutritionLimitationsViewState
-    extends State<LifestyleNutritionLimitationsView> {
+    extends State<LifestyleNutritionLimitationsView>
+    with OnboardingAnswerFlow<LifestyleNutritionLimitationsView> {
   bool _advancing = false;
   int _part = 0;
+  int get _contentPart => !widget.coaching || _part == 0
+      ? _part
+      : _part == 1
+          ? -1
+          : _part - 1;
   late final LifestyleNutritionViewModel _viewModel;
   late final TextEditingController _customDietController;
 
@@ -69,7 +82,7 @@ class _LifestyleNutritionLimitationsViewState
 
   Future<void> _onContinue() async {
     if (_advancing) return;
-    if (_part < 2) {
+    if (_part < (widget.coaching ? 3 : 2)) {
       FocusScope.of(context).unfocus();
       setState(() => _part++);
       return;
@@ -98,36 +111,65 @@ class _LifestyleNutritionLimitationsViewState
       totalSteps: _viewModel.totalSteps,
       sectionLabel: 'Your lifestyle',
       part: _part,
-      parts: 3,
+      parts: widget.coaching ? 4 : 3,
       canPop: _part == 0,
-      title: switch (_part) {
-        0 => language.activityLevelQuestion,
-        1 => language.eatingStyleQuestion,
-        _ => language.limitationsSectionTitle,
-      },
-      subtitle: switch (_part) {
-        0 =>
-          'Your everyday activity and usual sleep help us understand your starting routine.',
-        1 => 'Your preferences help shape your nutrition.',
-        _ => 'Choose any areas we should take into account.',
-      },
+      animateQuestion: widget.coaching,
+      previousAnswer: widget.coaching
+          ? (_part == 0
+              ? widget.previousAnswer
+              : _part == 1
+                  ? _viewModel.activityLevel.defaultLabel
+                  : _part == 2
+                      ? _viewModel.sleepDuration.defaultLabel
+                      : language.eatingStyleLabel(
+                          _viewModel.eatingStyle.backendValue))
+          : null,
+      showContinue: !widget.coaching ||
+          _contentPart == 2 ||
+          (_contentPart == 1 && _viewModel.eatingStyle.isCustom),
+      title: _contentPart == -1
+          ? language.sleepDurationQuestion
+          : switch (_contentPart) {
+              0 => language.activityLevelQuestion,
+              1 => language.eatingStyleQuestion,
+              _ => language.limitationsSectionTitle,
+            },
+      subtitle: widget.coaching
+          ? (_contentPart == 2
+              ? 'Select any areas we should account for.'
+              : _contentPart == 0
+                  ? 'Think about your day outside the gym.'
+                  : '')
+          : switch (_part) {
+              0 =>
+                'Your everyday activity and usual sleep help us understand your starting routine.',
+              1 => 'Your preferences help shape your nutrition.',
+              _ => 'Choose any areas we should take into account.',
+            },
       actionTitle: language.continueButtonTitle,
-      loading: _advancing,
+      loading: _advancing || choosingAnswer,
       onBack: _onBack,
       onContinue: _viewModel.controller.ready ? _onContinue : null,
       children: [
-        if (_part == 0)
+        if (_contentPart == 0)
           for (final option in ActivityLevelOption.values)
             _choice(
                 option.defaultLabel,
-                option.defaultSubtitle,
-                _viewModel.activityLevel == option,
-                () => _viewModel.selectActivity(option)),
-        if (_part == 0) ...[
+                widget.coaching ? null : option.defaultSubtitle,
+                _viewModel.activityLevel == option, () {
+              if (widget.coaching) {
+                chooseAnswer(
+                    () => _viewModel.selectActivity(option), _onContinue);
+              } else {
+                _viewModel.selectActivity(option);
+              }
+            }),
+        if (!widget.coaching && _part == 0) ...[
           const SizedBox(height: 20),
-          FitnessText(language.sleepDurationQuestion,
-              style:
-                  const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+          if (!widget.coaching)
+            FitnessText(language.sleepDurationQuestion,
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final option in SleepDurationOption.values)
@@ -143,20 +185,32 @@ class _LifestyleNutritionLimitationsViewState
                   onSelected: (_) => _viewModel.selectSleep(option)),
           ]),
         ],
-        if (_part == 1) ...[
-          for (final option in EatingStyleOption.values)
+        if (widget.coaching && _contentPart == -1)
+          for (final option in SleepDurationOption.values)
             _choice(
-                language.eatingStyleLabel(option.backendValue),
+                option.defaultLabel,
                 null,
-                _viewModel.eatingStyle == option,
-                () => _viewModel.selectEatingStyle(option)),
+                _viewModel.sleepDuration == option,
+                () => chooseAnswer(
+                    () => _viewModel.selectSleep(option), _onContinue)),
+        if (_contentPart == 1) ...[
+          for (final option in EatingStyleOption.values)
+            _choice(language.eatingStyleLabel(option.backendValue), null,
+                _viewModel.eatingStyle == option, () {
+              if (widget.coaching && !option.isCustom) {
+                chooseAnswer(
+                    () => _viewModel.selectEatingStyle(option), _onContinue);
+              } else {
+                _viewModel.selectEatingStyle(option);
+              }
+            }),
           if (_viewModel.eatingStyle.isCustom)
             OtherDietInput(
                 controller: _customDietController,
                 placeholder: language.customDietPlaceholder,
                 onChanged: _viewModel.setCustomEatingStyle),
         ],
-        if (_part == 2)
+        if (_contentPart == 2)
           for (final option in BodyLimitationOption.values)
             _choice(
                 option.defaultLabel,

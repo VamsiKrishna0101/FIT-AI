@@ -133,6 +133,21 @@ class _BodyFocusResultViewState extends State<BodyFocusResultView> {
               ])));
   void _close() => Navigator.pop(context, _changed);
   Future<void> _refreshReport() async {
+    final agreed = await showCupertinoDialog<bool>(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+            title: const FitnessText('Update body report'),
+            content: const FitnessText(
+                'I agree to Setcraft and OpenAI analyzing my photos, measurements, profile and training data for my report.'),
+            actions: [
+              CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const FitnessText('Cancel')),
+              CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const FitnessText('Continue')),
+            ]));
+    if (agreed != true || !mounted) return;
     await Navigator.of(context).push<bool>(AppPageRoute(
         page: BodyEstimateView(
             female: _entry.gender == 'FEMALE',

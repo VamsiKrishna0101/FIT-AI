@@ -1,3 +1,4 @@
+import 'features/onboarding/components/welcome_background_video.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
@@ -57,6 +58,11 @@ Future<Widget> _initializeHome() async {
         .syncAccountLanguage()
         .timeout(const Duration(seconds: 4), onTimeout: () {});
   }
+  if ((token == null || token.isEmpty) &&
+      !WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+          .disableAnimations) {
+    await WelcomeVideoPreload.prepare();
+  }
   return (token != null && token.isNotEmpty)
       ? authenticatedHome()
       : const OnboardingView();
@@ -85,6 +91,10 @@ class SetcraftApp extends StatelessWidget {
         darkTheme: ThemeData(
           useMaterial3: true,
           brightness: Brightness.dark,
+          progressIndicatorTheme: const ProgressIndicatorThemeData(
+              color: Colors.white,
+              linearTrackColor: Color(0x14FFFFFF),
+              circularTrackColor: Color(0x14FFFFFF)),
           scaffoldBackgroundColor: DSColors.bg,
           canvasColor: DSColors.bg,
           fontFamily: defaultTargetPlatform == TargetPlatform.iOS

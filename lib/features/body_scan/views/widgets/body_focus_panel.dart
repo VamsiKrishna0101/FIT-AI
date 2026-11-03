@@ -216,11 +216,11 @@ class _BodyFocusPanelState extends State<BodyFocusPanel> {
           'Photo estimates are approximate. Photos do not measure strength or body fat.',
           style:
               TextStyle(fontSize: 12, height: 1.4, color: FitnessTheme.muted)),
-      if (assessment.processing?['geminiMs'] is num)
+      if ((assessment.processing?['aiMs'] ?? assessment.processing?['geminiMs']) is num)
         Padding(
             padding: const EdgeInsets.only(top: 12),
             child: FitnessText(
-                '${fitnessText(context, 'Report')} · ${((assessment.processing!['geminiMs'] as num) / 1000).toStringAsFixed(1)}s',
+                '${fitnessText(context, 'Report')} · ${(((assessment.processing?['aiMs'] ?? assessment.processing?['geminiMs']) as num) / 1000).toStringAsFixed(1)}s',
                 style: const TextStyle(fontSize: 12))),
       for (final note in assessment.qualityNotes.toSet())
         Padding(
@@ -420,8 +420,8 @@ class _BodyFocusPanelState extends State<BodyFocusPanel> {
                   style: TextStyle(fontSize: 12))),
           FitnessText(
               assessment.visualCoachingConsent && assessment.photos.isNotEmpty
-                  ? 'Uses saved photos with Google Gemini.'
-                  : 'Uses saved measurements with Google Gemini.',
+                  ? 'Uses saved photos with OpenAI.'
+                  : 'Uses saved measurements with OpenAI.',
               style: const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
         ],
       ],

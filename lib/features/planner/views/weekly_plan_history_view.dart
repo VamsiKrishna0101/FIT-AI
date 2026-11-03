@@ -11,8 +11,14 @@ import '../repositories/weekly_plan_repository.dart';
 
 class WeeklyPlanHistoryView extends StatefulWidget {
   final WeeklyPlanRepository repository;
+  final Map<String, dynamic> query;
+  final String? rangeLabel;
 
-  const WeeklyPlanHistoryView({super.key, required this.repository});
+  const WeeklyPlanHistoryView(
+      {super.key,
+      required this.repository,
+      this.query = const {},
+      this.rangeLabel});
 
   @override
   State<WeeklyPlanHistoryView> createState() => _WeeklyPlanHistoryViewState();
@@ -67,8 +73,10 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
     });
 
     try {
-      final page =
-          await widget.repository.history(cursor: reset ? null : _nextCursor);
+      final page = widget.query.isEmpty
+          ? await widget.repository.history(cursor: reset ? null : _nextCursor)
+          : await widget.repository.filteredHistory(
+              cursor: reset ? null : _nextCursor, query: widget.query);
       if (request != _requestNumber || !await _sameOwner(owner)) return;
       final items = (page['items'] as List? ?? [])
           .map((item) => Map<String, dynamic>.from(item as Map))
@@ -127,23 +135,35 @@ class _WeeklyPlanHistoryViewState extends State<WeeklyPlanHistoryView> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  if (!_loading && _plans.isEmpty && _error == null)
-                    const SliverToBoxAdapter(
+                  if (widget.rangeLabel != null)
+                    SliverToBoxAdapter(
                         child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 44),
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                            child: Text(widget.rangeLabel!,
+                                style: const TextStyle(
+                                    fontSize: 12, color: FitnessTheme.muted)))),
+                  if (!_loading && _plans.isEmpty && _error == null)
+                    SliverToBoxAdapter(
+                        child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 44),
                       child: Column(children: [
-                        Icon(CupertinoIcons.calendar,
+                        const Icon(CupertinoIcons.calendar,
                             size: 36, color: FitnessTheme.muted),
-                        SizedBox(height: 20),
-                        FitnessText('No saved weeks yet',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w500)),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         FitnessText(
-                            'Generate a weekly plan and it will appear here.',
+                            widget.query.isEmpty
+                                ? 'No saved weeks yet'
+                                : 'No plans in this period',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 10),
+                        FitnessText(
+                            widget.query.isEmpty
+                                ? 'Generate a weekly plan and it will appear here.'
+                                : 'Choose another period.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: FitnessTheme.muted,
                                 fontSize: 13,
                                 height: 1.5)),

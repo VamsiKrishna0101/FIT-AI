@@ -60,8 +60,17 @@ class TrainingPreferencesView extends StatefulWidget {
   final bool editProfile;
   final OnboardingController? controller;
   final VoidCallback? onContinue;
+  final bool coaching;
+  final List<int> questionParts;
+  final String? previousAnswer;
   const TrainingPreferencesView(
-      {super.key, this.editProfile = false, this.onContinue, this.controller});
+      {super.key,
+      this.editProfile = false,
+      this.onContinue,
+      this.controller,
+      this.coaching = false,
+      this.questionParts = const [0, 1, 2, 3],
+      this.previousAnswer});
   @override
   State<TrainingPreferencesView> createState() =>
       _TrainingPreferencesViewState();
@@ -94,11 +103,15 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
       _budget = TextEditingController();
   bool _loading = true, _saving = false, _loadFailed = false;
   int _part = 0;
+  List<int> get _parts => widget.questionParts.contains(_part)
+      ? widget.questionParts
+      : const [1, 2, 3];
   String? _error;
   String? _profileUser;
   @override
   void initState() {
     super.initState();
+    _part = widget.questionParts.first;
     for (final field in [_notes, _allergies, _dislikes, _budget]) {
       field.addListener(_formChanged);
     }
@@ -342,8 +355,16 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
     FocusScope.of(context).unfocus();
     setState(() {
       _error = error;
-      if (error == null) _part++;
     });
+    if (error == null) {
+      final index = _parts.indexOf(_part);
+      if (index < _parts.length - 1) {
+        setState(() => _part = _parts[index + 1]);
+      } else {
+        _controller?.checkpoint();
+        widget.onContinue?.call();
+      }
+    }
   }
 
   void _chooseTrainingDays() {
@@ -516,32 +537,51 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         showProgress: !widget.editProfile,
         part: _part,
         parts: 4,
-        canPop: widget.editProfile || _part == 0,
+        canPop: widget.editProfile || _parts.indexOf(_part) == 0,
         title: widget.editProfile
             ? 'Training preferences'
-            : const [
+            : [
                 'What do you want to focus on?',
                 'Which days work for you?',
-                'Your training style',
-                'Final details',
+                widget.coaching
+                    ? 'Do you have a preferred training split?'
+                    : 'Your training style',
+                widget.coaching
+                    ? 'Anything else we should know?'
+                    : 'Final details',
               ][_part],
-        subtitle: widget.editProfile
-            ? 'Your priorities, your schedule, your way to train.'
-            : const [
-                'Choose as many as you like',
-                'Choose at least two training days.',
-                '',
-                'Optional',
-              ][_part],
+        animateQuestion: widget.coaching,
+        previousAnswer: widget.coaching
+            ? (_part == 2
+                ? fitnessText(context, '{count} training days',
+                    values: {'count': _draft.trainingDays.length})
+                : widget.previousAnswer)
+            : null,
+        subtitle: widget.coaching
+            ? (_part == 0
+                ? 'Choose as many as you like'
+                : _part == 3
+                    ? 'Optional'
+                    : _part == 1
+                        ? 'Choose at least two training days.'
+                        : '')
+            : widget.editProfile
+                ? 'Your priorities, your schedule, your way to train.'
+                : const [
+                    'Choose as many as you like',
+                    'Choose at least two training days.',
+                    '',
+                    'Optional',
+                  ][_part],
         actionTitle: widget.editProfile
             ? 'Save preferences'
             : _part < 3
                 ? 'Continue'
                 : 'Build my plan',
         onBack: () {
-          if (!widget.editProfile && _part > 0) {
+          if (!widget.editProfile && _parts.indexOf(_part) > 0) {
             setState(() {
-              _part--;
+              _part = _parts[_parts.indexOf(_part) - 1];
               _error = null;
             });
           } else {
@@ -614,13 +654,15 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                                     })),
                         ]),
                         const SizedBox(height: 20),
-                        OnboardingFocusBody(
-                            height: widget.editProfile ? 300 : 340,
-                            onSelected: _toggleMuscle,
-                            selected: _draft.focusMuscles.isEmpty
-                                ? trainingMuscles.keys.toSet()
-                                : _draft.focusMuscles.toSet(),
-                            female: _draft.gender == 'FEMALE'),
+                        OnboardingMonochrome(
+                            enabled: widget.coaching,
+                            child: OnboardingFocusBody(
+                                height: widget.editProfile ? 300 : 340,
+                                onSelected: _toggleMuscle,
+                                selected: _draft.focusMuscles.isEmpty
+                                    ? trainingMuscles.keys.toSet()
+                                    : _draft.focusMuscles.toSet(),
+                                female: _draft.gender == 'FEMALE')),
                         ExpansionTile(
                             tilePadding: EdgeInsets.zero,
                             shape: const Border(),
@@ -642,49 +684,67 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
             if (widget.editProfile || _part == 1) ...[
               const SizedBox(height: 14),
               _PreferenceCard(
+                  plain: !widget.editProfile,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    const _Heading(
-                        'Your week', 'Choose at least two training days.'),
-                    const SizedBox(height: 12),
-                    _trainingDayChoices(),
-                    const SizedBox(height: 14),
-                    DropdownButtonFormField<String>(
-                        initialValue: _draft.preferredTime ?? 'ANY',
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                            labelText: fitnessText(context, 'Preferred time'),
-                            fillColor: const Color(0xFF171819),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16)),
-                        dropdownColor: const Color(0xFF252628),
-                        borderRadius: BorderRadius.circular(16),
-                        icon: const Icon(CupertinoIcons.chevron_down,
-                            size: 16, color: FitnessTheme.muted),
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'ANY',
-                              child: FitnessText('Whenever works')),
-                          DropdownMenuItem(
-                              value: 'MORNING', child: FitnessText('Morning')),
-                          DropdownMenuItem(
-                              value: 'AFTERNOON',
-                              child: FitnessText('Afternoon')),
-                          DropdownMenuItem(
-                              value: 'EVENING', child: FitnessText('Evening'))
-                        ],
-                        onChanged: (value) =>
-                            _change(() => _draft.preferredTime = value)),
-                  ])),
+                        if (!widget.coaching)
+                          const _Heading('Your week',
+                              'Choose at least two training days.'),
+                        const SizedBox(height: 12),
+                        _trainingDayChoices(),
+                        const SizedBox(height: 14),
+                        DropdownButtonFormField<String>(
+                            initialValue: _draft.preferredTime ?? 'ANY',
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                                labelText:
+                                    fitnessText(context, 'Preferred time'),
+                                filled: !widget.coaching,
+                                fillColor: const Color(0xFF171819),
+                                border: widget.coaching
+                                    ? const UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color(0xFF353538)))
+                                    : null,
+                                enabledBorder: widget.coaching
+                                    ? const UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color(0xFF353538)))
+                                    : null,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 16)),
+                            dropdownColor: const Color(0xFF252628),
+                            borderRadius: BorderRadius.circular(16),
+                            icon: const Icon(CupertinoIcons.chevron_down,
+                                size: 16, color: FitnessTheme.muted),
+                            items: const [
+                              DropdownMenuItem(
+                                  value: 'ANY',
+                                  child: FitnessText('Whenever works')),
+                              DropdownMenuItem(
+                                  value: 'MORNING',
+                                  child: FitnessText('Morning')),
+                              DropdownMenuItem(
+                                  value: 'AFTERNOON',
+                                  child: FitnessText('Afternoon')),
+                              DropdownMenuItem(
+                                  value: 'EVENING',
+                                  child: FitnessText('Evening'))
+                            ],
+                            onChanged: (value) =>
+                                _change(() => _draft.preferredTime = value)),
+                      ])),
             ],
             if (widget.editProfile || _part == 2) ...[
               const SizedBox(height: 14),
               _PreferenceCard(
+                plain: !widget.editProfile,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TrainingStylePicker(
+                        compact: widget.coaching,
                         draft: _draft,
                         customDayEditor: _draft.trainingSplit == 'CUSTOM'
                             ? _customTrainingDays()
@@ -698,6 +758,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
               const SizedBox(height: 14),
               _OptionalPreferenceCard(
                   key: const ValueKey('movement-notes-section'),
+                  conversational: widget.coaching,
                   title: 'Movement notes',
                   controllers: [
                     _notes
@@ -717,6 +778,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
               _OptionalPreferenceCard(
                   key: ValueKey(
                       'food-preferences-${_error?.contains('budget') == true || _error?.contains('food names') == true}'),
+                  conversational: widget.coaching,
                   title: 'Food preferences',
                   controllers: [_allergies, _dislikes, _budget],
                   expand: _error?.contains('budget') == true ||
@@ -830,13 +892,14 @@ class _OptionalPreferenceCard extends StatefulWidget {
   final String title;
   final List<TextEditingController> controllers;
   final List<Widget> children;
-  final bool expand;
+  final bool expand, conversational;
   const _OptionalPreferenceCard(
       {super.key,
       required this.title,
       required this.controllers,
       required this.children,
-      this.expand = false});
+      this.expand = false,
+      this.conversational = false});
   @override
   State<_OptionalPreferenceCard> createState() =>
       _OptionalPreferenceCardState();
@@ -848,6 +911,7 @@ class _OptionalPreferenceCardState extends State<_OptionalPreferenceCard> {
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: Listenable.merge(widget.controllers),
         builder: (context, _) => _PreferenceCard(
+            quiet: widget.conversational,
             padding: EdgeInsets.zero,
             child: ExpansionTile(
               initiallyExpanded: widget.expand,
@@ -858,7 +922,7 @@ class _OptionalPreferenceCardState extends State<_OptionalPreferenceCard> {
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               title: FitnessText(widget.title,
                   style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w500)),
+                      fontSize: 18, fontWeight: FontWeight.w600)),
               trailing: FitnessText(
                   _open
                       ? 'Close'
@@ -894,15 +958,21 @@ class _Heading extends StatelessWidget {
 class _PreferenceCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final bool plain;
+  final bool plain, quiet;
   const _PreferenceCard(
       {required this.child,
       this.padding = const EdgeInsets.all(16),
-      this.plain = false});
+      this.plain = false,
+      this.quiet = false});
   @override
   Widget build(BuildContext context) => plain
       ? child
-      : FitnessCard(
-          padding: padding,
-          child: Material(type: MaterialType.transparency, child: child));
+      : quiet
+          ? Material(
+              color: const Color(0xFF232326),
+              borderRadius: BorderRadius.circular(24),
+              child: child)
+          : FitnessCard(
+              padding: padding,
+              child: Material(type: MaterialType.transparency, child: child));
 }

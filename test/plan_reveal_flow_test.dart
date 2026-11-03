@@ -13,12 +13,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:setcraft/core/cache/cache_scope.dart';
 import 'package:setcraft/core/components/liquid_chrome_button.dart';
 import 'package:setcraft/core/network/api_client.dart';
-import 'package:setcraft/features/onboarding/components/starter_plan_reveal.dart';
 import 'package:setcraft/features/onboarding/views/onboarding_view.dart';
 import 'package:setcraft/features/onboarding/views/goal_selection_view.dart';
 import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
 import 'package:setcraft/features/onboarding/viewmodels/onboarding_controller.dart';
 import 'package:setcraft/features/subscription/subscription_view.dart';
+import 'package:setcraft/features/train/views/exercise_detail_screen.dart';
+import 'package:setcraft/features/train/components/exercise_muscle_map.dart';
 import 'package:setcraft/features/train/components/graphite_anatomy.dart';
 import 'package:setcraft/features/train/models/training_session.dart';
 import 'package:setcraft/features/train/views/workout_session_view.dart';
@@ -45,12 +46,13 @@ Widget app(Widget child,
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         theme: ThemeData.dark().copyWith(
             textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Inter')),
-        home: Builder(
-            builder: (context) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                    disableAnimations: reduced,
-                    textScaler: TextScaler.linear(scale)),
-                child: RepaintBoundary(key: _preview, child: child))));
+        builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+                disableAnimations: reduced,
+                textScaler: TextScaler.linear(scale)),
+            child: RepaintBoundary(key: _preview, child: child!)),
+        home: child);
+
 void phone(WidgetTester tester, [Size size = const Size(393, 852)]) {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -68,12 +70,6 @@ Future<void> capture(WidgetTester tester, String name) =>
       await file.writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();
     });
-Future<void> artwork(WidgetTester tester) async {
-  await tester.runAsync(() => precacheImage(
-      const AssetImage(graphiteAnatomyAsset),
-      tester.element(find.byType(StarterPlanReveal))));
-  await tester.pumpAndSettle();
-}
 
 class SessionAdapter implements HttpClientAdapter {
   @override
@@ -111,7 +107,7 @@ void main() {
         {'fitai_access_token': 'opaque', 'fitai_user_id': 'reveal-test'});
   });
   testWidgets(
-      'Welcome animates briefly, leaves Get started usable, and does not sell a trial',
+      'Welcome animates briefly, starts personalization, and does not sell a trial',
       (tester) async {
     phone(tester);
     final model = OnboardingController();
@@ -129,7 +125,8 @@ void main() {
             .widget<LiquidChromeButton>(find.byType(LiquidChromeButton))
             .onPressed,
         isNotNull);
-    expect(find.text('Build my plan'), findsNothing);
+    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('WORKOUT PREVIEW'), findsNothing);
     expect(find.textContaining('14-day trial'), findsNothing);
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
@@ -145,105 +142,145 @@ void main() {
     await model.initialize();
     await tester.pumpWidget(app(OnboardingView(controller: model)));
     await tester.pumpAndSettle();
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 2; i++) {
       expect(
           tester
               .widget<Opacity>(find.byKey(ValueKey('welcome-goal-$i')))
               .opacity,
           1);
     }
-    await tester.runAsync(() => precacheImage(
-        const AssetImage('assets/branding/setcraft-training-hero-v1.png'),
-        tester.element(find.byType(OnboardingView))));
-    await tester.pumpAndSettle();
-    await capture(tester, 'welcome-get-started');
+    expect(find.byKey(const ValueKey('welcome-get-started')).hitTestable(),
+        findsOneWidget);
+    await capture(tester, 'welcome-entry');
     await tester.pumpWidget(const SizedBox());
     model.dispose();
   });
   testWidgets(
-      'Personal reveal shows the whole recommended week and only two exercises before checkout',
+      'Visual preview shows samples and opens a separate concise subscription screen',
       (tester) async {
     phone(tester);
     final repo = StarterRepo(), service = TrialService();
-    final preview = (repo.value['plan'] as Map)['preview'] as Map;
-    final days = preview['workouts'] as List;
-    final names = [
-      'Chest + Triceps',
-      'Rest day',
-      'Back + Biceps',
-      'Rest day',
-      'Legs + Glutes',
-      'Rest day',
-      'Shoulders + Core'
-    ];
-    for (var n = 0; n < days.length; n++) {
-      (days[n] as Map)['name'] = names[n];
-    }
-    final firstWorkout = preview['firstWorkout'] as Map;
-    firstWorkout['name'] = 'Chest + Triceps';
-    ((firstWorkout['exercises'] as List)[1] as Map)['name'] =
-        'Triceps extension';
-    String? opened;
     await tester.pumpWidget(app(StarterPlanView(
         repository: repo,
         subscription: service,
         profileLoader: () async => profile,
-        onComplete: (id) => opened = id)));
+        onComplete: (_) {})));
     await tester.pumpAndSettle();
-    expect(find.text('Nora, your plan is ready'), findsOneWidget);
-    expect(find.text('Beginner'), findsOneWidget);
-    expect(find.text('Dumbbells'), findsNothing);
-    expect(find.text('Your recommended week'), findsOneWidget);
-    for (var day = 19; day <= 25; day++) {
-      expect(find.byKey(ValueKey('starter-day-2026-10-$day')), findsOneWidget);
-    }
-    expect(find.text('Rest day'), findsNWidgets(3));
-    expect(
-        find.descendant(
-            of: find.byKey(const ValueKey('starter-day-2026-10-19')),
-            matching: find.text('Chest + Triceps')),
+    expect(find.text('Your plan is ready'), findsOneWidget);
+    expect(find.text('Build muscle · 4 training days'), findsOneWidget);
+    expect(find.byType(SubscriptionView), findsNothing);
+    expect(find.byKey(const ValueKey('starter-exercise-preview-press')),
         findsOneWidget);
+    expect(find.text('Rest day'), findsNothing);
     expect(
-        find.descendant(
-            of: find.byKey(const ValueKey('starter-day-2026-10-21')),
-            matching: find.text('Back + Biceps')),
+        find.byKey(const ValueKey('starter-day-2026-10-19')), findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-unlock')).hitTestable(),
         findsOneWidget);
-    expect(find.text('Dumbbell row'), findsNothing);
-    expect(find.byType(GraphiteMuscleFigure), findsNothing);
     expect(service.starts, 0);
     expect(repo.activations, 0);
     await capture(tester, 'personal-plan-reveal');
-    final first = find.byKey(const ValueKey('starter-first-workout'));
-    expect(
-        find.descendant(of: first, matching: find.text('Dumbbell floor press')),
-        findsOneWidget);
-    expect(find.descendant(of: first, matching: find.text('Triceps extension')),
-        findsOneWidget);
-    expect(find.text('Unlock your full plan'), findsOneWidget);
-    await tester.scrollUntilVisible(first, 250,
-        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.byKey(const ValueKey('starter-full-week')));
     await tester.pumpAndSettle();
-    await capture(tester, 'personal-plan-workout-preview');
-    await tester.scrollUntilVisible(find.text('Muscle focus'), 200,
-        scrollable: find.byType(Scrollable).first);
-    await tester.ensureVisible(find.text('Muscle focus'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Muscle focus'));
-    await artwork(tester);
-    expect(find.byType(GraphiteMuscleFigure), findsNWidgets(2));
-    for (final figure in tester
-        .widgetList<GraphiteMuscleFigure>(find.byType(GraphiteMuscleFigure))) {
-      expect(figure.female, true);
-      expect(figure.primary, {'chest', 'triceps'});
+    expect(find.text('Your recommended week'), findsOneWidget);
+    expect(find.text('Rest day'), findsNWidgets(3));
+    for (var day = 19; day <= 25; day++) {
+      expect(find.byKey(ValueKey('starter-day-2026-10-$day')).last,
+          findsOneWidget);
     }
-    await tester.tap(find.text('Unlock my plan'));
+    await capture(tester, 'personal-plan-full-week');
+    await tester.tapAt(const Offset(20, 80));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('starter-unlock')));
     await tester.pumpAndSettle();
     expect(find.byType(SubscriptionView), findsOneWidget);
-    expect(repo.activations, 0);
-    await tester.tap(find.byKey(const ValueKey('membership-close')));
+    expect(find.text('Day 12'), findsOneWidget);
     await tester.pumpAndSettle();
-    expect(opened, isNull);
-    expect(find.text('Unlock my plan'), findsOneWidget);
+    await capture(tester, 'personal-plan-pricing');
+    expect(service.starts, 0);
+    expect(repo.activations, 0);
+  });
+  testWidgets(
+      'A prepared name-only preview refreshes exercise identities before display',
+      (tester) async {
+    phone(tester);
+    final repo = StarterRepo();
+    final legacy = jsonDecode(jsonEncode(repo.value)) as Map<String, dynamic>;
+    final samples =
+        legacy['plan']['preview']['firstWorkout']['exercises'] as List;
+    for (final sample in samples.cast<Map>()) {
+      sample.remove('exerciseId');
+      sample.remove('exercise');
+    }
+    await tester.pumpWidget(app(StarterPlanView(
+        repository: repo,
+        initialRun: legacy,
+        subscription: TrialService(),
+        profileLoader: () async => profile,
+        onComplete: (_) {})));
+    await tester.pumpAndSettle();
+    expect(repo.starts, 0);
+    expect(repo.polls, 1);
+    expect(find.byKey(const ValueKey('starter-exercise-preview-press')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-exercise-preview-row')),
+        findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+      'An exercise image opens the full exercise detail guide and returns to preview',
+      (tester) async {
+    phone(tester);
+    final repo = StarterRepo();
+    final sample = ((repo.value['plan'] as Map)['preview']['firstWorkout']
+            ['exercises'] as List)
+        .first as Map;
+    sample['exercise'] = {
+      'id': 'preview-press',
+      'name': 'Dumbbell floor press',
+      'target': 'pectorals',
+      'bodyPart': 'chest',
+      'equipment': 'dumbbell',
+      'difficulty': 'beginner',
+      'instructions': [
+        'Lie on the floor with a dumbbell in each hand',
+        'Press upward while keeping your wrists stacked'
+      ],
+      'contentLanguage': 'en',
+    };
+    await tester.pumpWidget(app(StarterPlanView(
+        repository: repo,
+        subscription: TrialService(),
+        profileLoader: () async => profile,
+        onComplete: (_) {})));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('starter-exercise-preview-press')));
+    await tester.pump();
+    expect(
+        tester
+            .widget<ExerciseDetailView>(find.byType(ExerciseDetailView))
+            .loadDetail,
+        false);
+    expect(
+        tester
+            .widget<ExerciseDetailView>(find.byType(ExerciseDetailView))
+            .mediaGender,
+        'female');
+    await tester.runAsync(() => precacheImage(
+        const AssetImage(graphiteAnatomyAsset),
+        tester.element(find.byType(ExerciseDetailView))));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(ExerciseDetailView), findsOneWidget);
+    expect(find.byType(ExerciseMuscleMap), findsOneWidget);
+    await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('exercise-instructions')), 200,
+        scrollable: find.byType(Scrollable).last);
+    expect(find.text('How to perform'), findsOneWidget);
+    expect(find.text('Add to today'), findsNothing);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your plan is ready'), findsOneWidget);
+    expect(find.byType(SubscriptionView), findsNothing);
   });
   testWidgets(
       'A late profile response from another account never personalizes this preview',
@@ -278,21 +315,9 @@ void main() {
             },
         onComplete: (_) {})));
     await tester.pumpAndSettle();
-    expect(find.text('Get stronger'), findsOneWidget);
+    expect(find.text('Get stronger · 4 training days'), findsOneWidget);
     await capture(tester, 'personal-plan-reveal-male');
-    await tester.scrollUntilVisible(find.text('Muscle focus'), 200,
-        scrollable: find.byType(Scrollable).first);
-    await tester.ensureVisible(find.text('Muscle focus'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Muscle focus'));
-    await artwork(tester);
-    expect(find.byType(GraphiteMuscleFigure), findsNWidgets(2));
-    for (final figure in tester
-        .widgetList<GraphiteMuscleFigure>(find.byType(GraphiteMuscleFigure))) {
-      expect(figure.female, false);
-      expect(figure.primary,
-          containsAll(['chest', 'lats', 'upper_back', 'lower_back']));
-    }
+    expect(find.byType(Image), findsNothing);
     expect(tester.takeException(), isNull);
   });
   for (final language in ['en', 'de', 'fr']) {
@@ -308,7 +333,6 @@ void main() {
           scale: 1.6,
           language: language));
       await tester.pumpAndSettle();
-      await artwork(tester);
       expect(find.byType(LiquidChromeButton).hitTestable(), findsOneWidget);
       await tester.drag(find.byType(ListView).first, const Offset(0, -650));
       await tester.pumpAndSettle();

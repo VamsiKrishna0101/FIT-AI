@@ -34,9 +34,11 @@ class PlannedPhysiqueDay {
 
 class PlannedPhysiqueExercise {
   final String itemId, exerciseId, name, targetReps;
-  final String? reason, progression;
+  final String? reason, progression, weightBasis, weightUnit;
   final int sets;
-  final double? weightKg;
+  final double? weightKg, targetRpe;
+  final int? restSeconds;
+  final List<Map<String, dynamic>> setPrescriptions;
   final List<String> primary, secondary;
   PlannedPhysiqueExercise.fromJson(Map json)
       : itemId = json['itemId'] as String,
@@ -47,7 +49,31 @@ class PlannedPhysiqueExercise {
         weightKg = (json['weightKg'] as num?)?.toDouble(),
         reason = json['reason'] as String?,
         progression = json['progression'] as String?,
+        weightBasis = json['weightBasis'] as String?,
+        weightUnit = json['weightUnit'] as String?,
+        targetRpe = (json['targetRpe'] as num?)?.toDouble(),
+        restSeconds = (json['restSeconds'] as num?)?.toInt(),
+        setPrescriptions = (json['setPrescriptions'] as List? ?? [])
+            .whereType<Map>()
+            .map((set) => Map<String, dynamic>.from(set))
+            .toList(),
         primary = (json['primary'] as List? ?? []).whereType<String>().toList(),
         secondary =
             (json['secondary'] as List? ?? []).whereType<String>().toList();
+
+  Map<String, dynamic> toRecommendation() => {
+        'itemId': itemId,
+        'exerciseId': exerciseId,
+        'name': name,
+        'sets': sets,
+        'targetReps': targetReps,
+        'weightKg': weightKg,
+        'weightBasis': weightBasis,
+        'weightUnit': weightUnit,
+        'targetRpe': targetRpe,
+        'restSeconds': restSeconds,
+        'setPrescriptions': setPrescriptions,
+        'reason': reason,
+        'progression': progression,
+      };
 }

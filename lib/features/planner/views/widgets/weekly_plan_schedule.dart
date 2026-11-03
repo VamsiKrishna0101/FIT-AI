@@ -1,4 +1,7 @@
+import '../../../../core/components/liquid_glass.dart';
+import 'weekly_nutrition_card.dart';
 import '../../../train/components/workout_warmup.dart';
+import '../../../train/components/exercise_recommendation_card.dart';
 import '../../../nutrition/components/planned_meals_section.dart';
 import '../../../../core/cache/cache_scope.dart';
 import '../../../../core/components/liquid_chrome_button.dart';
@@ -10,7 +13,6 @@ import '../../../train/models/training_session.dart';
 import '../../../train/repositories/training_repository.dart';
 import '../../../train/views/train_dashboard_view.dart';
 import '../../../../core/theme/ds_motion.dart';
-import '../../../../core/theme/ds_colors.dart';
 import '../../../../core/components/content_transition.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +22,6 @@ import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/fitness_theme.dart';
 import '../../../body_scan/views/widgets/body_controls.dart';
 import 'plan_week_list.dart';
-import '../../../../core/components/fitness_form.dart';
 
 class WeeklyPlanSchedule extends StatefulWidget {
   final Map<String, dynamic> payload;
@@ -45,28 +46,10 @@ class WeeklyPlanSchedule extends StatefulWidget {
   State<WeeklyPlanSchedule> createState() => _WeeklyPlanScheduleState();
 }
 
-class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
-    with SingleTickerProviderStateMixin {
+class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule> {
   int _day = 0;
   int _section = 0;
   bool _startingFirst = false;
-  bool _openingDay = false;
-  late final _reveal =
-      AnimationController(vsync: this, duration: DSMotion.regular);
-  bool _revealed = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (DSMotion.reduced(context)) {
-      _reveal.value = 1;
-      _revealed = true;
-    } else if (!_revealed) {
-      _revealed = true;
-      _reveal.forward();
-    }
-  }
-
   List<Map<String, dynamic>> get _days =>
       (widget.payload['workouts'] as List? ?? [])
           .whereType<Map>()
@@ -127,12 +110,6 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
     if (!widget.active || days.isEmpty) return;
     final date = days[_day.clamp(0, days.length - 1)]['date'] as String;
     await _loadDate(date);
-    if (widget.showOverview && mounted) {
-      final next = _nextTraining(_days.map(_currentWorkout).toList());
-      if (next != null && next['date'] != date) {
-        await _loadDate('${next['date']}');
-      }
-    }
   }
 
   Future<void> _loadDate(String date) async {
@@ -202,36 +179,6 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
     }
   }
 
-  Future<void> _openDay(String date) async {
-    if (_openingDay) return;
-    _openingDay = true;
-    try {
-      await Navigator.of(context).push(AppPageRoute<void>(
-          page: FitnessTheme(
-              child: Scaffold(
-        appBar: AppBar(
-            title: Text(
-                DateFormat.yMMMEd(
-                        Localizations.localeOf(context).toLanguageTag())
-                    .format(DateTime.parse(date)),
-                style: const TextStyle(fontSize: 15))),
-        body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-            child: WeeklyPlanSchedule(
-                payload: widget.payload,
-                active: widget.active,
-                initialDate: date,
-                fromOnboarding: widget.fromOnboarding,
-                showOverview: false,
-                loadDay: widget.loadDay,
-                startDay: widget.startDay)),
-      ))));
-      if (mounted) await _loadSelected();
-    } finally {
-      _openingDay = false;
-    }
-  }
-
   Future<void> _restToday(String date) async {
     final changed = await showModalBottomSheet<bool>(
         sheetAnimationStyle: DSMotion.sheetStyle(context),
@@ -274,6 +221,9 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
       'exercises': [
         for (final item in live.items)
           {
+            ...?original
+                .where((row) => row['exerciseId'] == item.exercise.id)
+                .firstOrNull,
             'exerciseId': item.exercise.id,
             'displayName': item.exercise.displayName,
             'sets': item.targetSets,
@@ -287,6 +237,9 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
             'reason': original
                 .where((row) => row['exerciseId'] == item.exercise.id)
                 .firstOrNull?['reason'],
+            'progression': original
+                .where((row) => row['exerciseId'] == item.exercise.id)
+                .firstOrNull?['progression'],
           }
       ],
     };
@@ -296,7 +249,6 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
   void dispose() {
     ++_request;
     _subscription?.cancel();
-    _reveal.dispose();
     super.dispose();
   }
 
@@ -325,7 +277,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
         const SizedBox(height: 16),
       ],
       BodySegment(
-          labels: const ['Workout', 'Food'],
+          labels: const ['Training', 'Nutrition'],
           selected: _section,
           onChanged: (section) => setState(() => _section = section)),
       const SizedBox(height: 20),
@@ -349,448 +301,385 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
 
   Widget _overview(List<Map<String, dynamic>> savedDays) {
     final days = savedDays.map(_currentWorkout).toList();
-    final training = days.where((d) => d['restDay'] != true).toList();
-    final statuses = <String, String>{
-      for (final d in days)
-        if (d['status'] is String) '${d['date']}': d['status'] as String
-    };
+    final training = days.where((day) => day['restDay'] != true).toList();
     final completed =
-        training.where((d) => statuses[d['date']] == 'COMPLETED').length;
-    final knownProgress = widget.active &&
+        training.where((day) => day['status'] == 'COMPLETED').length;
+    final progressKnown = widget.active &&
         training.isNotEmpty &&
-        training.every((d) => statuses.containsKey(d['date']));
-    final next = _nextTraining(days);
+        training.every((day) => day['status'] is String);
+    final selected = days[_day.clamp(0, days.length - 1)];
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      if (next != null) ...[
-        _nextWorkout(next),
-        const SizedBox(height: 24),
-      ],
-      Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 12,
-          runSpacing: 8,
-          children: [
-            const FitnessText('Your week',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            if (knownProgress)
-              FitnessText('{done} of {total} complete',
-                  values: {'done': completed, 'total': training.length},
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted))
-            else
-              FitnessText('{count} training days',
-                  values: {'count': training.length},
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-          ]),
-      if (knownProgress) ...[
-        const SizedBox(height: 12),
-        ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-                value: completed / training.length,
-                minHeight: 4,
-                color: FitnessTheme.silver,
-                backgroundColor: FitnessTheme.line)),
-        const SizedBox(height: 6),
-        Text('${(completed / training.length * 100).round()}%',
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 11, color: FitnessTheme.muted)),
-      ],
-      const SizedBox(height: 12),
-      PlanWeekList(days: days, statuses: statuses, onSelected: _openDay),
-      if (widget.active && _errors.isNotEmpty)
-        TextButton.icon(
-            onPressed: _loadSelected,
-            icon: const Icon(Icons.refresh, size: 16),
-            label: const FitnessText('Could not sync. Tap to retry.')),
+      LiquidGlass(
+          radius: 26,
+          surfaceColor: const Color(0xFF171717),
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 14),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    const FitnessText('Training week',
+                        style:
+                            TextStyle(fontSize: 11, color: FitnessTheme.muted)),
+                    const SizedBox(height: 6),
+                    FitnessText('{count} workouts',
+                        values: {'count': training.length},
+                        style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -.7)),
+                  ])),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                const Icon(CupertinoIcons.calendar,
+                    size: 19, color: Colors.white),
+                const SizedBox(height: 8),
+                FitnessText('{count} rest days',
+                    values: {'count': days.length - training.length},
+                    style: const TextStyle(
+                        fontSize: 10, color: FitnessTheme.muted)),
+              ]),
+            ]),
+            if (progressKnown) ...[
+              const SizedBox(height: 16),
+              Row(children: [
+                for (var index = 0; index < training.length; index++) ...[
+                  if (index > 0) const SizedBox(width: 5),
+                  Expanded(
+                      child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                              color: index < completed
+                                  ? Colors.white
+                                  : const Color(0xFF3A3A3A),
+                              borderRadius: BorderRadius.circular(3)))),
+                ],
+              ]),
+            ],
+            const SizedBox(height: 20),
+            _weekStrip(days),
+          ])),
+      const SizedBox(height: 22),
+      _sectionTabs(),
+      const SizedBox(height: 22),
+      ContentTransition(
+          child: KeyedSubtree(
+        key: ValueKey('week-detail-${selected['date']}-$_section'),
+        child:
+            _section == 0 ? _workout(selected) : _food('${selected['date']}'),
+      )),
     ]);
   }
 
-  Map<String, dynamic>? _nextTraining(List<Map<String, dynamic>> days) {
-    final remaining = days
-        .where((d) =>
-            d['restDay'] != true &&
-            d['status'] != 'COMPLETED' &&
-            d['status'] != 'SKIPPED')
-        .toList();
-    return remaining.where((d) => d['status'] == 'IN_PROGRESS').firstOrNull ??
-        remaining
-            .where((d) => '${d['date']}'.compareTo(CacheScope.todayKey()) >= 0)
-            .firstOrNull;
-  }
-
-  Widget _nextWorkout(Map<String, dynamic> day) {
-    final date = '${day['date']}';
-    final live = _live[date];
-    final start = widget.active &&
-        live != null &&
-        !live.restDay &&
-        live.items.isNotEmpty &&
-        !live.finished &&
-        (live.started || date == CacheScope.todayKey());
-    final count =
-        day['exerciseCount'] ?? (day['exercises'] as List? ?? []).length;
-    return FitnessCard(
-        key: const ValueKey('next-plan-workout'),
-        child:
-            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          FitnessText(
-              live?.started == true ? 'Continue your workout' : 'Next workout',
-              style: const TextStyle(color: FitnessTheme.muted, fontSize: 12)),
-          const SizedBox(height: 12),
-          FitnessText('${day['name']}',
-              style: const TextStyle(
-                  fontSize: 25,
-                  height: 1.2,
-                  letterSpacing: -.5,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Text(
-              DateFormat.yMMMMEEEEd(
-                      Localizations.localeOf(context).toLanguageTag())
-                  .format(DateTime.parse(date)),
-              style: const TextStyle(fontSize: 12, color: FitnessTheme.silver)),
-          const SizedBox(height: 8),
-          Wrap(spacing: 12, runSpacing: 4, children: [
-            FitnessText(count == 1 ? '{count} exercise' : '{count} exercises',
-                values: {'count': count},
-                style:
-                    const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-            if ((day['estimatedMinutes'] as num? ?? 0) > 0)
-              FitnessText('{minutes} min',
-                  values: {'minutes': (day['estimatedMinutes'] as num).round()},
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-          ]),
-          const SizedBox(height: 18),
-          FitnessSubmit(
-              label: start
-                  ? (live.started ? 'Resume workout' : 'Start workout')
-                  : 'View workout',
-              busy: _startingFirst,
-              onPressed: _startingFirst
-                  ? null
-                  : start
-                      ? () => _startFirstWorkout(date)
-                      : () => _openDay(date)),
-          if (start)
-            TextButton(
-                onPressed: _startingFirst ? null : () => _openDay(date),
-                child: const FitnessText('View workout')),
-        ]));
-  }
+  Widget _sectionTabs() => Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+            color: const Color(0xFF191919),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: FitnessTheme.line, width: .7)),
+        child: Row(children: [
+          for (var i = 0; i < 2; i++)
+            Expanded(
+                child: Semantics(
+              selected: _section == i,
+              button: true,
+              child: Material(
+                color: _section == i ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => setState(() => _section = i),
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 13),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                                i == 0
+                                    ? Icons.fitness_center_outlined
+                                    : Icons.restaurant_outlined,
+                                size: 16,
+                                color: _section == i
+                                    ? Colors.black
+                                    : FitnessTheme.muted),
+                            const SizedBox(width: 8),
+                            Flexible(
+                                child: FitnessText(
+                                    i == 0 ? 'Training' : 'Nutrition',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: _section == i
+                                            ? Colors.black
+                                            : FitnessTheme.muted))),
+                          ])),
+                ),
+              ),
+            )),
+        ]),
+      );
 
   Widget _weekStrip(List<Map<String, dynamic>> days) => LayoutBuilder(
-        builder: (context, constraints) {
-          final largeText = MediaQuery.textScalerOf(context).scale(10) > 13;
-          final width = !largeText && days.length >= 5
-              ? (constraints.maxWidth - 12) / days.length
-              : 58.0;
-
-          return Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: DSColors.border, width: .7),
-              color: DSColors.bgCard,
-            ),
-            child: SingleChildScrollView(
+        builder: (context, box) {
+          final largeText = MediaQuery.textScalerOf(context).scale(10) > 14;
+          final width = !largeText && days.length <= 7
+              ? box.maxWidth / days.length
+              : 54.0;
+          return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(children: [
                 for (var index = 0; index < days.length; index++)
                   SizedBox(
                       width: width,
                       child: _dayButton(_currentWorkout(days[index]), index)),
-              ]),
-            ),
-          );
+              ]));
         },
       );
 
   Widget _dayButton(Map<String, dynamic> day, int index) {
-    final selected = index == _day;
-    final date = DateTime.parse(day['date'] as String);
+    final selected = _day == index;
+    final date = DateTime.parse('${day['date']}');
     final locale = Localizations.localeOf(context).toLanguageTag();
-
+    final complete = day['status'] == 'COMPLETED';
     return Semantics(
-      selected: selected,
       button: true,
+      selected: selected,
       label: '${DateFormat.yMMMMEEEEd(locale).format(date)} · ${day['name']}',
-      child: Material(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Material(
           color: Colors.transparent,
           child: InkWell(
             key: ValueKey('plan-day-${day['date']}'),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(17),
             onTap: () {
               setState(() => _day = index);
               unawaited(_loadSelected());
             },
             child: AnimatedContainer(
               duration: DSMotion.duration(context, DSMotion.selection),
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                    color: selected
-                        ? Colors.white.withValues(alpha: .30)
-                        : Colors.transparent),
-                gradient: selected
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF505050), Color(0xFF303030)],
-                      )
-                    : null,
-              ),
+                  color: selected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(17)),
               child: Column(children: [
                 Text(DateFormat.E(locale).format(date),
                     style: TextStyle(
-                        fontSize: 10,
-                        color: selected
-                            ? FitnessTheme.silver
-                            : FitnessTheme.muted)),
-                const SizedBox(height: 5),
+                        fontSize: 9,
+                        color: selected ? Colors.black54 : FitnessTheme.muted)),
+                const SizedBox(height: 8),
                 Text(DateFormat.d(locale).format(date),
                     style: TextStyle(
-                        fontSize: 17,
+                        fontSize: 19,
                         fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : FitnessTheme.silver)),
-                const SizedBox(height: 6),
-                Container(
-                    width: day['restDay'] == true ? 9 : 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: selected
-                            ? FitnessTheme.silver
-                            : FitnessTheme.muted.withValues(alpha: .5),
-                        borderRadius: BorderRadius.circular(3))),
+                        color: selected ? Colors.black : Colors.white)),
+                const SizedBox(height: 8),
+                Icon(
+                    complete
+                        ? CupertinoIcons.checkmark
+                        : day['restDay'] == true
+                            ? CupertinoIcons.minus
+                            : CupertinoIcons.circle_fill,
+                    size: day['restDay'] == true || complete ? 9 : 4,
+                    color: selected ? Colors.black54 : FitnessTheme.muted),
               ]),
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 
   Widget _workout(Map<String, dynamic> day) {
+    final date = '${day['date']}';
+    final live = _live[date];
+    final rest = day['restDay'] == true;
     final exercises =
         (day['exercises'] as List? ?? []).whereType<Map>().toList();
-
+    final sets = exercises.fold(
+        0, (sum, exercise) => sum + (exercise['sets'] as num? ?? 0).toInt());
+    final minutes = (day['estimatedMinutes'] as num? ?? 0).round();
+    final canStart = widget.active &&
+        live != null &&
+        !rest &&
+        live.items.isNotEmpty &&
+        !live.finished &&
+        !_errors.contains(date) &&
+        (live.started || date == CacheScope.todayKey());
+    final canEdit = widget.active &&
+        live != null &&
+        !live.finished &&
+        date.compareTo(CacheScope.todayKey()) >= 0 &&
+        !_errors.contains(date);
+    final canRest = widget.active &&
+        date == CacheScope.todayKey() &&
+        live?.json['canReschedule'] == true;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      FitnessText('${day['name']}',
-          style: const TextStyle(
-              fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -.5)),
-      const SizedBox(height: 8),
-      if (widget.active) ...[
-        if (day['restDay'] != true &&
-            _live[day['date']] != null &&
-            !_errors.contains(day['date']) &&
-            _live[day['date']]!.items.isNotEmpty &&
-            _live[day['date']]?.finished != true &&
-            (_live[day['date']]!.started ||
-                day['date'] == CacheScope.todayKey())) ...[
-          LiquidChromeButton(
-              key: const ValueKey('onboarding-first-workout-action'),
-              solid: true,
-              pill: true,
-              showArrow: false,
-              isLoading: _startingFirst,
-              title: _live[day['date']]!.started
-                  ? 'Resume workout'
-                  : 'Start workout',
-              onPressed: _startingFirst
-                  ? null
-                  : () => _startFirstWorkout(day['date'] as String)),
-          const SizedBox(height: 14),
-        ],
-        if (day['date'] == DateFormat('yyyy-MM-dd').format(DateTime.now()) &&
-            _live[day['date']]?.json['canReschedule'] == true)
-          Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                  onPressed: () => _restToday(day['date'] as String),
-                  child: const FitnessText('Rest today',
-                      style: TextStyle(color: FitnessTheme.silver)))),
-        if (_errors.contains(day['date']))
-          TextButton.icon(
-              onPressed: _loadSelected,
-              icon: const Icon(CupertinoIcons.refresh, size: 15),
-              label: const FitnessText('Could not sync. Tap to retry.',
-                  style: TextStyle(fontSize: 12))),
-        if (!_live.containsKey(day['date']) && !_errors.contains(day['date']))
-          const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: CupertinoActivityIndicator(radius: 8)),
-        if (_live.containsKey(day['date']) &&
-            !_errors.contains(day['date']) &&
-            _live[day['date']]?.finished != true)
-          Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: ValueKey('edit-plan-day-${day['date']}'),
-                onPressed: () => _editDay(day['date'] as String),
-                icon: const Icon(CupertinoIcons.slider_horizontal_3, size: 16),
-                label: const FitnessText('Edit workout',
-                    style: TextStyle(fontSize: 13)),
-                style:
-                    TextButton.styleFrom(foregroundColor: FitnessTheme.silver),
-              )),
-        const SizedBox(height: 8),
-      ],
-      if (day['restDay'] == true)
-        const FitnessCard(
+      LiquidGlass(
+          radius: 26,
+          surfaceColor: const Color(0xFF1C1C1C),
+          padding: const EdgeInsets.all(22),
           child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(CupertinoIcons.moon, color: FitnessTheme.silver, size: 26),
-            SizedBox(height: 14),
-            FitnessText('Recovery day', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 6),
-            FitnessText('No workout scheduled. Give yourself time to recover.',
-                style: TextStyle(
-                    fontSize: 13, color: FitnessTheme.muted, height: 1.4)),
-          ]),
-        )
-      else ...[
-        FitnessText(
-            '${exercises.length} ${exercises.length == 1 ? 'exercise' : 'exercises'} · ${day['estimatedMinutes']} min',
-            style: const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-        const SizedBox(height: 16),
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              Expanded(
+                  child: Text(
+                      DateFormat.MMMEd(
+                              Localizations.localeOf(context).toLanguageTag())
+                          .format(DateTime.parse(date)),
+                      style: const TextStyle(
+                          fontSize: 11, color: FitnessTheme.muted))),
+              if (live?.finished == true)
+                const Icon(CupertinoIcons.checkmark_circle_fill,
+                    color: Colors.white, size: 20)
+              else if (widget.active && live == null && !_errors.contains(date))
+                const CupertinoActivityIndicator(
+                    color: Colors.white, radius: 8),
+              if (canEdit || canRest)
+                PopupMenuButton<String>(
+                  tooltip: fitnessText(context, 'Workout options'),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(CupertinoIcons.ellipsis,
+                      size: 22, color: Colors.white),
+                  onSelected: (value) =>
+                      value == 'rest' ? _restToday(date) : _editDay(date),
+                  itemBuilder: (context) => [
+                    if (canEdit)
+                      PopupMenuItem(
+                          value: 'edit', child: FitnessText('Edit workout')),
+                    if (canRest)
+                      PopupMenuItem(
+                          value: 'rest', child: FitnessText('Rest today')),
+                  ],
+                ),
+            ]),
+            const SizedBox(height: 16),
+            Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+              Expanded(
+                  child: FitnessText(
+                      rest ? 'Rest & recharge' : planWorkoutTitle(day),
+                      style: const TextStyle(
+                          fontSize: 29,
+                          height: 1.2,
+                          letterSpacing: -1,
+                          fontWeight: FontWeight.w500))),
+              const SizedBox(width: 14),
+              Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF303030),
+                      borderRadius: BorderRadius.circular(17)),
+                  child: Icon(
+                      rest
+                          ? CupertinoIcons.moon
+                          : Icons.fitness_center_outlined,
+                      color: Colors.white,
+                      size: 23)),
+            ]),
+            if (rest) ...[
+              const SizedBox(height: 12),
+              const FitnessText(
+                  'Room to recover. Your next session is on the calendar.',
+                  style: TextStyle(
+                      fontSize: 12, color: FitnessTheme.muted, height: 1.5)),
+            ] else ...[
+              const SizedBox(height: 22),
+              Row(children: [
+                Expanded(
+                    child: _workoutStat('${exercises.length}', 'Exercises')),
+                if (minutes > 0)
+                  Expanded(child: _workoutStat('$minutes', 'Minutes')),
+                Expanded(child: _workoutStat('$sets', 'Sets')),
+              ]),
+              if (canStart || canEdit) ...[
+                const SizedBox(height: 24),
+                LiquidChromeButton(
+                    key: const ValueKey('onboarding-first-workout-action'),
+                    solid: true,
+                    pill: true,
+                    showArrow: true,
+                    isLoading: _startingFirst,
+                    title: canStart
+                        ? (live.started ? 'Resume workout' : 'Start workout')
+                        : 'Edit workout',
+                    onPressed: _startingFirst
+                        ? null
+                        : canStart
+                            ? () => _startFirstWorkout(date)
+                            : () => _editDay(date)),
+              ],
+            ],
+          ])),
+      if (_errors.contains(date))
+        TextButton.icon(
+            onPressed: _loadSelected,
+            icon: const Icon(CupertinoIcons.refresh, size: 15),
+            label: const FitnessText('Could not sync. Tap to retry.',
+                style: TextStyle(fontSize: 12))),
+      if (!rest && exercises.isNotEmpty) ...[
+        const SizedBox(height: 24),
+        Row(children: [
+          const Expanded(
+              child: FitnessText('Your exercises',
+                  style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -.3))),
+          FitnessText('Tap for details',
+              style: const TextStyle(fontSize: 10, color: FitnessTheme.muted)),
+        ]),
+        const SizedBox(height: 14),
         WorkoutWarmup(warmup: (day['warmup'] as Map?)?.cast<String, dynamic>()),
-        for (var index = 0; index < exercises.length; index++)
-          SlideTransition(
-            key: ValueKey('plan-card-reveal-$index'),
-            position:
-                Tween<Offset>(begin: const Offset(0, .035), end: Offset.zero)
-                    .chain(CurveTween(
-                        curve: Interval((index.clamp(0, 3)) * .08, 1,
-                            curve: DSMotion.snappy)))
-                    .animate(_reveal),
-            child:
-                _exercise(exercises[index], index + 1, day['date'] as String),
-          ),
+        for (var i = 0; i < exercises.length; i++)
+          _exercise(exercises[i], i + 1, date),
       ],
     ]);
   }
 
-  Widget _exercise(Map exercise, int number, String date) {
-    final targets =
-        (exercise['setPrescriptions'] as List? ?? []).whereType<Map>().toList();
-    final unit = exercise['weightUnit'] == 'per_hand'
-        ? ' per hand'
-        : exercise['weightUnit'] == 'total_load'
-            ? ' total'
-            : '';
-    final reps = exercise['targetReps'] ??
-        (exercise['repsMin'] == exercise['repsMax']
-            ? exercise['repsMax']
-            : '${exercise['repsMin']}–${exercise['repsMax']}');
-    String load(num? weight) => exercise['weightBasis'] == 'bodyweight'
-        ? 'Bodyweight'
-        : weight == null
-            ? 'Choose starting load'
-            : '$weight kg$unit';
-    return Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: FitnessCard(
-            padding: EdgeInsets.zero,
-            child: Material(
-                type: MaterialType.transparency,
-                child: Theme(
-                    data: Theme.of(context)
-                        .copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      key: PageStorageKey('plan-exercise-$date-$number'),
-                      tilePadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 3),
-                      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                      leading: Text(number.toString().padLeft(2, '0'),
-                          style: const TextStyle(
-                              fontSize: 12, color: FitnessTheme.muted)),
-                      title: FitnessText(
-                          '${exercise['displayName'] ?? exercise['name']}',
-                          style: const TextStyle(
-                              fontSize: 15,
-                              height: 1.35,
-                              fontWeight: FontWeight.w500)),
-                      subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 5),
-                          child: FitnessText('{sets} sets · {reps} reps',
-                              values: {
-                                'sets': targets.isEmpty
-                                    ? exercise['sets'] ?? 0
-                                    : targets.length,
-                                'reps': reps ?? ''
-                              },
-                              style: const TextStyle(
-                                  fontSize: 12, color: FitnessTheme.muted))),
-                      children: [
-                        Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Divider(
-                                  height: 1, color: FitnessTheme.line),
-                              const SizedBox(height: 12),
-                              if (targets.isEmpty)
-                                FitnessText(load(exercise['weightKg'] as num?),
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        color: FitnessTheme.silver)),
-                              for (final set in targets)
-                                Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 6),
-                                    child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          FitnessText('Set ${set['setNumber']}',
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: FitnessTheme.muted)),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                              child: FitnessText(
-                                                  '${set['repsMin'] == set['repsMax'] ? set['repsMax'] : '${set['repsMin']}–${set['repsMax']}'} reps · ${load(set['weightKg'] as num?)}',
-                                                  style: const TextStyle(
-                                                      fontSize: 13,
-                                                      color: FitnessTheme
-                                                          .silver))),
-                                        ])),
-                              if (exercise['weightBasis'] == 'estimated_start')
-                                const FitnessText(
-                                    'Starting estimate · reduce the load if needed',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: FitnessTheme.muted)),
-                              const SizedBox(height: 10),
-                              FitnessText(
-                                  '${exercise['targetRpe'] == null ? '' : 'Effort ${exercise['targetRpe']}/10 · '}${exercise['restSeconds']} s rest',
-                                  style: const TextStyle(
-                                      fontSize: 12, color: FitnessTheme.muted)),
-                              if (exercise['reason'] is String &&
-                                  (exercise['reason'] as String)
-                                      .isNotEmpty) ...[
-                                const SizedBox(height: 16),
-                                const FitnessText('Why this exercise',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 6),
-                                FitnessText(exercise['reason'] as String,
-                                    style: const TextStyle(
-                                        fontSize: 12,
-                                        color: FitnessTheme.muted,
-                                        height: 1.5)),
-                              ],
-                            ])
-                      ],
-                    )))));
-  }
+  Widget _workoutStat(String value, String label) => Container(
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+      margin: const EdgeInsets.only(right: 6),
+      decoration: BoxDecoration(
+          color: const Color(0xFF141414),
+          borderRadius: BorderRadius.circular(14)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value,
+            style: const TextStyle(
+                fontSize: 24,
+                height: 1.1,
+                letterSpacing: -.7,
+                fontWeight: FontWeight.w500)),
+        const SizedBox(height: 7),
+        FitnessText(label,
+            style: const TextStyle(fontSize: 10, color: FitnessTheme.muted)),
+      ]));
+
+  Widget _exercise(Map exercise, int number, String date) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ExerciseRecommendationCard(
+          key: ValueKey('plan-exercise-$date-$number'),
+          number: number,
+          exercise: {...Map<String, dynamic>.from(exercise), 'date': date}));
 
   Widget _food(String date) {
+    final nutrition = widget.payload["nutrition"] as Map?;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      WeeklyNutritionCard(targets: nutrition?["targets"] as Map?),
+      const SizedBox(height: 22),
+      _meals(date),
+    ]);
+  }
+
+  Widget _meals(String date) {
     if (widget.active && date.compareTo(CacheScope.todayKey()) >= 0) {
       return PlannedMealsSection(
-          key: ValueKey('weekly-food-$date'), date: DateTime.parse(date));
+          showIntakeHint:
+              (widget.payload["nutrition"] as Map?)?["targets"] is Map,
+          key: ValueKey('weekly-food-$date'),
+          date: DateTime.parse(date));
     }
     final nutrition = widget.payload['nutrition'] as Map?;
     final foodDay = (nutrition?['days'] as List? ?? [])
@@ -820,7 +709,7 @@ class _WeeklyPlanScheduleState extends State<WeeklyPlanSchedule>
         FitnessCard(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const FitnessText('Your training and nutrition',
+          const FitnessText('Nutrition guidance',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           FitnessText('${guidance['activity']}',

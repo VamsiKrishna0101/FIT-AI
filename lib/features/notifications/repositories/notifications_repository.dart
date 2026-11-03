@@ -51,6 +51,14 @@ class NotificationsRepository {
     await request('DELETE', 'device/$installation', null, _ownerToken);
   }
 
+  Future<void> snooze(String id, String installation) async {
+    await request('POST', '$id/snooze', {'installationId': installation});
+  }
+
+  Future<void> opened(String id) async {
+    await request('POST', '$id/opened');
+  }
+
   Future<void> test(String installation) async {
     await request(
         'POST', 'test', {'installationId': installation}, _ownerToken);

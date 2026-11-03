@@ -13,6 +13,15 @@ List<ProgressJson> progressRows(dynamic value) => value is List
 
 double? progressNumber(dynamic value) => value is num ? value.toDouble() : null;
 
+String progressSetValue(BuildContext context, Map set) {
+  final weight = progressNumber(set['weight']);
+  final reps = progressNumber(set['reps']);
+  final repLabel = progressValue(context, reps, unit: 'reps', digits: 0);
+  return weight != null && weight.isFinite && weight > 0
+      ? '${progressValue(context, weight, unit: 'kg')} × $repLabel'
+      : repLabel;
+}
+
 String progressMuscleLabel(BuildContext context, ProgressJson muscle) {
   const labels = {
     'chest': 'Chest',
@@ -83,6 +92,19 @@ class ProgressOverview {
   List<ProgressJson> get exercises => progressRows(json['exercises']);
   List<ProgressJson> get muscles => progressRows(json['muscles']);
   List<ProgressJson> get sessions => progressRows(json['recentSessions']);
+  List<ProgressJson> get personalBests => progressRows(json['personalBests']);
+  int? get dayCount {
+    final range = json['range'] as Map?;
+    final start = DateTime.tryParse(range?['start']?.toString() ?? '');
+    final end = DateTime.tryParse(range?['end']?.toString() ?? '');
+    if (start == null || end == null) return null;
+    final days = DateTime.utc(end.year, end.month, end.day)
+            .difference(DateTime.utc(start.year, start.month, start.day))
+            .inDays +
+        1;
+    return days > 0 ? days : null;
+  }
+
   ProgressJson get body =>
       Map<String, dynamic>.from(json['body'] as Map? ?? {});
   ProgressJson get wellness =>

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/ds_motion.dart';
@@ -7,9 +8,13 @@ import '../../../../core/localization/fitness_text.dart';
 /// A star-filled planning orb; its percentage is always server-confirmed.
 class PlanParticleOrb extends StatefulWidget {
   final int percent;
+  final VoidCallback? onComplete;
   final bool animating;
   const PlanParticleOrb(
-      {super.key, required this.percent, this.animating = true});
+      {super.key,
+      required this.percent,
+      this.animating = true,
+      this.onComplete});
   @override
   State<PlanParticleOrb> createState() => _PlanParticleOrbState();
 }
@@ -24,7 +29,7 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
       vsync: this,
       duration: DSMotion.chart,
       upperBound: 100,
-      value: widget.percent.clamp(0, 100).toDouble(),
+      value: 0,
       animationBehavior: AnimationBehavior.preserve);
   late final _stars = List.generate(160, (index) {
     final random = math.Random(1042 + index * 31);
@@ -40,17 +45,52 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _updateMotion();
+    _advanceProgress();
   }
 
   @override
   void didUpdateWidget(PlanParticleOrb oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateMotion();
-    if (oldWidget.percent != widget.percent) {
-      _progress.animateTo(widget.percent.clamp(0, 100).toDouble(),
-          duration: DSMotion.reduced(context) ? DSMotion.fast : DSMotion.chart,
-          curve: DSMotion.effects);
+    _advanceProgress();
+  }
+
+  Timer? _counter;
+  bool _notifiedComplete = false;
+  void _advanceProgress() {
+    _counter?.cancel();
+    final target =
+        math.max(_progress.value, widget.percent.clamp(0, 100).toDouble());
+    void complete() {
+      if (target == 100 && !_notifiedComplete) {
+        _notifiedComplete = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onComplete?.call();
+        });
+      }
     }
+
+    if (DSMotion.reduced(context)) {
+      _progress.value = target;
+      complete();
+      return;
+    }
+    if (!widget.animating || !TickerMode.valuesOf(context).enabled) return;
+    if (_progress.value >= target) {
+      complete();
+      return;
+    }
+    _counter = Timer.periodic(const Duration(milliseconds: 24), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      _progress.value = math.min(target, _progress.value + 1);
+      if (_progress.value >= target) {
+        timer.cancel();
+        complete();
+      }
+    });
   }
 
   void _updateMotion() {
@@ -65,6 +105,7 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
   @override
   void dispose() {
     _motion.dispose();
+    _counter?.cancel();
     _progress.dispose();
     super.dispose();
   }
@@ -135,8 +176,8 @@ class _ProgressPainter extends CustomPainter {
     paint.shader = const RadialGradient(colors: [
       Color(0x00000000),
       Color(0x00000000),
-      Color(0x0FE2E2E2),
-      Color(0x00E2E2E2)
+      Color(0x14FFFFFF),
+      Color(0x00FFFFFF)
     ], stops: [
       0,
       .5,
@@ -155,7 +196,7 @@ class _ProgressPainter extends CustomPainter {
       final opacity = (star.brightness * shimmer).clamp(0.0, 1.0);
       final dot = star.radius * size.shortestSide / 220;
       if (star.sparkle) {
-        paint.color = DSColors.silver.withValues(alpha: opacity * .10);
+        paint.color = Colors.white.withValues(alpha: opacity * .10);
         canvas.drawCircle(point, dot * 4.5, paint);
         canvas.save();
         canvas.translate(point.dx, point.dy);
@@ -172,7 +213,7 @@ class _ProgressPainter extends CustomPainter {
         canvas.drawPath(path, paint);
         canvas.restore();
       } else {
-        paint.color = DSColors.silver.withValues(alpha: opacity * .8);
+        paint.color = Colors.white.withValues(alpha: opacity * .8);
         canvas.drawCircle(point, dot, paint);
       }
     }
@@ -180,12 +221,12 @@ class _ProgressPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = .8
       ..strokeCap = StrokeCap.round
-      ..color = DSColors.silver.withValues(alpha: .12);
+      ..color = Colors.white.withValues(alpha: .12);
     final bounds = Rect.fromCircle(center: center, radius: radius * 1.035);
     canvas.drawCircle(center, radius * 1.035, paint);
     paint
       ..strokeWidth = 1.2
-      ..color = DSColors.silver.withValues(alpha: .62);
+      ..color = Colors.white.withValues(alpha: .62);
     canvas.drawArc(
         bounds, -math.pi / 2, math.pi * 2 * progress.value / 100, false, paint);
     // A separate orbit signals ongoing work without inventing progress.

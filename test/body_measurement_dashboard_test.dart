@@ -499,13 +499,22 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('body-calendar-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Multiple days'));
-    await tester.tap(find.byTooltip('Previous month'));
     await tester.pumpAndSettle();
     final now = DateTime.now();
     final dates = [
       DateTime(now.year, now.month - 1, 10),
       DateTime(now.year, now.month - 1, 12)
     ];
+    tester
+        .widget<DropdownButton<int>>(
+            find.byKey(const ValueKey('body-calendar-year-picker')))
+        .onChanged!(dates.first.year);
+    await tester.pumpAndSettle();
+    tester
+        .widget<DropdownButton<int>>(
+            find.byKey(const ValueKey('body-calendar-month-picker')))
+        .onChanged!(dates.first.month);
+    await tester.pumpAndSettle();
     for (final date in dates) {
       await tester.tap(find.byKey(ValueKey(
           'body-calendar-${date.toIso8601String().substring(0, 10)}')));

@@ -1,3 +1,7 @@
+import 'plan_checkout_copy.dart';
+import 'notification_copy.dart';
+import 'onboarding_conversation_copy.dart';
+import 'welcome_presentation_copy.dart';
 import 'body_measurements_copy.dart';
 import 'package:flutter/widgets.dart';
 import 'fitness_copy_data.dart';
@@ -32,7 +36,11 @@ final _displayTerms = {
 String fitnessText(BuildContext context, String text,
     {Map<String, Object> values = const {}}) {
   final locale = Localizations.localeOf(context).languageCode;
-  var translated = bodyMeasurementsTranslation(locale, text) ??
+  var translated = notificationTranslation(locale, text) ??
+      planCheckoutTranslation(locale, text) ??
+      onboardingConversationTranslation(locale, text) ??
+      welcomePresentationTranslation(locale, text) ??
+      bodyMeasurementsTranslation(locale, text) ??
       progressPresentationTranslation(locale, text) ??
       trainingHubTranslation(locale, text) ??
       nutritionPresentationTranslation(locale, text) ??

@@ -6,10 +6,20 @@ import '../../../../core/localization/fitness_text.dart';
 import '../../../../core/theme/fitness_theme.dart';
 import '../../models/body_map_models.dart';
 
+String bodyDateRangeLabel(BuildContext context, DateTime start, DateTime end) {
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  final showYear = start.year != DateTime.now().year || end.year != start.year;
+  final format = showYear ? DateFormat.yMMMd(locale) : DateFormat.MMMd(locale);
+  return '${format.format(start)} – ${format.format(end)}';
+}
+
 String bodySelectionLabel(BuildContext context, BodyDateSelection selection) {
   final locale = Localizations.localeOf(context).toLanguageTag();
-  String date(DateTime d) => DateFormat.MMMd(locale).format(d);
   final today = DateUtils.dateOnly(DateTime.now());
+  String date(DateTime d) => (d.year == today.year
+          ? DateFormat.MMMd(locale)
+          : DateFormat.yMMMd(locale))
+      .format(d);
   if (selection.mode == BodyDateMode.all) {
     return fitnessText(context, 'All time');
   }
@@ -22,7 +32,7 @@ String bodySelectionLabel(BuildContext context, BodyDateSelection selection) {
     if (selection.start == bodyMapWeek(today) && selection.end == today) {
       return fitnessText(context, 'This week');
     }
-    return '${date(selection.start!)} – ${date(selection.end)}';
+    return bodyDateRangeLabel(context, selection.start!, selection.end);
   }
   return selection.end == today
       ? fitnessText(context, 'Today')
@@ -31,7 +41,15 @@ String bodySelectionLabel(BuildContext context, BodyDateSelection selection) {
 
 class BodyCalendar extends StatefulWidget {
   final BodyDateSelection selection;
-  const BodyCalendar({super.key, required this.selection});
+  final bool planned;
+  final DateTime? today;
+  final String? title;
+  const BodyCalendar(
+      {super.key,
+      required this.selection,
+      this.planned = false,
+      this.today,
+      this.title});
   @override
   State<BodyCalendar> createState() => _BodyCalendarState();
 }
@@ -41,7 +59,9 @@ class _BodyCalendarState extends State<BodyCalendar> {
   late BodyDateMode _mode;
   late Set<DateTime> _days;
   DateTime? _start, _end;
-  DateTime get _today => DateUtils.dateOnly(DateTime.now());
+  DateTime get _today => DateUtils.dateOnly(widget.today ?? DateTime.now());
+  DateTime get _lastMonth =>
+      widget.planned ? DateTime(2100, 12) : DateTime(_today.year, _today.month);
   @override
   void initState() {
     super.initState();
@@ -52,7 +72,18 @@ class _BodyCalendarState extends State<BodyCalendar> {
     if (_days.isEmpty && s.mode == BodyDateMode.day) _days.add(s.end);
     _start = s.start;
     _end = s.end;
+    if (widget.planned) {
+      _mode = BodyDateMode.range;
+      _start = bodyMapWeek(s.start ?? s.end);
+      _end = DateTime(_start!.year, _start!.month, _start!.day + 6);
+      _month = DateTime(_start!.year, _start!.month);
+    }
   }
+
+  void _changeMonth(int year, int month) => setState(() {
+        final requested = DateTime(year, month);
+        _month = requested.isAfter(_lastMonth) ? _lastMonth : requested;
+      });
 
   BodyDateSelection? get _selection {
     if (_mode == BodyDateMode.all) {
@@ -70,6 +101,11 @@ class _BodyCalendarState extends State<BodyCalendar> {
   }
 
   void _tap(DateTime date) => setState(() {
+        if (widget.planned) {
+          _start = bodyMapWeek(date);
+          _end = DateTime(_start!.year, _start!.month, _start!.day + 6);
+          return;
+        }
         if (_mode == BodyDateMode.all) _mode = BodyDateMode.day;
         if (_mode == BodyDateMode.day) {
           _days = {date};
@@ -102,158 +138,255 @@ class _BodyCalendarState extends State<BodyCalendar> {
     return FitnessTheme(
         child: SafeArea(
             top: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(children: [
-                      const Expanded(
-                          child: FitnessText('Training dates',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -.4))),
-                      IconButton(
-                          tooltip: fitnessText(context, 'Close'),
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(CupertinoIcons.xmark, size: 17)),
-                    ]),
-                    Wrap(spacing: 8, runSpacing: 4, children: [
-                      for (final preset in ['Today', 'This week', 'All time'])
-                        ActionChip(
-                            backgroundColor: const Color(0xFF2A2A2A),
-                            side: BorderSide.none,
-                            label: FitnessText(preset,
-                                style: const TextStyle(fontSize: 12)),
-                            onPressed: () => setState(() {
-                                  _month = DateTime(_today.year, _today.month);
-                                  if (preset == 'Today') {
-                                    _mode = BodyDateMode.day;
-                                    _days = {_today};
-                                  }
-                                  if (preset == 'This week') {
-                                    _mode = BodyDateMode.range;
-                                    _start = bodyMapWeek(_today);
-                                    _end = _today;
-                                  }
-                                  if (preset == 'All time') {
-                                    _mode = BodyDateMode.all;
-                                  }
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Flexible(
+                  fit: FlexFit.loose,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(children: [
+                            Expanded(
+                                child: FitnessText(
+                                    widget.title ??
+                                        (widget.planned
+                                            ? 'Choose a week'
+                                            : 'Training dates'),
+                                    style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -.4))),
+                            IconButton(
+                                tooltip: fitnessText(context, 'Close'),
+                                onPressed: () => Navigator.pop(context),
+                                icon:
+                                    const Icon(CupertinoIcons.xmark, size: 17)),
+                          ]),
+                          if (!widget.planned) ...[
+                            Wrap(spacing: 8, runSpacing: 4, children: [
+                              for (final preset in [
+                                'This week',
+                                'Today',
+                                'All time'
+                              ])
+                                ActionChip(
+                                    backgroundColor: const Color(0xFF2A2A2A),
+                                    side: BorderSide.none,
+                                    label: FitnessText(preset,
+                                        style: const TextStyle(fontSize: 12)),
+                                    onPressed: () => setState(() {
+                                          _month = DateTime(
+                                              _today.year, _today.month);
+                                          if (preset == 'Today') {
+                                            _mode = BodyDateMode.day;
+                                            _days = {_today};
+                                          }
+                                          if (preset == 'This week') {
+                                            _mode = BodyDateMode.range;
+                                            _start = bodyMapWeek(_today);
+                                            _end = _today;
+                                          }
+                                          if (preset == 'All time') {
+                                            _mode = BodyDateMode.all;
+                                          }
+                                        })),
+                            ]),
+                            const SizedBox(height: 12),
+                            Wrap(spacing: 8, runSpacing: 4, children: [
+                              for (final pair in [
+                                (BodyDateMode.day, 'Single day'),
+                                (BodyDateMode.days, 'Multiple days'),
+                                (BodyDateMode.range, 'Date range')
+                              ])
+                                ChoiceChip(
+                                    showCheckmark: false,
+                                    selectedColor: const Color(0xFF44484D),
+                                    backgroundColor: const Color(0xFF292B2E),
+                                    side: BorderSide.none,
+                                    label: FitnessText(pair.$2,
+                                        style: const TextStyle(fontSize: 11)),
+                                    selected: _mode == pair.$1,
+                                    onSelected: (_) {
+                                      if (_mode == pair.$1) return;
+                                      setState(() {
+                                        _mode = pair.$1;
+                                        _days = {};
+                                        _start = null;
+                                        _end = null;
+                                      });
+                                    }),
+                            ]),
+                          ],
+                          if (widget.planned)
+                            const Padding(
+                                padding: EdgeInsets.only(top: 4, bottom: 12),
+                                child: FitnessText(
+                                    'Select a day to choose its week.',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: FitnessTheme.muted))),
+                          const SizedBox(height: 8),
+                          _BodyCalendarMonthPicker(
+                              month: _month,
+                              lastMonth: _lastMonth,
+                              onChanged: _changeMonth),
+                          const SizedBox(height: 18),
+                          Row(children: [
+                            for (var i = 0; i < 7; i++)
+                              Expanded(
+                                  child: Text(
+                                      DateFormat.E(locale)
+                                          .format(DateTime(2026, 10, 26 + i)),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          color: FitnessTheme.muted)))
+                          ]),
+                          const SizedBox(height: 6),
+                          for (var row = 0; row < rows; row++)
+                            Row(children: [
+                              for (var col = 0; col < 7; col++)
+                                Expanded(child: Builder(builder: (context) {
+                                  final day = DateTime(_month.year,
+                                      _month.month, row * 7 + col - offset + 1);
+                                  final selected = _selected(day);
+                                  final available =
+                                      !day.isBefore(DateTime(2000)) &&
+                                          (widget.planned ||
+                                              !day.isAfter(_today)) &&
+                                          day.year <= _lastMonth.year;
+                                  return Semantics(
+                                    selected: selected,
+                                    label: DateFormat.yMMMMEEEEd(locale)
+                                        .format(day),
+                                    child: TextButton(
+                                        key: ValueKey(
+                                            'body-calendar-${day.toIso8601String().substring(0, 10)}'),
+                                        onPressed:
+                                            available ? () => _tap(day) : null,
+                                        style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(44, 44),
+                                            backgroundColor: selected
+                                                ? FitnessTheme.silver
+                                                : Colors.transparent,
+                                            foregroundColor: selected
+                                                ? Colors.black
+                                                : day.month == _month.month
+                                                    ? Colors.white
+                                                    : FitnessTheme.muted,
+                                            shape: const CircleBorder()),
+                                        child: Text('${day.day}',
+                                            style:
+                                                const TextStyle(fontSize: 13))),
+                                  );
                                 })),
-                    ]),
-                    const SizedBox(height: 12),
-                    Wrap(spacing: 8, runSpacing: 4, children: [
-                      for (final pair in [
-                        (BodyDateMode.day, 'Single day'),
-                        (BodyDateMode.days, 'Multiple days'),
-                        (BodyDateMode.range, 'Date range')
-                      ])
-                        ChoiceChip(
-                            showCheckmark: false,
-                            selectedColor: const Color(0xFF44484D),
-                            backgroundColor: const Color(0xFF292B2E),
-                            side: BorderSide.none,
-                            label: FitnessText(pair.$2,
-                                style: const TextStyle(fontSize: 11)),
-                            selected: _mode == pair.$1,
-                            onSelected: (_) => setState(() {
-                                  _mode = pair.$1;
-                                  _days = {};
-                                  _start = null;
-                                  _end = null;
-                                })),
-                    ]),
-                    const SizedBox(height: 8),
-                    Row(children: [
-                      IconButton(
-                          tooltip: fitnessText(context, 'Previous month'),
-                          onPressed: _month.year <= 2000 && _month.month == 1
-                              ? null
-                              : () => setState(() => _month =
-                                  DateTime(_month.year, _month.month - 1)),
-                          icon: const Icon(CupertinoIcons.chevron_left,
-                              size: 17)),
-                      Expanded(
-                          child: Text(DateFormat.yMMMM(locale).format(_month),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w500))),
-                      IconButton(
-                          tooltip: fitnessText(context, 'Next month'),
-                          onPressed: _month.year == _today.year &&
-                                  _month.month == _today.month
-                              ? null
-                              : () => setState(() => _month =
-                                  DateTime(_month.year, _month.month + 1)),
-                          icon: const Icon(CupertinoIcons.chevron_right,
-                              size: 17)),
-                    ]),
-                    Row(children: [
-                      for (var i = 0; i < 7; i++)
-                        Expanded(
-                            child: Text(
-                                DateFormat.E(locale)
-                                    .format(DateTime(2026, 10, 26 + i)),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    fontSize: 10, color: FitnessTheme.muted)))
-                    ]),
-                    const SizedBox(height: 6),
-                    for (var row = 0; row < rows; row++)
-                      Row(children: [
-                        for (var col = 0; col < 7; col++)
-                          Expanded(child: Builder(builder: (context) {
-                            final number = row * 7 + col - offset + 1;
-                            if (number < 1 || number > count) {
-                              return const SizedBox(height: 44);
-                            }
-                            final day =
-                                DateTime(_month.year, _month.month, number);
-                            final selected = _selected(day);
-                            return Semantics(
-                              selected: selected,
-                              label: DateFormat.yMMMMEEEEd(locale).format(day),
-                              child: TextButton(
-                                  key: ValueKey(
-                                      'body-calendar-${day.toIso8601String().substring(0, 10)}'),
-                                  onPressed: day.isAfter(_today)
-                                      ? null
-                                      : () => _tap(day),
-                                  style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: const Size(44, 44),
-                                      backgroundColor: selected
-                                          ? FitnessTheme.silver
-                                          : Colors.transparent,
-                                      foregroundColor: selected
-                                          ? Colors.black
-                                          : Colors.white,
-                                      shape: const CircleBorder()),
-                                  child: Text('$number',
-                                      style: const TextStyle(fontSize: 13))),
-                            );
-                          })),
-                      ]),
-                    const SizedBox(height: 12),
-                    if (_selection case final selection?)
-                      Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(bodySelectionLabel(context, selection),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 12, color: FitnessTheme.muted))),
-                    FilledButton(
-                        onPressed: _selection == null
-                            ? null
-                            : () => Navigator.pop(context, _selection),
-                        style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: FitnessTheme.silver,
-                            foregroundColor: Colors.black),
-                        child: const FitnessText('Apply')),
-                  ]),
-            )));
+                            ]),
+                          const SizedBox(height: 12),
+                          if (_selection case final selection?)
+                            Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Text(
+                                    widget.planned
+                                        ? bodyDateRangeLabel(context,
+                                            selection.start!, selection.end)
+                                        : bodySelectionLabel(
+                                            context, selection),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: FitnessTheme.muted))),
+                        ]),
+                  )),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: FilledButton(
+                    key: const ValueKey('body-calendar-apply'),
+                    onPressed: _selection == null
+                        ? null
+                        : () => Navigator.pop(context, _selection),
+                    style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: FitnessTheme.silver,
+                        foregroundColor: Colors.black),
+                    child: const FitnessText('Apply')),
+              ),
+            ])));
+  }
+}
+
+class _BodyCalendarMonthPicker extends StatelessWidget {
+  final DateTime month, lastMonth;
+  final void Function(int year, int month) onChanged;
+  const _BodyCalendarMonthPicker(
+      {required this.month, required this.lastMonth, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    Widget picker(String label, String key, int value,
+            List<DropdownMenuItem<int>> items, ValueChanged<int> onSelected) =>
+        InputDecorator(
+            decoration: InputDecoration(
+                labelText: fitnessText(context, label),
+                labelStyle: const TextStyle(color: FitnessTheme.muted),
+                fillColor: const Color(0xFF24272B),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4)),
+            child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                    key: ValueKey(key),
+                    value: value,
+                    isExpanded: true,
+                    menuMaxHeight: 320,
+                    dropdownColor: const Color(0xFF24272B),
+                    borderRadius: BorderRadius.circular(14),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white),
+                    items: items,
+                    onChanged: (value) {
+                      if (value != null) onSelected(value);
+                    })));
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(
+          flex: 3,
+          child: picker(
+              'Month',
+              'body-calendar-month-picker',
+              month.month,
+              [
+                for (var number = 1; number <= 12; number++)
+                  DropdownMenuItem(
+                      value: number,
+                      enabled: !DateTime(month.year, number).isAfter(lastMonth),
+                      child: Text(
+                          DateFormat.MMMM(locale)
+                              .format(DateTime(2000, number)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis)),
+              ],
+              (number) => onChanged(month.year, number))),
+      const SizedBox(width: 12),
+      Expanded(
+          flex: 2,
+          child: picker(
+              'Year',
+              'body-calendar-year-picker',
+              month.year,
+              [
+                for (var year = lastMonth.year;
+                    year >= (month.year < 2000 ? month.year : 2000);
+                    year--)
+                  DropdownMenuItem(
+                      value: year,
+                      child: Text(DateFormat.y(locale).format(DateTime(year)),
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
+              ],
+              (year) => onChanged(year, month.month))),
+    ]);
   }
 }

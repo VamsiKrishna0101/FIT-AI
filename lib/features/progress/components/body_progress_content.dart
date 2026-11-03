@@ -1,4 +1,5 @@
 import '../../../core/theme/ds_colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
@@ -65,6 +66,9 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
                   'Add a reading to start tracking body changes.'),
               FilledButton.icon(
                   onPressed: widget.onAdd,
+                  style: FilledButton.styleFrom(
+                      backgroundColor: DSColors.silver,
+                      foregroundColor: DSColors.bg),
                   icon: const Icon(Icons.add, size: 18),
                   label: Text(fitnessText(context, 'Add a reading'))),
             ])),
@@ -85,8 +89,8 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
                   onTap: () => widget.onRecord(row['id'] as String),
                   title: Text(
                       progressDate(row['date'] as String?, locale, year: true)),
-                  trailing:
-                      const Icon(Icons.chevron_right, color: progressMuted)),
+                  trailing: const Icon(CupertinoIcons.chevron_right,
+                      size: 14, color: DSColors.muted)),
           ])),
         ],
       ]);
@@ -172,7 +176,10 @@ class _BodyProgressContentState extends State<BodyProgressContent> {
       FilledButton(
           onPressed: widget.onAdd,
           style: FilledButton.styleFrom(
-              backgroundColor: progressSilver, foregroundColor: DSColors.bg),
+              backgroundColor: progressSilver,
+              foregroundColor: DSColors.bg,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12))),
           child: Text(fitnessText(context, 'Add a reading'))),
       const ProgressHeading('Measurements'),
       if (metrics.every((row) => row['latest'] == null))

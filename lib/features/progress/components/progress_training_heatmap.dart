@@ -23,7 +23,8 @@ class ProgressTrainingHeatmap extends StatelessWidget {
     final counts = <DateTime, int>{};
     for (final session in sessions) {
       final date = DateTime.tryParse(session['date']?.toString() ?? '');
-      if (date != null) counts.update(_day(date), (n) => n + 1, ifAbsent: () => 1);
+      if (date != null)
+        counts.update(_day(date), (n) => n + 1, ifAbsent: () => 1);
     }
     if (counts.isEmpty) return const SizedBox.shrink();
     final latest = counts.keys.reduce((a, b) => a.isAfter(b) ? a : b);

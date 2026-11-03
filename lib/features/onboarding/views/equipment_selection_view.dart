@@ -1,9 +1,9 @@
 import '../viewmodels/onboarding_controller.dart';
-import '../../../core/components/content_transition.dart';
+import '../../../core/localization/fitness_copy.dart';
+import '../../../core/localization/app_language.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/fitness_theme.dart';
@@ -17,12 +17,16 @@ import 'lifestyle_nutrition_limitations_view.dart';
 class EquipmentSelectionView extends StatefulWidget {
   final VoidCallback? onContinue;
   final bool editProfile;
+  final bool coaching;
+  final String? previousAnswer;
   final EquipmentRepository? repository;
   final OnboardingController? controller;
   const EquipmentSelectionView(
       {super.key,
       this.onContinue,
       this.editProfile = false,
+      this.coaching = false,
+      this.previousAnswer,
       this.repository,
       this.controller});
   @override
@@ -31,8 +35,30 @@ class EquipmentSelectionView extends StatefulWidget {
 
 class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
   late final EquipmentViewModel _viewModel;
-  EquipmentGroup _group = EquipmentGroup.weights;
-  bool _moreMachinesExpanded = false, _submitting = false;
+  final _search = TextEditingController();
+  final _scroll = ScrollController();
+  String _query = '';
+  bool _submitting = false;
+  static const _sections = <String, List<String>>{
+    'Free weights': ['dumbbells', 'kettlebells', 'barbell'],
+    'Benches & racks': ['adjustable_bench', 'squat_rack'],
+    'Machines & cables': [
+      'cable_station',
+      'smith_machine',
+      'leg_press',
+      'hack_squat',
+      'chest_press',
+      'shoulder_press',
+      'leg_extension',
+      'leg_curl',
+      'lat_pulldown',
+      'seated_row',
+      'pec_deck',
+      'rear_delt',
+      'assisted_pullup_dip'
+    ],
+    'Bands & bodyweight': ['resistance_bands', 'pullup_bar', 'dip_bars'],
+  };
   String? _saveError;
   @override
   void initState() {
@@ -52,6 +78,8 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
   void dispose() {
     _viewModel.removeListener(_rebuild);
     _viewModel.dispose();
+    _search.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -94,223 +122,227 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
     _viewModel.toggleEquipment(id);
   }
 
-  Widget _grid(List<EquipmentItem> items) => Column(children: [
-        for (final item in items)
-          Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _EquipmentCard(
-                  key: ValueKey(item.id),
-                  item: item,
-                  title:
-                      EquipmentCopy.item(_viewModel.selectedLanguage, item.id),
-                  selected: _viewModel.selectedIds.contains(item.id),
-                  onTap: _viewModel.isReady && !_submitting
-                      ? () => _toggle(item.id)
-                      : null)),
-      ]);
+  void _searchChanged(String query) {
+    setState(() => _query = query.trim().toLowerCase());
+    if (_scroll.hasClients) _scroll.jumpTo(0);
+  }
 
+  bool _matches(EquipmentItem item) =>
+      _query.isEmpty ||
+      EquipmentCopy.item(_viewModel.selectedLanguage, item.id)
+          .toLowerCase()
+          .contains(_query) ||
+      EquipmentCopy.item(AppLanguage.uk, item.id)
+          .toLowerCase()
+          .contains(_query) ||
+      item.id.contains(_query) ||
+      item.id.replaceAll('_', ' ').contains(_query);
+  Widget _row(EquipmentItem item) => _EquipmentRow(
+      key: ValueKey('equipment-${item.id}'),
+      item: item,
+      title: EquipmentCopy.item(_viewModel.selectedLanguage, item.id),
+      selected: _viewModel.selectedIds.contains(item.id),
+      onTap:
+          _viewModel.isReady && !_submitting ? () => _toggle(item.id) : null);
   @override
   Widget build(BuildContext context) {
     final language = _viewModel.selectedLanguage;
     final selected = _viewModel.selectedIds;
-    final noEquipment = selected.contains('bodyweight_only');
-    final primary = EquipmentCatalog.mainItems
-        .where((item) => item.group == _group)
-        .toList();
-    final machineCount = EquipmentCatalog.additionalMachines
-        .where((item) => selected.contains(item.id))
-        .length;
+    final sections = <String, List<EquipmentItem>>{
+      for (final section in _sections.entries)
+        section.key: [
+          for (final id in section.value)
+            if (_matches(EquipmentCatalog.byId[id]!)) EquipmentCatalog.byId[id]!
+        ],
+    };
+    final showBodyweight = _matches(EquipmentCatalog.noEquipment);
+    final hasResults =
+        showBodyweight || sections.values.any((items) => items.isNotEmpty);
     return OnboardingScaffold(
-        step: _viewModel.currentStep,
-        sectionLabel: 'Your equipment',
-        totalSteps: _viewModel.totalSteps,
-        showProgress: !widget.editProfile,
-        title: EquipmentCopy.equipmentTitle(language),
-        subtitle: EquipmentCopy.subtitle(language),
-        actionTitle: widget.editProfile
-            ? EquipmentCopy.saveLabel(language)
-            : language.continueButtonTitle,
-        onBack: _submitting ? null : () => Navigator.of(context).maybePop(),
-        onContinue: _viewModel.isReady && _viewModel.isValid && !_submitting
-            ? _onContinue
-            : null,
-        loading: _submitting,
-        footer: EquipmentCopy.editLater(language),
-        children: [
-          if (_viewModel.loadError != null) ...[
-            FitnessText(_viewModel.loadError!,
-                style: const TextStyle(color: FitnessTheme.muted)),
-            TextButton(
-                onPressed: _viewModel.loadState,
-                child: const FitnessText('Retry')),
-          ] else if (!_viewModel.isReady)
-            const Center(
-                child: CupertinoActivityIndicator(color: FitnessTheme.silver))
-          else ...[
-            if (_viewModel.needsExactSelection) ...[
-              const FitnessText(
-                  'Choose your exact equipment to update your saved setup.',
-                  style: TextStyle(
-                      fontSize: 13, color: FitnessTheme.muted, height: 1.4)),
-              const SizedBox(height: 14),
+      step: _viewModel.currentStep,
+      totalSteps: _viewModel.totalSteps,
+      sectionLabel: 'Your equipment',
+      catalogue: true,
+      scrollController: _scroll,
+      title: 'Review your equipment',
+      subtitle: _viewModel.needsExactSelection
+          ? 'Choose your exact equipment to update your saved setup.'
+          : 'Choose the equipment available to you',
+      actionTitle:
+          widget.editProfile ? EquipmentCopy.saveLabel(language) : 'Done',
+      onBack: _submitting ? null : () => Navigator.of(context).maybePop(),
+      onContinue: _viewModel.isReady && _viewModel.isValid && !_submitting
+          ? _onContinue
+          : null,
+      loading: _submitting,
+      actionMessage: _saveError,
+      footer: _viewModel.isReady
+          ? (_viewModel.isValid
+              ? EquipmentCopy.selectionCount(language,
+                  selected.contains('bodyweight_only') ? 0 : selected.length)
+              : EquipmentCopy.requiredSelectionHint(language))
+          : null,
+      bottomAccessory: TextField(
+          key: const ValueKey('equipment-search'),
+          controller: _search,
+          readOnly: _submitting,
+          onChanged: _searchChanged,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+          style: const TextStyle(fontSize: 14, color: Colors.white),
+          decoration: InputDecoration(
+              hintText: fitnessText(context, 'Search equipment'),
+              prefixIcon: const Icon(Icons.search_rounded,
+                  size: 21, color: Color(0xFFB5B5BC)),
+              suffixIcon: _query.isEmpty
+                  ? null
+                  : IconButton(
+                      key: const ValueKey('equipment-clear-search'),
+                      tooltip:
+                          MaterialLocalizations.of(context).deleteButtonTooltip,
+                      onPressed: _submitting
+                          ? null
+                          : () {
+                              _search.clear();
+                              _searchChanged('');
+                            },
+                      icon: const Icon(Icons.close_rounded, size: 18)),
+              filled: true,
+              fillColor: const Color(0xFF242427),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: BorderSide.none),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: BorderSide.none),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: const BorderSide(color: Color(0xFF797980))))),
+      children: [
+        if (_viewModel.loadError != null)
+          Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(children: [
+                FitnessText(_viewModel.loadError!),
+                TextButton(
+                    onPressed: _viewModel.loadState,
+                    child: const FitnessText('Retry'))
+              ]))
+        else if (!_viewModel.isReady)
+          const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(
+                  child:
+                      CupertinoActivityIndicator(color: FitnessTheme.silver)))
+        else ...[
+          if (showBodyweight) _row(EquipmentCatalog.noEquipment),
+          for (final section in sections.entries)
+            if (section.value.isNotEmpty) ...[
+              Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 26, 24, 16),
+                  child: Semantics(
+                      header: true,
+                      child: FitnessText(section.key,
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              fontStyle: FontStyle.italic,
+                              height: 1.3,
+                              letterSpacing: -.3)))),
+              for (final item in section.value) _row(item),
             ],
-            OnboardingChoice(
-                title: EquipmentCopy.item(language, 'bodyweight_only'),
-                selected: noEquipment,
-                onTap: () => _toggle('bodyweight_only')),
-            const SizedBox(height: 20),
-            Row(children: [
-              Expanded(
-                  child: FitnessText(EquipmentCopy.group(language, _group),
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -.3))),
-              const SizedBox(width: 8),
-              FitnessText(
-                  EquipmentCopy.selectionCount(
-                      language, noEquipment ? 0 : selected.length),
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
-            ]),
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final group in EquipmentGroup.values)
-                _CategoryChip(
-                    title: EquipmentCopy.tab(language, group),
-                    selected: group == _group,
-                    count: selected
-                        .where((id) =>
-                            id != 'bodyweight_only' &&
-                            EquipmentCatalog.byId[id]?.group == group)
-                        .length,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _group = group);
-                    }),
-            ]),
-            const SizedBox(height: 16),
-            ContentTransition(
-                child:
-                    KeyedSubtree(key: ValueKey(_group), child: _grid(primary))),
-            if (_group == EquipmentGroup.machines) ...[
-              const SizedBox(height: 12),
-              Material(
-                  color: FitnessTheme.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () => setState(
-                          () => _moreMachinesExpanded = !_moreMachinesExpanded),
-                      child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(children: [
-                            Expanded(
-                                child: FitnessText(
-                                    EquipmentCopy.moreMachinesLabel(language),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500))),
-                            if (machineCount > 0) ...[
-                              FitnessText('$machineCount',
-                                  style: const TextStyle(
-                                      color: FitnessTheme.silver,
-                                      fontSize: 12)),
-                              const SizedBox(width: 10),
-                            ],
-                            Icon(
-                                _moreMachinesExpanded
-                                    ? CupertinoIcons.chevron_up
-                                    : CupertinoIcons.chevron_down,
-                                size: 14,
-                                color: FitnessTheme.muted),
-                          ])))),
-              ContentResize(
-                  child: _moreMachinesExpanded
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: _grid(EquipmentCatalog.additionalMachines))
-                      : const SizedBox.shrink()),
-            ],
-          ],
-          if (_saveError != null) ...[
-            const SizedBox(height: 14),
-            FitnessText(_saveError!,
-                style:
-                    const TextStyle(color: FitnessTheme.coral, fontSize: 13)),
-          ],
-        ]);
+          if (!hasResults)
+            const Padding(
+                padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FitnessText('No equipment found',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 8),
+                      FitnessText('Try another name.',
+                          style: TextStyle(
+                              fontSize: 14, color: FitnessTheme.muted)),
+                    ])),
+        ],
+      ],
+    );
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  final String title;
-  final bool selected;
-  final int count;
-  final VoidCallback onTap;
-  const _CategoryChip(
-      {required this.title,
-      required this.selected,
-      required this.count,
-      required this.onTap});
-  @override
-  Widget build(BuildContext context) => Semantics(
-      button: true,
-      selected: selected,
-      child: Material(
-          color: selected ? const Color(0xFF333333) : FitnessTheme.surface,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-              side: BorderSide(
-                  color:
-                      selected ? const Color(0xFF767676) : Colors.transparent,
-                  width: .7)),
-          child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(30),
-              child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                  child: FitnessText(count == 0 ? title : '$title · $count',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: selected ? Colors.white : FitnessTheme.muted,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w400))))));
-}
-
-class _EquipmentCard extends StatelessWidget {
+class _EquipmentRow extends StatelessWidget {
   final EquipmentItem item;
   final String title;
   final bool selected;
   final VoidCallback? onTap;
-  const _EquipmentCard(
+  const _EquipmentRow(
       {super.key,
       required this.item,
       required this.title,
       required this.selected,
       required this.onTap});
   @override
-  Widget build(BuildContext context) {
-    return KeyedSubtree(
-        key: ValueKey('equipment-${item.id}'),
-        child: IgnorePointer(
-            ignoring: onTap == null,
-            child: Opacity(
-                opacity: onTap == null ? .5 : 1,
-                child: OnboardingChoice(
-                    leading: item.assetPath == null
-                        ? null
-                        : SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Image.asset(item.assetPath!,
-                                fit: BoxFit.contain,
-                                cacheWidth: 144,
-                                excludeFromSemantics: true)),
-                    title: title,
-                    selected: selected,
-                    onTap: onTap ?? () {}))));
-  }
+  Widget build(BuildContext context) => Semantics(
+        container: true,
+        button: true,
+        checked: selected,
+        enabled: onTap != null,
+        label: title,
+        onTap: onTap,
+        child: ExcludeSemantics(
+            child: Material(
+          color: const Color(0xFF171719),
+          child: InkWell(
+              onTap: onTap,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 94),
+                decoration: const BoxDecoration(
+                    border: Border(
+                        bottom:
+                            BorderSide(color: Color(0xFF303034), width: .6))),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                child: Row(children: [
+                  Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF242427),
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.all(6),
+                      child: item.assetPath == null
+                          ? Icon(item.fallbackIcon,
+                              size: 29, color: FitnessTheme.silver)
+                          : Image.asset(item.assetPath!,
+                              fit: BoxFit.contain,
+                              cacheWidth: 192,
+                              excludeFromSemantics: true)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: FitnessText(title,
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                              color: Color(0xFFF3F3F5)))),
+                  const SizedBox(width: 12),
+                  IgnorePointer(
+                      child: Checkbox(
+                          value: selected,
+                          onChanged: onTap == null ? null : (_) => onTap!(),
+                          activeColor: FitnessTheme.silver,
+                          checkColor: Colors.black,
+                          side: const BorderSide(
+                              color: Color(0xFF818187), width: 1.2),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4)),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap)),
+                ]),
+              )),
+        )),
+      );
 }

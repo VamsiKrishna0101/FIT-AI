@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/theme/fitness_theme.dart';
+import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import '../models/progress_models.dart';
 import 'progress_surface.dart';
@@ -21,77 +22,93 @@ class ProgressWorkoutTile extends StatelessWidget {
     final seconds = progressNumber(session['durationSeconds']);
     final exercises = progressRows(session['exercises']);
     final records = (progressNumber(session['records']) ?? 0).toInt();
+    final volume = progressNumber(session['volume']);
     final tint = progressSessionColor(session);
-    return InkWell(
-        onTap: onTap,
-        child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Container(
-                  width: 46,
-                  padding: const EdgeInsets.symmetric(vertical: 7),
-                  decoration: BoxDecoration(
-                      color: tint.withValues(alpha: .12),
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(
-                          color: tint.withValues(alpha: .22), width: .7)),
-                  child: Column(children: [
-                    Text(date == null ? '—' : DateFormat.d(locale).format(date),
-                        style: const TextStyle(
-                            color: progressSilver,
-                            fontSize: 18,
-                            height: 1.1,
-                            fontWeight: FontWeight.w700)),
-                    Text(
-                        date == null
-                            ? ''
-                            : DateFormat.MMM(locale).format(date).toUpperCase(),
-                        style: TextStyle(
-                            color: tint,
-                            fontSize: 9.5,
-                            letterSpacing: .6,
-                            fontWeight: FontWeight.w600)),
-                  ])),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(
-                        progressTitle(fitnessText(
-                            context, session['name'] as String? ?? 'Workout')),
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            height: 1.3)),
-                    const SizedBox(height: 8),
-                    Wrap(spacing: 6, runSpacing: 6, children: [
-                      if (exercises.isNotEmpty)
-                        _Chip(
-                            '${exercises.length} ${fitnessText(context, 'exercises')}'),
-                      _Chip(
-                          '${session['sets'] ?? 0} ${fitnessText(context, 'sets')}'),
-                      if (seconds != null && seconds > 0)
-                        _Chip(
-                            '${(seconds / 60).round()} ${fitnessText(context, 'min')}'),
-                    ]),
-                    if (records > 0) ...[
-                      const SizedBox(height: 8),
-                      _RecordBadge(count: records),
-                    ],
-                    if (session['status'] != 'COMPLETED') ...[
-                      const SizedBox(height: 6),
-                      Text(fitnessText(context, 'In progress'),
-                          style: const TextStyle(
-                              color: progressMuted, fontSize: 11)),
-                    ],
-                  ])),
-              const SizedBox(width: 6),
-              const Padding(
-                  padding: EdgeInsets.only(top: 14),
-                  child: Icon(CupertinoIcons.chevron_right,
-                      size: 13, color: progressMuted)),
-            ])));
+    return MotionPress(
+        child: InkWell(
+            onTap: onTap,
+            child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                          width: 46,
+                          padding: const EdgeInsets.symmetric(vertical: 7),
+                          decoration: BoxDecoration(
+                              color: tint.withValues(alpha: .12),
+                              borderRadius: BorderRadius.circular(13),
+                              border: Border.all(
+                                  color: tint.withValues(alpha: .22),
+                                  width: .7)),
+                          child: Column(children: [
+                            Text(
+                                date == null
+                                    ? '—'
+                                    : DateFormat.d(locale).format(date),
+                                style: const TextStyle(
+                                    color: progressSilver,
+                                    fontSize: 18,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w700)),
+                            Text(
+                                date == null
+                                    ? ''
+                                    : DateFormat.MMM(locale)
+                                        .format(date)
+                                        .toUpperCase(),
+                                style: TextStyle(
+                                    color: tint,
+                                    fontSize: 9.5,
+                                    letterSpacing: .6,
+                                    fontWeight: FontWeight.w600)),
+                          ])),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(
+                                progressTitle(fitnessText(context,
+                                    session['name'] as String? ?? 'Workout')),
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.3)),
+                            const SizedBox(height: 8),
+                            Wrap(spacing: 6, runSpacing: 6, children: [
+                              if (volume != null && volume > 0)
+                                _Chip(
+                                    volume >= 10000
+                                        ? '${(volume / 1000).toStringAsFixed(1)}k kg'
+                                        : '${progressValue(context, volume, digits: 0)} kg',
+                                    accent: progressStrength),
+                              if (exercises.isNotEmpty)
+                                _Chip(
+                                    '${exercises.length} ${fitnessText(context, 'exercises')}'),
+                              _Chip(
+                                  '${session['sets'] ?? 0} ${fitnessText(context, 'sets')}'),
+                              if (seconds != null && seconds > 0)
+                                _Chip(
+                                    '${(seconds / 60).round()} ${fitnessText(context, 'min')}'),
+                            ]),
+                            if (records > 0) ...[
+                              const SizedBox(height: 8),
+                              _RecordBadge(count: records),
+                            ],
+                            if (session['status'] != 'COMPLETED') ...[
+                              const SizedBox(height: 6),
+                              Text(fitnessText(context, 'In progress'),
+                                  style: const TextStyle(
+                                      color: progressMuted, fontSize: 11)),
+                            ],
+                          ])),
+                      const SizedBox(width: 6),
+                      const Padding(
+                          padding: EdgeInsets.only(top: 14),
+                          child: Icon(CupertinoIcons.chevron_right,
+                              size: 13, color: progressMuted)),
+                    ]))));
   }
 }
 
@@ -105,17 +122,37 @@ Color progressSessionColor(ProgressJson session) =>
 
 class _Chip extends StatelessWidget {
   final String text;
-  const _Chip(this.text);
+  final IconData? icon;
+  final Color? accent;
+  const _Chip(this.text, {this.icon, this.accent});
   @override
   Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
-          color: const Color(0x0DFFFFFF),
-          borderRadius: BorderRadius.circular(8)),
+          color: DSColors.bgRaised,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              color: accent != null
+                  ? accent!.withValues(alpha: .3)
+                  : DSColors.border,
+              width: .7)),
       child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(text,
-              style: const TextStyle(
-                  fontSize: 11, color: progressSilver, height: 1.3))));
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 10, color: accent ?? progressSilver),
+                const SizedBox(width: 4),
+              ],
+              Text(text,
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: accent ?? progressSilver,
+                      height: 1.3,
+                      fontWeight:
+                          accent != null ? FontWeight.w600 : FontWeight.w400)),
+            ],
+          )));
 }
 
 class _RecordBadge extends StatelessWidget {
@@ -171,9 +208,9 @@ class ProgressWorkoutHistory extends StatelessWidget {
                     : DateFormat.yMMMM(locale)
                         .format(DateTime.parse('${group.key}-01')),
                 style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -.4))),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -.3))),
         Stack(children: [
           PositionedDirectional(
               start: 7,
@@ -218,10 +255,7 @@ class _TimelineDot extends StatelessWidget {
       decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: DSColors.bg,
-          border: Border.all(color: color.withValues(alpha: .45), width: 1.2),
-          boxShadow: [
-            BoxShadow(color: color.withValues(alpha: .35), blurRadius: 8),
-          ]),
+          border: Border.all(color: color.withValues(alpha: .45), width: 1.2)),
       child: Container(
           width: 7,
           height: 7,
@@ -245,6 +279,8 @@ class ProgressWorkoutRecap extends StatelessWidget {
             appBar: AppBar(
                 backgroundColor: DSColors.bg,
                 surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: const IconThemeData(color: DSColors.silver),
                 title: Text(fitnessText(context, 'Workout'),
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.w600))),

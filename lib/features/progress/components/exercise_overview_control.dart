@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_copy.dart';
+import '../../../core/theme/ds_colors.dart';
 import '../repositories/progress_repository.dart';
 import 'progress_surface.dart';
 
@@ -68,14 +69,21 @@ class _ExerciseOverviewControlState extends State<ExerciseOverviewControl> {
   @override
   Widget build(BuildContext context) => Align(
       alignment: Alignment.centerLeft,
-      child: TextButton(
+      child: TextButton.icon(
           onPressed: _loading || _saving
               ? null
               : _failed
                   ? _load
                   : _toggle,
-          style: TextButton.styleFrom(foregroundColor: progressSilver),
-          child: Text(
+          icon: Icon(_pinned ? Icons.push_pin : Icons.push_pin_outlined,
+              size: 14, color: _pinned ? DSColors.accent : DSColors.muted),
+          style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              backgroundColor: DSColors.bgRaised,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: DSColors.border, width: .7))),
+          label: Text(
               fitnessText(
                   context,
                   _failed

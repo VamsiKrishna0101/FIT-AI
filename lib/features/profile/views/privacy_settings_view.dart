@@ -144,7 +144,7 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
                 padding: EdgeInsets.only(bottom: 20),
                 child: LinearProgressIndicator()),
           if (_message != null) SettingsNotice(_message!),
-          if (_photoCount > 0 || _photoLoadFailed)
+          if (_photoCount > 0 || _photoLoadFailed || _records.isNotEmpty)
             SettingsGroup(title: 'Saved photos', children: [
               SettingsRow(
                   icon: CupertinoIcons.photo_on_rectangle,

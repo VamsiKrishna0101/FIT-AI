@@ -1,6 +1,26 @@
 const _languages = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 
 const _copy = <String, List<String>>{
+  'Best set': [
+    'Bester Satz',
+    'Meilleure série',
+    'Bästa set',
+    'Beste sett',
+    'Bedste sæt',
+    'Beste set',
+    'Mejor serie',
+    'Serie migliore',
+  ],
+  'Estimated from your logged weight and reps.': [
+    'Aus deinem protokollierten Gewicht und den Wiederholungen geschätzt.',
+    'Estimation à partir de tes charges et répétitions enregistrées.',
+    'Uppskattat från din loggade vikt och dina repetitioner.',
+    'Estimert fra vekten og repetisjonene du har logget.',
+    'Estimeret ud fra din registrerede vægt og dine gentagelser.',
+    'Geschat op basis van je gelogde gewicht en herhalingen.',
+    'Estimado a partir del peso y las repeticiones que has registrado.',
+    'Stima basata sul peso e sulle ripetizioni registrati.',
+  ],
   'Summary': [
     'Übersicht',
     'Résumé',
@@ -115,5 +135,498 @@ const _copy = <String, List<String>>{
 
 String? progressPresentationTranslation(String locale, String text) {
   final index = _languages.indexOf(locale);
-  return index < 0 ? null : _copy[text]?[index];
+  return index < 0 ? null : (_recapCopy[text] ?? _copy[text])?[index];
 }
+
+const _recapCopy = <String, List<String>>{
+  'Choose another period.': [
+    'Wähle einen anderen Zeitraum.',
+    'Choisis une autre période.',
+    'Välj en annan period.',
+    'Velg en annen periode.',
+    'Vælg en anden periode.',
+    'Kies een andere periode.',
+    'Elige otro período.',
+    'Scegli un altro periodo.'
+  ],
+  'Activity': [
+    'Aktivität',
+    'Activité',
+    'Aktivitet',
+    'Aktivitet',
+    'Aktivitet',
+    'Activiteit',
+    'Actividad',
+    'Attività'
+  ],
+  'Days trained': [
+    'Trainingstage',
+    'Jours d’entraînement',
+    'Träningsdagar',
+    'Treningsdager',
+    'Træningsdage',
+    'Trainingsdagen',
+    'Días entrenados',
+    'Giorni di allenamento'
+  ],
+  'Upcoming': [
+    'Bevorstehend',
+    'À venir',
+    'Kommande',
+    'Kommende',
+    'Kommende',
+    'Binnenkort',
+    'Próximo',
+    'In programma'
+  ],
+  'Trained': [
+    'Trainiert',
+    'Entraîné',
+    'Tränat',
+    'Trent',
+    'Trænet',
+    'Getraind',
+    'Entrenado',
+    'Allenato'
+  ],
+  'Muscle training': [
+    'Muskeltraining',
+    'Travail musculaire',
+    'Muskelträning',
+    'Muskeltrening',
+    'Muskeltræning',
+    'Spiertraining',
+    'Entrenamiento muscular',
+    'Allenamento muscolare'
+  ],
+  'Recent exercises': [
+    'Letzte Übungen',
+    'Exercices récents',
+    'Senaste övningarna',
+    'Siste øvelser',
+    'Seneste øvelser',
+    'Recente oefeningen',
+    'Ejercicios recientes',
+    'Esercizi recenti'
+  ],
+  'No exercises in this period': [
+    'Keine Übungen in diesem Zeitraum',
+    'Aucun exercice sur cette période',
+    'Inga övningar under perioden',
+    'Ingen øvelser i denne perioden',
+    'Ingen øvelser i denne periode',
+    'Geen oefeningen in deze periode',
+    'Sin ejercicios en este período',
+    'Nessun esercizio in questo periodo'
+  ],
+  'Daily trends': [
+    'Tagesverlauf',
+    'Tendances quotidiennes',
+    'Dagliga trender',
+    'Daglige trender',
+    'Daglige tendenser',
+    'Dagelijkse trends',
+    'Tendencias diarias',
+    'Andamento giornaliero'
+  ],
+  'Macro split': [
+    'Makroverteilung',
+    'Répartition des macros',
+    'Makrofördelning',
+    'Makrofordeling',
+    'Makrofordeling',
+    'Macroverdeling',
+    'Distribución de macros',
+    'Ripartizione dei macro'
+  ],
+  'Macro kcal': [
+    'Makro-kcal',
+    'kcal des macros',
+    'Makro-kcal',
+    'Makro-kcal',
+    'Makro-kcal',
+    'Macro-kcal',
+    'kcal de macros',
+    'kcal dei macro'
+  ],
+  'Weekly average': [
+    'Wochendurchschnitt',
+    'Moyenne hebdomadaire',
+    'Veckosnitt',
+    'Ukesgjennomsnitt',
+    'Ugentligt gennemsnit',
+    'Weekgemiddelde',
+    'Promedio semanal',
+    'Media settimanale'
+  ],
+  'No plans in this period': [
+    'Keine Pläne in diesem Zeitraum',
+    'Aucun programme sur cette période',
+    'Inga planer under perioden',
+    'Ingen planer i denne perioden',
+    'Ingen planer i denne periode',
+    'Geen plannen in deze periode',
+    'Sin planes en este período',
+    'Nessun programma in questo periodo'
+  ],
+  'Week of {date}': [
+    'Woche vom {date}',
+    'Semaine du {date}',
+    'Veckan från {date}',
+    'Uken fra {date}',
+    'Ugen fra {date}',
+    'Week van {date}',
+    'Semana del {date}',
+    'Settimana del {date}'
+  ],
+  'Progress dates': [
+    'Zeitraum für Fortschritt',
+    'Dates des progrès',
+    'Datum för framsteg',
+    'Datoer for fremgang',
+    'Datoer for fremskridt',
+    'Datums voor voortgang',
+    'Fechas del progreso',
+    'Date dei progressi'
+  ],
+  'Training volume': [
+    'Trainingsvolumen',
+    'Volume d’entraînement',
+    'Träningsvolym',
+    'Treningsvolum',
+    'Træningsvolumen',
+    'Trainingsvolume',
+    'Volumen de entrenamiento',
+    'Volume di allenamento'
+  ],
+  'Weight × reps, added across your logged sets.': [
+    'Gewicht × Wiederholungen, summiert über deine erfassten Sätze.',
+    'Charge × répétitions, additionnées sur tes séries enregistrées.',
+    'Vikt × repetitioner, summerat över dina loggade set.',
+    'Vekt × repetisjoner, summert over dine loggede sett.',
+    'Vægt × gentagelser, lagt sammen for dine loggede sæt.',
+    'Gewicht × herhalingen, opgeteld over je gelogde sets.',
+    'Peso × repeticiones, sumados en tus series registradas.',
+    'Peso × ripetizioni, sommati nelle tue serie registrate.'
+  ],
+  'Your last 4 weeks': [
+    'Deine letzten 4 Wochen',
+    'Tes 4 dernières semaines',
+    'Dina senaste 4 veckor',
+    'Dine siste 4 uker',
+    'Dine seneste 4 uger',
+    'Je afgelopen 4 weken',
+    'Tus últimas 4 semanas',
+    'Le tue ultime 4 settimane'
+  ],
+  'Your last 3 months': [
+    'Deine letzten 3 Monate',
+    'Tes 3 derniers mois',
+    'Dina senaste 3 månader',
+    'Dine siste 3 måneder',
+    'Dine seneste 3 måneder',
+    'Je afgelopen 3 maanden',
+    'Tus últimos 3 meses',
+    'I tuoi ultimi 3 mesi'
+  ],
+  'Your last year': [
+    'Dein letztes Jahr',
+    'Ton année écoulée',
+    'Ditt senaste år',
+    'Ditt siste år',
+    'Dit seneste år',
+    'Je afgelopen jaar',
+    'Tu último año',
+    'Il tuo ultimo anno'
+  ],
+  'Your training so far': [
+    'Dein bisheriges Training',
+    'Ton entraînement jusqu’ici',
+    'Din träning hittills',
+    'Treningen din så langt',
+    'Din træning indtil nu',
+    'Je training tot nu toe',
+    'Tu entrenamiento hasta ahora',
+    'Il tuo allenamento finora'
+  ],
+  'Your selected dates': [
+    'Dein gewählter Zeitraum',
+    'La période sélectionnée',
+    'Din valda period',
+    'Din valgte periode',
+    'Din valgte periode',
+    'Je gekozen periode',
+    'Tu período seleccionado',
+    'Il periodo selezionato'
+  ],
+  '{count} workout completed': [
+    '{count} Training abgeschlossen',
+    '{count} séance terminée',
+    '{count} pass genomfört',
+    '{count} økt fullført',
+    '{count} træning gennemført',
+    '{count} training voltooid',
+    '{count} entrenamiento completado',
+    '{count} allenamento completato'
+  ],
+  '{count} workouts completed': [
+    '{count} Trainings abgeschlossen',
+    '{count} séances terminées',
+    '{count} pass genomförda',
+    '{count} økter fullført',
+    '{count} træninger gennemført',
+    '{count} trainingen voltooid',
+    '{count} entrenamientos completados',
+    '{count} allenamenti completati'
+  ],
+  'Your sets are saved. Finish a workout to add it here.': [
+    'Deine Sätze sind gespeichert. Schließe ein Training ab, damit es hier erscheint.',
+    'Tes séries sont enregistrées. Termine une séance pour l’ajouter ici.',
+    'Dina set är sparade. Slutför ett pass för att lägga till det här.',
+    'Settene dine er lagret. Fullfør en økt for å legge den til her.',
+    'Dine sæt er gemt. Afslut en træning for at tilføje den her.',
+    'Je sets zijn opgeslagen. Rond een training af om die hier toe te voegen.',
+    'Tus series están guardadas. Completa un entrenamiento para añadirlo aquí.',
+    'Le tue serie sono salvate. Completa un allenamento per aggiungerlo qui.'
+  ],
+  'Keep logging to build your comparison over time.': [
+    'Erfasse weitere Trainings, um sie mit der Zeit vergleichen zu können.',
+    'Continue à enregistrer tes séances pour pouvoir les comparer au fil du temps.',
+    'Fortsätt logga för att kunna jämföra över tid.',
+    'Fortsett å logge for å kunne sammenligne over tid.',
+    'Fortsæt med at logge for at kunne sammenligne over tid.',
+    'Blijf loggen om na verloop van tijd te kunnen vergelijken.',
+    'Sigue registrando para poder comparar con el tiempo.',
+    'Continua a registrare per confrontare i risultati nel tempo.'
+  ],
+  'Workouts per week': [
+    'Trainings pro Woche',
+    'Séances par semaine',
+    'Pass per vecka',
+    'Økter per uke',
+    'Træninger pr. uge',
+    'Trainingen per week',
+    'Entrenamientos por semana',
+    'Allenamenti a settimana'
+  ],
+  'Training details': [
+    'Trainingsdetails',
+    'Détails de l’entraînement',
+    'Träningsdetaljer',
+    'Treningsdetaljer',
+    'Træningsdetaljer',
+    'Trainingsdetails',
+    'Detalles del entrenamiento',
+    'Dettagli dell’allenamento'
+  ],
+  'No workouts in this period': [
+    'Keine Trainings in diesem Zeitraum',
+    'Aucune séance sur cette période',
+    'Inga pass under den här perioden',
+    'Ingen økter i denne perioden',
+    'Ingen træninger i denne periode',
+    'Geen trainingen in deze periode',
+    'Sin entrenamientos en este período',
+    'Nessun allenamento in questo periodo'
+  ],
+  'Log a workout to start seeing your progress here.': [
+    'Erfasse ein Training, um hier deine Fortschritte zu sehen.',
+    'Enregistre une séance pour voir tes progrès ici.',
+    'Logga ett pass för att börja se dina framsteg här.',
+    'Logg en økt for å begynne å se fremgangen din her.',
+    'Log en træning for at begynde at se dine fremskridt her.',
+    'Log een training om hier je voortgang te zien.',
+    'Registra un entrenamiento para ver tu progreso aquí.',
+    'Registra un allenamento per vedere i tuoi progressi qui.'
+  ],
+  'Open training': [
+    'Training öffnen',
+    'Ouvrir l’entraînement',
+    'Öppna träning',
+    'Åpne trening',
+    'Åbn træning',
+    'Training openen',
+    'Abrir entrenamiento',
+    'Apri allenamento'
+  ],
+  'Your exercise progress': [
+    'Dein Fortschritt pro Übung',
+    'Tes progrès par exercice',
+    'Dina framsteg per övning',
+    'Fremgangen din per øvelse',
+    'Dine fremskridt pr. øvelse',
+    'Je voortgang per oefening',
+    'Tu progreso por ejercicio',
+    'I tuoi progressi per esercizio'
+  ],
+  'Recent personal bests': [
+    'Neue persönliche Bestleistungen',
+    'Records personnels récents',
+    'Senaste personbästa',
+    'Nylige personlige rekorder',
+    'Seneste personlige rekorder',
+    'Recente persoonlijke records',
+    'Récords personales recientes',
+    'Record personali recenti'
+  ],
+  'First session': [
+    'Erste Einheit',
+    'Première séance',
+    'Första passet',
+    'Første økt',
+    'Første træning',
+    'Eerste training',
+    'Primera sesión',
+    'Prima sessione'
+  ],
+  'Latest session': [
+    'Letzte Einheit',
+    'Dernière séance',
+    'Senaste passet',
+    'Siste økt',
+    'Seneste træning',
+    'Laatste training',
+    'Última sesión',
+    'Ultima sessione'
+  ],
+  'Heaviest set per session': [
+    'Schwerster Satz pro Einheit',
+    'Série la plus lourde par séance',
+    'Tyngsta setet per pass',
+    'Tyngste sett per økt',
+    'Tungeste sæt pr. træning',
+    'Zwaarste set per training',
+    'Serie más pesada por sesión',
+    'Serie più pesante per sessione'
+  ],
+  'Most reps per session': [
+    'Meiste Wiederholungen pro Einheit',
+    'Maximum de répétitions par séance',
+    'Flest repetitioner per pass',
+    'Flest repetisjoner per økt',
+    'Flest gentagelser pr. træning',
+    'Meeste herhalingen per training',
+    'Más repeticiones por sesión',
+    'Più ripetizioni per sessione'
+  ],
+  'Log another session to compare.': [
+    'Erfasse eine weitere Einheit zum Vergleichen.',
+    'Enregistre une autre séance pour comparer.',
+    'Logga ett pass till för att jämföra.',
+    'Logg en økt til for å sammenligne.',
+    'Log en træning mere for at sammenligne.',
+    'Log nog een training om te vergelijken.',
+    'Registra otra sesión para comparar.',
+    'Registra un’altra sessione per confrontare.'
+  ],
+  'Open exercise for earlier sessions.': [
+    'Öffne die Übung für frühere Einheiten.',
+    'Ouvre l’exercice pour voir les séances précédentes.',
+    'Öppna övningen för tidigare pass.',
+    'Åpne øvelsen for tidligere økter.',
+    'Åbn øvelsen for tidligere træninger.',
+    'Open de oefening voor eerdere trainingen.',
+    'Abre el ejercicio para ver sesiones anteriores.',
+    'Apri l’esercizio per le sessioni precedenti.'
+  ],
+  'Supporting habits': [
+    'Unterstützende Gewohnheiten',
+    'Habitudes complémentaires',
+    'Stödjande vanor',
+    'Støttende vaner',
+    'Støttende vaner',
+    'Ondersteunende gewoonten',
+    'Hábitos complementarios',
+    'Abitudini di supporto'
+  ],
+  '{count} of {days} days logged': [
+    '{count} von {days} Tagen erfasst',
+    '{count} jours sur {days} enregistrés',
+    '{count} av {days} dagar loggade',
+    '{count} av {days} dager logget',
+    '{count} af {days} dage logget',
+    '{count} van {days} dagen gelogd',
+    '{count} de {days} días registrados',
+    '{count} giorni su {days} registrati'
+  ],
+  '{count} day logged': [
+    '{count} Tag erfasst',
+    '{count} jour enregistré',
+    '{count} dag loggad',
+    '{count} dag logget',
+    '{count} dag logget',
+    '{count} dag gelogd',
+    '{count} día registrado',
+    '{count} giorno registrato'
+  ],
+  '{count} days logged': [
+    '{count} Tage erfasst',
+    '{count} jours enregistrés',
+    '{count} dagar loggade',
+    '{count} dager logget',
+    '{count} dage logget',
+    '{count} dagen gelogd',
+    '{count} días registrados',
+    '{count} giorni registrati'
+  ],
+  '{change} since {date}': [
+    '{change} seit {date}',
+    '{change} depuis le {date}',
+    '{change} sedan {date}',
+    '{change} siden {date}',
+    '{change} siden {date}',
+    '{change} sinds {date}',
+    '{change} desde el {date}',
+    '{change} dal {date}'
+  ],
+  'Heavier weight': [
+    'Höheres Gewicht',
+    'Charge plus lourde',
+    'Tyngre vikt',
+    'Tyngre vekt',
+    'Tungere vægt',
+    'Zwaarder gewicht',
+    'Más peso',
+    'Carico maggiore'
+  ],
+  'More reps at this weight': [
+    'Mehr Wiederholungen mit diesem Gewicht',
+    'Plus de répétitions à cette charge',
+    'Fler repetitioner på denna vikt',
+    'Flere repetisjoner med denne vekten',
+    'Flere gentagelser med denne vægt',
+    'Meer herhalingen met dit gewicht',
+    'Más repeticiones con este peso',
+    'Più ripetizioni con questo peso'
+  ],
+  'More weight × reps in one set': [
+    'Mehr Gewicht × Wiederholungen in einem Satz',
+    'Plus de charge × répétitions en une série',
+    'Mer vikt × repetitioner i ett set',
+    'Mer vekt × repetisjoner i ett sett',
+    'Mere vægt × gentagelser i ét sæt',
+    'Meer gewicht × herhalingen in één set',
+    'Más peso × repeticiones en una serie',
+    'Più peso × ripetizioni in una serie'
+  ],
+  'Personal best': [
+    'Persönliche Bestleistung',
+    'Record personnel',
+    'Personbästa',
+    'Personlig rekord',
+    'Personlig rekord',
+    'Persoonlijk record',
+    'Récord personal',
+    'Record personale'
+  ],
+  'Your workout history will appear here.': [
+    'Dein Trainingsverlauf erscheint hier.',
+    'Ton historique d’entraînement apparaîtra ici.',
+    'Din träningshistorik visas här.',
+    'Treningshistorikken din vises her.',
+    'Din træningshistorik vises her.',
+    'Je trainingsgeschiedenis verschijnt hier.',
+    'Tu historial de entrenamientos aparecerá aquí.',
+    'La tua cronologia degli allenamenti apparirà qui.'
+  ],
+};

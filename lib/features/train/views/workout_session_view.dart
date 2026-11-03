@@ -1,4 +1,5 @@
 import '../components/workout_warmup.dart';
+import '../../notifications/services/rest_notification_service.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
@@ -18,6 +19,8 @@ import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
 import '../components/workout_form_guide.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/watch/watch_models.dart';
+import '../../../core/watch/watch_sync_service.dart';
 
 class WorkoutSessionView extends StatefulWidget {
   final TrainingDay initial;
@@ -45,6 +48,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   late final _clock = ValueNotifier(_now);
   Timer? _timer;
   StreamSubscription<TrainingDay>? _syncSubscription;
+  StreamSubscription<WatchIncomingAction>? _watchSubscription;
   final _restState = ValueNotifier<WorkoutRest?>(null);
   bool _restOpen = false, _restNotified = false;
   int _restVersion = 0;
@@ -71,8 +75,16 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
       if (!mounted || day.date != _day.date) return;
       setState(() {
         _day = day;
+        if (_day.finished) _syncRestAlert();
         _index = _index.clamp(0, (_day.items.length - 1).clamp(0, 100));
       });
+      _syncToWatch();
+    });
+    _watchSubscription =
+        WatchSyncService.shared.actions.listen(_handleWatchAction);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncToWatch();
+      WatchSyncService.shared.startWatchApp();
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _tick();
@@ -92,6 +104,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   }
 
   void _tick() {
+    _syncRestVisibility();
     final now = _now;
     _clock.value = now;
     final rest = _restState.value;
@@ -112,6 +125,21 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     if (state == AppLifecycleState.resumed) _tick();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncRestVisibility();
+  }
+
+  void _syncRestVisibility() {
+    unawaited(RestNotificationService.shared
+        .setInAppTimerVisible(
+          this,
+          _restOpen || ModalRoute.of(context)?.isCurrent == true,
+        )
+        .catchError((Object _) {}));
+  }
+
   Future<void> _restoreRest() async {
     if (_day.finished ||
         !DateUtils.isSameDay(DateTime.tryParse(_day.date), _now)) {
@@ -122,6 +150,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
       final data = await _repo.restData(_day.date);
       if (!mounted || version != _restVersion) return;
       _restState.value = WorkoutRest.fromJson(data, _now);
+      _syncRestAlert();
     } catch (_) {
       // Rest is optional; a cache read must never block logging a workout.
     }
@@ -135,10 +164,15 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
 
   @override
   void dispose() {
+    unawaited(RestNotificationService.shared
+        .setInAppTimerVisible(this, false)
+        .catchError((Object _) {}));
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _scroll.dispose();
     _syncSubscription?.cancel();
+    _watchSubscription?.cancel();
+    WatchSyncService.shared.clearSession();
     _restState.dispose();
     _clock.dispose();
     super.dispose();
@@ -229,10 +263,154 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     _restVersion++;
     _restNotified = false;
     _restState.value = rest;
+    _syncRestAlert();
     _clock.value = _now;
     unawaited(_repo.saveRest(_day.date, rest?.toJson()).catchError((Object _) {
       // A timer cache failure must not turn a saved set into a failed save.
     }));
+    _syncToWatch();
+  }
+
+  void _syncRestAlert() {
+    final rest = _day.finished ? null : _restState.value;
+    unawaited(RestNotificationService.shared
+        .update(
+          date: _day.date,
+          end: rest?.end,
+          paused: rest?.isPaused ?? false,
+        )
+        .catchError((Object _) {}));
+  }
+
+  void _syncToWatch() {
+    if (!mounted) return;
+    final rest = _restState.value;
+    final restPayload = rest == null
+        ? null
+        : WatchRestPayload(
+            isActive: true,
+            exerciseName: rest.exercise,
+            setNumber: rest.setNumber ?? 1,
+            remainingSeconds: rest.remaining(_now),
+            duration: rest.duration,
+            isPaused: rest.isPaused,
+            endTimeEpochMs: rest.end.millisecondsSinceEpoch,
+          );
+
+    final snapshot = WatchWorkoutSnapshot(
+      sessionId: _day.session?['id']?.toString() ?? _day.date,
+      date: _day.date,
+      title: _day.name,
+      activeItemIndex: _index,
+      items: _day.items.asMap().entries.map((entry) {
+        final item = entry.value;
+        final rawLogs = _day.logs(item.id);
+        return WatchExerciseItem(
+          id: item.id,
+          exerciseName: item.exercise.displayName,
+          orderIndex: item.orderIndex,
+          targetSets: item.targetSets,
+          targetReps: item.targetReps,
+          targetWeight: item.targetWeight,
+          restSeconds: item.restSeconds,
+          status: item.status,
+          loggedSets: rawLogs
+              .map((log) => WatchSetLog(
+                    setNumber: (log['setNumber'] as num?)?.toInt() ?? 1,
+                    weight: (log['weight'] as num?)?.toDouble() ?? 0.0,
+                    reps: (log['reps'] as num?)?.toInt() ?? 0,
+                    completed: log['completed'] != false,
+                    rpe: (log['rpe'] as num?)?.toDouble(),
+                  ))
+              .toList(),
+        );
+      }).toList(),
+      rest: restPayload,
+    );
+
+    WatchSyncService.shared.syncWorkoutState(snapshot);
+    WatchSyncService.shared.syncRestState(restPayload);
+  }
+
+  void _handleWatchAction(WatchIncomingAction action) {
+    if (!mounted) return;
+    switch (action) {
+      case WatchLogSetAction(
+          :final itemId,
+          :final setNumber,
+          :final weight,
+          :final reps
+        ):
+        final itemIndex = _day.items.indexWhere((i) => i.id == itemId);
+        if (itemIndex >= 0) {
+          _saveWatchSet(_day.items[itemIndex], setNumber, weight, reps);
+        }
+        break;
+      case WatchSelectExerciseAction(:final itemId):
+        final targetIndex = _day.items.indexWhere((i) => i.id == itemId);
+        if (targetIndex >= 0 && targetIndex != _index) {
+          setState(() {
+            _index = targetIndex;
+            _loadPrevious();
+          });
+          _showCurrentStep();
+          _syncToWatch();
+        }
+        break;
+      case WatchSkipExerciseAction(:final itemId):
+        final targetIndex = _day.items.indexWhere((i) => i.id == itemId);
+        if (targetIndex >= 0) {
+          _status(_day.items[targetIndex], 'SKIPPED');
+        }
+        break;
+      case WatchRestControlAction(:final operation):
+        if (operation == 'EXTEND') {
+          _addRest();
+        } else if (operation == 'SKIP') {
+          _updateRest(null);
+        } else if (operation == 'TOGGLE_PAUSE') {
+          final rest = _restState.value;
+          if (rest != null) _updateRest(rest.togglePause(_now));
+        }
+        break;
+      case WatchBiometricUpdateAction():
+        break;
+      case WatchFinishWorkoutAction():
+        _finish();
+        break;
+    }
+  }
+
+  Future<void> _saveWatchSet(
+      TodayPlanItemModel item, int number, double weight, int reps) async {
+    final count = _setCount(item);
+    final wasLogged =
+        _day.logs(item.id).any((log) => log['setNumber'] == number);
+    setState(() => _busy = true);
+    try {
+      await _mutate('PUT', '/items/${item.id}/sets', data: {
+        'setNumber': number,
+        'reps': reps,
+        'weight': item.isBodyweight ? 0.0 : weight,
+        'rpe': null,
+      });
+      if (mounted) {
+        setState(() => _selectedSets.remove(item.id));
+        if (!wasLogged) {
+          if (_day.logs(item.id).length < count) {
+            _startRest(item, number);
+          } else if (_restState.value?.exercise == item.exercise.displayName) {
+            _updateRest(null);
+          }
+        }
+        _syncToWatch();
+      }
+    } catch (error) {
+      _error(TrainingRepository.errorMessage(
+          error, 'Could not save set from Watch.'));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   void _startRest(TodayPlanItemModel item, int setNumber) {
@@ -490,6 +668,47 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                 fontWeight: FontWeight.w500,
                 color: DSColors.silver)),
         actions: [
+          // Live Biometric Heart Rate pill from Apple Watch (if telemetry available)
+          ValueListenableBuilder<WatchBiometrics?>(
+            valueListenable: WatchSyncService.shared.biometricsNotifier,
+            builder: (_, bio, __) {
+              if (bio == null || bio.heartRate <= 0) {
+                return const SizedBox.shrink();
+              }
+              final zoneColor = switch (bio.hrZone) {
+                1 => DSColors.silver,
+                2 => DSColors.blue,
+                3 => DSColors.accentLime,
+                4 => DSColors.gold,
+                _ => DSColors.heat,
+              };
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: DSColors.bgElevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: zoneColor.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(CupertinoIcons.heart_fill, size: 12, color: zoneColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${bio.heartRate}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: zoneColor,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
           if (!_day.finished)
             Padding(
                 padding: const EdgeInsets.only(right: 20),

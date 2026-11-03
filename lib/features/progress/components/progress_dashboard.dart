@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/theme/ds_colors.dart';
 import '../../../core/theme/ds_motion.dart';
@@ -52,8 +53,8 @@ class ProgressSectionControl extends StatelessWidget {
     final duration = DSMotion.duration(context, DSMotion.regular);
     return DecoratedBox(
         decoration: BoxDecoration(
-            color: const Color(0xFF111113),
-            borderRadius: BorderRadius.circular(100),
+            color: DSColors.bgCard,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: DSColors.border, width: .7)),
         child: Padding(
             padding: const EdgeInsets.all(4),
@@ -74,22 +75,22 @@ class ProgressSectionControl extends StatelessWidget {
                           heightFactor: 1,
                           child: DecoratedBox(
                               decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(100),
-                                  gradient: const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Color(0xFF3C3F45),
-                                        Color(0xFF2A2C31)
-                                      ]),
+                                  borderRadius: BorderRadius.circular(14),
+                                  color: DSColors.bgRaised,
+                                  /*
+// e
+// c
+// c1
+// c2
+                                  */
                                   border: Border.all(
-                                      color: DSColors.borderHi, width: .7),
-                                  boxShadow: const [
+                                      color: DSColors.borderHi, width: .7)))))),
+              /* boxShadow: const [
                                     BoxShadow(
                                         color: Color(0x66000000),
                                         blurRadius: 10,
                                         offset: Offset(0, 3)),
-                                  ]))))),
+                                  ]))))), */
               Row(children: [
                 for (final section in ProgressSection.values)
                   Expanded(
@@ -98,8 +99,13 @@ class ProgressSectionControl extends StatelessWidget {
                           button: true,
                           child: InkWell(
                               key: ValueKey('progress-section-${section.name}'),
-                              borderRadius: BorderRadius.circular(100),
-                              onTap: () => onChanged(section),
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () {
+                                if (section != selected) {
+                                  HapticFeedback.selectionClick();
+                                  onChanged(section);
+                                }
+                              },
                               child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 4, vertical: 11),
@@ -180,8 +186,8 @@ class ProgressSectionControl extends StatelessWidget {
 ({List<ProgressPoint> points, String unit, String label})
     progressNutritionPreview(ProgressJson wellness) {
   for (final choice in [
-    ('calories', 'kcal', 'Calories'),
     ('protein', 'g', 'Protein'),
+    ('calories', 'kcal', 'Calories'),
     ('water', 'L', 'Water'),
     ('carbs', 'g', 'Carbs'),
     ('fat', 'g', 'Fat'),
@@ -217,218 +223,145 @@ class ProgressExerciseTrends extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (exercises.isEmpty) {
+    final available = exercises
+        .where((row) =>
+            row['latest'] is Map &&
+            (progressNumber((row['latest'] as Map)['reps']) ?? 0) > 0)
+        .toList();
+    final byId = {for (final row in available) row['id']: row};
+    final chosen = <ProgressJson>[
+      for (final id in pins)
+        if (byId[id] != null) byId[id]!,
+      ...available.where((row) => !pins.contains(row['id'])),
+    ].take(3).toList();
+    if (chosen.isEmpty) {
       return const ProgressSurface(
           child: ProgressEmpty('Log sets to see how your exercises improve.'));
     }
-    final available = {for (final row in exercises) row['id']: row};
-    final chosen = <ProgressJson>[
-      for (final id in pins)
-        if (available[id] != null) available[id]!,
-    ];
-    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-    if (scale <= 1.28) {
-      // Pinned exercises lead the shelf; the most recent fill the rest.
-      final shelf = [
-        ...chosen,
-        ...exercises.where((row) => !chosen.contains(row)),
-      ].take(6).toList();
-      return SizedBox(
-          height: 92 + scale * 96,
-          child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              itemCount: shelf.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, i) => _ExerciseCard(
-                  exercise: shelf[i], onTap: () => onOpen(shelf[i]))));
-    }
-    if (chosen.isEmpty) chosen.addAll(exercises.take(3));
     return ProgressSurface(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+        padding: EdgeInsets.zero,
         child: Column(children: [
-          for (var i = 0; i < chosen.take(3).length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: Color(0x12FFFFFF)),
-            _ExerciseTrendRow(
+          for (var i = 0; i < chosen.length; i++) ...[
+            if (i > 0)
+              const Divider(
+                  height: 1, indent: 16, endIndent: 16, color: DSColors.border),
+            _ExerciseComparisonRow(
                 exercise: chosen[i], onTap: () => onOpen(chosen[i])),
           ],
         ]));
   }
 }
 
-/// A shelf card: the exercise, its latest top value, the period change and a
-/// sparkline of recent sessions in the strength hue.
-class _ExerciseCard extends StatelessWidget {
+class _ExerciseComparisonRow extends StatelessWidget {
   final ProgressJson exercise;
   final VoidCallback onTap;
-  const _ExerciseCard({required this.exercise, required this.onTap});
+  const _ExerciseComparisonRow({required this.exercise, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final points =
-        ProgressPoint.parse(progressRows(exercise['sparkline']), 'value');
-    final latest = exercise['latest'] as Map?;
-    final loaded = exercise['metric'] == 'load' ||
-        (exercise['metric'] == null &&
-            (progressNumber(latest?['weight']) ?? 0) > 0);
-    final value = points.lastOrNull?.value ??
-        progressNumber(latest?[loaded ? 'weight' : 'reps']);
-    final change = progressNumber(exercise['change']);
-    final reps = progressNumber(latest?['reps']);
-    final date = exercise['latestDate'] as String?;
+    final latest = exercise['latest'] as Map;
+    final first = exercise['first'] as Map?;
+    final firstDate = exercise['firstDate'] as String?;
+    final latestDate = exercise['latestDate'] as String?;
+    // Older cached responses have no first set. Never infer its reps from a
+    // truncated load sparkline, or present that as a comparable set.
+    final compare = first != null &&
+        (progressNumber(first['reps']) ?? 0) > 0 &&
+        firstDate != null &&
+        latestDate != null &&
+        firstDate != latestDate;
+    final loaded = (progressNumber(latest['weight']) ?? 0) > 0 ||
+        (progressNumber(first?['weight']) ?? 0) > 0;
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final caption = loaded && reps != null
-        ? '${progressValue(context, reps, unit: 'reps', digits: 0)} · ${fitnessText(context, 'Last session')}'
-        : date != null
-            ? progressDate(date, locale)
-            : fitnessText(context, 'Latest');
-    return SizedBox(
-        width: 158,
-        child: ProgressSurface(
-            accent: progressStrength,
-            padding: EdgeInsets.zero,
-            child: InkWell(
-                key: ValueKey('progress-exercise-${exercise['id']}'),
-                onTap: onTap,
-                child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(progressTitle(exercise['name'] as String? ?? ''),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  height: 1.35,
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 4),
-                          Text(caption,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 11, color: progressMuted)),
-                          const Spacer(),
-                          ProgressValueText(
-                              progressValue(
-                                  context, value, unit: loaded ? 'kg' : 'reps'),
-                              size: 22),
-                          if (loaded && change != null && change.isFinite) ...[
-                            const SizedBox(height: 6),
-                            ProgressChangeChip(
-                                change: change,
-                                label:
-                                    '${change > 0 ? '+' : ''}${progressValue(context, change)}%'),
-                          ],
-                          if (points.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            SizedBox(
-                                width: double.infinity,
-                                height: 32,
-                                child: ExcludeSemantics(
-                                    child: ProgressSparkline(
-                                        points: points,
-                                        color: progressStrength))),
-                          ],
-                        ])))));
-  }
-}
-
-class _ExerciseTrendRow extends StatelessWidget {
-  final ProgressJson exercise;
-  final VoidCallback onTap;
-  const _ExerciseTrendRow({required this.exercise, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final points =
-        ProgressPoint.parse(progressRows(exercise['sparkline']), 'value');
-    final latest = exercise['latest'] as Map?;
-    final loaded = exercise['metric'] == 'load' ||
-        (exercise['metric'] == null &&
-            (progressNumber(latest?['weight']) ?? 0) > 0);
-    final value = points.lastOrNull?.value ??
-        progressNumber(latest?[loaded ? 'weight' : 'reps']);
-    final unit = loaded ? 'kg' : 'reps';
-    final change = progressNumber(exercise['change']);
-    final reps = progressNumber(latest?['reps']);
-    final date = exercise['latestDate'] as String?;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final caption = loaded && reps != null
-        ? '${progressValue(context, reps, unit: 'reps', digits: 0)} · ${fitnessText(context, 'Last session')}'
-        : date != null
-            ? progressDate(date, locale)
-            : fitnessText(context, 'Latest');
+    Widget reading(String label, Map set, String? date, {bool muted = false}) =>
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(fitnessText(context, label),
+              style: const TextStyle(
+                  color: progressMuted, fontSize: 11, height: 1.4)),
+          const SizedBox(height: 5),
+          Text(progressSetValue(context, set),
+              style: TextStyle(
+                  color: muted ? progressMuted : progressSilver,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -.3,
+                  height: 1.3)),
+          if (date != null) ...[
+            const SizedBox(height: 4),
+            Text(progressDate(date, locale),
+                style: const TextStyle(
+                    color: progressMuted, fontSize: 11, height: 1.4)),
+          ],
+        ]);
     return InkWell(
         key: ValueKey('progress-exercise-${exercise['id']}'),
         onTap: onTap,
         child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: LayoutBuilder(builder: (context, box) {
-              final expanded = MediaQuery.textScalerOf(context).scale(13) > 18;
-              final name = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(progressTitle(exercise['name'] as String? ?? ''),
+            padding: const EdgeInsets.all(16),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Expanded(
+                    child: Text(
+                        progressTitle(exercise['name'] as String? ?? ''),
                         style: const TextStyle(
-                            fontSize: 14,
-                            height: 1.35,
-                            fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 5),
-                    Text(caption,
-                        style: const TextStyle(
-                            fontSize: 11, height: 1.4, color: progressMuted)),
-                  ]);
-              final statistic =
-                  Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text(progressValue(context, value, unit: unit),
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500)),
-                if (loaded && change != null && change.isFinite) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                      '${change > 0 ? '+' : ''}${progressValue(context, change)}%',
-                      style:
-                          const TextStyle(color: progressMuted, fontSize: 11)),
-                ],
-              ]);
-              final chart = SizedBox(
-                  width: expanded ? 90 : 62,
-                  height: 30,
-                  child: ExcludeSemantics(
-                      child: ProgressSparkline(
-                          points: points, color: progressBlue)));
-              if (expanded) {
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      name,
-                      const SizedBox(height: 12),
-                      Row(children: [
-                        if (points.isNotEmpty) chart,
-                        const Spacer(),
-                        Flexible(child: statistic),
-                        const SizedBox(width: 8),
-                        const Icon(CupertinoIcons.chevron_right,
-                            size: 13, color: progressMuted),
-                      ])
-                    ]);
-              }
-              return Row(children: [
-                Expanded(child: name),
-                if (points.isNotEmpty && box.maxWidth >= 270) ...[
-                  const SizedBox(width: 12),
-                  chart,
-                ],
-                const SizedBox(width: 14),
-                ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 100),
-                    child: statistic),
-                const SizedBox(width: 9),
+                            color: progressSilver,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4))),
+                const SizedBox(width: 12),
                 const Icon(CupertinoIcons.chevron_right,
                     size: 12, color: progressMuted),
-              ]);
-            })));
+              ]),
+              const SizedBox(height: 4),
+              Text(
+                  fitnessText(
+                      context,
+                      loaded
+                          ? 'Heaviest set per session'
+                          : 'Most reps per session'),
+                  style: const TextStyle(
+                      color: progressMuted, fontSize: 11, height: 1.4)),
+              const SizedBox(height: 16),
+              LayoutBuilder(builder: (context, box) {
+                final latestReading =
+                    reading('Latest session', latest, latestDate);
+                if (!compare) return latestReading;
+                final firstReading =
+                    reading('First session', first, firstDate, muted: true);
+                if (box.maxWidth < 290 ||
+                    MediaQuery.textScalerOf(context).scale(14) > 18) {
+                  return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        firstReading,
+                        const SizedBox(height: 14),
+                        latestReading,
+                      ]);
+                }
+                return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: firstReading),
+                      const Padding(
+                          padding: EdgeInsets.fromLTRB(8, 22, 16, 0),
+                          child: Icon(CupertinoIcons.arrow_right,
+                              size: 14, color: progressMuted)),
+                      Expanded(child: latestReading),
+                    ]);
+              }),
+              if (!compare) ...[
+                const SizedBox(height: 12),
+                Text(
+                    fitnessText(
+                        context,
+                        (progressNumber(exercise['sessions']) ?? 1) <= 1
+                            ? 'Log another session to compare.'
+                            : 'Open exercise for earlier sessions.'),
+                    style: const TextStyle(
+                        color: progressMuted, fontSize: 12, height: 1.4)),
+              ],
+            ])));
   }
 }
 
@@ -447,58 +380,54 @@ class ProgressBeyondTraining extends StatelessWidget {
     final body = progressBodyPreview(data.body);
     final recovery = progressRecoveryPreview(data.wellness);
     final nutrition = progressNutritionPreview(data.wellness);
-    final children = [
-      if (body.points.isNotEmpty)
-        _TrendPreview(
-            label: body.label,
-            unit: body.unit,
-            points: body.points,
-            color: progressBody,
-            icon: CupertinoIcons.resize,
-            contextLabel: _bodySourceLabel(body.source),
-            onTap: onBody),
+    final habits = [
       if (recovery.points.isNotEmpty)
         _TrendPreview(
             label: recovery.label,
             unit: recovery.unit,
             points: recovery.points,
-            color: progressRecovery,
-            icon: CupertinoIcons.moon_fill,
             average: true,
+            dayCount: data.dayCount,
             onTap: onRecovery),
       if (nutrition.points.isNotEmpty)
         _TrendPreview(
             label: nutrition.label,
             unit: nutrition.unit,
             points: nutrition.points,
-            color: progressNutrition,
-            icon: Icons.restaurant_rounded,
             average: true,
+            dayCount: data.dayCount,
             onTap: onNutrition),
     ];
-    if (children.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const ProgressHeading('Beyond training'),
-      if (MediaQuery.textScalerOf(context).scale(14) > 19)
-        Column(children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            children[i],
-          ]
-        ])
-      else
-        // Two columns; an odd last tile spans the row so the grid stays even.
+      if (body.points.isNotEmpty) ...[
+        const ProgressHeading('Body changes'),
+        _TrendPreview(
+            label: body.label,
+            unit: body.unit,
+            points: body.points,
+            contextLabel: _bodySourceLabel(body.source),
+            onTap: onBody),
+      ],
+      if (habits.isNotEmpty) ...[
+        const ProgressHeading('Supporting habits'),
         LayoutBuilder(builder: (context, box) {
-          final half = (box.maxWidth - 12) / 2;
-          return Wrap(spacing: 12, runSpacing: 12, children: [
-            for (var i = 0; i < children.length; i++)
-              SizedBox(
-                  width: children.length.isOdd && i == children.length - 1
-                      ? box.maxWidth
-                      : half,
-                  child: children[i]),
+          if (habits.length == 1 ||
+              box.maxWidth < 340 ||
+              MediaQuery.textScalerOf(context).scale(14) > 18) {
+            return Column(children: [
+              for (var i = 0; i < habits.length; i++) ...[
+                if (i > 0) const SizedBox(height: 12),
+                habits[i],
+              ],
+            ]);
+          }
+          return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: habits[0]),
+            const SizedBox(width: 12),
+            Expanded(child: habits[1]),
           ]);
         }),
+      ],
     ]);
   }
 }
@@ -507,71 +436,110 @@ class _TrendPreview extends StatelessWidget {
   final String label, unit;
   final List<ProgressPoint> points;
   final bool average;
+  final int? dayCount;
   final String? contextLabel;
-  final Color color;
-  final IconData icon;
   final VoidCallback onTap;
   const _TrendPreview(
       {required this.label,
       required this.unit,
       required this.points,
-      required this.color,
-      required this.icon,
       required this.onTap,
       this.contextLabel,
-      this.average = false});
+      this.average = false,
+      this.dayCount});
+
   @override
   Widget build(BuildContext context) {
     final value = average
         ? points.fold<double>(0, (sum, row) => sum + row.value) / points.length
         : points.last.value;
+    final count = points.map((point) => point.date).toSet().length;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final change = points.last.value - points.first.value;
+    final coverage = dayCount != null && dayCount! >= count
+        ? fitnessText(context, '{count} of {days} days logged', values: {
+            'count': progressValue(context, count, digits: 0),
+            'days': progressValue(context, dayCount, digits: 0),
+          })
+        : fitnessText(
+            context, count == 1 ? '{count} day logged' : '{count} days logged',
+            values: {'count': progressValue(context, count, digits: 0)});
+    final minutes = (value * 60).round();
+    final display = unit == 'h'
+        ? '${progressValue(context, minutes ~/ 60, unit: 'h', digits: 0)} ${progressValue(context, minutes % 60, unit: 'min', digits: 0)}'
+        : progressValue(context, value, unit: unit);
     return ProgressSurface(
-        accent: color,
-        padding: EdgeInsets.zero,
-        child: InkWell(
-            onTap: onTap,
-            child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        _IconChip(icon: icon, color: color),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: Text(fitnessText(context, label),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: progressMuted,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500))),
-                        const Icon(CupertinoIcons.chevron_right,
-                            size: 12, color: progressMuted),
-                      ]),
-                      const SizedBox(height: 12),
-                      ProgressValueText(
-                          progressValue(context, value, unit: unit),
-                          size: 24),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                          width: double.infinity,
-                          height: 34,
-                          child: ProgressSparkline(
-                              points: points, daily: average, color: color)),
-                      const SizedBox(height: 10),
-                      Text(
-                          contextLabel != null
-                              ? fitnessText(context, contextLabel!)
-                              : average
-                                  ? fitnessText(context, 'Recorded-day average')
-                                  : points.length < 2
-                                      ? fitnessText(context, 'Latest reading')
-                                      : '${change > 0 ? '+' : ''}${progressValue(context, change, unit: unit)}',
-                          style: const TextStyle(
-                              fontSize: 11, color: progressMuted)),
-                    ]))));
+        onTap: onTap,
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(
+                child: Text(fitnessText(context, label),
+                    style: const TextStyle(
+                        color: progressSilver,
+                        fontSize: 13,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500))),
+            const SizedBox(width: 8),
+            const Icon(CupertinoIcons.chevron_right,
+                size: 12, color: progressMuted),
+          ]),
+          const SizedBox(height: 12),
+          Text(display,
+              style: const TextStyle(
+                  color: progressSilver,
+                  fontSize: 22,
+                  height: 1.2,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -.4)),
+          const SizedBox(height: 6),
+          Text(
+              fitnessText(
+                  context, average ? 'Recorded-day average' : 'Latest reading'),
+              style: const TextStyle(
+                  color: progressMuted, fontSize: 11, height: 1.4)),
+          const SizedBox(height: 4),
+          Text(
+              average
+                  ? coverage
+                  : progressDate(
+                      points.last.date.toIso8601String().substring(0, 10),
+                      locale),
+              style: const TextStyle(
+                  color: progressMuted, fontSize: 11, height: 1.4)),
+          if (contextLabel != null) ...[
+            const SizedBox(height: 4),
+            Text(fitnessText(context, contextLabel!),
+                style: const TextStyle(
+                    color: progressMuted, fontSize: 11, height: 1.4)),
+          ],
+          if (points.length >= 2) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+                width: double.infinity,
+                height: 30,
+                child: ExcludeSemantics(
+                    child: ProgressSparkline(
+                        points: points, daily: average, color: progressMuted))),
+            const SizedBox(height: 8),
+            if (!average)
+              Text(
+                  fitnessText(context, '{change} since {date}', values: {
+                    'change':
+                        '${change > 0 ? '+' : ''}${progressValue(context, change, unit: unit)}',
+                    'date': progressDate(
+                        points.first.date.toIso8601String().substring(0, 10),
+                        locale),
+                  }),
+                  style: const TextStyle(
+                      color: progressMuted, fontSize: 12, height: 1.4))
+            else
+              Text(
+                  '${progressDate(points.first.date.toIso8601String().substring(0, 10), locale)} – ${progressDate(points.last.date.toIso8601String().substring(0, 10), locale)}',
+                  style: const TextStyle(
+                      color: progressMuted, fontSize: 10, height: 1.4)),
+          ],
+        ]));
   }
 }
 
@@ -741,9 +709,11 @@ class _TrendCard extends StatelessWidget {
                               Text(
                                   recorded
                                       ? summary
-                                      : fitnessText(context, 'Not recorded yet'),
+                                      : fitnessText(
+                                          context, 'Not recorded yet'),
                                   style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 10.5,
+                                      letterSpacing: .6,
                                       color: recorded
                                           ? progressSilver
                                           : progressMuted)),
@@ -754,15 +724,16 @@ class _TrendCard extends StatelessWidget {
                       ]),
                       if (points.isNotEmpty) ...[
                         const SizedBox(height: 14),
-                        SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ExcludeSemantics(
-                                child: ProgressSparkline(
-                                    points: points,
-                                    color: color,
-                                    daily: ['nutrition', 'recovery']
-                                        .contains(kind)))),
+                        if (points.length >= 2)
+                          SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ExcludeSemantics(
+                                  child: ProgressSparkline(
+                                      points: points,
+                                      color: color,
+                                      daily: ['nutrition', 'recovery']
+                                          .contains(kind)))),
                       ],
                     ]))));
   }

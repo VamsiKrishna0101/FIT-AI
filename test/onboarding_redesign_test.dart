@@ -178,9 +178,17 @@ void main() {
         isNull);
     await tester.tap(find.text('3 days a week'));
     await next(tester);
-    await tester.tap(find.byType(OnboardingChoice).at(2));
+    await tester.tap(find
+        .descendant(
+            of: find.byType(OnboardingChoice).at(2),
+            matching: find.byType(InkWell))
+        .first);
     await next(tester);
-    await tester.tap(find.byType(OnboardingChoice).at(1));
+    await tester.tap(find
+        .descendant(
+            of: find.byType(OnboardingChoice).at(1),
+            matching: find.byType(InkWell))
+        .first);
     await next(tester);
     expect(continued, isTrue);
     expect(model.draft.daysPerWeek, 'DAYS_3');
@@ -254,14 +262,28 @@ void main() {
     await tester.pumpWidget(app(LifestyleNutritionLimitationsView(
         controller: model, onContinue: () => continued = true)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(OnboardingChoice).last);
+    await tester.tap(find
+        .descendant(
+            of: find.byType(OnboardingChoice).last,
+            matching: find.byType(InkWell))
+        .first);
     await tester.scrollUntilVisible(find.text('6–7 hrs'), 150,
         scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text('6–7 hrs'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('6–7 hrs'));
     await next(tester);
-    await tester.tap(find.byType(OnboardingChoice).at(3));
+    await tester.tap(find
+        .descendant(
+            of: find.byType(OnboardingChoice).at(3),
+            matching: find.byType(InkWell))
+        .first);
     await next(tester);
-    await tester.tap(find.byType(OnboardingChoice).at(2));
+    await tester.tap(find
+        .descendant(
+            of: find.byType(OnboardingChoice).at(2),
+            matching: find.byType(InkWell))
+        .first);
     await next(tester);
     expect(continued, isTrue);
     expect(model.draft.activityLevel, 'HIGH');

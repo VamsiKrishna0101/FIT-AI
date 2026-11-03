@@ -4,19 +4,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:setcraft/core/theme/fitness_theme.dart';
-import 'package:setcraft/features/progress/components/exercise_overview_control.dart';
+import 'package:setcraft/features/progress/components/exercise_progress_content.dart';
+import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/views/progress_detail_view.dart';
+import 'package:setcraft/features/body_scan/models/body_map_models.dart';
+import 'package:setcraft/features/body_scan/views/widgets/body_calendar.dart';
 import 'package:setcraft/features/progress/repositories/progress_repository.dart';
 import 'package:setcraft/features/progress/views/progress_exercises_view.dart';
 
 class _Repository extends ProgressRepository {
   final queries = <Map<String, dynamic>>[];
-  final selected = <String>[];
+  final paths = <String>[];
+  final periods = <String>[];
+  var failMore = false;
+  var pinReads = 0;
   @override
   Future<Map<String, dynamic>> load(String path, String period,
       {bool refresh = false, Map<String, dynamic> query = const {}}) async {
     queries.add({...query});
+    paths.add(path);
+    periods.add(period);
+    if (path.startsWith('/exercises/')) {
+      const days = [
+        ('2026-10-01', 10),
+        ('2026-10-12', 11),
+        ('2026-10-21', 12),
+      ];
+      return {
+        'exercise': {
+          'id': 'row',
+          'name': 'Dumbbell bent over row',
+          'loggedSets': 9,
+        },
+        'range': {'start': '2026-09-25', 'end': '2026-10-22'},
+        'series': [
+          for (final (date, weight) in days)
+            {
+              'date': date,
+              'load': weight,
+              'reps': 10,
+              'volume': weight * 30,
+              'estimatedStrength': weight * 4 / 3,
+              'bestSet': {'weight': weight, 'reps': 10},
+            }
+        ],
+        'records': {
+          'bestLoad': {'weight': 12, 'reps': 10, 'date': '2026-10-21'}
+        },
+        'history': [
+          for (final (date, weight) in days.reversed)
+            {
+              'date': date,
+              'entries': [
+                for (var i = 1; i <= 3; i++)
+                  {'setNumber': i, 'weight': weight, 'reps': 10}
+              ],
+            }
+        ],
+      };
+    }
     final more = query['cursor'] != null;
+    if (more && failMore) throw StateError('Offline');
     final search = query['search'] as String? ?? '';
     return {
       'range': {'start': '2026-09-25', 'end': '2026-10-22'},
@@ -31,7 +79,7 @@ class _Repository extends ProgressRepository {
                   : 'Cable row',
           'latest': {'weight': more ? 40 : 12, 'reps': 10},
           'latestDate': '2026-10-21',
-          'sessions': 4,
+          'sessions': 3,
           'metric': 'load',
           'change': 20,
           'sparkline': [
@@ -56,17 +104,9 @@ class _Repository extends ProgressRepository {
   }
 
   @override
-  Future<List<String>> pins() async => [...selected];
-  @override
-  Future<void> setPinned(String id, bool enabled) async {
-    if (enabled && selected.length >= 3)
-      throw const FormatException(
-          'Your overview already shows three exercises. Remove one before adding another.');
-    if (enabled) {
-      selected.add(id);
-    } else {
-      selected.remove(id);
-    }
+  Future<List<String>> pins() async {
+    pinReads++;
+    return [];
   }
 }
 
@@ -95,15 +135,19 @@ void main() {
             repository: repo)));
     await tester.pumpAndSettle();
     expect(find.byTooltip('Pin exercise'), findsNothing);
-    expect(find.textContaining('Weight not recorded'), findsOneWidget);
+    expect(find.text('10 reps'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'row');
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
     await tester.tap(find.text('All muscles'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Lats').last);
+    await tester.tap(find.byWidgetPredicate(
+        (w) => w is CheckedPopupMenuItem<String> && w.value == 'lats'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Load more'));
+    await tester.scrollUntilVisible(find.text('Load more exercises'), 200,
+        scrollable: find.byType(Scrollable).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Load more exercises'));
     await tester.pumpAndSettle();
     expect(repo.queries.last, containsPair('search', 'row'));
     expect(repo.queries.last, containsPair('muscle', 'lats'));
@@ -114,21 +158,93 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-      'Overview limit explains the conflict without replacing a saved exercise',
+      'Opening an exercise retains sparse dates and has no overview action',
       (tester) async {
-    final repo = _Repository()..selected.addAll(['one', 'two', 'three']);
+    final repo = _Repository();
     await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-            body: FitnessTheme(
-                child: ExerciseOverviewControl(
-                    exerciseId: 'four', repository: repo)))));
+        home: ProgressExercisesView(
+            period: 'custom',
+            muscles: const [],
+            query: const {
+              'start': '2026-09-25',
+              'end': '2026-10-22',
+              'dates': '2026-09-25,2026-10-22',
+              'dataset': 'real',
+            },
+            repository: repo)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Show on overview'));
+    await tester.tap(find.text('Dumbbell bent over row'));
     await tester.pumpAndSettle();
-    expect(repo.selected, ['one', 'two', 'three']);
-    expect(find.textContaining('Remove one before adding another'),
-        findsOneWidget);
+    expect(find.byType(ProgressDetailView), findsOneWidget);
+    expect(find.byType(ProgressChart), findsOneWidget);
+    expect(repo.paths.last, '/exercises/row');
+    expect(repo.queries.last['dates'], '2026-09-25,2026-10-22');
+    expect(repo.pinReads, 0);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -1000));
+    await tester.pumpAndSettle();
+    expect(find.text('Show on overview'), findsNothing);
+    expect(find.text('Remove from overview'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
+  testWidgets('The shared calendar retains search and muscle filters',
+      (tester) async {
+    final repo = _Repository();
+    await tester.pumpWidget(MaterialApp(
+        home: ProgressExercisesView(
+            period: 'custom',
+            muscles: const [
+              {'id': 'lats', 'label': 'Lats'}
+            ],
+            query: const {'start': '2026-09-25', 'end': '2026-10-22'},
+            repository: repo)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'row');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('All muscles'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byWidgetPredicate(
+        (w) => w is CheckedPopupMenuItem<String> && w.value == 'lats'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('exercise-progress-calendar')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BodyCalendar), findsOneWidget);
+    await tester.tap(find.text('This week'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('body-calendar-apply')));
+    await tester.pumpAndSettle();
+    final today = DateUtils.dateOnly(DateTime.now());
+    String key(DateTime day) => day.toIso8601String().substring(0, 10);
+    expect(repo.queries.last['search'], 'row');
+    expect(repo.queries.last['muscle'], 'lats');
+    expect(repo.queries.last['start'], key(bodyMapWeek(today)));
+    expect(repo.queries.last['end'], key(today));
+    expect(repo.periods.last, 'custom');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Older-page failure preserves rows and retries the same cursor',
+      (tester) async {
+    final repo = _Repository()..failMore = true;
+    await tester.pumpWidget(MaterialApp(
+        home: ProgressExercisesView(
+            period: '4w', muscles: const [], repository: repo)));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Load more exercises'));
+    await tester.tap(find.text('Load more exercises'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dumbbell bent over row'), findsOneWidget);
+    expect(find.text('Barbell bench press'), findsOneWidget);
+    expect(repo.queries.last['cursor'], 'next');
+    repo.failMore = false;
+    await tester.ensureVisible(find.text('Retry'));
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(repo.queries.last['cursor'], 'next');
+    expect(find.text('Barbell squat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
       'List remains readable at larger text sizes and renders the native preview',
       (tester) async {
@@ -161,5 +277,21 @@ void main() {
       await file.writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();
     });
+    await tester.tap(find.text('Dumbbell bent over row'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ExerciseProgressContent), findsOneWidget);
+    final detailBoundary = tester.renderObject<RenderRepaintBoundary>(find
+        .ancestor(
+            of: find.byType(ProgressDetailView),
+            matching: find.byType(RepaintBoundary))
+        .first);
+    await tester.runAsync(() async {
+      final image = await detailBoundary.toImage(pixelRatio: 2);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File('build/previews/exercise-progress-detail.png')
+          .writeAsBytes(bytes!.buffer.asUint8List());
+      image.dispose();
+    });
+    expect(tester.takeException(), isNull);
   });
 }

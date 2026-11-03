@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
@@ -9,6 +11,15 @@ import 'package:liquid_glass_renderer/liquid_glass_renderer.dart' as glass;
 import '../theme/ds_colors.dart';
 import '../theme/ds_motion.dart';
 import 'navigation_glyph.dart';
+
+/// Whether the current platform has Impeller-quality shader support that can
+/// render chromatic aberration and refraction without visible artefacts.
+/// On Android the shader filter is technically supported but chromatic
+/// aberration bleeds vivid red/yellow fringes at the small nav-bar scale, so
+/// we opt into the premium software fallback instead.
+bool get _supportsLiquidOptics =>
+    ui.ImageFilter.isShaderFilterSupported &&
+    defaultTargetPlatform == TargetPlatform.iOS;
 
 /// A compact, icon-only floating dock. Labels remain available to assistive
 /// technology and tooltips without changing the dock's geometry by locale.
@@ -213,8 +224,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
                       key: const ValueKey('navigation-tabs'),
                       height: size.height,
                       child: Listener(
-                        onPointerDown: (event) =>
-                            _down(event, size, direction),
+                        onPointerDown: (event) => _down(event, size, direction),
                         onPointerUp: _up,
                         onPointerCancel: _cancel,
                         child: GestureDetector(
@@ -301,8 +311,10 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
           highlightColor: Colors.transparent,
           child: TweenAnimationBuilder<Color?>(
             tween: ColorTween(
+                // Inactive: warm silver-blue so it reads distinctly against
+                // the dark dock on Android. Active: near-white for contrast.
                 end:
-                    selected ? DSColors.navGlassText : const Color(0xFFC2C5CA)),
+                    selected ? DSColors.navGlassText : const Color(0xFF8A9199)),
             duration: duration,
             curve: DSMotion.effects,
             builder: (context, color, _) => SizedBox(
@@ -360,67 +372,137 @@ class _NavigationGlass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final optics = lens && ui.ImageFilter.isShaderFilterSupported;
-    // With real optics the lens stays nearly clear so the refraction reads;
-    // only a whisper of frost marks its body. Without the shader a blur alone
-    // cannot separate it from the dock, so the fallback keeps a silver finish.
-    final finish = DecoratedBox(
-      key: ValueKey(lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(100),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: optics
-              ? [
-                  Color.lerp(const Color(0x1AFFFFFF), const Color(0x26FFFFFF),
-                      pressure)!,
-                  Color.lerp(const Color(0x06FFFFFF), const Color(0x0DFFFFFF),
-                      pressure)!,
-                ]
-              : lens
-                  ? [
-                      Color.lerp(const Color(0x669EA5AE),
-                          const Color(0x8AABB2BA), pressure)!,
-                      Color.lerp(const Color(0x52798089),
-                          const Color(0x737F8892), pressure)!,
-                    ]
-                  // A lighter smoke lets content scrolling beneath show
-                  // through the frost while staying distinct from black.
-                  : const [Color(0xB0383B40), Color(0xBF26282C)],
-        ),
-      ),
-      child: child,
-    );
-    final Widget surface;
+    final optics = lens && _supportsLiquidOptics;
+
     if (highContrast) {
-      surface = ColoredBox(
-          color: lens ? const Color(0xFF535A63) : DSColors.bgRaised,
-          child: child);
-    } else if (optics) {
-      surface = glass.LiquidGlass.withOwnLayer(
-        shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
-        settings: glass.LiquidGlassSettings(
-          glassColor: const Color(0x0AFFFFFF),
-          thickness: 16 + pressure * 6,
-          blur: .6,
-          refractiveIndex: 1.4,
-          chromaticAberration: .35,
-          lightAngle: -math.pi / 3,
-          lightIntensity: .45 + pressure * .25,
-          ambientStrength: .08,
-          saturation: 1.25,
-        ),
-        child: finish,
-      );
-    } else {
-      surface = BackdropFilter(
-        filter:
-            ui.ImageFilter.blur(sigmaX: lens ? 2 : 14, sigmaY: lens ? 2 : 14),
-        child: finish,
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(100),
+        child: ColoredBox(
+            color: lens ? const Color(0xFF535A63) : DSColors.bgRaised,
+            child: child),
       );
     }
-    return ClipRRect(borderRadius: BorderRadius.circular(100), child: surface);
+
+    if (optics) {
+      // Real liquid-glass shader path (iOS / shader-capable).
+      final finish = DecoratedBox(
+        key: const ValueKey('navigation-lens-finish'),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(
+                  const Color(0x1AFFFFFF), const Color(0x26FFFFFF), pressure)!,
+              Color.lerp(
+                  const Color(0x06FFFFFF), const Color(0x0DFFFFFF), pressure)!,
+            ],
+          ),
+        ),
+        child: child,
+      );
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(100),
+        child: glass.LiquidGlass.withOwnLayer(
+          shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
+          settings: glass.LiquidGlassSettings(
+            glassColor: const Color(0x0AFFFFFF),
+            thickness: 16 + pressure * 6,
+            blur: .6,
+            refractiveIndex: 1.4,
+            chromaticAberration: .35,
+            lightAngle: -math.pi / 3,
+            lightIntensity: .45 + pressure * .25,
+            ambientStrength: .08,
+            saturation: 1.25,
+          ),
+          child: finish,
+        ),
+      );
+    }
+
+    // ── Android / software-fallback premium glass path ──────────────────────
+    // Layered approach: frosted backdrop → rich gradient body → specular sheen.
+    final blurSigma = lens ? 18.0 : 22.0;
+
+    // Body gradient differs between the floating dock and the active lens pill.
+    final bodyGradient = lens
+        ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              // Pressed lens brightens like a water droplet catching light.
+              Color.lerp(
+                  const Color(0x52A8B4BE), const Color(0x70BCC8D4), pressure)!,
+              Color.lerp(
+                  const Color(0x3D6E7A84), const Color(0x5C8A97A2), pressure)!,
+              Color.lerp(
+                  const Color(0x283A4248), const Color(0x42506068), pressure)!,
+            ],
+            stops: const [0.0, 0.52, 1.0],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            // Obsidian-dark dock: slightly lighter at top-left for specularity.
+            colors: [
+              Color(0xCC2C3035),
+              Color(0xCC1A1D21),
+              Color(0xD4141618),
+            ],
+            stops: [0.0, 0.50, 1.0],
+          );
+
+    // Vertical sheen overlay — simulates light hitting a curved glass surface.
+    final sheenGradient = lens
+        ? LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withValues(alpha: .28 + pressure * .10),
+              Colors.white.withValues(alpha: .06),
+              Colors.white.withValues(alpha: .00),
+              Colors.white.withValues(alpha: .04),
+            ],
+            stops: const [0.0, 0.30, 0.65, 1.0],
+          )
+        : const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0x18FFFFFF),
+              Color(0x04FFFFFF),
+              Color(0x00FFFFFF),
+              Color(0x06FFFFFF),
+            ],
+            stops: [0.0, 0.28, 0.62, 1.0],
+          );
+
+    final Widget surface = ClipRRect(
+      borderRadius: BorderRadius.circular(100),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: DecoratedBox(
+          key: ValueKey(
+              lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(100),
+            gradient: bodyGradient,
+          ),
+          child: DecoratedBox(
+            // Vertical specular sheen on top of the body colour.
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              gradient: sheenGradient,
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+
+    return surface;
   }
 }
 
@@ -530,11 +612,8 @@ class _LiquidSelectionState extends State<_LiquidSelection>
           final height = 42 * (1 + pressure * .3 - stretch * .22);
           final center = ((physicalPosition + .5) * slot)
               .clamp(width / 2, widget.width - width / 2);
-          final lens = Rect.fromLTWH(
-              center - width / 2,
-              (widget.height - height) / 2 - pressure * 2,
-              width,
-              height);
+          final lens = Rect.fromLTWH(center - width / 2,
+              (widget.height - height) / 2 - pressure * 2, width, height);
           return Positioned.fill(
             child: IgnorePointer(
               child: ExcludeSemantics(
@@ -593,20 +672,36 @@ class _GlassRim extends CustomPainter {
     final rim = RRect.fromRectAndRadius(bounds, const Radius.circular(100));
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = highContrast ? 1.2 : .55;
+      ..strokeWidth = highContrast ? 1.2 : (lens ? .75 : .55);
     if (highContrast) {
       paint.color = DSColors.silver;
-    } else {
+    } else if (lens) {
+      // Lens rim: bold top-left specular hit fading to a bottom-right glimmer.
+      // The alpha scales with pressure so it brightens when held.
       paint.shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withValues(alpha: lens ? .48 + pressure * .12 : .30),
-          Colors.white.withValues(alpha: lens ? .14 : .09),
-          Colors.white.withValues(alpha: lens ? .08 : .05),
-          Colors.white.withValues(alpha: lens ? .24 : .16),
+          Colors.white.withValues(alpha: .72 + pressure * .18),
+          Colors.white.withValues(alpha: .38 + pressure * .10),
+          Colors.white.withValues(alpha: .10),
+          Colors.white.withValues(alpha: .06),
+          Colors.white.withValues(alpha: .32 + pressure * .08),
         ],
-        stops: const [0, .35, .72, 1],
+        stops: const [0.0, 0.22, 0.50, 0.72, 1.0],
+      ).createShader(bounds);
+    } else {
+      // Dock rim: subtle specular on top-left corner only.
+      paint.shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withValues(alpha: .38),
+          Colors.white.withValues(alpha: .14),
+          Colors.white.withValues(alpha: .06),
+          Colors.white.withValues(alpha: .18),
+        ],
+        stops: const [0, .32, .70, 1],
       ).createShader(bounds);
     }
     canvas.drawRRect(rim, paint);

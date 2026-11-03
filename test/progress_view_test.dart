@@ -1,4 +1,4 @@
-import 'package:setcraft/features/progress/components/progress_training_hero.dart';
+import 'package:setcraft/features/progress/components/progress_visual_cards.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -90,7 +90,7 @@ void main() {
     expect(tester.getBottomLeft(find.text('Bench press')).dy, lessThan(852));
     expect(find.text('40 kg'), findsOneWidget);
     expect(find.byType(ProgressChart), findsNothing);
-    expect(find.byType(ProgressWeeklyBars), findsOneWidget);
+    expect(find.byType(ProgressAttendanceCard), findsOneWidget);
     expect(find.byType(ProgressActivity), findsNothing);
     await capture(tester, 'progress-sparse-redesign');
     await tester.tap(find.byKey(const ValueKey('progress-open-activity')));
@@ -102,13 +102,13 @@ void main() {
     expect(find.text('45'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('progress-section-trends')));
+    await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('progress-view-all-history')), 200,
+        scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
-    expect(find.text('Body changes'), findsOneWidget);
-    expect(find.text('Nutrition'), findsOneWidget);
-    expect(find.text('Recovery'), findsOneWidget);
+    expect(find.byKey(const ValueKey('progress-view-all-history')), findsOneWidget);
+    expect(find.text('Recovery'), findsNothing);
     expect(find.byType(ProgressSetupRow), findsNothing);
-    expect(find.text('—'), findsNothing);
     await capture(tester, 'progress-setup-redesign');
     expect(tester.takeException(), isNull);
   });
@@ -374,8 +374,8 @@ void main() {
     await capture(tester, 'progress-seeded-preview');
     expect(find.text('Preview data'), findsNothing);
     expect(find.text('Real data'), findsNothing);
-    expect(find.byType(ProgressTrainingHero), findsOneWidget);
-    expect(find.text('Exercise progress'), findsOneWidget);
+    expect(find.byType(ProgressAttendanceCard), findsOneWidget);
+    expect(find.text('Recent exercises'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.drag(
         find.byType(CustomScrollView).first, const Offset(0, -720));

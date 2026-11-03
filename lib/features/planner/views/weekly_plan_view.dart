@@ -3,6 +3,7 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/content_transition.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +13,7 @@ import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../repositories/weekly_plan_repository.dart';
 import 'weekly_plan_generation_view.dart';
+import '../../notifications/views/notification_settings_view.dart';
 import 'weekly_plan_history_view.dart';
 import 'widgets/weekly_plan_schedule.dart';
 import '../../body_scan/models/body_assessment_models.dart';
@@ -294,6 +296,9 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       });
     }
     await _load();
+    if (mounted && result?['status'] == 'COMPLETED') {
+      await offerNotificationReminders(context);
+    }
   }
 
   Future<void> _openHistory() async {
@@ -381,7 +386,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
     return FitnessTheme(
         child: Scaffold(
       appBar: AppBar(
-        title: const FitnessText('Your weekly plan',
+        title: const FitnessText('Weekly plan',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         backgroundColor: FitnessTheme.canvas,
         surfaceTintColor: Colors.transparent,
@@ -392,175 +397,209 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
                   style: TextStyle(color: FitnessTheme.silver, fontSize: 12)))
         ],
       ),
-      body: RefreshIndicator(
-          onRefresh: _load,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-            child: ContentTransition(
-                key: ValueKey(_owner),
-                child: _loading && payload == null
-                    ? const LoadingPlaceholder(key: ValueKey('plan-loading'))
-                    : Column(
-                        key: ValueKey(_selected?['id'] ?? 'plan-empty'),
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                            if (_running) ...[
-                              _surface(
-                                  child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                    const FitnessText(
-                                        'Your next plan is being prepared.',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 12),
-                                    FitnessSubmit(
-                                        label: 'View plan progress',
-                                        onPressed:
-                                            _busy ? null : _openProgress),
-                                  ])),
-                              const SizedBox(height: 20),
-                            ],
-                            if (payload == null && !_running) ...[
-                              const FitnessText('Your next workouts',
-                                  style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: -.7)),
-                              const SizedBox(height: 10),
-                              const FitnessText(
-                                  'Choose your start date and training days. We’ll build your workouts and use the food support you choose in Nutrition.',
-                                  style: TextStyle(
-                                      color: FitnessTheme.muted, height: 1.5)),
-                              const SizedBox(height: 24),
-                              if (_canGenerate)
-                                FitnessSubmit(
-                                    label: 'Generate weekly plan',
-                                    busy: _busy,
-                                    onPressed: _loading ? null : _generate),
-                            ],
-                            if (payload != null) ...[
-                              SizedBox(key: _planKey, height: 0),
-                              if (start != null && end != null)
-                                Text(
-                                    '${DateFormat.MMMd(locale).format(start)} – ${DateFormat.yMMMd(locale).format(end)}',
-                                    style: const TextStyle(
-                                        fontSize: 23,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: -.5)),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                  spacing: 12,
-                                  runSpacing: 4,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    FitnessText(
-                                        payload['synthetic'] == true
-                                            ? 'TEST PLAN'
-                                            : status,
-                                        style: const TextStyle(
-                                            color: FitnessTheme.muted,
-                                            fontSize: 12)),
-                                  ]),
-                              const SizedBox(height: 20),
-                              WeeklyPlanSchedule(
-                                  key: ValueKey(_selected!['id']),
-                                  active: _selected?['status'] == 'ACTIVE',
-                                  fromOnboarding: widget.fromOnboarding,
-                                  payload: payload),
-                              const SizedBox(height: 12),
-                              ExpansionTile(
-                                tilePadding: EdgeInsets.zero,
-                                shape: const Border(),
-                                collapsedShape: const Border(),
-                                title: const FitnessText('Plan options',
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: FitnessTheme.muted)),
-                                children: [
-                                  if (_canGenerate && !_running)
-                                    TextButton(
-                                        onPressed: _busy ? null : _generate,
-                                        child: const FitnessText(
-                                            'Create next plan')),
-                                  if (_cooldownActive && nextGeneration != null)
-                                    Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 12),
-                                        child: FitnessText(
-                                            'Next plan available ${DateFormat.yMMMd(locale).add_jm().format(nextGeneration)}',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                height: 1.4,
-                                                color: FitnessTheme.muted))),
+      backgroundColor: FitnessTheme.canvas,
+      body: DecoratedBox(
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF111111), Colors.black],
+                  stops: [0, .35])),
+          child: RefreshIndicator(
+              color: Colors.white,
+              backgroundColor: Color(0xFF242424),
+              onRefresh: _load,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics()),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                child: ContentTransition(
+                    key: ValueKey(_owner),
+                    child: _loading && payload == null
+                        ? const LoadingPlaceholder(
+                            key: ValueKey('plan-loading'))
+                        : Column(
+                            key: ValueKey(_selected?['id'] ?? 'plan-empty'),
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                                if (_running) ...[
+                                  _surface(
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                        const FitnessText(
+                                            'Your next plan is being prepared.',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600)),
+                                        const SizedBox(height: 12),
+                                        FitnessSubmit(
+                                            label: 'View plan progress',
+                                            onPressed:
+                                                _busy ? null : _openProgress),
+                                      ])),
+                                  const SizedBox(height: 20),
                                 ],
-                              ),
-                              if ((payload['warnings'] as List? ?? [])
-                                  .isNotEmpty) ...[
-                                const SizedBox(height: 16),
-                                Theme(
-                                    data: Theme.of(context).copyWith(
-                                        dividerColor: Colors.transparent),
-                                    child: ExpansionTile(
-                                      tilePadding: EdgeInsets.zero,
-                                      title: const FitnessText('Plan notes',
-                                          style: TextStyle(
-                                              color: FitnessTheme.muted,
-                                              fontSize: 13)),
-                                      children: [
-                                        for (final warning
-                                            in payload['warnings'] as List)
-                                          Padding(
-                                              padding: const EdgeInsets.only(
-                                                  bottom: 8),
-                                              child: FitnessText('$warning',
-                                                  style: const TextStyle(
-                                                      color: FitnessTheme.muted,
-                                                      fontSize: 12,
-                                                      height: 1.5)))
-                                      ],
-                                    )),
-                              ],
-                              if (_selected?['status'] == 'DRAFT' &&
-                                  _selected?['synthetic'] != true &&
-                                  !pastWeek)
-                                Padding(
-                                    padding: const EdgeInsets.only(top: 20),
-                                    child: FitnessSubmit(
-                                        label: 'Use this weekly plan',
+                                if (payload == null && !_running) ...[
+                                  const FitnessText('Your next workouts',
+                                      style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: -.7)),
+                                  const SizedBox(height: 10),
+                                  const FitnessText(
+                                      'Choose your days. Build a week around you.',
+                                      style: TextStyle(
+                                          color: FitnessTheme.muted,
+                                          height: 1.5)),
+                                  const SizedBox(height: 24),
+                                  if (_canGenerate)
+                                    FitnessSubmit(
+                                        label: 'Generate weekly plan',
                                         busy: _busy,
-                                        onPressed: _activate)),
-                              if (pastWeek && _selected?['status'] == 'DRAFT')
-                                const Padding(
-                                    padding: EdgeInsets.only(top: 16),
-                                    child: FitnessText(
-                                        'Past week · saved for review',
-                                        style: TextStyle(
-                                            color: FitnessTheme.muted,
-                                            fontSize: 12))),
-                            ],
-                            if (_run?['status'] == 'FAILED' && !_cooldownActive)
-                              TextButton(
-                                  onPressed: _busy ? null : _openProgress,
-                                  child: const FitnessText('Retry planning')),
-                            if (_error != null)
-                              Padding(
-                                  padding: const EdgeInsets.only(top: 16),
-                                  child: Column(children: [
-                                    FitnessText(_error!,
-                                        style: const TextStyle(
-                                            color: FitnessTheme.coral)),
-                                    TextButton(
-                                        onPressed: _busy ? null : _load,
-                                        child: const FitnessText('Retry')),
-                                  ])),
-                          ])),
-          )),
+                                        onPressed: _loading ? null : _generate),
+                                ],
+                                if (payload != null) ...[
+                                  SizedBox(key: _planKey, height: 0),
+                                  _pageHeading(
+                                      payload, status, start, end, locale),
+                                  WeeklyPlanSchedule(
+                                      key: ValueKey(_selected!['id']),
+                                      active: _selected?['status'] == 'ACTIVE',
+                                      fromOnboarding: widget.fromOnboarding,
+                                      payload: payload),
+                                  const SizedBox(height: 12),
+                                  _planDetails(payload, nextGeneration, locale),
+                                  if (_selected?['status'] == 'DRAFT' &&
+                                      _selected?['synthetic'] != true &&
+                                      !pastWeek)
+                                    Padding(
+                                        padding: const EdgeInsets.only(top: 20),
+                                        child: FitnessSubmit(
+                                            label: 'Use this weekly plan',
+                                            busy: _busy,
+                                            onPressed: _activate)),
+                                  if (pastWeek &&
+                                      _selected?['status'] == 'DRAFT')
+                                    const Padding(
+                                        padding: EdgeInsets.only(top: 16),
+                                        child: FitnessText(
+                                            'Past week · saved for review',
+                                            style: TextStyle(
+                                                color: FitnessTheme.muted,
+                                                fontSize: 12))),
+                                ],
+                                if (_run?['status'] == 'FAILED' &&
+                                    !_cooldownActive)
+                                  TextButton(
+                                      onPressed: _busy ? null : _openProgress,
+                                      child:
+                                          const FitnessText('Retry planning')),
+                                if (_error != null)
+                                  Padding(
+                                      padding: const EdgeInsets.only(top: 16),
+                                      child: Column(children: [
+                                        FitnessText(_error!,
+                                            style: const TextStyle(
+                                                color: FitnessTheme.coral)),
+                                        TextButton(
+                                            onPressed: _busy ? null : _load,
+                                            child: const FitnessText('Retry')),
+                                      ])),
+                              ])),
+              ))),
     ));
   }
 
+  Widget _pageHeading(Map<String, dynamic> payload, String status,
+          DateTime? start, DateTime? end, String locale) =>
+      Padding(
+        padding: const EdgeInsets.only(top: 2, bottom: 24),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const FitnessText('Your week.',
+              style: TextStyle(
+                  fontSize: 36,
+                  height: 1.15,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -1.5)),
+          const SizedBox(height: 12),
+          Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (start != null && end != null)
+                  Text(
+                      '${DateFormat.MMMd(locale).format(start)} – ${DateFormat.yMMMd(locale).format(end)}',
+                      style: const TextStyle(
+                          fontSize: 12, color: FitnessTheme.muted)),
+                Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFF242424),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: FitnessText(
+                        payload['synthetic'] == true ? 'TEST PLAN' : status,
+                        style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500))),
+              ]),
+        ]),
+      );
+
   Widget _surface({required Widget child}) => FitnessCard(child: child);
+
+  Widget _planDetails(Map<String, dynamic> payload, DateTime? nextGeneration,
+          String locale) =>
+      FitnessCard(
+        padding: EdgeInsets.zero,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            shape: const Border(),
+            collapsedShape: const Border(),
+            iconColor: FitnessTheme.muted,
+            collapsedIconColor: FitnessTheme.muted,
+            tilePadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            leading: const Icon(CupertinoIcons.info_circle,
+                size: 18, color: FitnessTheme.muted),
+            title: const FitnessText('About this plan',
+                style: TextStyle(fontSize: 13, color: FitnessTheme.silver)),
+            children: [
+              if (payload['summary'] case final String summary
+                  when summary.isNotEmpty)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: FitnessText(summary,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: FitnessTheme.muted,
+                            height: 1.5))),
+              for (final warning in payload['warnings'] as List? ?? [])
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: FitnessText('$warning',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: FitnessTheme.muted,
+                            height: 1.5))),
+              if (_cooldownActive && nextGeneration != null)
+                FitnessText(
+                    'Next plan available ${DateFormat.yMMMd(locale).add_jm().format(nextGeneration)}',
+                    style: const TextStyle(
+                        fontSize: 11, color: FitnessTheme.muted, height: 1.4)),
+              if (_canGenerate && !_running)
+                TextButton(
+                    onPressed: _busy ? null : _generate,
+                    child: const FitnessText('Create next plan')),
+            ],
+          ),
+        ),
+      );
 }

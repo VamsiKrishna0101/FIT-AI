@@ -9,6 +9,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/storage/secure_session_store.dart';
 import '../repositories/notifications_repository.dart';
+import 'rest_notification_service.dart';
+import '../../../core/localization/fitness_copy.dart';
 
 @pragma('vm:entry-point')
 Future<void> fitaiNotificationBackground(RemoteMessage message) async {
@@ -38,6 +40,11 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
     if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
       return;
     }
+    RestNotificationService.shared.opened.stream
+        .listen((data) => unawaited(_openData(data)));
+    try {
+      await RestNotificationService.shared.initialize();
+    } catch (_) {/* Remote push remains independent. */}
     try {
       await Firebase.initializeApp();
       configured = true;
@@ -145,10 +152,17 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
     final ownerToken = await SecureSessionStore.shared.accessToken;
     final owner = await SecureSessionStore.shared.userId;
     await FirebaseMessaging.instance.setAutoInitEnabled(true);
-    if (defaultTargetPlatform == TargetPlatform.iOS &&
-        await FirebaseMessaging.instance.getAPNSToken() == null) {
-      throw StateError(
-          'Apple push registration is not ready. Check APNs setup.');
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      String? apnsToken;
+      for (var attempt = 0; attempt < 10 && apnsToken == null; attempt++) {
+        apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        if (apnsToken == null) {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+        }
+      }
+      if (apnsToken == null) {
+        throw StateError('Could not register notifications. Please try again.');
+      }
     }
     final token = await FirebaseMessaging.instance.getToken();
     if (token == null || owner != await SecureSessionStore.shared.userId) {
@@ -175,7 +189,10 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
         return preferences;
       });
 
-  Future<void> detach() => _serialized(_detach);
+  Future<void> detach() => _serialized(() async {
+        await RestNotificationService.shared.detach();
+        await _detach();
+      });
 
   Future<void> _detach() async {
     _pending = null;
@@ -217,19 +234,28 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
                       const TextStyle(color: Color(0xFF44484C), fontSize: 12)),
           ]),
       action: SnackBarAction(
-          label: 'Open',
+          label: fitnessText(messengerKey.currentContext!, 'Open'),
           textColor: const Color(0xFF181A1C),
           onPressed: () => unawaited(_open(message))),
     ));
   }
 
-  Future<void> _open(RemoteMessage message) async {
-    if (!await _belongsToAccount(message)) return;
-    final id = message.data['notificationId']?.toString();
+  Future<void> _open(RemoteMessage message) => _openData(
+      message.data.map((key, value) => MapEntry(key, value.toString())));
+
+  Future<void> _openData(Map<String, String> data) async {
+    final owner = await SecureSessionStore.shared.userId;
+    if (await SecureSessionStore.shared.accessToken != null &&
+        data['userId'] != owner) {
+      return;
+    }
+    final id = data['notificationId'];
     if (id == null || !_seen.add(id)) return;
     if (_seen.length > 100) _seen.remove(_seen.first);
-    _pending =
-        message.data.map((key, value) => MapEntry(key, value.toString()));
+    _pending = data;
+    if (!id.startsWith('rest:') && data['userId'] == owner) {
+      unawaited(repository.opened(id).catchError((Object _) {}));
+    }
     _opened.add(_pending!);
   }
 

@@ -1,22 +1,23 @@
-import 'package:setcraft/core/theme/ds_motion.dart';
-import '../viewmodels/onboarding_controller.dart';
 import 'package:flutter/material.dart';
+import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/localization/app_language.dart';
-import '../../../core/localization/fitness_text.dart';
-import '../../../core/theme/fitness_theme.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
+import '../../../core/theme/ds_motion.dart';
+import '../../../core/theme/fitness_theme.dart';
+import '../../../core/localization/fitness_text.dart';
+import '../../auth/views/auth_view.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/welcome_training_intro.dart';
-import '../../../core/components/liquid_chrome_button.dart';
-import '../../../core/branding/setcraft_brand.dart';
+import '../components/welcome_background_video.dart';
+import '../viewmodels/onboarding_controller.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
-import 'goal_selection_view.dart';
-import '../../auth/views/auth_view.dart';
-import '../../auth/auth_copy.dart';
+import 'onboarding_journey.dart';
 
+/// Monochrome training welcome with clear value and a persistent setup action.
 class OnboardingView extends StatefulWidget {
   final OnboardingController? controller;
   const OnboardingView({super.key, this.controller});
+
   @override
   State<OnboardingView> createState() => _OnboardingViewState();
 }
@@ -24,19 +25,6 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView> {
   late final OnboardingViewModel _viewModel;
   bool _saving = false;
-  bool _artworkWarmed = false;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_artworkWarmed) return;
-    _artworkWarmed = true;
-    for (final sex in ['male', 'female']) {
-      precacheImage(
-          ResizeImage(AssetImage('assets/onboarding_bodies/$sex-front.png'),
-              width: 500),
-          context);
-    }
-  }
 
   @override
   void initState() {
@@ -60,12 +48,11 @@ class _OnboardingViewState extends State<OnboardingView> {
     if (_saving || !_viewModel.ready) return;
     setState(() => _saving = true);
     try {
-      // Persist the displayed default even when the language sheet was unused.
       _viewModel.draft.languageCode = _viewModel.selectedLanguage.code;
       await _viewModel.continueToNextStep();
       if (mounted) {
         await OnboardingPageRoute(
-                page: GoalSelectionView(controller: _viewModel.controller))
+                page: OnboardingJourney.start(_viewModel.controller))
             .open(context);
       }
     } finally {
@@ -78,59 +65,108 @@ class _OnboardingViewState extends State<OnboardingView> {
     final language = _viewModel.selectedLanguage;
     return FitnessTheme(
         child: Scaffold(
-            backgroundColor: Colors.black,
-            body: SafeArea(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                  Expanded(
-                      child: ListView(padding: EdgeInsets.zero, children: [
-                    Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
-                        child: Row(children: [
-                          const SetcraftMark(size: 30),
-                          const SizedBox(width: 10),
-                          const Text('SETCRAFT',
-                              textScaler: TextScaler.noScaling,
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 2.4)),
-                          const Spacer(),
-                          TextButton(
-                              key: const ValueKey('onboarding-language'),
-                              onPressed:
-                                  !_viewModel.ready ? null : _chooseLanguage,
-                              child: Text(language.nativeName,
-                                  style: const TextStyle(
-                                      color: FitnessTheme.muted,
-                                      fontSize: 12))),
-                        ])),
-                    const WelcomeTrainingIntro(),
-                    const SizedBox(height: 24),
-                  ])),
-                  Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-                      child: LiquidChromeButton(
-                          title: 'Get started',
-                          loadingTitle: 'Continuing…',
-                          solid: true,
-                          pill: true,
-                          showArrow: false,
-                          isLoading: _saving || !_viewModel.ready,
-                          onPressed:
-                              _saving || !_viewModel.ready ? null : _continue)),
-                  TextButton(
-                      onPressed: _saving
-                          ? null
-                          : () => OnboardingPageRoute<void>(
-                                  page: const AuthView(initialSignIn: true))
-                              .open(context),
-                      child: FitnessText(
-                          AuthCopy.forLanguage(language).switchToSignIn,
-                          style: const TextStyle(
-                              fontSize: 13, color: FitnessTheme.muted))),
-                ]))));
+      backgroundColor: Colors.black,
+      body: Stack(fit: StackFit.expand, children: [
+        const WelcomeBackgroundVideo(),
+        const Positioned.fill(
+            child: DecoratedBox(
+                decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: [
+                0,
+                .36,
+                .60,
+                .84,
+                1
+              ],
+              colors: [
+                Color(0x33000000),
+                Color(0x3D000000),
+                Color(0x6B000000),
+                Color(0xD1000000),
+                Color(0xFA000000)
+              ]),
+        ))),
+        SafeArea(
+            child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(minHeight: constraints.maxHeight),
+                        child: IntrinsicHeight(
+                            child: Center(
+                                child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 488),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton(
+                                          key: const ValueKey(
+                                              'onboarding-language'),
+                                          onPressed: !_viewModel.ready
+                                              ? null
+                                              : _chooseLanguage,
+                                          style: TextButton.styleFrom(
+                                              foregroundColor:
+                                                  const Color(0xFFCCCCD0),
+                                              minimumSize: const Size(44, 44)),
+                                          child: Text(language.nativeName,
+                                              style: const TextStyle(
+                                                  fontSize: 11)))),
+                                  SizedBox(height: constraints.maxHeight * .20),
+                                  const Spacer(),
+                                  WelcomeTrainingIntro(
+                                      compact: constraints.maxHeight < 780),
+                                  const SizedBox(height: 30),
+                                  LiquidChromeButton(
+                                      key:
+                                          const ValueKey('welcome-get-started'),
+                                      title: 'Get started',
+                                      loadingTitle: 'Continuing…',
+                                      solid: true,
+                                      pill: true,
+                                      showArrow: false,
+                                      height: 54,
+                                      textStyle: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w800,
+                                          fontStyle: FontStyle.italic,
+                                          letterSpacing: -.2),
+                                      isLoading: _saving || !_viewModel.ready,
+                                      onPressed: _saving || !_viewModel.ready
+                                          ? null
+                                          : _continue),
+                                  const SizedBox(height: 14),
+                                  TextButton(
+                                      key: const ValueKey('welcome-sign-in'),
+                                      onPressed: _saving
+                                          ? null
+                                          : () => OnboardingPageRoute<void>(
+                                                  page: const AuthView(
+                                                      initialSignIn: true))
+                                              .open(context),
+                                      style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              const Color(0xFFA0A0AA),
+                                          minimumSize: const Size(48, 48)),
+                                      child: const FitnessText('Log in',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                              fontStyle: FontStyle.italic))),
+                                ]),
+                          ),
+                        ))),
+                      ),
+                    ))),
+      ]),
+    ));
   }
 
   Future<void> _chooseLanguage() => showModalBottomSheet<void>(

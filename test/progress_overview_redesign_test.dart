@@ -1,4 +1,4 @@
-import 'package:setcraft/features/progress/components/progress_dashboard.dart';
+import 'package:setcraft/features/progress/components/progress_visual_cards.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -19,8 +19,13 @@ const bench = <String, dynamic>{
   'name': 'Bench press',
   'metric': 'load',
   'latest': {'weight': 60, 'reps': 8},
+  'first': {'weight': 50, 'reps': 8},
+  'firstDate': '2026-10-05',
   'latestDate': '2026-10-30',
   'sessions': 4,
+  'loggedSets': 12,
+  'totalReps': 96,
+  'volume': 5280,
   'change': 20,
   'sparkline': [
     {'date': '2026-10-05', 'value': 50},
@@ -34,7 +39,13 @@ const pullUp = <String, dynamic>{
   'name': 'Pull-up',
   'metric': 'reps',
   'latest': {'weight': 0, 'reps': 8},
+  'first': {'weight': 0, 'reps': 6},
+  'firstDate': '2026-10-05',
+  'latestDate': '2026-10-30',
   'sessions': 2,
+  'loggedSets': 6,
+  'totalReps': 42,
+  'volume': null,
   'change': null,
   'sparkline': [
     {'date': '2026-10-05', 'value': 6},
@@ -42,8 +53,21 @@ const pullUp = <String, dynamic>{
   ],
 };
 const overview = ProgressOverview({
-  'range': {'start': '2026-10-03', 'end': '2026-10-30'},
-  'summary': {'workouts': 12, 'sets': 144, 'records': 3, 'workoutChange': 2},
+  'range': {
+    'start': '2026-10-03',
+    'end': '2026-10-30',
+    'previousStart': '2026-09-05',
+    'previousEnd': '2026-10-02',
+    'comparable': true,
+  },
+  'summary': {
+    'workouts': 12,
+    'sets': 144,
+    'records': 3,
+    'workoutChange': 2,
+    'previousWorkouts': 10,
+    'hasPreviousTraining': true,
+  },
   'weeks': [
     {'date': '2026-09-28', 'workouts': 1, 'sets': 12, 'partial': true},
     {'date': '2026-10-05', 'workouts': 3, 'sets': 36},
@@ -62,6 +86,7 @@ Widget page(Widget child,
         double scale = 1,
         bool dock = false}) =>
     MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: ThemeData.dark().copyWith(
             textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Inter')),
         locale: locale,
@@ -91,10 +116,12 @@ void phone(WidgetTester tester, {double width = 393}) {
   addTearDown(tester.view.reset);
 }
 
-Future<void> capture(WidgetTester tester, String name) async {
+Future<void> capture(WidgetTester tester, String name,
+    {Finder? boundaryFinder}) async {
   await tester.runAsync(() async {
     final boundary = tester.renderObject<RenderRepaintBoundary>(
-        find.byKey(const ValueKey('progress-redesign-preview')));
+        boundaryFinder ??
+            find.byKey(const ValueKey('progress-redesign-preview')));
     final image = await boundary.toImage(pixelRatio: 2);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     final file = File('build/previews/$name.png');
@@ -102,6 +129,15 @@ Future<void> capture(WidgetTester tester, String name) async {
     await file.writeAsBytes(bytes!.buffer.asUint8List());
     image.dispose();
   });
+}
+
+Future<void> reveal(WidgetTester tester, Finder target) async {
+  for (var i = 0; i < 35 && target.hitTestable().evaluate().isEmpty; i++) {
+    await tester.drag(
+        find.byType(CustomScrollView).first, const Offset(0, -180));
+    await tester.pumpAndSettle();
+  }
+  expect(target.hitTestable(), findsWidgets);
 }
 
 void main() {
@@ -183,24 +219,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Empty overview has one prompt and keeps every destination',
+  testWidgets('Empty overview keeps chart destinations and the training action',
       (tester) async {
     phone(tester);
     await tester.pumpWidget(page(const ProgressOverviewView(
         initial: ProgressOverview({
-      'summary': {'workouts': 0}
+      'summary': {'workouts': 0},
     }))));
     await tester.pumpAndSettle();
-    expect(find.text('Log sets to see how your exercises improve.'),
-        findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('progress-section-trends')));
-    await tester.pumpAndSettle();
-    expect(find.text('Body changes'), findsOneWidget);
-    expect(find.text('Recovery'), findsOneWidget);
-    expect(find.text('Nutrition'), findsOneWidget);
-    expect(find.text('Muscles'), findsOneWidget);
-    expect(find.byType(ProgressChart), findsNothing);
-    expect(find.text('—'), findsNothing);
+    expect(
+        find.byKey(const ValueKey('progress-open-training')), findsOneWidget);
+    await reveal(
+        tester, find.byKey(const ValueKey('progress-view-all-history')));
+    expect(find.text('Recovery'), findsNothing);
+    expect(find.text('HRV'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -211,13 +243,13 @@ void main() {
         page(const ProgressOverviewView(initial: overview), dock: true));
     await tester.pumpAndSettle();
     await capture(tester, 'progress-overview-focused');
-    expect(tester.getSize(find.byType(ProgressExerciseTrends)).height,
-        lessThan(230));
-    await tester.drag(
-        find.byType(CustomScrollView).first, const Offset(0, -1200));
+    await reveal(
+        tester, find.byKey(const ValueKey('progress-view-all-history')));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -400));
     await tester.pumpAndSettle();
     final footer =
-        tester.getRect(find.byKey(const ValueKey('progress-all-trends')));
+        tester.getRect(find.byKey(const ValueKey('progress-view-all-history')));
     final dock =
         tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
     expect(footer.bottom, lessThan(dock.top));
@@ -259,26 +291,25 @@ void main() {
       expect(
           tester
               .renderObject<RenderParagraph>(
-                  find.text(fitnessText(context, '4 weeks')).first)
+                  find.byKey(const ValueKey('progress-range-label')))
               .didExceedMaxLines,
           isFalse);
       expect(tester.takeException(), isNull);
       if (language == AppLanguage.germany) {
         await capture(tester, 'progress-overview-german-large');
       }
-      await tester.scrollUntilVisible(find.byType(ProgressExerciseTrends), 120,
+      await tester.scrollUntilVisible(
+          find.byType(ProgressExerciseChartShelf), 120,
           scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
-      expect(find.text('60 kg'), findsOneWidget);
-      await tester.drag(
-          find.byType(CustomScrollView).first, const Offset(0, -1600));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('progress-all-trends')), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('progress-section-picker')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(fitnessText(context, 'Trends')).last);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('progress-trend-body')), findsOneWidget);
+      expect(find.byKey(const ValueKey('progress-exercise-bench')),
+          findsOneWidget);
+      await reveal(
+          tester, find.byKey(const ValueKey('progress-view-all-history')));
+      expect(find.byKey(const ValueKey('progress-view-all-history')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('progress-calendar-button')),
+          findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

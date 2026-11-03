@@ -18,7 +18,7 @@ class WeeklyPlanRepository {
   Future<Map<String, dynamic>> _read(String path,
           {Map<String, dynamic>? query,
           Duration ttl = const Duration(minutes: 5)}) =>
-      UserDataCache.shared.load('plans', 'real-v2:$path:${query.toString()}',
+      UserDataCache.shared.load('plans', 'real-v3:$path:${query.toString()}',
           () async {
         final response = await ApiClient.shared
             .get<Map<String, dynamic>>(path, queryParameters: query);
@@ -35,7 +35,7 @@ class WeeklyPlanRepository {
 
   Future<List<Map<String, dynamic>>> plans() async {
     final data =
-        await UserDataCache.shared.load('plans', 'real-list-v2', () async {
+        await UserDataCache.shared.load('plans', 'real-list-v3', () async {
       final response =
           await ApiClient.shared.get<Map<String, dynamic>>('/api/plans');
       return {'plans': response.data?['data'] ?? []};
@@ -50,6 +50,11 @@ class WeeklyPlanRepository {
     return _read('/api/plans/history',
         query: {if (cursor != null) 'cursor': cursor});
   }
+
+  Future<Map<String, dynamic>> filteredHistory(
+          {String? cursor, required Map<String, dynamic> query}) =>
+      _read('/api/plans/history',
+          query: {...query, if (cursor != null) 'cursor': cursor});
 
   Future<Map<String, dynamic>> savedPlan(String id) async {
     return _read('/api/plans/saved/$id');

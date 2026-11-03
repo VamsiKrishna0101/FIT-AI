@@ -6,8 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:setcraft/features/progress/components/progress_chart.dart';
+import 'package:setcraft/features/progress/components/progress_surface.dart';
 import 'package:setcraft/features/progress/components/progress_dashboard.dart';
-import 'package:setcraft/features/progress/components/progress_training_hero.dart';
+import 'package:setcraft/features/progress/components/progress_visual_cards.dart';
 import 'package:setcraft/features/progress/components/progress_workout_history.dart';
 import 'package:setcraft/features/progress/models/progress_models.dart';
 import 'package:setcraft/features/progress/repositories/progress_repository.dart';
@@ -102,17 +103,25 @@ void main() {
     await tester
         .pumpWidget(fixture.page(ProgressOverviewView(repository: repository)));
     await tester.pumpAndSettle();
-    expect(find.byType(ProgressExerciseTrends), findsOneWidget);
-    expect(repository.calls.single.period, '4w');
-    await tester.tap(find.byType(DropdownButton<String>).first);
+    expect(find.byType(ProgressExerciseChartShelf), findsOneWidget);
+    expect(repository.calls.single.period, 'custom');
+    await tester.tap(find.byKey(const ValueKey('progress-calendar-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('3 months').last);
+    await tester.tap(find.text('All time'));
     await tester.pumpAndSettle();
-    expect(repository.calls.last.period, '3m');
-    await tester.tap(find.byKey(const ValueKey('progress-section-history')));
+    await tester.tap(find.byKey(const ValueKey('body-calendar-apply')));
+    await tester.pumpAndSettle();
+    expect(repository.calls.last.period, 'all');
+    await tester.scrollUntilVisible(find.text('Workout history'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.drag(
+        find.byType(CustomScrollView).first, const Offset(0, -250));
+    await tester.pumpAndSettle();
+    expect(find.text('Workout history').hitTestable(), findsOneWidget);
+    await tester.tap(find.text('Workout history'));
     await tester.pumpAndSettle();
     expect(repository.calls.last.path, '/sessions');
-    expect(repository.calls.last.period, '3m');
+    expect(repository.calls.last.period, 'all');
     expect(repository.calls.last.query['dataset'], 'real');
     expect(tester.takeException(), isNull);
   });
@@ -125,11 +134,12 @@ void main() {
         ProgressOverviewView(initial: populated, repository: repository),
         dock: true));
     await tester.pumpAndSettle();
-    expect(find.byType(ProgressExerciseTrends), findsOneWidget);
-    expect(tester.getSize(find.byType(ProgressTrainingHero)).height,
-        lessThan(240));
-    expect(tester.getSize(find.byType(ProgressExerciseTrends)).height,
-        lessThan(210));
+    expect(find.byType(ProgressExerciseChartShelf), findsOneWidget);
+    expect(find.byType(ProgressAttendanceCard), findsOneWidget);
+    expect(find.text('Total Volume'), findsNothing);
+    await fixture.reveal(
+        tester, find.byKey(const ValueKey('progress-exercise-bench')));
+    expect(find.text('60 kg'), findsOneWidget);
     await fixture.capture(tester, 'progress-dashboard-summary');
     await tester
         .ensureVisible(find.byKey(const ValueKey('progress-exercise-bench')));
@@ -140,7 +150,7 @@ void main() {
     expect(chart.showChange, isTrue);
     expect(chart.points.map((p) => p.value), [55, 60, 62.5]);
     expect(repository.calls.last.path, '/exercises/bench');
-    expect(repository.calls.last.period, '4w');
+    expect(repository.calls.last.period, 'custom');
     await tester.runAsync(() async {
       final boundary = tester.renderObject<RenderRepaintBoundary>(find
           .ancestor(
@@ -155,11 +165,11 @@ void main() {
     });
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.byType(ProgressExerciseTrends), findsOneWidget);
+    expect(find.byType(ProgressExerciseChartShelf), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('All six trend categories are discoverable and retain the period',
+  testWidgets('Supporting categories are discoverable and retain the period',
       (tester) async {
     fixture.phone(tester);
     final repository = _Repository();
@@ -167,33 +177,26 @@ void main() {
         ProgressOverviewView(initial: populated, repository: repository),
         dock: true));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('progress-section-trends')));
-    await tester.pumpAndSettle();
-    for (final kind in [
-      'training',
-      'exercises',
-      'muscles',
-      'body',
-      'nutrition',
-      'recovery'
-    ]) {
-      expect(find.byKey(ValueKey('progress-trend-$kind')), findsOneWidget);
-    }
+    await fixture.reveal(tester, find.text('Body changes'));
+    expect(find.text('Recovery'), findsNothing);
+    expect(find.text('HRV'), findsNothing);
     await fixture.capture(tester, 'progress-dashboard-trends');
-    await tester
-        .ensureVisible(find.byKey(const ValueKey('progress-trend-body')));
-    await tester.tap(find.byKey(const ValueKey('progress-trend-body')));
+    final bodyAction = find.descendant(
+        of: find.byWidgetPredicate(
+            (w) => w is ProgressHeading && w.title == 'Body changes'),
+        matching: find.byType(TextButton));
+    await tester.tap(bodyAction);
     await tester.pumpAndSettle();
     expect(repository.calls.last.path, '/body');
-    expect(repository.calls.last.period, '4w');
+    expect(repository.calls.last.period, 'custom');
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('progress-trend-body')), findsOneWidget);
+    expect(find.byType(ProgressBodyChartCard), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-      'History loads once, paginates without duplicates and opens recaps',
+      'History retains the period, paginates without duplicates and opens recaps',
       (tester) async {
     fixture.phone(tester);
     final repository = _Repository();
@@ -201,20 +204,26 @@ void main() {
         ProgressOverviewView(initial: populated, repository: repository),
         dock: true));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('progress-section-history')));
+    await tester.scrollUntilVisible(find.text('Workout history'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.drag(
+        find.byType(CustomScrollView).first, const Offset(0, -250));
+    await tester.pumpAndSettle();
+    expect(find.text('Workout history').hitTestable(), findsOneWidget);
+    await tester.tap(find.text('Workout history'));
     await tester.pumpAndSettle();
     expect(find.text('Upper body'), findsOneWidget);
     expect(find.text('Lower body'), findsOneWidget);
-    await fixture.capture(tester, 'progress-dashboard-history');
-    await tester.tap(find.byKey(const ValueKey('progress-section-summary')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('progress-section-history')));
-    await tester.pumpAndSettle();
+    await fixture.capture(tester, 'progress-dashboard-history',
+        boundaryFinder: find
+            .ancestor(
+                of: find.byType(ProgressDetailView),
+                matching: find.byType(RepaintBoundary))
+            .first);
     expect(
         repository.calls.where((call) => call.path == '/sessions').length, 1);
-    await tester
-        .ensureVisible(find.byKey(const ValueKey('progress-history-more')));
-    await tester.tap(find.byKey(const ValueKey('progress-history-more')));
+    await tester.ensureVisible(find.text('Load more'));
+    await tester.tap(find.text('Load more'));
     await tester.pumpAndSettle();
     expect(find.text('Upper body'), findsOneWidget);
     expect(find.text('Older workout'), findsOneWidget);

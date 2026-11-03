@@ -21,6 +21,7 @@ typedef FoodPageLoader = Future<FoodCatalogPage> Function(int page,
 
 class FoodLibraryView extends StatefulWidget {
   final String initialMealType;
+  final DateTime? initialDate;
   final VoidCallback onMealAdded;
   final List<NutritionFoodItemModel>? initialFoods;
   final FoodPageLoader? pageLoader;
@@ -30,6 +31,7 @@ class FoodLibraryView extends StatefulWidget {
       {super.key,
       required this.onMealAdded,
       this.initialMealType = 'LUNCH',
+      this.initialDate,
       this.initialFoods,
       this.pageLoader,
       this.saveMeal,
@@ -180,7 +182,10 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
     FocusScope.of(context).unfocus();
     final route = AppPageRoute<bool>(
         builder: (_) => MealPortionView(
-            food: food, initialMealType: _slot, saveMeal: widget.saveMeal));
+            food: food,
+            initialMealType: _slot,
+            saveMeal: widget.saveMeal,
+            date: widget.initialDate));
     final saved = await Navigator.of(context).push(route);
     await route.completed;
     if (!mounted) return;

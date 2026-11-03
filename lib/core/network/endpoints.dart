@@ -6,7 +6,7 @@ class Endpoints {
   );
   static final String baseUrl = _configuredBaseUrl.isNotEmpty
       ? _configuredBaseUrl
-      : 'https://1594-2401-4900-1c27-f174-d504-d2f1-613-9731.ngrok-free.app';
+      : 'https://4ac5-2401-4900-1c27-feeb-8a9-4f63-4c4d-14d5.ngrok-free.app';
 
   // Auth
   static const String sendOtp = '/api/auth/send-otp';

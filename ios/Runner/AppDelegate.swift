@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 import HealthKit
 import CoreMotion
 
@@ -10,6 +11,7 @@ import CoreMotion
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    UNUserNotificationCenter.current().delegate = self
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -54,6 +56,10 @@ import CoreMotion
           result(false)
         }
       }
+    }
+
+    if let watchRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "SetcraftWatchManager") {
+      WatchManager.shared.register(with: watchRegistrar)
     }
 
     guard let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "FitAIHealthTotals") else { return }

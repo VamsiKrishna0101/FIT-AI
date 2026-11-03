@@ -148,6 +148,7 @@ class BodyAssessmentRepository {
     final response = await ApiClient.shared.client
         .post<Map<String, dynamic>>('/api/body/entries/${entry.id}/focus',
             data: {
+              'analysisProvider': 'OPENAI',
               'expectedUpdatedAt': entry.updatedAt,
               'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
               'consentToVisualCoaching':

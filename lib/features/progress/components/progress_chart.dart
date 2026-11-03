@@ -2,7 +2,6 @@ import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_motion.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
-import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/localization/fitness_copy.dart';
@@ -95,13 +94,22 @@ class _ProgressChartState extends State<ProgressChart> {
         reference: reference,
         integer: widget.digits == 0);
     final min = scale.min, max = scale.max;
+    final axisCapacity = math.max(
+        1,
+        (widget.height / (MediaQuery.textScalerOf(context).scale(12) * 1.5))
+            .floor());
+    final axisTicks = scale.ticks.length <= axisCapacity
+        ? scale.ticks
+        : axisCapacity >= 2
+            ? [max, min]
+            : [max];
     String axisValue(double value) => value.abs() >= 10000
         ? NumberFormat.compact(locale: locale).format(value)
         : progressValue(context, value, digits: scale.step % 1 == 0 ? 0 : 1);
     final axisWidth = math.max(
         40.0,
         MediaQuery.textScalerOf(context).scale(12) *
-            scale.ticks.map((v) => axisValue(v).length).reduce(math.max) *
+            axisTicks.map((v) => axisValue(v).length).reduce(math.max) *
             .62);
     final headline =
         widget.average && _selected == null ? average : selected.value;
@@ -248,7 +256,7 @@ class _ProgressChartState extends State<ProgressChart> {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: scale.ticks
+                      children: axisTicks
                           .map((value) => Text(axisValue(value),
                               style: const TextStyle(
                                   fontSize: 12, color: progressMuted)))
@@ -584,7 +592,8 @@ class _ChartPainter extends CustomPainter {
           bar.color = color.withValues(alpha: .3);
         }
         canvas.drawRRect(
-            RRect.fromRectAndRadius(rect, Radius.circular(math.min(4.0, width / 2))),
+            RRect.fromRectAndRadius(
+                rect, Radius.circular(math.min(4.0, width / 2))),
             bar);
       }
     } else {
@@ -629,10 +638,9 @@ class _ChartPainter extends CustomPainter {
             canvas.drawPath(
                 line,
                 paint
-                  ..shader = LinearGradient(colors: [
-                    color.withValues(alpha: .5),
-                    color
-                  ]).createShader(Offset.zero & size));
+                  ..shader = LinearGradient(
+                          colors: [color.withValues(alpha: .5), color])
+                      .createShader(Offset.zero & size));
           } else {
             canvas.drawCircle(
                 geometry.position(start), 2.5, Paint()..color = color);

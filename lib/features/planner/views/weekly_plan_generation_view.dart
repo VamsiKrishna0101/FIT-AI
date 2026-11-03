@@ -314,7 +314,8 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             if (_retrying) ...[
-                              const CupertinoActivityIndicator(radius: 8),
+                              const CupertinoActivityIndicator(
+                                  radius: 8, color: DSColors.bg),
                               const SizedBox(width: 10),
                             ],
                             FitnessText(
@@ -362,7 +363,8 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
               ? const Icon(CupertinoIcons.checkmark_circle_fill,
                   color: DSColors.silver, size: 18)
               : active && !_failed && !_unavailable && _foreground
-                  ? const CupertinoActivityIndicator(radius: 8)
+                  ? const CupertinoActivityIndicator(
+                      radius: 8, color: Colors.white)
                   : Center(
                       child: Text('$number',
                           style: const TextStyle(

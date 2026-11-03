@@ -121,6 +121,7 @@ class _BodyPhotoReviewViewState extends State<BodyPhotoReviewView> {
         'recordedDate': CacheScope.todayKey(DateTime.now()),
         'utcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
         'consentToPhotoAnalysis': true,
+        'analysisProvider': 'OPENAI',
         'consentToVisualCoaching': true,
         'savePhotos': _savePhotos,
         if (_readings != null) 'compositionReadings': _readings,

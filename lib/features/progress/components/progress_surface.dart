@@ -4,27 +4,26 @@ import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 
 const progressMuted = DSColors.muted;
 const progressSilver = DSColors.silver;
-// Each area of Progress owns one hue, so a glance tells you what a chart is
-// about. Values and text stay neutral; colour belongs to the data marks.
-const progressTraining = DSColors.accent;
-const progressStrength = DSColors.ice;
-const progressMuscle = DSColors.pulse;
-const progressBody = DSColors.gold;
-const progressNutrition = DSColors.coral;
-const progressRecovery = DSColors.sage;
+// FitAI Design System tokens — 100% harmonized with Today & Train tabs
+const progressTraining = DSColors.accent; // FitAI Mint Sage (#67D7B0)
+const progressStrength = DSColors.ice; // FitAI Ice (#5AC8FA)
+const progressMuscle = DSColors.violet; // FitAI Violet (#A28BFA)
+const progressBody = DSColors.gold; // FitAI Gold (#FFB84D)
+const progressNutrition = DSColors.coral; // FitAI Coral (#ED927F)
+const progressRecovery = DSColors.accent; // FitAI Accent
 // Direction of change and personal records.
-const progressUp = Color(0xFF4ADE80);
-const progressDown = Color(0xFFFF6B6B);
+const progressUp = DSColors.accent;
+const progressDown = DSColors.coral;
 const progressRecord = DSColors.gold;
-// The original token names map onto those hues, so every detail screen and
-// metric picker picks up the palette without changing its call sites.
+// Backward compatibility token aliases
 const progressBlue = progressStrength;
-const progressCyan = Color(0xFF5EE6D0);
+const progressCyan = DSColors.ice;
 const progressViolet = progressMuscle;
 const progressAmber = progressBody;
 const progressCard = DSColors.bgCard;
@@ -34,95 +33,49 @@ String progressTitle(String value) =>
 
 Color progressMuscleColor(String id) => progressMuscle;
 
-/// The shared Progress card: a graphite gradient lifted off the black canvas
-/// by a soft shadow and a specular top edge. An [accent] adds a faint glow of
-/// that area's hue from the top corner.
+/// The shared Progress card: Solid obsidian card matching the Today tab
+/// (_TodaySurface), with pure black OLED background, 18px radius, and clean hairline border.
 class ProgressSurface extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color? accent;
   final double radius;
-  const ProgressSurface(
-      {super.key,
-      required this.child,
-      this.accent,
-      this.radius = 22,
-      this.padding = const EdgeInsets.all(16)});
+  final bool hero;
+  final VoidCallback? onTap;
+
+  const ProgressSurface({
+    super.key,
+    required this.child,
+    this.accent,
+    this.radius = 18,
+    this.hero = false,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final highContrast = MediaQuery.highContrastOf(context);
-    final shape = BorderRadius.circular(radius);
-    return SizedBox(
-        width: double.infinity,
-        child: DecoratedBox(
-            decoration: BoxDecoration(borderRadius: shape, boxShadow: const [
-              BoxShadow(
-                  color: Color(0x73000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 10)),
-            ]),
-            child: Material(
-                type: MaterialType.transparency,
-                shape: RoundedRectangleBorder(
-                    borderRadius: shape,
-                    side: BorderSide(
-                        color:
-                            highContrast ? DSColors.borderHi : DSColors.border,
-                        width: highContrast ? 1 : .7)),
-                clipBehavior: Clip.antiAlias,
-                child: Ink(
-                    decoration: BoxDecoration(
-                        color: highContrast ? progressCard : null,
-                        gradient: highContrast
-                            ? null
-                            : const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Color(0xFF1E1F22), Color(0xFF141416)])),
-                    child: CustomPaint(
-                        painter: highContrast
-                            ? null
-                            : _SurfaceSheen(accent: accent, radius: radius),
-                        child: Padding(padding: padding, child: child))))));
+    final borderColor = hero ? DSColors.borderHi : DSColors.border;
+
+    final surface = Material(
+      color: DSColors.bgCard,
+      borderRadius: BorderRadius.circular(radius),
+      clipBehavior: Clip.antiAlias,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: borderColor, width: .7),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(radius),
+          child: Padding(padding: padding, child: child),
+        ),
+      ),
+    );
+
+    return MotionPress(enabled: onTap != null, child: surface);
   }
-}
-
-class _SurfaceSheen extends CustomPainter {
-  const _SurfaceSheen({required this.accent, required this.radius});
-  final Color? accent;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bounds = Offset.zero & size;
-    if (accent case final accent?) {
-      canvas.drawRect(
-          bounds,
-          Paint()
-            ..shader = RadialGradient(
-                center: const Alignment(-.85, -1.15),
-                radius: 1.05,
-                colors: [
-                  accent.withValues(alpha: .16),
-                  accent.withValues(alpha: 0)
-                ]).createShader(bounds));
-    }
-    if (size.width <= radius * 1.2) return;
-    // A hairline of light along the top edge reads as a polished bevel.
-    final edge = Rect.fromLTWH(radius * .6, 0, size.width - radius * 1.2, 1);
-    canvas.drawRect(
-        edge,
-        Paint()
-          ..shader = LinearGradient(colors: [
-            Colors.white.withValues(alpha: 0),
-            Colors.white.withValues(alpha: .11),
-            Colors.white.withValues(alpha: 0),
-          ]).createShader(edge));
-  }
-
-  @override
-  bool shouldRepaint(_SurfaceSheen oldDelegate) =>
-      oldDelegate.accent != accent || oldDelegate.radius != radius;
 }
 
 /// A change badge tinted by direction, with an arrow so the meaning never
@@ -145,23 +98,24 @@ class ProgressChangeChip extends StatelessWidget {
         : change < 0
             ? CupertinoIcons.arrow_down_right
             : CupertinoIcons.minus;
-    return DecoratedBox(
+    return Container(
         decoration: BoxDecoration(
-            color: color.withValues(alpha: .13),
+            color: DSColors.bgRaised,
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: color.withValues(alpha: .28), width: .7)),
+            border: Border.all(color: color.withValues(alpha: .3), width: .7)),
         child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(icon, size: 11, color: color),
-              const SizedBox(width: 4),
+              Icon(icon, size: 10.5, color: color),
+              const SizedBox(width: 5),
               Flexible(
                   child: Text(label,
-                      style: TextStyle(
-                          color: color,
+                      style: const TextStyle(
+                          color: DSColors.silver,
                           fontSize: 11.5,
                           height: 1.3,
-                          fontWeight: FontWeight.w600))),
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -.1))),
             ])));
   }
 }
@@ -171,33 +125,49 @@ class ProgressHeading extends StatelessWidget {
   final VoidCallback? onTap;
   final String action;
   final bool stacked;
+  final double topPadding;
   const ProgressHeading(this.title,
-      {super.key, this.onTap, this.action = 'View all', this.stacked = false});
+      {super.key,
+      this.onTap,
+      this.action = 'View all',
+      this.stacked = false,
+      this.topPadding = 24});
   @override
   Widget build(BuildContext context) {
     final heading = Text(fitnessText(context, title),
         style: const TextStyle(
-            fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -.5));
-    final button = TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-            foregroundColor: progressMuted,
-            padding: EdgeInsets.symmetric(horizontal: stacked ? 0 : 8)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Flexible(
-              child: Text(fitnessText(context, action),
-                  style: const TextStyle(fontSize: 13))),
-          const Icon(CupertinoIcons.chevron_right, size: 12)
-        ]));
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -.3,
+            color: Colors.white));
+    final button = onTap == null
+        ? null
+        : MotionPress(
+            child: TextButton(
+                onPressed: onTap,
+                style: TextButton.styleFrom(
+                    foregroundColor: DSColors.silver,
+                    padding: EdgeInsets.symmetric(horizontal: stacked ? 0 : 8)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Flexible(
+                      child: Text(fitnessText(context, action),
+                          style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: DSColors.muted))),
+                  const SizedBox(width: 3),
+                  const Icon(CupertinoIcons.chevron_right,
+                      size: 11, color: DSColors.muted)
+                ])));
     return Padding(
-        padding: const EdgeInsets.only(top: 24, bottom: 10),
+        padding: EdgeInsets.only(top: topPadding, bottom: 8),
         child: stacked && onTap != null
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [heading, button])
+                children: [heading, const SizedBox(height: 4), button!])
             : Row(children: [
                 Expanded(child: heading),
-                if (onTap != null) button
+                if (button != null) button
               ]));
   }
 }
@@ -219,27 +189,26 @@ class ProgressSetupRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ProgressSurface(
       padding: EdgeInsets.zero,
-      child: InkWell(
-          onTap: onTap,
-          child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text(fitnessText(context, title),
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 5),
-                      Text(fitnessText(context, message),
-                          style: const TextStyle(
-                              fontSize: 12, color: progressMuted, height: 1.4)),
-                    ])),
-                const SizedBox(width: 8),
-                const Icon(CupertinoIcons.chevron_right,
-                    color: progressMuted, size: 14),
-              ]))));
+      onTap: onTap,
+      child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(children: [
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(fitnessText(context, title),
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 5),
+                  Text(fitnessText(context, message),
+                      style: const TextStyle(
+                          fontSize: 12, color: progressMuted, height: 1.4)),
+                ])),
+            const SizedBox(width: 8),
+            const Icon(CupertinoIcons.chevron_right,
+                color: progressMuted, size: 14),
+          ])));
 }
 
 class ProgressChoices extends StatelessWidget {
@@ -302,9 +271,7 @@ class ProgressChoices extends StatelessWidget {
               .toList()));
 }
 
-/// Placeholder cards shaped like the content that is loading. They fade in
-/// once rather than pulsing forever, so a slow request never keeps frames
-/// scheduled.
+/// Placeholder cards shaped like the content that is loading.
 class ProgressSkeleton extends StatelessWidget {
   final List<double> heights;
   const ProgressSkeleton({super.key, this.heights = const [200, 190, 150]});
@@ -312,28 +279,37 @@ class ProgressSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
       child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: DSMotion.duration(context, DSMotion.reveal),
-              curve: DSMotion.effects,
-              builder: (context, value, child) =>
-                  Opacity(opacity: value, child: child),
-              child: Column(children: [
-                for (var i = 0; i < heights.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 14),
-                  ProgressSurface(
-                      child: SizedBox(
+          tween: Tween(begin: 0, end: 1),
+          duration: DSMotion.duration(context, DSMotion.reveal),
+          curve: DSMotion.effects,
+          builder: (context, value, child) =>
+              Opacity(opacity: value, child: child),
+          child: Column(children: [
+            for (var i = 0; i < heights.length; i++) ...[
+              if (i > 0) const SizedBox(height: 14),
+              ProgressSurface(
+                  padding: const EdgeInsets.all(16),
+                  child: heights[i] < 100
+                      ? const Row(
+                          children: [
+                            _Bone(width: 24, height: 24),
+                            SizedBox(width: 12),
+                            Expanded(child: _Bone(height: 16)),
+                          ],
+                        )
+                      : SizedBox(
                           height: heights[i] - 32,
-                          child: Column(
+                          child: const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const _Bone(width: 90, height: 12),
-                                const SizedBox(height: 14),
-                                const _Bone(width: 140, height: 28),
-                                const Spacer(),
-                                const _Bone(height: 44),
+                                _Bone(width: 90, height: 12),
+                                SizedBox(height: 12),
+                                _Bone(width: 140, height: 22),
+                                Spacer(),
+                                _Bone(height: 36),
                               ]))),
-                ],
-              ])));
+            ],
+          ])));
 }
 
 class _Bone extends StatelessWidget {
@@ -357,10 +333,26 @@ class ProgressEmpty extends StatelessWidget {
   const ProgressEmpty(this.message, {super.key});
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 22),
-      child: Text(fitnessText(context, message),
-          style: const TextStyle(
-              color: progressMuted, fontSize: 13, height: 1.45)));
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 4),
+      child: Row(children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .04),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: DSColors.border, width: .7),
+          ),
+          child: const Icon(CupertinoIcons.chart_bar,
+              size: 15, color: DSColors.muted),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(fitnessText(context, message),
+              style: const TextStyle(
+                  color: DSColors.muted, fontSize: 12.5, height: 1.4)),
+        ),
+      ]));
 }
 
 /// Consistent, readable supporting context across Progress detail pages.
@@ -455,34 +447,52 @@ class ProgressMetricPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       child: Row(
           children: choices.entries.map((entry) {
         final active = entry.key == selected;
         return Padding(
-            padding: const EdgeInsets.only(right: 6),
+            padding: const EdgeInsets.only(right: 8),
             child: Semantics(
                 selected: active,
                 button: true,
-                child: Material(
-                    color: active ? DSColors.bgRaised : progressCard,
-                    borderRadius: BorderRadius.circular(12),
-                    child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => onChanged(entry.key),
-                        child: ConstrainedBox(
-                            constraints: const BoxConstraints(minHeight: 44),
-                            child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 13, vertical: 11),
-                                child: Text(fitnessText(context, entry.value),
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: active
-                                            ? progressSilver
-                                            : progressMuted,
-                                        fontWeight: active
-                                            ? FontWeight.w600
-                                            : FontWeight.w500))))))));
+                child: MotionPress(
+                    child: Container(
+                        decoration: BoxDecoration(
+                            color: active ? DSColors.bgRaised : DSColors.bgCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: active
+                                    ? DSColors.borderHi
+                                    : DSColors.border,
+                                width: .7)),
+                        child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  if (!active) {
+                                    HapticFeedback.selectionClick();
+                                    onChanged(entry.key);
+                                  }
+                                },
+                                child: ConstrainedBox(
+                                    constraints:
+                                        const BoxConstraints(minHeight: 40),
+                                    child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 14, vertical: 10),
+                                        child: Text(
+                                            fitnessText(context, entry.value),
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: active
+                                                    ? DSColors.silver
+                                                    : DSColors.muted,
+                                                fontWeight: active
+                                                    ? FontWeight.w600
+                                                    : FontWeight.w500))))))))));
       }).toList()));
 }
 

@@ -5,6 +5,7 @@ import '../../../core/localization/fitness_copy.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/training_hero.dart';
+import '../components/onboarding_answer_flow.dart';
 import '../viewmodels/schedule_location_viewmodel.dart';
 import '../models/training_schedule_models.dart';
 import 'equipment_selection_view.dart';
@@ -13,13 +14,23 @@ import 'equipment_selection_view.dart';
 class ScheduleLocationView extends StatefulWidget {
   final OnboardingController? controller;
   final VoidCallback? onContinue;
-  const ScheduleLocationView({super.key, this.controller, this.onContinue});
+  final bool coaching;
+  final List<int> questionParts;
+  final String? previousAnswer;
+  const ScheduleLocationView(
+      {super.key,
+      this.controller,
+      this.onContinue,
+      this.coaching = false,
+      this.questionParts = const [0, 1, 2],
+      this.previousAnswer});
 
   @override
   State<ScheduleLocationView> createState() => _ScheduleLocationViewState();
 }
 
-class _ScheduleLocationViewState extends State<ScheduleLocationView> {
+class _ScheduleLocationViewState extends State<ScheduleLocationView>
+    with OnboardingAnswerFlow<ScheduleLocationView> {
   bool _advancing = false;
   int _part = 0;
   late final ScheduleLocationViewModel _viewModel;
@@ -27,6 +38,7 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
   @override
   void initState() {
     super.initState();
+    _part = widget.questionParts.first;
     _viewModel = ScheduleLocationViewModel(controller: widget.controller)
       ..addListener(_rebuild);
   }
@@ -44,8 +56,9 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
   }
 
   void _onBack() {
-    if (_part > 0) {
-      setState(() => _part--);
+    if (widget.questionParts.indexOf(_part) > 0) {
+      setState(() => _part =
+          widget.questionParts[widget.questionParts.indexOf(_part) - 1]);
     } else {
       Navigator.of(context).pop();
     }
@@ -53,8 +66,9 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
 
   Future<void> _onContinue() async {
     if (_advancing) return;
-    if (_part < 2) {
-      setState(() => _part++);
+    if (widget.questionParts.indexOf(_part) < widget.questionParts.length - 1) {
+      setState(() => _part =
+          widget.questionParts[widget.questionParts.indexOf(_part) + 1]);
       return;
     }
     setState(() => _advancing = true);
@@ -87,20 +101,32 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
       sectionLabel: 'Your training',
       part: _part,
       parts: 3,
-      canPop: _part == 0,
+      canPop: _part == widget.questionParts.first,
       title: switch (_part) {
         0 => language.weeklyCommitmentQuestion,
         1 => language.sessionDurationQuestion,
         _ => language.trainingLocationQuestion,
       },
-      subtitle: switch (_part) {
-        0 =>
-          'Choose a week you can keep coming back to. You can change it later.',
-        1 => 'We’ll use your available time to shape each session.',
-        _ => 'Your plan will use the space and equipment you actually have.',
-      },
+      animateQuestion: widget.coaching,
+      previousAnswer: widget.coaching
+          ? (_part == 1 && _viewModel.selectedDays != null
+              ? fitnessText(context, '{count} days a week',
+                  values: {'count': _viewModel.selectedDays!.daysCount})
+              : widget.previousAnswer)
+          : null,
+      showContinue: !widget.coaching,
+      footer: widget.coaching ? 'You can change this later.' : null,
+      subtitle: widget.coaching
+          ? ''
+          : switch (_part) {
+              0 =>
+                'Choose a week you can keep coming back to. You can change it later.',
+              1 => 'We’ll use your available time to shape each session.',
+              _ =>
+                'Your plan will use the space and equipment you actually have.',
+            },
       actionTitle: language.continueButtonTitle,
-      loading: _advancing,
+      loading: _advancing || choosingAnswer,
       onBack: _onBack,
       onContinue: _viewModel.controller.ready && valid ? _onContinue : null,
       children: [
@@ -113,8 +139,17 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
                       'count': option.daysCount == 6 ? '6+' : option.daysCount
                     }),
                     selected: _viewModel.selectedDays == option,
-                    onTap: () => _viewModel.selectDays(option))),
-        if (_part == 0 && _viewModel.selectedDays != null) ...[
+                    onTap: () {
+                      if (widget.coaching) {
+                        chooseAnswer(
+                            () => _viewModel.selectDays(option), _onContinue);
+                      } else {
+                        _viewModel.selectDays(option);
+                      }
+                    })),
+        if (!widget.coaching &&
+            _part == 0 &&
+            _viewModel.selectedDays != null) ...[
           const SizedBox(height: 10),
           const OnboardingContextNote(
               title: 'Consistency starts with a realistic week.',
@@ -128,7 +163,14 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
                 child: OnboardingChoice(
                     title: language.durationOptionTitle(option),
                     selected: _viewModel.selectedDuration == option,
-                    onTap: () => _viewModel.selectDuration(option))),
+                    onTap: () {
+                      if (widget.coaching) {
+                        chooseAnswer(() => _viewModel.selectDuration(option),
+                            _onContinue);
+                      } else {
+                        _viewModel.selectDuration(option);
+                      }
+                    })),
         if (_part == 2)
           for (final option in TrainingLocationOption.values)
             Padding(
@@ -136,7 +178,14 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
                 child: OnboardingChoice(
                     title: language.locationOptionTitle(option),
                     selected: _viewModel.selectedLocation == option,
-                    onTap: () => _viewModel.selectLocation(option))),
+                    onTap: () {
+                      if (widget.coaching) {
+                        chooseAnswer(() => _viewModel.selectLocation(option),
+                            _onContinue);
+                      } else {
+                        _viewModel.selectLocation(option);
+                      }
+                    })),
       ],
     );
   }

@@ -4,6 +4,7 @@ import '../../../core/theme/fitness_theme.dart';
 import '../../../core/components/content_transition.dart';
 import '../components/exercise_muscle_map.dart';
 import '../components/exercise_insights.dart';
+import '../components/exercise_recommendation_card.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,6 +21,7 @@ import '../components/workout_item_actions.dart';
 
 class ExerciseDetailView extends StatefulWidget {
   final TodayPlanItemModel? planItem;
+  final Map<String, dynamic>? recommendation;
   final WorkoutExerciseModel exercise;
   final VoidCallback? onStatusChanged;
   final Future<bool> Function()? onAddToPlan;
@@ -32,6 +34,7 @@ class ExerciseDetailView extends StatefulWidget {
   const ExerciseDetailView(
       {super.key,
       this.planItem,
+      this.recommendation,
       required this.exercise,
       this.onStatusChanged,
       this.onAddToPlan,
@@ -408,6 +411,14 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
           physics: const BouncingScrollPhysics(),
           children: [
+            if (widget.recommendation
+                case final Map<String, dynamic> recommendation) ...[
+              Text(fitnessText(context, 'Recommended for you'),
+                  style: const TextStyle(fontSize: 12, color: DSColors.muted)),
+              const SizedBox(height: 10),
+              ExerciseRecommendationCard(exercise: recommendation),
+              const SizedBox(height: 16),
+            ],
             _demo(),
             const SizedBox(height: 12),
             _muscles(),

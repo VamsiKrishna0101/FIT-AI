@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 class LiquidChromeButton extends StatefulWidget {
   final String title;
   final String? loadingTitle;
+  final TextStyle? textStyle;
   final VoidCallback? onPressed;
   final double height;
   final bool isLoading, showArrow, pill, solid;
@@ -18,6 +19,7 @@ class LiquidChromeButton extends StatefulWidget {
       required this.title,
       required this.onPressed,
       this.loadingTitle,
+      this.textStyle,
       this.height = 54,
       this.isLoading = false,
       this.showArrow = true,
@@ -90,10 +92,12 @@ class _LiquidChromeButtonState extends State<LiquidChromeButton> {
                                           child: FitnessText(title,
                                               textAlign: TextAlign.center,
                                               style: const TextStyle(
-                                                  color: DSColors.bg,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: -.3))),
+                                                      color: DSColors.bg,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      letterSpacing: -.3)
+                                                  .merge(widget.textStyle))),
                                       if (widget.showArrow || widget.isLoading)
                                         Positioned(
                                             right: 0,

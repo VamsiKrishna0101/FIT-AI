@@ -83,6 +83,17 @@ void main() {
     expect(adapter.saved?['gender'], 'FEMALE');
     expect((await OnboardingDraft.load()).age, isNull);
   });
+  test('Training setup saves without fabricated body measurements', () async {
+    final draft = _draft()
+      ..heightCm = null
+      ..weightKg = null
+      ..targetWeightKg = null;
+    await AuthRepository().completeMissingProfile(draft);
+    expect(adapter.saved?['age'], 27);
+    for (final field in ['height', 'weight', 'targetWeight']) {
+      expect(adapter.saved!.containsKey(field), false);
+    }
+  });
   test('existing profile is never overwritten by a device draft', () async {
     adapter.exists = true;
     await AuthRepository().completeMissingProfile(_draft());

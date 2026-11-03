@@ -4,17 +4,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../../../core/components/premium_surface.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
+import '../../../core/theme/ds_colors.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../repositories/mcp_repository.dart';
 import 'settings_components.dart';
 
-const _muted = TextStyle(color: FitnessTheme.muted, fontSize: 13, height: 1.5);
 ButtonStyle get _primary => FilledButton.styleFrom(
     backgroundColor: FitnessTheme.silver,
     foregroundColor: FitnessTheme.canvas,
-    minimumSize: const Size(double.infinity, 52),
+    minimumSize: const Size(double.infinity, 50),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)));
 String _date(BuildContext c, DateTime d) =>
     DateFormat.yMMMd(Localizations.localeOf(c).toLanguageTag())
@@ -25,48 +24,85 @@ void _notice(BuildContext c, String text) =>
 class McpConnectionsView extends StatelessWidget {
   final McpRepository? repository;
   const McpConnectionsView({super.key, this.repository});
+
   @override
   Widget build(BuildContext context) => SettingsPage(
-          title: 'MCP & integrations',
-          subtitle: 'Your fitness context, connected on your terms.',
-          children: [
-            const PremiumSurface(
-                child: Column(
+        title: 'MCP & Integrations',
+        subtitle: '',
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            decoration: BoxDecoration(
+              color: DSColors.bgCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: DSColors.border, width: .7),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(CupertinoIcons.link,
+                      size: 22, color: FitnessTheme.silver),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Icon(CupertinoIcons.link,
-                      size: 30, color: FitnessTheme.silver),
-                  SizedBox(height: 18),
-                  Text('A connection you control',
-                      style: TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -.5)),
-                  SizedBox(height: 10),
-                  Text(
-                      'Give an AI app the context you choose. Manage its access here, whenever you need.',
-                      style: _muted),
-                ])),
-            const SizedBox(height: 26),
-            SettingsGroup(title: 'AI apps', children: [
+                      Text(
+                        'Model Context Protocol',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: -.3,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Secure AI client integrations',
+                        style: TextStyle(
+                          color: FitnessTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          SettingsGroup(
+            title: 'AI Apps',
+            children: [
               SettingsRow(
-                  icon: CupertinoIcons.sparkles,
-                  title: 'Claude',
-                  subtitle: 'Connect with a personal access token.',
-                  value: 'Manage',
-                  onTap: () => Navigator.push(
-                      context,
-                      AppPageRoute<void>(
-                          page: ClaudeConnectionView(repository: repository)))),
+                icon: CupertinoIcons.sparkles,
+                title: 'Claude',
+                subtitle: 'Personal access token',
+                value: 'Manage',
+                onTap: () => Navigator.push(
+                  context,
+                  AppPageRoute<void>(
+                    page: ClaudeConnectionView(repository: repository),
+                  ),
+                ),
+              ),
               const SettingsRow(
-                  icon: CupertinoIcons.bubble_left_bubble_right,
-                  title: 'ChatGPT',
-                  subtitle: 'An OAuth connection is planned separately.',
-                  value: 'Coming soon'),
-            ]),
-            const SettingsNotice(
-                'Creating a token does not connect an AI app automatically. You choose where to use it.'),
-          ]);
+                icon: CupertinoIcons.bubble_left_bubble_right,
+                title: 'ChatGPT',
+                subtitle: 'OAuth integration',
+                value: 'Coming soon',
+              ),
+            ],
+          ),
+        ],
+      );
 }
 
 class ClaudeConnectionView extends StatefulWidget {
@@ -83,6 +119,7 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
   String? _owner, _error, _revoking;
   bool _loading = true;
   int _request = 0;
+
   @override
   void initState() {
     super.initState();
@@ -152,6 +189,9 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
         animationStyle: DSMotion.dialogStyle(context),
         context: context,
         builder: (c) => AlertDialog(
+                backgroundColor: FitnessTheme.surface,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
                 title: const Text('Revoke access?'),
                 content: Text(
                     '“${token.name}” will stop working. You can create another token later.'),
@@ -161,7 +201,8 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
                       child: const Text('Cancel')),
                   TextButton(
                       onPressed: () => Navigator.pop(c, true),
-                      child: const Text('Revoke'))
+                      child: const Text('Revoke',
+                          style: TextStyle(color: FitnessTheme.coral)))
                 ]));
     if (yes != true || !mounted) return;
     setState(() => _revoking = token.id);
@@ -179,165 +220,303 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
   Widget build(BuildContext context) {
     final active = _data?.tokens.where((t) => t.active).length ?? 0;
     return SettingsPage(
-        title: 'Claude',
-        subtitle: 'Your training, with more context.',
-        bottom: FilledButton(
-            style: _primary,
-            onPressed: !_loading && _data?.configured == true && active < 5
-                ? () => _create()
-                : null,
-            child: const Text('Create access token')),
-        children: [
-          const PremiumSurface(
-              child: Column(
+      title: 'Claude',
+      subtitle: '',
+      bottom: FilledButton(
+          style: _primary,
+          onPressed: !_loading && _data?.configured == true && active < 5
+              ? () => _create()
+              : null,
+          child: const Text('Create access token')),
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: DSColors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: DSColors.border, width: .7),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(CupertinoIcons.sparkles,
+                    size: 22, color: FitnessTheme.silver),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Icon(CupertinoIcons.sparkles,
-                    size: 30, color: FitnessTheme.silver),
-                SizedBox(height: 16),
-                Text('Setcraft × Claude',
-                    style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -.7)),
-                SizedBox(height: 10),
-                Text(
-                    'A clear view of your workouts. Only the details you choose to share.',
-                    style: _muted),
-                SizedBox(height: 16),
-                Row(children: [
-                  Icon(CupertinoIcons.lock_shield,
-                      size: 16, color: FitnessTheme.silver),
-                  SizedBox(width: 8),
-                  Expanded(
-                      child: Text('Read-only access · No body photos',
-                          style: TextStyle(
-                              fontSize: 12, color: FitnessTheme.silver)))
-                ]),
-              ])),
-          const SizedBox(height: 24),
-          if (_loading)
-            const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CupertinoActivityIndicator()))
-          else if (_error != null) ...[
-            SettingsNotice(_error!),
-            TextButton(onPressed: _load, child: const Text('Try again'))
-          ] else ...[
-            if (_data?.configured != true)
-              const SettingsNotice(
-                  'Connection setup is temporarily unavailable. Please try again later.'),
-            if (active >= 5)
-              const SettingsNotice(
-                  'Five active tokens. Revoke one or replace an existing token to continue.'),
-            Row(children: [
-              const Expanded(
-                  child: Text('Your access tokens',
+                    Text(
+                      'Setcraft × Claude',
                       style: TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w500))),
-              Text('$active / 5 active',
-                  style:
-                      const TextStyle(color: FitnessTheme.muted, fontSize: 12))
-            ]),
-            const SizedBox(height: 12),
-            if (_data?.tokens.isEmpty != false)
-              const PremiumSurface(
-                  child: Column(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: -.3,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Read-only access · No body photos',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: FitnessTheme.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        if (_loading)
+          const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CupertinoActivityIndicator()))
+        else if (_error != null) ...[
+          SettingsNotice(_error!),
+          TextButton(onPressed: _load, child: const Text('Try again'))
+        ] else ...[
+          if (_data?.configured != true)
+            const SettingsNotice(
+                'Connection setup is temporarily unavailable. Please try again later.'),
+          if (active >= 5)
+            const SettingsNotice(
+                'Five active tokens. Revoke one or replace an existing token to continue.'),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Your access tokens',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$active / 5 active',
+                  style: const TextStyle(
+                    color: FitnessTheme.muted,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_data?.tokens.isEmpty != false)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: DSColors.bgCard,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: DSColors.border, width: .7),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(CupertinoIcons.shield,
+                        size: 18, color: FitnessTheme.silver),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text('Ready when you are',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.w500)),
-                    SizedBox(height: 8),
-                    Text(
-                        'Create a token, then add it to your Claude connector settings. Nothing is shared until the connection is used.',
-                        style: _muted),
-                  ])),
-            for (final token in _data?.tokens ?? <McpAccessToken>[]) ...[
-              _card(context, token),
-              const SizedBox(height: 12)
-            ],
+                        Text(
+                          'Ready when you are',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Create a token to connect with Claude.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: FitnessTheme.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          for (final token in _data?.tokens ?? <McpAccessToken>[]) ...[
+            _card(context, token),
+            const SizedBox(height: 12)
           ],
-          const SizedBox(height: 22),
-          const SettingsGroup(title: 'How to connect', children: [
-            SettingsRow(
-                icon: CupertinoIcons.lock,
-                title: '1. Create a token',
-                subtitle: 'Choose permissions and an expiry date.'),
-            SettingsRow(
+        ],
+        const SizedBox(height: 20),
+        SettingsGroup(
+          title: 'Setup Guide',
+          children: [
+            const SettingsRow(
+              icon: CupertinoIcons.lock,
+              title: '1. Create a token',
+              subtitle: 'Choose permissions and expiry date',
+            ),
+            const SettingsRow(
+              icon: CupertinoIcons.link,
+              title: '2. Add connector in Claude',
+              subtitle: 'Customize → Connectors → Add custom',
+            ),
+            const SettingsRow(
+              icon: CupertinoIcons.doc_on_clipboard,
+              title: '3. Add Authorization header',
+              subtitle: 'Bearer followed by your access token',
+            ),
+            if (_data?.serverUrl != null)
+              SettingsRow(
                 icon: CupertinoIcons.link,
-                title: '2. Add Setcraft in Claude',
-                subtitle:
-                    'Open Customize → Connectors → Add custom connector. Use the server URL.'),
-            SettingsRow(
-                icon: CupertinoIcons.doc_on_clipboard,
-                title: '3. Add the request header',
-                subtitle:
-                    'Use Authorization as the name, and Bearer followed by a space and your token as its value. Choose fixed credentials, without OAuth sign-in.'),
-          ]),
-          if (_data?.serverUrl != null)
-            OutlinedButton.icon(
-                onPressed: () async {
+                title: 'Copy server URL',
+                value: 'Copy',
+                onTap: () async {
                   await Clipboard.setData(
                       ClipboardData(text: _data!.serverUrl!));
                   if (context.mounted) _notice(context, 'Server URL copied');
                 },
-                icon: const Icon(CupertinoIcons.link, size: 16),
-                label: const Text('Copy server URL')),
-          const SizedBox(height: 12),
-          const SettingsNotice(
-              'Use your personal Claude connection. A shared workspace credential can give other members access to the same Setcraft account.'),
-        ]);
+              ),
+          ],
+        ),
+      ],
+    );
   }
 
-  Widget _card(BuildContext c, McpAccessToken t) => PremiumSurface(
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(
-              child: Text(t.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w500))),
-          const SizedBox(width: 10),
-          Text(
-              t.revokedAt != null
-                  ? 'Revoked'
-                  : t.expired
-                      ? 'Expired'
-                      : 'Active',
-              style: const TextStyle(color: FitnessTheme.muted, fontSize: 12))
-        ]),
-        const SizedBox(height: 8),
-        Text('•••• ${t.lastFour}',
-            style: const TextStyle(
-                fontSize: 12, color: FitnessTheme.muted, letterSpacing: 1)),
-        const SizedBox(height: 12),
-        Text(t.scopes.map((s) => mcpPermissions[s]?.$1 ?? s).join(' · '),
-            style: const TextStyle(
-                fontSize: 12, height: 1.5, color: FitnessTheme.silver)),
-        const SizedBox(height: 10),
-        Text('Expires ${_date(c, t.expiresAt)}', style: _muted),
-        Text(
-            t.lastUsedAt == null
-                ? 'Not used yet'
-                : 'Last used ${_date(c, t.lastUsedAt!)}',
-            style: _muted),
-        if (t.revokedAt == null) ...[
-          const SizedBox(height: 10),
-          Wrap(spacing: 8, children: [
-            TextButton(
-                onPressed: _revoking == null && _data?.configured == true
-                    ? () => _create(t)
-                    : null,
-                child: const Text('Replace token')),
-            TextButton(
-                onPressed: _revoking == null ? () => _revoke(t) : null,
-                child: Text(_revoking == t.id ? 'Revoking…' : 'Revoke'))
-          ])
-        ],
-      ]));
+  Widget _card(BuildContext c, McpAccessToken t) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: DSColors.bgCard,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: DSColors.border, width: .7),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    t.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    t.revokedAt != null
+                        ? 'Revoked'
+                        : t.expired
+                            ? 'Expired'
+                            : 'Active',
+                    style: TextStyle(
+                      color: t.revokedAt != null || t.expired
+                          ? FitnessTheme.muted
+                          : FitnessTheme.silver,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '•••• ${t.lastFour}',
+              style: const TextStyle(
+                fontSize: 12,
+                color: FitnessTheme.muted,
+                letterSpacing: 1,
+                fontFamily: 'monospace',
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              t.scopes.map((s) => mcpPermissions[s]?.$1 ?? s).join(' · '),
+              style: const TextStyle(
+                fontSize: 12,
+                color: FitnessTheme.silver,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text('Expires ${_date(c, t.expiresAt)}',
+                style:
+                    const TextStyle(color: FitnessTheme.muted, fontSize: 11)),
+            const SizedBox(height: 2),
+            Text(
+              t.lastUsedAt == null
+                  ? 'Not used yet'
+                  : 'Last used ${_date(c, t.lastUsedAt!)}',
+              style: const TextStyle(color: FitnessTheme.muted, fontSize: 11),
+            ),
+            if (t.revokedAt == null) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1, color: Color(0x14FFFFFF)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  TextButton(
+                    onPressed: _revoking == null && _data?.configured == true
+                        ? () => _create(t)
+                        : null,
+                    style: TextButton.styleFrom(
+                      foregroundColor: FitnessTheme.silver,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                    child: const Text('Replace token',
+                        style: TextStyle(fontSize: 12)),
+                  ),
+                  TextButton(
+                    onPressed: _revoking == null ? () => _revoke(t) : null,
+                    style: TextButton.styleFrom(
+                      foregroundColor: FitnessTheme.coral,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                    child: Text(
+                      _revoking == t.id ? 'Revoking…' : 'Revoke',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      );
 }
 
 class CreateMcpTokenView extends StatefulWidget {
@@ -365,6 +544,7 @@ class _CreateMcpTokenViewState extends State<CreateMcpTokenView> {
   int _days = 30;
   bool _busy = false;
   String? _error;
+
   @override
   void dispose() {
     _name.dispose();
@@ -407,88 +587,152 @@ class _CreateMcpTokenViewState extends State<CreateMcpTokenView> {
 
   @override
   Widget build(BuildContext context) => SettingsPage(
-          title:
-              widget.replace == null ? 'Create access token' : 'Replace token',
-          subtitle: 'Choose what this connection can read.',
-          bottom: FilledButton(
-              style: _primary,
-              onPressed: _busy ? null : _submit,
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                if (_busy) ...[
-                  const CupertinoActivityIndicator(radius: 8),
-                  const SizedBox(width: 10)
-                ],
-                Flexible(
-                    child: Text(
-                        _busy
-                            ? 'Creating…'
-                            : widget.replace == null
-                                ? 'Generate token'
-                                : 'Create replacement',
-                        textAlign: TextAlign.center))
-              ])),
-          children: [
-            if (widget.replace != null)
-              const SettingsNotice(
-                  'Creating the replacement immediately revokes the old token. Update it in Claude afterwards.'),
-            Form(
-                key: _form,
-                child: TextFormField(
-                    controller: _name,
-                    enabled: !_busy,
-                    maxLength: 60,
-                    decoration: const InputDecoration(
-                        labelText: 'Token name',
-                        hintText: 'For example, My Claude'),
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? 'Enter a name for this connection.'
-                        : null)),
-            const SizedBox(height: 22),
-            SettingsGroup(title: 'Permissions', children: [
+        title: widget.replace == null ? 'Create access token' : 'Replace token',
+        subtitle: '',
+        bottom: FilledButton(
+          style: _primary,
+          onPressed: _busy ? null : _submit,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_busy) ...[
+                const CupertinoActivityIndicator(radius: 8),
+                const SizedBox(width: 10),
+              ],
+              Flexible(
+                child: Text(
+                  _busy
+                      ? 'Creating…'
+                      : widget.replace == null
+                          ? 'Generate token'
+                          : 'Create replacement',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+        children: [
+          Form(
+            key: _form,
+            child: TextFormField(
+              controller: _name,
+              enabled: !_busy,
+              maxLength: 60,
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: DSColors.bgCard,
+                labelText: 'Token name',
+                labelStyle: const TextStyle(color: FitnessTheme.muted),
+                hintText: 'For example, My Claude',
+                hintStyle: const TextStyle(color: DSColors.textTertiary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide:
+                      const BorderSide(color: DSColors.border, width: .7),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide:
+                      const BorderSide(color: DSColors.border, width: .7),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide:
+                      const BorderSide(color: FitnessTheme.silver, width: 1),
+                ),
+              ),
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Enter a name for this connection.'
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SettingsGroup(
+            title: 'Permissions',
+            children: [
               for (final p in mcpPermissions.entries)
                 Material(
-                    color: Colors.transparent,
-                    child: SwitchListTile.adaptive(
-                        value: _scopes.contains(p.key),
-                        onChanged: _busy
-                            ? null
-                            : (v) => setState(() {
-                                  v
-                                      ? _scopes.add(p.key)
-                                      : _scopes.remove(p.key);
-                                }),
-                        activeTrackColor: FitnessTheme.silver,
-                        title: Text(p.value.$1,
-                            style: const TextStyle(fontSize: 14)),
-                        subtitle: Text(
-                            '${p.key == 'nutrition:read' || p.key == 'measurements:read' ? 'Optional. ' : ''}${p.value.$2}',
-                            style: _muted)))
-            ]),
-            const Text('Expires after', style: _muted),
-            const SizedBox(height: 10),
-            Wrap(spacing: 8, runSpacing: 8, children: [
+                  color: Colors.transparent,
+                  child: SwitchListTile.adaptive(
+                    value: _scopes.contains(p.key),
+                    onChanged: _busy
+                        ? null
+                        : (v) => setState(() {
+                              v ? _scopes.add(p.key) : _scopes.remove(p.key);
+                            }),
+                    activeTrackColor: FitnessTheme.silver,
+                    title: Text(
+                      p.value.$1,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      p.value.$2,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: FitnessTheme.muted,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              'EXPIRES AFTER',
+              style: TextStyle(
+                color: DSColors.textTertiary,
+                fontSize: 11,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
               for (final days in [7, 30, 90])
                 ChoiceChip(
-                    label: Text('$days days'),
-                    selected: _days == days,
-                    selectedColor: FitnessTheme.silver,
-                    showCheckmark: false,
-                    labelStyle: TextStyle(
-                        color: _days == days
-                            ? FitnessTheme.canvas
-                            : FitnessTheme.silver),
-                    onSelected:
-                        _busy ? null : (_) => setState(() => _days = days))
-            ]),
-            const SizedBox(height: 22),
-            const SettingsNotice(
-                'Read access only. No body photos, workout changes, billing access, or permission to create other tokens.'),
-            if (_error != null)
-              Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(_error!, style: _muted)),
-          ]);
+                  label: Text('$days days'),
+                  selected: _days == days,
+                  selectedColor: FitnessTheme.silver,
+                  backgroundColor: DSColors.bgCard,
+                  showCheckmark: false,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: _days == days ? Colors.white : DSColors.border,
+                      width: .7,
+                    ),
+                  ),
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _days == days
+                        ? FitnessTheme.canvas
+                        : FitnessTheme.silver,
+                  ),
+                  onSelected:
+                      _busy ? null : (_) => setState(() => _days = days),
+                ),
+            ],
+          ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(_error!,
+                  style: const TextStyle(color: FitnessTheme.coral)),
+            ),
+        ],
+      );
 }
 
 class McpTokenCreatedView extends StatefulWidget {
@@ -503,6 +747,7 @@ class McpTokenCreatedView extends StatefulWidget {
 class _McpTokenCreatedViewState extends State<McpTokenCreatedView>
     with WidgetsBindingObserver {
   bool _revealed = false, _copying = false;
+
   @override
   void initState() {
     super.initState();
@@ -543,81 +788,119 @@ class _McpTokenCreatedViewState extends State<McpTokenCreatedView>
 
   @override
   Widget build(BuildContext context) => SettingsPage(
-          title: 'Your access token',
-          subtitle: 'One token. Only your chosen permissions.',
-          bottom: FilledButton(
-              style: _primary,
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Done')),
-          children: [
-            PremiumSurface(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        title: 'Access token',
+        subtitle: '',
+        bottom: FilledButton(
+          style: _primary,
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Done'),
+        ),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: DSColors.bgCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: DSColors.border, width: .7),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(CupertinoIcons.checkmark_shield,
+                      size: 24, color: FitnessTheme.silver),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Ready to connect',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: -.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.issued.token.name,
+                  style: const TextStyle(
+                    color: FitnessTheme.silver,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.035),
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                  ),
+                  child: Row(
                     children: [
-                  const Icon(CupertinoIcons.checkmark_shield,
-                      size: 32, color: FitnessTheme.silver),
-                  const SizedBox(height: 18),
-                  const Text('Ready to connect',
-                      style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -.5)),
-                  const SizedBox(height: 10),
-                  Text(widget.issued.token.name, style: _muted),
-                  const SizedBox(height: 20),
-                  Text(
-                      _revealed
-                          ? widget.issued.secret
-                          : 'sc_mcp_••••••••${widget.issued.token.lastFour}',
-                      key: const ValueKey('mcp-secret'),
-                      style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          height: 1.7,
-                          color: FitnessTheme.silver)),
-                  TextButton.icon(
-                      onPressed: () async {
-                        try {
-                          await widget.repository
-                              .requireOwner(widget.issued.owner);
-                          if (mounted) setState(() => _revealed = !_revealed);
-                        } catch (_) {
-                          if (context.mounted) {
-                            _notice(context,
-                                'Your account changed. Reopen AI connections.');
+                      Expanded(
+                        child: Text(
+                          _revealed
+                              ? widget.issued.secret
+                              : 'sc_mcp_••••••••${widget.issued.token.lastFour}',
+                          key: const ValueKey('mcp-secret'),
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                            color: FitnessTheme.silver,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: FitnessTheme.silver,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        onPressed: () async {
+                          try {
+                            await widget.repository
+                                .requireOwner(widget.issued.owner);
+                            if (mounted) setState(() => _revealed = !_revealed);
+                          } catch (_) {
+                            if (context.mounted) {
+                              _notice(context,
+                                  'Your account changed. Reopen AI connections.');
+                            }
                           }
-                        }
-                      },
-                      icon: Icon(
+                        },
+                        icon: Icon(
                           _revealed
                               ? CupertinoIcons.eye_slash
                               : CupertinoIcons.eye,
-                          size: 17),
-                      label: Text(_revealed ? 'Hide token' : 'Show token')),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                      style: _primary,
-                      onPressed: _copying ? null : _copy,
-                      icon: const Icon(CupertinoIcons.doc_on_doc, size: 17),
-                      label: const Text('Copy token')),
-                ])),
-            const SizedBox(height: 18),
-            const SettingsNotice(
-                'Copy this token before leaving. We cannot show it again. If you lose it, replace it from your token list.'),
-            const SizedBox(height: 18),
-            Text('Expires ${_date(context, widget.issued.token.expiresAt)}',
-                style: _muted),
-            const SizedBox(height: 18),
-            OutlinedButton.icon(
-                onPressed: () async {
-                  await Clipboard.setData(
-                      ClipboardData(text: widget.issued.serverUrl));
-                  if (context.mounted) _notice(context, 'Server URL copied');
-                },
-                icon: const Icon(CupertinoIcons.link, size: 17),
-                label: const Text('Copy server URL')),
-            const SizedBox(height: 18),
-            const SettingsNotice(
-                'In Claude’s custom connector, add a request header named Authorization. Its value is Bearer, a space, then your token. Paste it into settings, never into a chat message.'),
-          ]);
+                          size: 16,
+                        ),
+                        label: Text(
+                          _revealed ? 'Hide token' : 'Show token',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  style: _primary,
+                  onPressed: _copying ? null : _copy,
+                  icon: const Icon(CupertinoIcons.doc_on_clipboard, size: 16),
+                  label: const Text('Copy token'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
 }

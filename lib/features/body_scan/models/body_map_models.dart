@@ -1,5 +1,13 @@
 import 'planned_physique_models.dart';
 
+class BodyExerciseSelection {
+  final String exerciseId;
+  final PlannedPhysiqueExercise? recommendation;
+  final String? date;
+  const BodyExerciseSelection(this.exerciseId,
+      {this.recommendation, this.date});
+}
+
 class BodyMapData {
   final String date, weekStart, weekEnd, gender;
   final String? planId;

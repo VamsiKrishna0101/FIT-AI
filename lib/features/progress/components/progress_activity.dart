@@ -2,6 +2,7 @@ import '../../../core/components/motion.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/cache/cache_scope.dart';
+import '../../../core/theme/ds_colors.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
 import 'progress_chart.dart';
@@ -53,15 +54,38 @@ class ProgressTrainingSummary extends StatelessWidget {
                           const TextStyle(fontSize: 11, color: progressMuted)),
                 ])),
         ]),
-        if (summary['workoutChange'] is num) ...[
+        if (summary['workoutChange'] is num &&
+            (summary['hasPreviousTraining'] == true ||
+                (progressNumber(summary['previousWorkouts']) ?? 0) > 0)) ...[
           const SizedBox(height: 17),
           Container(
               padding: const EdgeInsets.only(top: 12),
               decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0x14FFFFFF)))),
+                  border: Border(top: BorderSide(color: DSColors.border))),
               child: Text(
                   '${(summary['workoutChange'] as num) > 0 ? '+' : ''}${progressValue(context, summary['workoutChange'] as num, digits: 0)} ${fitnessText(context, 'Workouts')} · ${fitnessText(context, 'Previous period')}',
                   style: const TextStyle(fontSize: 11, color: progressMuted))),
+        ],
+        if ((progressNumber(summary['volume']) ?? 0) > 0) ...[
+          const SizedBox(height: 20),
+          const Divider(color: DSColors.border, height: 1),
+          const SizedBox(height: 16),
+          Text(fitnessText(context, 'Training volume'),
+              style: const TextStyle(color: progressMuted, fontSize: 12)),
+          const SizedBox(height: 6),
+          Text(
+              progressValue(context, progressNumber(summary['volume']),
+                  unit: 'kg·reps', digits: 0),
+              style: const TextStyle(
+                  color: progressSilver,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(
+              fitnessText(
+                  context, 'Weight × reps, added across your logged sets.'),
+              style: const TextStyle(
+                  color: progressMuted, fontSize: 12, height: 1.4)),
         ],
       ]));
 }

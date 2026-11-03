@@ -262,13 +262,15 @@ class AboutYouViewModel extends ChangeNotifier {
         _selectedExperience != null;
   }
 
-  Future<void> continueToNextStep() async {
+  Future<void> continueToNextStep({bool includeMeasurements = true}) async {
     draft.name = _name.trim();
     draft.gender = _gender;
     draft.age = _age;
-    draft.heightCm = double.parse(_heightCm.toStringAsFixed(1));
-    draft.weightKg = double.parse(_weightKg.toStringAsFixed(1));
-    draft.targetWeightKg = double.parse(_targetWeightKg.toStringAsFixed(1));
+    if (includeMeasurements) {
+      draft.heightCm = double.parse(_heightCm.toStringAsFixed(1));
+      draft.weightKg = double.parse(_weightKg.toStringAsFixed(1));
+      draft.targetWeightKg = double.parse(_targetWeightKg.toStringAsFixed(1));
+    }
     if (_selectedExperience != null) {
       draft.experienceLevel = _selectedExperience!.backendValue;
     }

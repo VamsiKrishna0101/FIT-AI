@@ -15,6 +15,7 @@ import 'package:setcraft/features/profile/views/privacy_settings_view.dart';
 import 'package:setcraft/features/profile/views/settings_preferences_view.dart';
 import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
 import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
+import 'package:setcraft/core/watch/views/apple_watch_settings_view.dart';
 import 'helpers/fake_mcp_repository.dart';
 
 class _SettingsRepository extends SettingsRepository {
@@ -317,8 +318,12 @@ void main() {
     await _capture(tester, 'settings-overview');
     await tester.pumpWidget(
         _app(ClaudeConnectionView(repository: FakeMcpRepository())));
+        
     await tester.pumpAndSettle();
     await _capture(tester, 'settings-claude');
+    await tester.pumpWidget(_app(const AppleWatchSettingsView()));
+    await tester.pumpAndSettle();
+    await _capture(tester, 'settings-watch');
     expect(tester.takeException(), isNull);
   });
 
