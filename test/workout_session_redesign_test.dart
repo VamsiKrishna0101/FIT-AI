@@ -71,7 +71,7 @@ Map<String, dynamic> sample(
 class _Adapter implements HttpClientAdapter {
   Map<String, dynamic> day = sample(two: true);
   final writes = <RequestOptions>[];
-  bool rejectSave = false;
+  bool rejectSave = false, rejectDelete = false;
   @override
   Future<ResponseBody> fetch(
       RequestOptions o, Stream<Uint8List>? stream, Future<void>? cancel) async {
@@ -84,7 +84,8 @@ class _Adapter implements HttpClientAdapter {
       });
     } else if (o.method != 'GET') {
       writes.add(o);
-      if (rejectSave && o.method == 'PUT') {
+      if ((rejectSave && o.method == 'PUT') ||
+          (rejectDelete && o.method == 'DELETE')) {
         return ResponseBody.fromString(
             '{"error":"Not saved yet. Tap save to retry."}', 503,
             headers: {
@@ -108,6 +109,10 @@ class _Adapter implements HttpClientAdapter {
         item!['status'] = 'COMPLETED';
       } else if (o.method == 'PUT') {
         upsert(o.data as Map);
+      } else if (o.method == 'DELETE' && o.path.contains('/sets/')) {
+        final number = int.parse(o.path.split('/sets/').last.split('?').first);
+        (item!['setLogs'] as List)
+            .removeWhere((log) => log['setNumber'] == number);
       } else if (o.path.contains('/finish')) {
         day['session']['status'] = 'COMPLETED';
         day['session']['durationSeconds'] = 620;
@@ -243,6 +248,136 @@ void main() {
     expect(find.text('Enter the weight you lifted before saving this set.'),
         findsWidgets);
     expect(find.byTooltip('Saved'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'Set selection keeps equal input boxes without opening the keyboard',
+      (tester) async {
+    // Keep the guide in the viewport when checking that row selection does not
+    // rebuild it. Phone-sized scrolling is covered by the layout tests below.
+    tester.view.physicalSize = const Size(393, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(screen(sample()));
+    await settle(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('set-select-2')));
+    await settle(tester);
+    final guide =
+        tester.widget<WorkoutFormGuide>(find.byType(WorkoutFormGuide));
+    final firstSize =
+        tester.getSize(find.byKey(const ValueKey('set-weight-1')));
+    final secondSize =
+        tester.getSize(find.byKey(const ValueKey('set-weight-2')));
+    expect(firstSize, secondSize);
+    expect(tester.testTextInput.isVisible, isFalse);
+    await tester.tap(find.byKey(const ValueKey('set-select-2')));
+    await settle(tester);
+    expect(find.text('Log set 2'), findsOneWidget);
+    expect(tester.testTextInput.isVisible, isFalse);
+    expect(
+        identical(
+            tester.widget<WorkoutFormGuide>(find.byType(WorkoutFormGuide)),
+            guide),
+        isTrue);
+    await tester.tap(find.byKey(const ValueKey('set-weight-2')));
+    await settle(tester);
+    expect(tester.testTextInput.isVisible, isTrue);
+    expect(
+        tester.getSize(find.byKey(const ValueKey('set-weight-2'))), secondSize);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+      'An unsaved extra row is removed locally and its draft stays deleted',
+      (tester) async {
+    await tester.pumpWidget(screen(sample()));
+    await settle(tester);
+    await tester.ensureVisible(find.text('Add set'));
+    await settle(tester);
+    await tester.tap(find.text('Add set'));
+    await settle(tester);
+    expect(tester.testTextInput.isVisible, isFalse);
+    await tester.enterText(find.byKey(const ValueKey('set-weight-4')), '25');
+    await tester.enterText(find.byKey(const ValueKey('set-reps-4')), '9');
+    await tester.pump(const Duration(milliseconds: 300));
+    await settle(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('set-delete-4')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('set-delete-4')));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('set-weight-4')), findsNothing);
+    expect(adapter.writes, isEmpty);
+    await tester.ensureVisible(find.text('Add set'));
+    await settle(tester);
+    await tester.tap(find.text('Add set'));
+    await settle(tester);
+    for (final id in ['set-weight-4', 'set-reps-4']) {
+      expect(
+          tester.widget<TextField>(find.byKey(ValueKey(id))).controller!.text,
+          isEmpty);
+    }
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Deleting a saved extra row preserves higher numbered saved sets',
+      (tester) async {
+    adapter.day = sample();
+    (adapter.day['items'] as List).first['setLogs'] = [
+      {'setNumber': 4, 'reps': 8, 'weight': 25},
+      {'setNumber': 5, 'reps': 7, 'weight': 30},
+    ];
+    await tester.pumpWidget(screen(adapter.day));
+    await settle(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('set-delete-4')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('set-delete-4')));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('set-weight-4')), findsNothing);
+    expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('set-weight-5')))
+            .controller!
+            .text,
+        '30');
+    expect(adapter.writes.single.method, 'DELETE');
+    expect(adapter.writes.single.path, contains('/sets/4'));
+    expect((adapter.day['items'] as List).first['setLogs'], [
+      {'setNumber': 5, 'reps': 7, 'weight': 30},
+    ]);
+    // Let the repository's coalesced dashboard refresh complete.
+    await tester.pump(const Duration(milliseconds: 800));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('A failed extra-set deletion preserves the row and edited values',
+      (tester) async {
+    adapter.day = sample();
+    adapter.rejectDelete = true;
+    (adapter.day['items'] as List).first['setLogs'] = [
+      {'setNumber': 4, 'reps': 8, 'weight': 25},
+    ];
+    await tester.pumpWidget(screen(adapter.day));
+    await settle(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('set-weight-4')));
+    await settle(tester);
+    await tester.enterText(find.byKey(const ValueKey('set-weight-4')), '26');
+    await tester.ensureVisible(find.byKey(const ValueKey('set-delete-4')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('set-delete-4')));
+    await settle(tester);
+    expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('set-weight-4')))
+            .controller!
+            .text,
+        '26');
+    expect(find.text('Could not save. Please try again.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets('Bodyweight uses reps-only entry and finishes without a load',

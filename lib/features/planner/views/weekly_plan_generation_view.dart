@@ -9,17 +9,20 @@ import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../repositories/weekly_plan_repository.dart';
 import 'widgets/plan_particle_orb.dart';
+import '../../profile/views/ai_sharing_consent.dart';
 
 class WeeklyPlanGenerationView extends StatefulWidget {
   final WeeklyPlanRepository repository;
   final Map<String, dynamic> initialRun;
   final DateTime weekStart;
+  final Future<bool> Function(BuildContext) requestAiConsent;
 
   const WeeklyPlanGenerationView({
     super.key,
     required this.repository,
     required this.initialRun,
     required this.weekStart,
+    this.requestAiConsent = ensureAiSharingConsent,
   });
 
   @override
@@ -127,6 +130,9 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
     if (_retrying) return;
     setState(() => _retrying = true);
     try {
+      if (!await widget.requestAiConsent(context) || !await _sameOwner()) {
+        return;
+      }
       final run = await widget.repository.retry(_run['id'] as String);
       if (!await _sameOwner()) return;
       setState(() {

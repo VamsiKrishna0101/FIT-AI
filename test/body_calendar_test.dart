@@ -157,12 +157,11 @@ void main() {
     await choose(tester, 'body-calendar-month-picker', 'December');
     await tap(tester, find.byKey(const ValueKey('body-calendar-2025-12-10')));
     await choose(tester, 'body-calendar-year-picker', '2026', delta: -120);
-    final month = tester.widget<DropdownButton<int>>(
-        find.byKey(const ValueKey('body-calendar-month-picker')));
+    final month = calendarDropdown<int>(tester, 'body-calendar-month-picker');
     expect(month.value, 11,
         reason: 'Returning to this year clamps a future month to this month');
     expect(
-        month.items!.singleWhere((item) => item.value == 12).enabled, isFalse);
+        month.items.singleWhere((item) => item.value == 12).enabled, isFalse);
     expect(
         tester
             .widget<TextButton>(

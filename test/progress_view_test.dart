@@ -372,7 +372,13 @@ void main() {
     await tester.pumpWidget(
         page(ProgressOverviewView(initial: ProgressOverview(json))));
     await capture(tester, 'progress-seeded-preview');
-    expect(find.text('Preview data'), findsNothing);
+    // The optional seeded fixture can contain a body series with preview
+    // provenance. Its source label is valid; an overview dataset control isn't.
+    expect(
+        find.text('Preview data').evaluate().every((element) =>
+            element.findAncestorWidgetOfExactType<ProgressBodyChartCard>() !=
+            null),
+        isTrue);
     expect(find.text('Real data'), findsNothing);
     expect(find.byType(ProgressAttendanceCard), findsOneWidget);
     expect(find.text('Recent exercises'), findsOneWidget);

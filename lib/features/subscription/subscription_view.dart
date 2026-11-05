@@ -36,6 +36,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   String? _loadError;
   bool _refreshing = false, _purchasing = false, _leaving = false;
   bool _awaitingUnlock = false, _continuing = false;
+  bool _presentedRevenueCat = false;
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       _refresh();
     } else {
       _selectAvailableOffer();
+      _scheduleRevenueCatPaywall();
     }
   }
 
@@ -72,7 +74,31 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       }
     } finally {
       if (mounted) setState(() => _refreshing = false);
+      _scheduleRevenueCatPaywall();
     }
+  }
+
+  void _scheduleRevenueCatPaywall() {
+    if (!mounted ||
+        _presentedRevenueCat ||
+        !service.usesRevenueCat ||
+        !service.plansAvailable ||
+        service.access?.hasAccess == true) {
+      return;
+    }
+    _presentedRevenueCat = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // Run the existing onboarding validation before opening native checkout.
+      await _purchase();
+      if (mounted &&
+          !widget.blocking &&
+          service.access?.hasAccess != true &&
+          service.error == null &&
+          Navigator.canPop(context)) {
+        Navigator.maybePop(context);
+      }
+    });
   }
 
   void _verified() {

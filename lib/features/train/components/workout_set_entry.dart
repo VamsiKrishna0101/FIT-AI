@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/cache/cache_scope.dart';
@@ -20,6 +21,8 @@ class WorkoutSetEntry extends StatefulWidget {
   final Future<Map<String, dynamic>>? previous;
   final bool disabled;
   final bool bodyweight, compact, active, showSaveAction, showDetailsAction;
+  final bool removable;
+  final ValueListenable<int?>? selection;
   final VoidCallback? onActivate;
   final Future<void> Function(int reps, double? weight, double? effort) onSave;
   final Future<void> Function() onDelete;
@@ -38,6 +41,8 @@ class WorkoutSetEntry extends StatefulWidget {
       this.active = true,
       this.showSaveAction = true,
       this.showDetailsAction = true,
+      this.removable = false,
+      this.selection,
       this.onActivate,
       required this.disabled,
       required this.onSave,
@@ -57,8 +62,18 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   Future<void>? _pendingSave;
   final _weightFocus = FocusNode(), _repsFocus = FocusNode();
   bool _detailsOpen = false, _addedLoad = false;
+  bool _deleting = false, _renderedSaved = false;
+  late bool _wasActive;
+  late final Future<void> _restored;
   String? _validation;
   bool get _showWeight => !widget.bodyweight || _addedLoad;
+  bool get _active => widget.selection == null
+      ? widget.active
+      : widget.selection!.value == widget.number;
+  bool get _saved =>
+      widget.log != null &&
+      !_dirty &&
+      (widget.bodyweight || (_load != null && _load! > 0));
   @override
   void initState() {
     super.initState();
@@ -70,7 +85,35 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     _addedLoad = weight is num && weight > 0;
     _weight.text = weight == null ? '' : '$weight';
     _effort = (widget.log?['rpe'] as num?)?.toDouble();
-    _restore();
+    _wasActive = _active;
+    widget.selection?.addListener(_selectionChanged);
+    _weightFocus.addListener(_focusChanged);
+    _repsFocus.addListener(_focusChanged);
+    _restored = _restore();
+  }
+
+  void _selectionChanged() {
+    if (_wasActive == _active || !mounted) return;
+    setState(() => _wasActive = _active);
+  }
+
+  void _focusChanged() {
+    if (_weightFocus.hasFocus || _repsFocus.hasFocus) widget.onActivate?.call();
+  }
+
+  void _selectRow() {
+    FocusScope.of(context).unfocus();
+    widget.onActivate?.call();
+  }
+
+  @override
+  void didUpdateWidget(WorkoutSetEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selection != widget.selection) {
+      oldWidget.selection?.removeListener(_selectionChanged);
+      widget.selection?.addListener(_selectionChanged);
+    }
+    _wasActive = _active;
   }
 
   Future<void> _restore() async {
@@ -94,15 +137,17 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
             (double.tryParse(_weight.text.replaceAll(',', '.')) ?? 0) > 0;
       }
       _effort = (draft['rpe'] as num?)?.toDouble() ?? _effort;
+      setState(() {});
     }
-    setState(() {});
   }
 
-  void _changed(String _) {
+  void _changed(String _, {bool rebuild = false}) {
+    final needsRebuild =
+        rebuild || _validation != null || _saved != _renderedSaved;
     _validation = null;
     _confirmed = false;
     _touched = true;
-    setState(() {});
+    if (needsRebuild) setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), _persist);
   }
@@ -122,7 +167,8 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   @override
   void dispose() {
     _debounce?.cancel();
-    if (hasPendingValues) _persist();
+    if (hasPendingValues && !_deleting) _persist();
+    widget.selection?.removeListener(_selectionChanged);
     _reps.dispose();
     _weight.dispose();
     _weightFocus.dispose();
@@ -243,33 +289,33 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
   }
 
   Future<void> _delete() async {
+    if (_busy) return;
+    FocusScope.of(context).unfocus();
+    _deleting = true;
+    _debounce?.cancel();
     setState(() => _busy = true);
     try {
+      await _restored;
+      if (!mounted) return;
+      if (_draftKey != null) await LocalCache.shared.remove(_draftKey!);
       await widget.onDelete();
-      _debounce?.cancel();
-      _reps.clear();
-      _weight.clear();
-      _effort = null;
       _confirmed = true;
       _touched = false;
-      if (_draftKey != null) await LocalCache.shared.remove(_draftKey!);
+      if (mounted) {
+        _reps.clear();
+        _weight.clear();
+        _effort = null;
+      }
     } catch (_) {
+      if (hasPendingValues) _persist();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
                 fitnessText(context, 'Could not save. Please try again.'))));
       }
     } finally {
+      _deleting = false;
       if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  void focusEditor() {
-    if (!mounted || !widget.active) return;
-    if (widget.bodyweight) {
-      _repsFocus.requestFocus();
-    } else {
-      _weightFocus.requestFocus();
     }
   }
 
@@ -290,7 +336,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
         builder: (_) => WorkoutSetDetailsSheet(
             number: widget.number,
             bodyweight: widget.bodyweight,
-            canDelete: widget.log != null,
+            canDelete: widget.removable || widget.log != null,
             effort: _effort,
             weight: _weight.text));
     _detailsOpen = false;
@@ -304,7 +350,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
       _weight.text = details.weight;
       _addedLoad = details.weight.isNotEmpty;
     }
-    _changed('');
+    _changed('', rebuild: true);
   }
 
   String _number(num value) => (NumberFormat.decimalPattern(
@@ -340,11 +386,16 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
         controller: weight ? _weight : _reps,
         focusNode: weight ? _weightFocus : _repsFocus,
         enabled: !widget.disabled && !_busy,
+        onTap: widget.onActivate,
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 16, color: DSColors.silver),
         keyboardType: weight
             ? const TextInputType.numberWithOptions(decimal: true)
             : TextInputType.number,
+        textInputAction: weight ? TextInputAction.next : TextInputAction.done,
+        onSubmitted: (_) => weight
+            ? _repsFocus.requestFocus()
+            : FocusScope.of(context).unfocus(),
         inputFormatters: [
           if (weight)
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
@@ -357,7 +408,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
             semanticCounterText:
                 fitnessText(context, weight ? 'Weight (kg)' : 'Reps'),
             filled: true,
-            fillColor: const Color(0xFF0D0D0D),
+            fillColor: DSColors.bgElevated,
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
@@ -380,34 +431,24 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
     ]);
   }
 
-  Widget _savedValue(bool weight) {
-    final value = weight ? _weight.text : _reps.text;
-    final number = num.tryParse(value.replaceAll(',', '.'));
-    return Text(number == null ? '—' : _number(number),
-        textAlign: TextAlign.center,
-        style: TextStyle(
-            fontSize: 15,
-            color: widget.log == null ? DSColors.muted : DSColors.silver));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final saved = widget.log != null &&
-        !_dirty &&
-        (widget.bodyweight || (_load != null && _load! > 0));
+    final saved = _saved;
+    _renderedSaved = saved;
     final large = MediaQuery.textScalerOf(context).scale(14) > 20;
     final counter = Container(
+        key: ValueKey('set-select-${widget.number}'),
         width: 28,
         height: 30,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-            color: widget.active ? DSColors.silver : Colors.transparent,
+            color: _active ? DSColors.silver : DSColors.bgElevated,
             borderRadius: BorderRadius.circular(7)),
         child: Text('${widget.number}',
             style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: widget.active ? DSColors.bg : DSColors.muted)));
+                color: _active ? DSColors.bg : DSColors.silver)));
     final status = widget.showSaveAction
         ? IconButton(
             tooltip: fitnessText(
@@ -423,23 +464,26 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                 : const Icon(CupertinoIcons.checkmark,
                     size: 17, color: DSColors.silver))
         : SizedBox(
-            width: 18,
-            child: saved
-                ? const Icon(CupertinoIcons.checkmark,
-                    size: 14, color: DSColors.silver)
-                : const SizedBox.shrink());
+            width: 44,
+            child: widget.removable
+                ? IconButton(
+                    key: ValueKey('set-delete-${widget.number}'),
+                    tooltip: fitnessText(context, 'Delete set'),
+                    onPressed: widget.disabled || _busy ? null : _delete,
+                    icon: _busy
+                        ? const CupertinoActivityIndicator()
+                        : const Icon(CupertinoIcons.trash,
+                            size: 17, color: DSColors.muted))
+                : saved
+                    ? const Icon(CupertinoIcons.checkmark,
+                        size: 14, color: DSColors.silver)
+                    : const SizedBox.shrink());
     Widget values() => Row(children: [
           if (!widget.bodyweight) ...[
-            Expanded(
-                child: widget.active
-                    ? _input(true, label: large)
-                    : _savedValue(true)),
+            Expanded(child: _input(true, label: large)),
             const SizedBox(width: 8)
           ],
-          Expanded(
-              child: widget.active
-                  ? _input(false, label: large)
-                  : _savedValue(false)),
+          Expanded(child: _input(false, label: large)),
         ]);
     return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -448,7 +492,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: InkWell(
-                onTap: widget.disabled || _busy ? null : widget.onActivate,
+                onTap: widget.disabled || _busy ? null : _selectRow,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                     padding: const EdgeInsets.all(8),
@@ -476,7 +520,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                               const SizedBox(width: 8),
                               status,
                             ]),
-                          if (widget.active && _validation != null)
+                          if (_active && _validation != null)
                             Padding(
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Text(fitnessText(context, _validation!),
@@ -484,7 +528,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                                         color: Color(0xFFED927F),
                                         fontSize: 12,
                                         height: 1.4))),
-                          if (widget.active &&
+                          if (_active &&
                               widget.showDetailsAction &&
                               widget.targetLabel != null)
                             Padding(
@@ -504,7 +548,7 @@ class WorkoutSetEntryState extends State<WorkoutSetEntry> {
                                     '${fitnessText(context, 'Added weight (kg)')} · ${_weight.text}',
                                     style: const TextStyle(
                                         fontSize: 11, color: DSColors.muted))),
-                          if (widget.active && widget.showDetailsAction)
+                          if (_active && widget.showDetailsAction)
                             Align(
                                 alignment: AlignmentDirectional.centerEnd,
                                 child: TextButton(

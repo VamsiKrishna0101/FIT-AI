@@ -156,8 +156,7 @@ void main() {
     await t.tap(find.text('Revoke').last);
     await t.pumpAndSettle();
     expect(repo.revocations, 1);
-    expect(find.text('No access tokens. Create one to set up Claude.'),
-        findsOneWidget);
+    expect(find.text('No access tokens yet.'), findsOneWidget);
   });
   testWidgets(
       'Unconfigured server disables generation without claiming a connection',

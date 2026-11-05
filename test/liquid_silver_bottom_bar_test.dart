@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:setcraft/core/components/navigation_glyph.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -134,7 +135,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(nativeRequests, 0);
     expect(find.byType(UiKitView), findsNothing);
-    expect(find.byType(BackdropFilter), findsNWidgets(2));
+    expect(
+        find.byType(BackdropFilter),
+        defaultTargetPlatform == TargetPlatform.android
+            ? findsNothing
+            : findsNWidgets(2));
     expect(
         find.byKey(const ValueKey('navigation-active-pill')), findsOneWidget);
     expect(find.text('Today'), findsNothing);

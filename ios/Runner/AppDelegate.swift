@@ -17,6 +17,45 @@ import CoreMotion
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    if let settingsRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "SetcraftAccountSettings") {
+      clearAccountExports()
+      let settings = FlutterMethodChannel(name: "setcraft/settings", binaryMessenger: settingsRegistrar.messenger())
+      settings.setMethodCallHandler { [weak self] call, result in
+        guard let self = self else { result(FlutterError(code: "UNAVAILABLE", message: "Settings unavailable.", details: nil)); return }
+        switch call.method {
+        case "appInfo":
+          result(["appVersion": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
+                  "buildNumber": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "",
+                  "platform": "ios", "osVersion": UIDevice.current.systemVersion])
+        case "clearExports": self.clearAccountExports(); result(nil)
+        case "shareExport":
+          guard let args = call.arguments as? [String: Any], let json = args["json"] as? String,
+                let data = json.data(using: .utf8), data.count <= 50 * 1024 * 1024,
+                (try? JSONSerialization.jsonObject(with: data)) is [String: Any] else {
+            result(FlutterError(code: "INVALID_EXPORT", message: "This export could not be prepared.", details: nil)); return
+          }
+          do {
+            self.clearAccountExports()
+            try FileManager.default.createDirectory(at: self.accountExportDirectory, withIntermediateDirectories: true)
+            let file = self.accountExportDirectory.appendingPathComponent("setcraft-data-\(UUID().uuidString).json")
+            try data.write(to: file, options: [.atomic, .completeFileProtection])
+            var presenter = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+              .flatMap { $0.windows }.first { $0.isKeyWindow }?.rootViewController
+            while let presented = presenter?.presentedViewController { presenter = presented }
+            guard let presenter = presenter else { throw NSError(domain: "Export", code: 1) }
+            let share = UIActivityViewController(activityItems: [file], applicationActivities: nil)
+            share.popoverPresentationController?.sourceView = presenter.view
+            share.popoverPresentationController?.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 1, height: 1)
+            share.completionWithItemsHandler = { _, _, _, _ in try? FileManager.default.removeItem(at: file) }
+            presenter.present(share, animated: true) { result(nil) }
+          } catch {
+            self.clearAccountExports()
+            result(FlutterError(code: "EXPORT_FAILED", message: "Could not open the share sheet. Please try again.", details: nil))
+          }
+        default: result(FlutterMethodNotImplemented)
+        }
+      }
+    }
     if let motionRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "SetcraftHydrationMotion") {
       FlutterEventChannel(name: "setcraft/hydration_motion", binaryMessenger: motionRegistrar.messenger())
         .setStreamHandler(hydrationTilt)
@@ -93,6 +132,12 @@ import CoreMotion
         }
       }
       store.execute(query)
+    }
+  }
+  private var accountExportDirectory: URL { FileManager.default.temporaryDirectory.appendingPathComponent("account_exports", isDirectory: true) }
+  private func clearAccountExports() {
+    for file in (try? FileManager.default.contentsOfDirectory(at: accountExportDirectory, includingPropertiesForKeys: nil)) ?? [] {
+      try? FileManager.default.removeItem(at: file)
     }
   }
 }

@@ -425,8 +425,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                             },
                             (value) => _experience = value),
                       ]),
-                      const SettingsNotice(
-                          'Updates guide future plans. Your logged workouts and measurements stay intact.'),
+                      const SettingsNotice('Applies to future plans.'),
                     ],
                   ]),
             ),

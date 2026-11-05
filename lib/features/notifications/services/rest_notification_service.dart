@@ -29,6 +29,7 @@ class RestNotificationService extends ChangeNotifier
   int _revision = 0;
   final _visibleTimers = <Object>{};
   bool get supported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get available => supported && _ready;
   bool get _foreground =>
       WidgetsBinding.instance.lifecycleState == null ||
       WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;

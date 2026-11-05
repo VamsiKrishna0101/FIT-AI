@@ -148,26 +148,26 @@ class ProgressMuscleChartCard extends StatelessWidget {
     final ordered = [...muscles]..sort((a, b) =>
         (progressNumber(b['directSets']) ?? 0)
             .compareTo(progressNumber(a['directSets']) ?? 0));
-    final shown = ordered.take(6).toList();
     return ProgressSurface(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(fitnessText(context, 'Logged sets'),
               style: const TextStyle(fontSize: 12, color: progressMuted)),
           const SizedBox(height: 16),
-          if (shown.isEmpty)
+          if (ordered.isEmpty)
             const ProgressEmpty('No sets in this period')
           else
             ProgressColumnChart(
                 color: progressMuscle,
+                minBarWidth: 80,
                 bars: [
-                  for (final muscle in shown)
+                  for (final muscle in ordered)
                     ProgressVisualBar(
                         progressMuscleLabel(context, muscle),
                         progressNumber(muscle['directSets']),
                         '${progressMuscleLabel(context, muscle)} · ${progressValue(context, progressNumber(muscle['directSets']), unit: 'sets', digits: 0)}')
                 ],
-                onSelected: (i) => onMuscle(shown[i])),
+                onSelected: (i) => onMuscle(ordered[i])),
         ]));
   }
 }
@@ -537,6 +537,13 @@ class _ProgressNutritionDonutCardState
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
+            if (selected != null)
+              IconButton(
+                  key: const ValueKey('progress-macro-reset'),
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => setState(() => _selected = null),
+                  icon: const Icon(CupertinoIcons.chevron_left,
+                      size: 18, color: progressSilver)),
             Expanded(
                 child: Text(fitnessText(context, 'Macro split'),
                     style:

@@ -260,10 +260,10 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
           )
         else ...[
           const SettingsEditorSection(title: 'Claude', children: [
-            FitnessText('Read-only access to the data you choose.',
+            FitnessText('Read-only access.',
                 style: TextStyle(
                     fontSize: 14, height: 1.5, color: FitnessTheme.silver)),
-            FitnessText('Body photos are never shared.',
+            FitnessText('No photos shared.',
                 style: TextStyle(fontSize: 12, color: FitnessTheme.muted)),
           ]),
           if (_loading)
@@ -275,14 +275,12 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
             TextButton(onPressed: _load, child: const FitnessText('Try again')),
           ] else ...[
             if (_data?.configured != true)
-              const SettingsNotice(
-                  'Connection setup is temporarily unavailable. Please try again later.'),
+              const SettingsNotice('Connection unavailable. Try again later.'),
             if (active >= 5)
               const SettingsNotice(
-                  'Five active tokens. Revoke one or replace an existing token to continue.'),
+                  'Token limit reached. Revoke or replace one.'),
             if (_data?.tokens.isEmpty != false)
-              const SettingsNotice(
-                  'No access tokens. Create one to set up Claude.')
+              const SettingsNotice('No access tokens yet.')
             else
               SettingsGroup(
                   title: 'Access tokens',
@@ -469,7 +467,7 @@ class _CreateMcpTokenViewState extends State<CreateMcpTokenView> {
             ),
         ],
       ),
-      const SettingsNotice('Read-only access. Body photos are never shared.'),
+      const SettingsNotice('Read-only · No photos.'),
       if (_error != null) SettingsNotice(_error!, error: true),
       if (widget.embedded) ...[
         action,
@@ -588,7 +586,7 @@ class _McpTokenCreatedViewState extends State<McpTokenCreatedView>
       SettingsEditorSection(title: 'Ready to connect', children: [
         Text(widget.issued.token.name,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-        const FitnessText('Copy this token now. It is shown only once.',
+        const FitnessText('Copy now. Shown once.',
             style: TextStyle(
                 fontSize: 13, height: 1.5, color: FitnessTheme.muted)),
         Container(

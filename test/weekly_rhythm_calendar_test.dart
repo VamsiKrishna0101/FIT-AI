@@ -158,10 +158,8 @@ void main() {
     await tap(tester, 'weekly-rhythm-calendar');
     expect(find.byType(AppCalendar), findsOneWidget);
     expect(
-        tester
-            .widget<DropdownButton<int>>(
-                find.byKey(const ValueKey('week-calendar-month-picker')))
-            .items!
+        calendarDropdown<int>(tester, 'week-calendar-month-picker')
+            .items
             .singleWhere((item) => item.value == 11)
             .enabled,
         isFalse);

@@ -82,48 +82,194 @@ class AppFilterDropdown<T> extends StatelessWidget {
     final border = OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0x24FFFFFF), width: .7));
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label == null ? null : fitnessText(context, label!),
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        labelStyle: const TextStyle(color: FitnessTheme.muted, fontSize: 12),
-        filled: true,
-        fillColor: const Color(0xFF222428),
-        isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        enabledBorder: border,
-        disabledBorder: border,
-        focusedBorder: border.copyWith(
-            borderSide: const BorderSide(color: Color(0x70FFFFFF), width: .8)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          key: dropdownKey,
-          value: value,
-          isExpanded: true,
-          isDense: true,
-          itemHeight: null,
-          menuMaxHeight: 340,
-          dropdownColor: const Color(0xFF222428),
-          borderRadius: BorderRadius.circular(14),
-          icon: const Icon(CupertinoIcons.chevron_down,
-              size: 12, color: FitnessTheme.muted),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: FitnessTheme.silver,
-              fontSize: 14,
-              fontWeight: FontWeight.w500),
-          items: items,
-          selectedItemBuilder: selectedItemBuilder,
-          onChanged: onChanged == null
-              ? null
-              : (value) {
-                  if (value != null) onChanged!(value);
-                },
-        ),
-      ),
+    final decoration = InputDecoration(
+      labelText: label == null ? null : fitnessText(context, label!),
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      labelStyle: const TextStyle(color: FitnessTheme.muted, fontSize: 12),
+      filled: true,
+      fillColor: const Color(0xFF222428),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      enabledBorder: border,
+      disabledBorder: border,
+      focusedBorder: border.copyWith(
+          borderSide: const BorderSide(color: Color(0x70FFFFFF), width: .8)),
     );
+    final selectedIndex = items.indexWhere((item) => item.value == value);
+    final selected = selectedIndex < 0
+        ? const SizedBox.shrink()
+        : selectedItemBuilder?.call(context)[selectedIndex] ??
+            items[selectedIndex].child;
+    return LayoutBuilder(builder: (context, constraints) {
+      return PopupMenuButton<T>(
+        key: dropdownKey,
+        tooltip: label == null ? null : fitnessText(context, label!),
+        enabled: onChanged != null,
+        // No initialValue: it would align the selected option over the field.
+        position: PopupMenuPosition.under,
+        offset: const Offset(0, 8),
+        constraints: BoxConstraints(
+            minWidth: constraints.maxWidth,
+            maxWidth: constraints.maxWidth,
+            maxHeight: 340),
+        color: const Color(0xFF222428),
+        surfaceTintColor: Colors.transparent,
+        menuPadding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0x24FFFFFF), width: .7)),
+        onSelected: onChanged,
+        itemBuilder: (_) => [
+          _FilterOptionsEntry<T>(
+              width: constraints.maxWidth, items: items, selected: value),
+        ],
+        child: InputDecorator(
+            decoration: decoration,
+            child: DefaultTextStyle.merge(
+                style: TextStyle(
+                    color: onChanged == null
+                        ? FitnessTheme.muted
+                        : FitnessTheme.silver,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500),
+                child: Row(children: [
+                  Expanded(child: selected),
+                  const SizedBox(width: 12),
+                  const Icon(CupertinoIcons.chevron_down,
+                      size: 12, color: FitnessTheme.muted),
+                ]))),
+      );
+    });
   }
+}
+
+/// The popup owns one scrollable list so its scrollbar and paging cue remain
+/// visible while the options move. Short lists fit without a scroll cue.
+class _FilterOptionsEntry<T> extends PopupMenuEntry<T> {
+  final double width;
+  final List<DropdownMenuItem<T>> items;
+  final T selected;
+  const _FilterOptionsEntry(
+      {required this.width, required this.items, required this.selected});
+  @override
+  double get height => 340;
+  @override
+  bool represents(T? value) => false;
+  @override
+  State<_FilterOptionsEntry<T>> createState() => _FilterOptionsEntryState<T>();
+}
+
+class _FilterOptionsEntryState<T> extends State<_FilterOptionsEntry<T>> {
+  final _scroll = ScrollController();
+  bool _scrollable = false, _moreBelow = false, _metricsScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_scheduleMetrics);
+    _scheduleMetrics();
+  }
+
+  void _scheduleMetrics() {
+    if (_metricsScheduled) return;
+    _metricsScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _metricsScheduled = false;
+      if (!mounted || !_scroll.hasClients) return;
+      final scrollable = _scroll.position.maxScrollExtent > 1;
+      final moreBelow = _scroll.position.extentAfter > 1;
+      if (scrollable != _scrollable || moreBelow != _moreBelow) {
+        setState(() {
+          _scrollable = scrollable;
+          _moreBelow = moreBelow;
+        });
+      }
+    });
+  }
+
+  void _more() {
+    final position = _scroll.position;
+    final next = (position.pixels +
+            position.viewportDimension * (_moreBelow ? .75 : -.75))
+        .clamp(0.0, position.maxScrollExtent);
+    _scroll.animateTo(next,
+        duration: DSMotion.duration(context, DSMotion.fast),
+        curve: DSMotion.effects);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+      width: widget.width,
+      child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 340),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Flexible(
+                fit: FlexFit.loose,
+                child: NotificationListener<ScrollMetricsNotification>(
+                    onNotification: (_) {
+                      _scheduleMetrics();
+                      return false;
+                    },
+                    child: RawScrollbar(
+                        controller: _scroll,
+                        thumbVisibility: true,
+                        trackVisibility: true,
+                        interactive: true,
+                        thickness: 4,
+                        radius: const Radius.circular(3),
+                        crossAxisMargin: 4,
+                        thumbColor: FitnessTheme.muted,
+                        trackColor: const Color(0x18FFFFFF),
+                        trackBorderColor: Colors.transparent,
+                        child: ListView(
+                            controller: _scroll,
+                            primary: false,
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            children: [
+                              for (final item in widget.items)
+                                CheckedPopupMenuItem<T>(
+                                    value: item.value,
+                                    enabled: item.enabled,
+                                    checked: item.value == widget.selected,
+                                    child: item.child),
+                            ])))),
+            if (_scrollable) ...[
+              const Divider(height: 1, color: Color(0x24FFFFFF)),
+              InkWell(
+                  onTap: _more,
+                  child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 9),
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Flexible(
+                                    child: FitnessText('More options',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: FitnessTheme.muted))),
+                                const SizedBox(width: 8),
+                                Icon(
+                                    _moreBelow
+                                        ? CupertinoIcons.chevron_down
+                                        : CupertinoIcons.chevron_up,
+                                    size: 12,
+                                    color: FitnessTheme.muted),
+                              ])))),
+            ],
+          ])));
 }
 
 Future<T?> showAppCalendarSheet<T>(

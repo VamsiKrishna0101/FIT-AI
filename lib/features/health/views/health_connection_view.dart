@@ -229,8 +229,8 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                             const SizedBox(height: 9),
                             FitnessText(
                                 unsupported
-                                    ? 'Health sync is unavailable on this device. You can continue with manual logging.'
-                                    : 'Bring your daily movement, sleep, and recovery readings into Setcraft.',
+                                    ? 'Health sync unavailable. You can log manually.'
+                                    : 'Daily activity and sleep.',
                                 style: const TextStyle(
                                     fontSize: 14,
                                     color: FitnessTheme.muted,
@@ -317,7 +317,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                                             fontWeight: FontWeight.w500)),
                                     const SizedBox(height: 8),
                                     const FitnessText(
-                                        'Recorded in your health app. Setcraft sets and volume stay separate.',
+                                        'Health app workouts. Sets and volume stay separate.',
                                         style: TextStyle(
                                             fontSize: 11,
                                             height: 1.4,
@@ -380,7 +380,7 @@ class _HealthConnectionViewState extends State<HealthConnectionView>
                               ]),
                             const SizedBox(height: 16),
                             const FitnessText(
-                                'You choose what to share. Selected readings are synced to your Setcraft account to power your dashboard. You can stop syncing at any time.',
+                                'Chosen readings sync to your Setcraft account. Stop anytime.',
                                 style: TextStyle(
                                     fontSize: 12,
                                     height: 1.5,
@@ -477,11 +477,11 @@ class HealthPrivacyView extends StatelessWidget {
           child: SingleChildScrollView(
               padding: EdgeInsets.all(24),
               child: FitnessText(
-                  'Setcraft requests read access to steps, active calories, workouts, sleep. Weight and body fat are optional.\n\n'
-                  'The phone reads the categories you choose from Health Connect or Apple Health. Setcraft uploads daily readings, source information, and imported workout details to its backend and saves them in your signed-in account. These records power dated dashboards and trends. Readiness uses your optional sleep and check-in answers; it is not measured recovery.\n\n'
-                  'Setcraft does not request permission to write health records in this connection flow. You can decline categories or choose Set up later. Missing data is not replaced with example readings.\n\n'
-                  'Stop syncing in Profile → Health connection. Review or revoke operating-system access in Health Connect or Apple Health. Stopping sync does not delete previously saved account records.\n\n'
-                  'Apple does not disclose whether individual read permissions were denied; no readable records can mean missing data or restricted access.',
+                  'Read access\nSteps, active calories, workouts and sleep. Weight and body fat are optional.\n\n'
+                  'Data use\nChosen readings and source details are saved to your account for dashboards and trends. Readiness is an estimate from sleep and check-ins.\n\n'
+                  'Your choice\nRead-only access. Skip any category or set up later.\n\n'
+                  'Stop syncing in Settings → Health connection. Revoke permissions in your health app. Previously saved records stay in your account.\n\n'
+                  'On iPhone, missing readings can mean no data or restricted access.',
                   style: TextStyle(
                       fontSize: 14,
                       height: 1.6,

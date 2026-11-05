@@ -9,6 +9,7 @@ import '../../../core/storage/secure_session_store.dart';
 import '../models/body_assessment_models.dart';
 import '../models/training_map_models.dart';
 import '../models/planned_physique_models.dart';
+import '../../progress/repositories/progress_repository.dart';
 
 class BodyAssessmentRepository {
   static final shared = BodyAssessmentRepository();
@@ -33,6 +34,9 @@ class BodyAssessmentRepository {
     await UserDataCache.shared.invalidate('body');
     await UserDataCache.shared.invalidate('body_real');
     await invalidateMaps();
+    // Progress now reuses fresh entries when switching tabs. Body edits must
+    // evict those entries just as meal, sleep and workout edits do.
+    await ProgressRepository.shared.invalidate();
   }
 
   Future<void> invalidateMaps() => UserDataCache.shared.invalidate('body_map');

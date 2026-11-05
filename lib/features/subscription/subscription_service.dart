@@ -1,6 +1,9 @@
+import 'package:purchases_flutter/purchases_flutter.dart' as rc;
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
@@ -34,12 +37,14 @@ class SubscriptionAccess {
 /// A free first pricing phase must never replace the renewal price.
 @immutable
 class MembershipOffer {
+  final rc.Package? package;
   final ProductDetails product;
   final String price;
   final double amount;
   final int trialDays;
   const MembershipOffer(
-      {required this.product,
+      {this.package,
+      required this.product,
       required this.price,
       required this.amount,
       this.trialDays = 0});
@@ -100,7 +105,44 @@ class SubscriptionService extends ChangeNotifier {
       catalogIssue == null &&
       offers.isNotEmpty;
 
+  bool get _usesRevenueCat => _store == null;
+  bool get usesRevenueCat =>
+      _usesRevenueCat && access?.data['billingProvider'] == 'revenuecat';
+  static bool _rcConfigured = false;
+  Future<void> _configureRevenueCat() async {
+    final user = await SecureSessionStore.shared.userId;
+    if (user == null) throw StateError('Please sign in again.');
+    const useTestStore = bool.fromEnvironment('REVENUECAT_USE_TEST_STORE',
+        defaultValue: kDebugMode);
+    final key = useTestStore && kDebugMode
+        ? 'test_tnFavxCGcfuBKXvOAGJrgbfrWtm'
+        : ios
+            ? const String.fromEnvironment('REVENUECAT_IOS_KEY')
+            : const String.fromEnvironment('REVENUECAT_ANDROID_KEY');
+    if (key.isEmpty || (!kDebugMode && key.startsWith('test_'))) {
+      throw StateError('Store billing is not configured for this release.');
+    }
+    if (!_rcConfigured) {
+      await rc.Purchases.configure(
+          rc.PurchasesConfiguration(key)..appUserID = user);
+      _rcConfigured = true;
+    } else if (await rc.Purchases.appUserID != user) {
+      await rc.Purchases.logIn(user);
+    }
+  }
+
+  Future<void> _syncRevenueCat(String owner) async {
+    if (owner != await SecureSessionStore.shared.userId) return;
+    final result = await api
+        .post<Map<String, dynamic>>('/api/subscription/revenuecat/sync');
+    if (owner != await SecureSessionStore.shared.userId) return;
+    access =
+        SubscriptionAccess(Map<String, dynamic>.from(result.data!['data']));
+    notifyListeners();
+  }
+
   void _listen() {
+    if (_usesRevenueCat) return;
     if ((!android && !ios) || _purchases != null) return;
     _purchases = store.purchaseStream.listen((purchases) {
       _purchaseQueue = _purchaseQueue
@@ -200,6 +242,42 @@ class SubscriptionService extends ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
+    if (_usesRevenueCat) {
+      if (!android && !ios) {
+        catalogIssue = SubscriptionCatalogIssue.mobileOnly;
+        notifyListeners();
+        return;
+      }
+      final owner = await SecureSessionStore.shared.userId;
+      await _configureRevenueCat();
+      final offering = (await rc.Purchases.getOfferings()).current;
+      if (owner != await SecureSessionStore.shared.userId) return;
+      offers.clear();
+      for (final entry in {
+        'monthly': offering?.monthly,
+        'annual': offering?.annual
+      }.entries) {
+        final package = entry.value;
+        if (package == null) continue;
+        final p = package.storeProduct;
+        offers[entry.key] = MembershipOffer(
+            package: package,
+            product: ProductDetails(
+                id: p.identifier,
+                title: p.title,
+                description: p.description,
+                price: p.priceString,
+                rawPrice: p.price,
+                currencyCode: p.currencyCode),
+            price: p.priceString,
+            amount: p.price);
+      }
+      storeReady = true;
+      catalogIssue =
+          offers.isEmpty ? SubscriptionCatalogIssue.productsMissing : null;
+      notifyListeners();
+      return;
+    }
     _listen();
     final owner = _owner, snapshot = access;
     final revision = SecureSessionStore.shared.revision;
@@ -365,6 +443,16 @@ class SubscriptionService extends ChangeNotifier {
 
   Future<void> purchase(String interval) async {
     if (busy || awaitingConfirmation) return;
+    if (_usesRevenueCat) {
+      await _run(() async {
+        final owner = await SecureSessionStore.shared.userId;
+        if (owner == null) throw StateError('Please sign in again.');
+        await _configureRevenueCat();
+        await RevenueCatUI.presentPaywall();
+        await _syncRevenueCat(owner);
+      });
+      return;
+    }
     await _run(() async {
       _listen();
       await refresh();
@@ -403,6 +491,17 @@ class SubscriptionService extends ChangeNotifier {
   }
 
   Future<void> restore() => _run(() async {
+        if (_usesRevenueCat) {
+          final owner = await SecureSessionStore.shared.userId;
+          if (owner == null) throw StateError('Please sign in again.');
+          await _configureRevenueCat();
+          await rc.Purchases.restorePurchases();
+          await _syncRevenueCat(owner);
+          notice = access?.hasAccess == true
+              ? 'Membership restored.'
+              : 'No active membership found.';
+          return;
+        }
         _listen();
         if ((!android && !ios) || !await store.isAvailable()) {
           throw StateError('Restore purchases is available in the mobile app.');
@@ -472,6 +571,14 @@ class SubscriptionService extends ChangeNotifier {
   }
 
   Future<void> manage() => _run(() async {
+        if (_usesRevenueCat) {
+          final owner = await SecureSessionStore.shared.userId;
+          if (owner == null) throw StateError('Please sign in again.');
+          await _configureRevenueCat();
+          await RevenueCatUI.presentCustomerCenter();
+          await _syncRevenueCat(owner);
+          return;
+        }
         final uri = ios
             ? Uri.parse('https://apps.apple.com/account/subscriptions')
             : Uri.https('play.google.com', '/store/account/subscriptions');
@@ -506,6 +613,13 @@ class SubscriptionService extends ChangeNotifier {
   }
 
   static String message(Object failure) {
+    if (failure is MissingPluginException) {
+      return 'Billing needs an updated app. Stop the app and run it again from Android Studio.';
+    }
+    if (failure is PlatformException) {
+      final detail = failure.message;
+      if (detail != null && detail.trim().isNotEmpty) return detail;
+    }
     if (failure is DioException && failure.response?.data is Map) {
       final text = failure.response!.data['error'];
       if (text is String) return text;

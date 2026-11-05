@@ -121,6 +121,39 @@ void main() {
     expect(result!.end, today);
   });
 
+  testWidgets(
+      'Every calendar menu opens below its field with a working scroll cue',
+      (tester) async {
+    await open(tester, host((_) {}));
+    for (final suffix in ['filter', 'month-picker', 'year-picker']) {
+      final field = find.byKey(ValueKey('app-calendar-$suffix'));
+      await tester.ensureVisible(field);
+      await tester.pumpAndSettle();
+      final fieldRect = tester.getRect(field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      final scrollbar = find.byType(RawScrollbar);
+      expect(tester.getTopLeft(scrollbar).dy,
+          greaterThanOrEqualTo(fieldRect.bottom + 7));
+      expect(tester.getSize(scrollbar).width, closeTo(fieldRect.width, 1));
+      expect(tester.widget<RawScrollbar>(scrollbar).thumbVisibility, isTrue);
+      final more = find.text('More options');
+      expect(more.hitTestable(), findsOneWidget);
+      final position =
+          tester.state<ScrollableState>(find.byType(Scrollable).last).position;
+      final before = position.pixels;
+      await tester.tap(more);
+      await tester.pumpAndSettle();
+      expect(position.pixels, greaterThan(before));
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(CupertinoIcons.chevron_up), findsOneWidget);
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('A screen reader can select a dated button and apply it',
       (tester) async {
     final semantics = tester.ensureSemantics();
@@ -144,10 +177,9 @@ void main() {
     TextButton tomorrow() => tester.widget<TextButton>(
         find.byKey(const ValueKey('app-calendar-day-2026-11-05')));
     expect(tomorrow().onPressed, isNull);
-    var month = tester.widget<DropdownButton<int>>(
-        find.byKey(const ValueKey('app-calendar-month-picker')));
+    var month = calendarDropdown<int>(tester, 'app-calendar-month-picker');
     expect(
-        month.items!.singleWhere((item) => item.value == 12).enabled, isFalse);
+        month.items.singleWhere((item) => item.value == 12).enabled, isFalse);
     await tester.pumpWidget(const SizedBox());
     AppCalendarSelection? result;
     await open(tester, host((value) => result = value, future: true));
@@ -197,8 +229,7 @@ void main() {
     await selectCalendarOption(tester, 'app-calendar-month-picker', 'December');
     await tap(tester, 'app-calendar-day-2025-12-29');
     await selectCalendarOption(tester, 'app-calendar-year-picker', '2026');
-    final month = tester.widget<DropdownButton<int>>(
-        find.byKey(const ValueKey('app-calendar-month-picker')));
+    final month = calendarDropdown<int>(tester, 'app-calendar-month-picker');
     expect(month.value, 11);
     await tap(tester, 'app-calendar-apply');
     expect(result!.dates, [DateTime(2025, 12, 29), DateTime(2026, 11, 2)]);

@@ -279,6 +279,7 @@ Widget screen(
       home: RepaintBoundary(
           key: capture,
           child: StarterPlanView(
+              requestAiConsent: (_) async => true,
               repository: repo,
               subscription: service,
               onComplete: done,

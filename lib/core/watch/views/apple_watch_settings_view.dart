@@ -84,15 +84,15 @@ class _AppleWatchSettingsViewState extends State<AppleWatchSettingsView>
 
   String get _statusDescription {
     if (!_service.isPaired) {
-      return 'Pair an Apple Watch with this iPhone to use wrist controls.';
+      return 'Pair your Apple Watch to get started.';
     }
     if (!_service.isAppInstalled) {
-      return 'Install Setcraft on your paired Apple Watch.';
+      return 'Install Setcraft on your watch.';
     }
     if (!_service.isReachable) {
-      return 'Open Setcraft on your watch to reconnect.';
+      return 'Open Setcraft on your watch.';
     }
-    return 'Your watch is available for workouts.';
+    return 'Ready for workouts.';
   }
 
   Widget _switch(String title, String subtitle, bool value,

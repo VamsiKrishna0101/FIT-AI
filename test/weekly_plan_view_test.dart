@@ -172,8 +172,9 @@ void main() {
       'Refreshing a reset plan removes the old selection and unlocks generation',
       (tester) async {
     final repository = _Repository()..generated = true;
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('plan-day-2026-10-12')), findsOneWidget);
     repository.generated = false;
@@ -236,8 +237,9 @@ void main() {
   testWidgets('Missing measurements are required before generation',
       (tester) async {
     final repository = _Repository()..currentScan = false;
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
@@ -260,8 +262,9 @@ void main() {
       'Measurement service failure blocks plan generation until verified',
       (tester) async {
     final repository = _UnavailableMeasurementsRepository();
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
@@ -278,8 +281,9 @@ void main() {
   testWidgets('Measurement action opens entered measurements before generation',
       (tester) async {
     final repository = _Repository()..currentScan = false;
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Generate weekly plan'));
     await tester.tap(find.text('Generate weekly plan'));
@@ -301,8 +305,9 @@ void main() {
       'Real generation has no demo toggle and opens a usable saved plan',
       (tester) async {
     final repository = _Repository();
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     expect(find.byType(Switch), findsNothing);
     expect(find.text('Use test history'), findsNothing);
@@ -342,7 +347,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(
         home: MediaQuery(
       data: const MediaQueryData(textScaler: TextScaler.linear(1.8)),
-      child: WeeklyPlanView(repository: repository),
+      child: WeeklyPlanView(
+          requestAiConsent: (_) async => true, repository: repository),
     )));
     await tester.pumpAndSettle();
     await tester
@@ -364,8 +370,9 @@ void main() {
       (tester) async {
     final repository = _Repository()..generated = true;
 
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
 
     expect(find.text('Generate weekly plan'), findsNothing);
@@ -496,7 +503,9 @@ void main() {
                 disableAnimations: true),
             child: child!),
         home: RepaintBoundary(
-            key: captureKey, child: WeeklyPlanView(repository: repository)),
+            key: captureKey,
+            child: WeeklyPlanView(
+                requestAiConsent: (_) async => true, repository: repository)),
       ));
       await tester.pumpAndSettle();
       expect(find.text('Dumbbell floor press'), findsOneWidget);

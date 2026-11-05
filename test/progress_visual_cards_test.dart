@@ -70,6 +70,58 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final scale in [1.0, 1.6]) {
+    testWidgets('Muscle chart scrolls to every muscle and back at scale $scale',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 740);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      const ids = [
+        'chest',
+        'lats',
+        'shoulders',
+        'quads',
+        'biceps',
+        'triceps',
+        'hamstrings',
+        'glutes',
+        'core',
+        'calves'
+      ];
+      String? opened;
+      await tester.pumpWidget(page(MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+          child: ProgressMuscleChartCard(muscles: [
+            for (var i = ids.length - 1; i >= 0; i--)
+              {'id': ids[i], 'label': ids[i], 'directSets': 9 - i}
+          ], onMuscle: (row) => opened = row['id'] as String))));
+      await tester.pumpAndSettle();
+      final first = find.byKey(const ValueKey('progress-visual-bar-0'));
+      final last = find.byKey(const ValueKey('progress-visual-bar-9'));
+      final scroll = find.descendant(
+          of: find.byType(ProgressColumnChart),
+          matching: find.byType(SingleChildScrollView));
+      expect(first.hitTestable(), findsOneWidget);
+      expect(last.hitTestable(), findsNothing);
+      await tester.tap(first);
+      expect(opened, 'chest');
+
+      await tester.drag(scroll, const Offset(-2000, 0));
+      await tester.pumpAndSettle();
+      expect(last.hitTestable(), findsOneWidget);
+      await tester.tap(last);
+      expect(opened, 'calves');
+
+      await tester.drag(scroll, const Offset(2000, 0));
+      await tester.pumpAndSettle();
+      expect(first.hitTestable(), findsOneWidget);
+      await tester.tap(first);
+      expect(opened, 'chest');
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('Nutrition ring has one-line centre and selectable macro share',
       (tester) async {
     await tester.pumpWidget(page(const ProgressNutritionDonutCard(wellness: {
@@ -84,6 +136,35 @@ void main() {
         find.byKey(const ValueKey('progress-macro-centre-value')));
     expect(centre.data, '50%');
     expect(centre.maxLines, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Every macro percentage has a visible way back to the total',
+      (tester) async {
+    await tester.pumpWidget(page(const ProgressNutritionDonutCard(wellness: {
+      'nutrition': [
+        {'date': '2026-10-30', 'protein': 25, 'carbs': 25, 'fat': 10}
+      ]
+    })));
+    await tester.pumpAndSettle();
+    final value = find.byKey(const ValueKey('progress-macro-centre-value'));
+    final reset = find.byKey(const ValueKey('progress-macro-reset'));
+    final total = tester.widget<Text>(value).data;
+    expect(find.text('Macro kcal'), findsOneWidget);
+    expect(reset, findsNothing);
+
+    for (final macro in ['Protein', 'Carbs', 'Fat']) {
+      await tester.tap(find.byKey(ValueKey('progress-macro-$macro')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Text>(value).data, endsWith('%'));
+      expect(reset.hitTestable(), findsOneWidget);
+      expect(find.byTooltip('Back'), findsOneWidget);
+      await tester.tap(reset);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Text>(value).data, total);
+      expect(find.text('Macro kcal'), findsOneWidget);
+      expect(reset, findsNothing);
+    }
     expect(tester.takeException(), isNull);
   });
 }

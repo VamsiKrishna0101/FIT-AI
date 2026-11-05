@@ -506,14 +506,10 @@ void main() {
       DateTime(now.year, now.month - 1, 10),
       DateTime(now.year, now.month - 1, 12)
     ];
-    tester
-        .widget<DropdownButton<int>>(
-            find.byKey(const ValueKey('body-calendar-year-picker')))
+    calendarDropdown<int>(tester, 'body-calendar-year-picker')
         .onChanged!(dates.first.year);
     await tester.pumpAndSettle();
-    tester
-        .widget<DropdownButton<int>>(
-            find.byKey(const ValueKey('body-calendar-month-picker')))
+    calendarDropdown<int>(tester, 'body-calendar-month-picker')
         .onChanged!(dates.first.month);
     await tester.pumpAndSettle();
     for (final date in dates) {

@@ -55,6 +55,7 @@ void main() {
     final repo = StarterRepo();
     (repo.value['plan'] as Map)['preview'] = preview;
     await tester.pumpWidget(app(StarterPlanView(
+        requestAiConsent: (_) async => true,
         repository: repo,
         subscription: TrialService(),
         profileLoader: () async => profile,

@@ -16,8 +16,8 @@ import 'package:setcraft/features/planner/views/weekly_plan_card.dart';
 // disabled. Advance finite frames instead of waiting for an idle loading view.
 Future<void> _advance(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 600));
-  await tester.pump(const Duration(milliseconds: 600));
+  await tester.pump(const Duration(milliseconds: 900));
+  await tester.pump(const Duration(milliseconds: 900));
 }
 
 class _ProgressRepository extends WeeklyPlanRepository {
@@ -81,6 +81,7 @@ Widget _screen(_ProgressRepository repository,
         child: RepaintBoundary(
           key: captureKey,
           child: WeeklyPlanGenerationView(
+            requestAiConsent: (_) async => true,
             repository: repository,
             initialRun: Map.of(repository.current),
             weekStart: DateTime(2026, 10, 12),
@@ -112,7 +113,7 @@ void main() {
       (tester) async {
     final repository = _ProgressRepository();
     await tester.pumpWidget(_screen(repository));
-    await tester.pump(const Duration(milliseconds: 400));
+    await _advance(tester);
     expect(find.text('41%'), findsOneWidget);
     await tester.pump(const Duration(seconds: 9));
     await tester.pump();
@@ -201,6 +202,7 @@ void main() {
       update = setState;
       return PlanParticleOrb(percent: percent);
     })));
+    await tester.pump(const Duration(milliseconds: 1100));
     update(() => percent = 75);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 80));
@@ -209,7 +211,7 @@ void main() {
     final shown = int.parse(text.data!.replaceAll('%', ''));
     expect(shown, greaterThan(41));
     expect(shown, lessThan(75));
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 900));
     expect(find.text('75%'), findsOneWidget);
     await tester.pump(const Duration(seconds: 10));
     expect(find.text('75%'), findsOneWidget);
@@ -228,7 +230,7 @@ void main() {
                 child: RepaintBoundary(
                     key: capture,
                     child: const PlanParticleOrb(percent: 41))))));
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1100));
     Future<List<int>> pixels() => tester.runAsync(() async {
           final boundary = capture.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
@@ -393,8 +395,9 @@ void main() {
   testWidgets('Continue in background can reopen the same confirmed progress',
       (tester) async {
     final repository = _ProgressRepository();
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await _advance(tester);
     await tester.ensureVisible(find.text('View plan progress'));
     await tester.tap(find.text('View plan progress'));
@@ -448,6 +451,8 @@ void main() {
     await _advance(tester);
     expect(find.byType(WeeklyPlanGenerationView), findsOneWidget);
     expect(find.byType(WeeklyPlanView), findsNothing);
+    // Let the route transition and the per-point counter finish.
+    await _advance(tester);
     expect(find.text('41%'), findsOneWidget);
     repository.current = {
       ...repository.current,

@@ -37,6 +37,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        AccountSettingsBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         hydrationTilt?.dispose()
         val tilt = HydrationTiltStream(this)
         hydrationTilt = tilt

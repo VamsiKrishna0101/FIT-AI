@@ -72,6 +72,8 @@ class FakePush extends NotificationService {
 
 class FakeRest extends RestNotificationService {
   @override
+  bool get available => true;
+  @override
   bool get supported => true;
   @override
   Future<void> initialize() async {}
@@ -83,12 +85,25 @@ class FakeRest extends RestNotificationService {
   }
 }
 
+class UnavailableRest extends FakeRest {
+  @override
+  Future<void> initialize() async =>
+      throw MissingPluginException('Local alerts unavailable');
+}
+
+class UnavailablePush extends FakePush {
+  UnavailablePush(super.data);
+  @override
+  Future<void> refresh() async => throw PlatformException(code: 'unavailable');
+}
+
 final remoteSwitch = find.descendant(
   of: find.byKey(const ValueKey('remote-notifications')),
   matching: find.byType(CupertinoSwitch),
 );
 const preview = ValueKey('notification-preview');
-Widget app(FakeNotifications data, FakePush service, {double scale = 1}) =>
+Widget app(FakeNotifications data, FakePush service,
+        {double scale = 1, RestNotificationService? localAlerts}) =>
     MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
@@ -101,7 +116,7 @@ Widget app(FakeNotifications data, FakePush service, {double scale = 1}) =>
                     child: NotificationSettingsView(
                         repository: data,
                         service: service,
-                        restService: FakeRest())),
+                        restService: localAlerts ?? FakeRest())),
               )),
     );
 
@@ -133,6 +148,20 @@ void main() {
     expect(data.values['enabled'], false);
   });
 
+  testWidgets('Phone alert failures do not block account preferences',
+      (tester) async {
+    final data = FakeNotifications();
+    await tester.pumpWidget(
+        app(data, UnavailablePush(data), localAlerts: UnavailableRest()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('remote-notifications')), findsOneWidget);
+    expect(find.text('Workout reminders'), findsOneWidget);
+    expect(data.values['enabled'], false);
+    expect(find.text('Could not save notification settings. Please try again.'),
+        findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Failed enable keeps switch off and shows an actionable error',
       (tester) async {
     final data = FakeNotifications()..fail = true;
@@ -144,17 +173,18 @@ void main() {
     expect(find.text('Could not save. Please try again.'), findsOneWidget);
   });
 
-  testWidgets(
-      'Category opens a detail screen and saves only its requested change',
+  testWidgets('Category changes inline and saves only its requested preference',
       (tester) async {
     final data = FakeNotifications();
     await tester.pumpWidget(app(data, FakePush(data)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Workout reminders'));
+    expect(find.byType(NotificationCategoryView), findsNothing);
+    final workoutSwitch = find.descendant(
+        of: find.byKey(const ValueKey('reminder-workouts')),
+        matching: find.byType(CupertinoSwitch));
+    await tester.ensureVisible(workoutSwitch);
     await tester.pumpAndSettle();
-    expect(find.text('Reminder time'), findsOneWidget);
-    expect(find.text('18:00'), findsOneWidget);
-    await tester.tap(find.byType(CupertinoSwitch).last);
+    await tester.tap(workoutSwitch);
     await tester.pumpAndSettle();
     expect(data.values['workouts'], false);
     expect(data.values['plans'], true);
@@ -170,6 +200,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final data = FakeNotifications()..values['enabled'] = true;
     await tester.pumpWidget(app(data, FakePush(data), scale: 1.5));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('This phone'), 300);
+    await tester.ensureVisible(find.text('This phone'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('This phone'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Send test notification'), 300);
     await tester.ensureVisible(find.text('Send test notification'));
@@ -211,6 +246,7 @@ void main() {
         of: find.byKey(const ValueKey('rest-notifications')),
         matching: find.byType(CupertinoSwitch));
     await tester.ensureVisible(toggle);
+    await tester.pumpAndSettle();
     await tester.tap(toggle);
     await tester.pumpAndSettle();
     expect(tester.widget<CupertinoSwitch>(toggle).value, true);
@@ -224,6 +260,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Pause reminders'), 250);
     await tester.ensureVisible(find.text('Pause reminders'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Pause reminders'));
     await tester.pumpAndSettle();
     expect(
@@ -233,6 +270,7 @@ void main() {
     expect(data.values['billing'], true);
     expect(data.values['workouts'], true);
     await tester.ensureVisible(find.text('Resume reminders'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Resume reminders'));
     await tester.pumpAndSettle();
     expect(data.values['pausedUntil'], null);

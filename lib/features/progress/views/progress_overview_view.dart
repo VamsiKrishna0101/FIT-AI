@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/liquid_silver_bottom_bar.dart';
 import '../../../core/components/app_date_filter.dart';
-import '../../../core/components/motion.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/localization/language_manager.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
@@ -105,7 +104,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
         if (!mounted || !widget.isActive) return;
         if (key == 'invalidated') {
           unawaited(_load(refresh: true));
-        } else if (key.contains('__${_period}_')) {
+        } else if (!_loading && key.contains('__${_period}_')) {
           unawaited(_acceptCache(_request, _period, _query));
         }
       });
@@ -122,7 +121,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
   void didUpdateWidget(ProgressOverviewView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive && widget.initial == null) {
-      unawaited(_load(refresh: true));
+      unawaited(_load());
     }
   }
 
@@ -155,18 +154,24 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
     });
     try {
       final pins = await _repo.pins();
-      if (!refresh) await _acceptCache(request, period, query);
+      if (!refresh && _data == null) {
+        await _acceptCache(request, period, query);
+      }
       final json = await _repo.load('', period, refresh: refresh, query: query);
       if (mounted && request == _request) {
         setState(() {
           _data = ProgressOverview(json);
           _pins = pins;
+          _loading = false;
         });
       }
     } catch (_) {
-      if (mounted && request == _request) setState(() => _failed = true);
-    } finally {
-      if (mounted && request == _request) setState(() => _loading = false);
+      if (mounted && request == _request) {
+        setState(() {
+          _failed = true;
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -194,7 +199,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
             period: _period,
             query: _query,
             initial: initial)));
-    if (mounted && widget.initial == null) unawaited(_load(refresh: true));
+    if (mounted && widget.initial == null) unawaited(_load());
   }
 
   void _exercise(ProgressJson row) => _open(
@@ -362,10 +367,9 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
       ProgressDailyTrendsCard(data: data, days: days),
       _history(data),
     ];
-    return [
-      for (var i = 0; i < sections.length; i++)
-        MotionEntrance(order: i, child: sections[i])
-    ];
+    // Lazy sections should be ready while scrolling, rather than replaying
+    // opacity animations whenever a card is mounted again by the sliver list.
+    return sections;
   }
 
   @override

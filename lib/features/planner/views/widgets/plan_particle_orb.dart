@@ -75,7 +75,13 @@ class _PlanParticleOrbState extends State<PlanParticleOrb>
       complete();
       return;
     }
-    if (!widget.animating || !TickerMode.valuesOf(context).enabled) return;
+    if (!widget.animating || !TickerMode.valuesOf(context).enabled) {
+      if (target == 100) {
+        _progress.value = target;
+        complete();
+      }
+      return;
+    }
     if (_progress.value >= target) {
       complete();
       return;

@@ -478,7 +478,7 @@ class _TrainingSettingsViewState extends State<TrainingSettingsView> {
               ),
             ),
             const SizedBox(height: 6),
-            const SettingsNotice('Changes apply to your next generated plan.'),
+            const SettingsNotice('Applies to your next plan.'),
           ],
         ],
       );

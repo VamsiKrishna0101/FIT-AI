@@ -39,6 +39,8 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   bool _busy = false, _optionsOpen = false;
   final _scroll = ScrollController();
   final _selectedSets = <String, int>{};
+  final _activeSelections = <String, ValueNotifier<int?>>{};
+  final _setsVersion = ValueNotifier(0);
   final _collapsedDemos = <String>{};
   final _stepKeys = <int, GlobalKey>{};
   DateTime get _now => widget.clock?.call() ?? DateTime.now();
@@ -78,6 +80,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         if (_day.finished) _syncRestAlert();
         _index = _index.clamp(0, (_day.items.length - 1).clamp(0, 100));
       });
+      _refreshSelections();
       _syncToWatch();
     });
     _watchSubscription =
@@ -175,13 +178,20 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     WatchSyncService.shared.clearSession();
     _restState.dispose();
     _clock.dispose();
+    _setsVersion.dispose();
+    for (final selection in _activeSelections.values) {
+      selection.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _mutate(String method, String suffix,
       {Map<String, dynamic>? data}) async {
     final day = await _repo.mutate(_day.date, method, suffix, data: data);
-    if (mounted) setState(() => _day = day);
+    if (mounted) {
+      if (!identical(_day, day)) setState(() => _day = day);
+      _refreshSelections();
+    }
   }
 
   Future<void> _status(TodayPlanItemModel item, String status) async {
@@ -395,7 +405,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         'rpe': null,
       });
       if (mounted) {
-        setState(() => _selectedSets.remove(item.id));
+        _clearSelection(item);
         if (!wasLogged) {
           if (_day.logs(item.id).length < count) {
             _startRest(item, number);
@@ -529,11 +539,12 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   }
 
   int? _activeNumber(TodayPlanItemModel item) {
+    final numbers = _setNumbers(item);
     final selected = _selectedSets[item.id];
-    if (selected != null && selected <= _setCount(item)) return selected;
+    if (selected != null && numbers.contains(selected)) return selected;
     if (!item.isPending || _editingFinished) return null;
     final saved = _day.logs(item.id).map((row) => row['setNumber']).toSet();
-    for (var number = 1; number <= _setCount(item); number++) {
+    for (final number in numbers) {
       if (!saved.contains(number)) return number;
     }
     return null;
@@ -553,11 +564,25 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   }
 
   void _selectSet(TodayPlanItemModel item, int number) {
-    if (_busy) return;
-    setState(() => _selectedSets[item.id] = number);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _setEntries['${item.id}:$number']?.currentState?.focusEditor();
-    });
+    if (_busy || _activeNumber(item) == number) return;
+    _selectedSets[item.id] = number;
+    _selectionFor(item).value = number;
+  }
+
+  ValueNotifier<int?> _selectionFor(TodayPlanItemModel item) =>
+      _activeSelections.putIfAbsent(
+          item.id, () => ValueNotifier(_activeNumber(item)));
+
+  void _clearSelection(TodayPlanItemModel item) {
+    _selectedSets.remove(item.id);
+    _selectionFor(item).value = _activeNumber(item);
+  }
+
+  void _refreshSelections() {
+    for (final entry in _activeSelections.entries) {
+      final item = _day.items.where((item) => item.id == entry.key).firstOrNull;
+      entry.value.value = item == null ? null : _activeNumber(item);
+    }
   }
 
   Future<void> _logSet(TodayPlanItemModel item, int number) async {
@@ -576,7 +601,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
       if (entry == null) return;
       await entry.savePending(confirmSuggestion: true);
       if (!mounted) return;
-      setState(() => _selectedSets.remove(item.id));
+      _clearSelection(item);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final next = _activeNumber(item);
@@ -971,9 +996,12 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     ]);
   }
 
-  Widget _sets(TodayPlanItemModel item) {
+  Widget _sets(TodayPlanItemModel item) => ValueListenableBuilder<int>(
+      valueListenable: _setsVersion, builder: (_, __, ___) => _buildSets(item));
+
+  Widget _buildSets(TodayPlanItemModel item) {
     final count = _setCount(item);
-    final active = _activeNumber(item);
+    final selection = _selectionFor(item);
     final large = MediaQuery.textScalerOf(context).scale(14) > 20;
     Widget heading(String text) => Text(copy(text),
         textAlign: TextAlign.center,
@@ -998,14 +1026,19 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                     style:
                         const TextStyle(fontSize: 11, color: DSColors.muted)),
               ])),
-          if (active != null &&
-              item.localizedTargetLabel(context, active) != null)
-            Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 14),
-                child: Text(
-                    '${copy('Target')} · ${item.localizedTargetLabel(context, active)}',
-                    style: const TextStyle(
-                        fontSize: 11, height: 1.4, color: DSColors.muted))),
+          ValueListenableBuilder<int?>(
+              valueListenable: selection,
+              builder: (_, active, __) => active == null ||
+                      item.localizedTargetLabel(context, active) == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 14),
+                      child: Text(
+                          '${copy('Target')} · ${item.localizedTargetLabel(context, active)}',
+                          style: const TextStyle(
+                              fontSize: 11,
+                              height: 1.4,
+                              color: DSColors.muted)))),
           if (!large)
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1019,9 +1052,9 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                     const SizedBox(width: 8),
                   ],
                   Expanded(flex: 2, child: heading('Reps')),
-                  const SizedBox(width: 26),
+                  const SizedBox(width: 52),
                 ])),
-          for (var number = 1; number <= count; number++)
+          for (final number in _setNumbers(item))
             WorkoutSetEntry(
                 key: _setEntries.putIfAbsent('${item.id}:$number',
                     () => GlobalKey<WorkoutSetEntryState>()),
@@ -1029,7 +1062,8 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                 itemId: item.id,
                 number: number,
                 compact: true,
-                active: active == number,
+                selection: selection,
+                removable: number > item.targetSets,
                 showSaveAction: false,
                 showDetailsAction: false,
                 onActivate: () => _selectSet(item, number),
@@ -1056,7 +1090,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                       'rpe': effort
                     });
                     if (mounted) {
-                      setState(() => _selectedSets.remove(item.id));
+                      _clearSelection(item);
                       if (!wasLogged) {
                         if (_day.logs(item.id).length < count) {
                           _startRest(item, number);
@@ -1072,33 +1106,36 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                     if (mounted) setState(() => _busy = false);
                   }
                 },
-                onDelete: () =>
-                    _mutate('DELETE', '/items/${item.id}/sets/$number')),
+                onDelete: () => _deleteSet(item, number)),
           const SizedBox(height: 6),
           const Divider(height: 1, color: DSColors.border),
-          Wrap(alignment: WrapAlignment.spaceBetween, children: [
-            TextButton(
-                onPressed: _busy ? null : () => _extraSet(item),
-                child: Text(copy('Add set'),
-                    style:
-                        const TextStyle(fontSize: 12, color: DSColors.silver))),
-            if (active != null)
-              TextButton(
-                  onPressed: _busy
-                      ? null
-                      : () => _setEntries['${item.id}:$active']
-                          ?.currentState
-                          ?.showDetails(),
-                  child: Text(copy('Set details'),
-                      style: const TextStyle(
-                          fontSize: 12, color: DSColors.muted))),
-            if (!_day.finished)
-              TextButton(
-                  onPressed: _busy ? null : () => _exerciseOptions(item),
-                  child: Text(copy('Exercise options'),
-                      style: const TextStyle(
-                          fontSize: 11, color: DSColors.muted))),
-          ]),
+          ValueListenableBuilder<int?>(
+              valueListenable: selection,
+              builder: (_, active, __) =>
+                  Wrap(alignment: WrapAlignment.spaceBetween, children: [
+                    TextButton(
+                        onPressed: _busy ? null : () => _extraSet(item),
+                        child: Text(copy('Add set'),
+                            style: const TextStyle(
+                                fontSize: 12, color: DSColors.silver))),
+                    if (active != null)
+                      TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => _setEntries['${item.id}:$active']
+                                  ?.currentState
+                                  ?.showDetails(),
+                          child: Text(copy('Set details'),
+                              style: const TextStyle(
+                                  fontSize: 12, color: DSColors.muted))),
+                    if (!_day.finished)
+                      TextButton(
+                          onPressed:
+                              _busy ? null : () => _exerciseOptions(item),
+                          child: Text(copy('Exercise options'),
+                              style: const TextStyle(
+                                  fontSize: 11, color: DSColors.muted))),
+                  ])),
         ]));
   }
 
@@ -1113,7 +1150,15 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     }
   }
 
-  Widget _footer(TodayPlanItemModel? item) {
+  Widget _footer(TodayPlanItemModel? item) => Builder(builder: (footerContext) {
+        final keyboardInset = MediaQuery.viewInsetsOf(footerContext).bottom;
+        if (item == null) return _buildFooter(item, keyboardInset);
+        return ValueListenableBuilder<int?>(
+            valueListenable: _selectionFor(item),
+            builder: (_, __, ___) => _buildFooter(item, keyboardInset));
+      });
+
+  Widget _buildFooter(TodayPlanItemModel? item, double keyboardInset) {
     final summary = _day.finished && !_editingFinished;
     final active = item == null ? null : _activeNumber(item);
     final editing = active != null &&
@@ -1143,8 +1188,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                             ? () => _completeAndAdvance(item!)
                             : _nextExercise;
     return Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        padding: EdgeInsets.only(bottom: keyboardInset),
         child: SafeArea(
             top: false,
             child: Container(
@@ -1157,9 +1201,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (!summary &&
-                          !_editingFinished &&
-                          MediaQuery.viewInsetsOf(context).bottom == 0)
+                      if (!summary && !_editingFinished && keyboardInset == 0)
                         _restBar(),
                       FilledButton(
                           key: const ValueKey('workout-primary-action'),
@@ -1186,17 +1228,52 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                     ]))));
   }
 
-  final _extra = <String, int>{};
-  int _setCount(TodayPlanItemModel item) {
-    final logs =
-        _day.logs(item.id).map((row) => (row['setNumber'] as num).toInt());
-    return [item.targetSets, _extra[item.id] ?? 0, ...logs]
-        .reduce((a, b) => a > b ? a : b);
-  }
+  final _extra = <String, Set<int>>{};
+  List<int> _setNumbers(TodayPlanItemModel item) => {
+        for (var number = 1; number <= item.targetSets; number++) number,
+        ...?_extra[item.id],
+        for (final row in _day.logs(item.id)) (row['setNumber'] as num).toInt(),
+      }.toList()
+        ..sort();
+
+  int _setCount(TodayPlanItemModel item) => _setNumbers(item).length;
 
   void _extraSet(TodayPlanItemModel item) {
-    final count = _setCount(item);
-    if (count < 100) setState(() => _extra[item.id] = count + 1);
+    final numbers = _setNumbers(item).toSet();
+    final number = Iterable<int>.generate(100, (index) => index + 1)
+        .where(
+            (number) => number > item.targetSets && !numbers.contains(number))
+        .firstOrNull;
+    if (number == null) return;
+    (_extra[item.id] ??= {}).add(number);
+    _setsVersion.value++;
+    _refreshSelections();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final row = _setEntries['${item.id}:$number']?.currentContext;
+      if (mounted && row != null) {
+        unawaited(Scrollable.ensureVisible(row,
+            alignment: .6,
+            duration: DSMotion.duration(context, DSMotion.fast)));
+      }
+    });
+  }
+
+  Future<void> _deleteSet(TodayPlanItemModel item, int number) async {
+    final logged = _day.logs(item.id).any((row) => row['setNumber'] == number);
+    if (logged) {
+      setState(() => _busy = true);
+      try {
+        await _mutate('DELETE', '/items/${item.id}/sets/$number');
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+    }
+    if (!mounted) return;
+    _extra[item.id]?.remove(number);
+    _setEntries.remove('${item.id}:$number');
+    if (_selectedSets[item.id] == number) _selectedSets.remove(item.id);
+    _setsVersion.value++;
+    _refreshSelections();
   }
 
   int? _suggestedReps(TodayPlanItemModel item, int number) {

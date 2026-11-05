@@ -5,9 +5,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:setcraft/core/components/profile_avatar.dart';
 import 'package:setcraft/features/profile/repositories/settings_repository.dart';
 import 'package:setcraft/features/profile/views/profile_view.dart';
+import 'package:setcraft/features/subscription/subscription_service.dart';
+import 'package:setcraft/features/subscription/subscription_view.dart';
 import 'package:setcraft/features/profile/views/profile_details_view.dart';
 import 'package:setcraft/features/profile/views/training_settings_view.dart';
 import 'package:setcraft/features/profile/views/equipment_settings_view.dart';
@@ -19,6 +22,39 @@ import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
 import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
 import 'package:setcraft/core/watch/views/apple_watch_settings_view.dart';
 import 'helpers/fake_mcp_repository.dart';
+import 'helpers/fake_privacy_repository.dart';
+
+class _Membership extends SubscriptionService {
+  final bool active, available;
+  int paywalls = 0, management = 0;
+  _Membership({this.active = false, this.available = true});
+  @override
+  bool get plansAvailable => available;
+  @override
+  Future<void> initialize() async {
+    access = SubscriptionAccess({
+      'state': active ? 'active' : 'available',
+      'serverTime': DateTime.now().toUtc().toIso8601String(),
+      'paidUntil':
+          DateTime.now().toUtc().add(const Duration(days: 1)).toIso8601String(),
+    });
+    offers['annual'] = MembershipOffer(
+        product: ProductDetails(
+            id: 'annual',
+            title: 'Annual',
+            description: 'Test',
+            price: '\$79.99',
+            rawPrice: 79.99,
+            currencyCode: 'USD'),
+        price: '\$79.99',
+        amount: 79.99);
+  }
+
+  @override
+  Future<void> purchase(String interval) async => paywalls++;
+  @override
+  Future<void> manage() async => management++;
+}
 
 class _SettingsRepository extends SettingsRepository {
   Map<String, dynamic>? saved;
@@ -208,6 +244,36 @@ void main() {
         'fitai_user_id': 'settings-user',
       }));
 
+  for (final active in [false, true]) {
+    testWidgets(
+        'Premium settings opens ${active ? 'management' : 'paywall'} directly',
+        (tester) async {
+      final membership = _Membership(active: active);
+      await tester.pumpWidget(_app(ProfileView(
+          repository: _SettingsRepository(), subscriptionService: membership)));
+      await tester.pumpAndSettle();
+      await _tapVisible(tester, find.text('Setcraft Premium'));
+      expect(membership.paywalls, active ? 0 : 1);
+      expect(membership.management, active ? 1 : 0);
+      expect(find.byType(SubscriptionView), findsNothing);
+      expect(find.text('Settings'), findsOneWidget);
+    });
+  }
+  testWidgets(
+      'Premium settings keeps settings open when billing is unavailable',
+      (tester) async {
+    final membership = _Membership(available: false);
+    await tester.pumpWidget(_app(ProfileView(
+        repository: _SettingsRepository(), subscriptionService: membership)));
+    await tester.pumpAndSettle();
+    await _tapVisible(tester, find.text('Setcraft Premium'));
+    expect(membership.paywalls, 0);
+    expect(membership.management, 0);
+    expect(find.text('Membership is unavailable. Please try again.'),
+        findsOneWidget);
+    expect(find.byType(SubscriptionView), findsNothing);
+  });
+
   testWidgets('Circular avatar opens settings with initials and no extra icon',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
@@ -247,8 +313,7 @@ void main() {
     expect(find.text('Claude'), findsOneWidget);
     expect(find.byType(ClaudeConnectionView), findsOneWidget);
     expect(find.text('Create access token'), findsOneWidget);
-    expect(find.text('No access tokens. Create one to set up Claude.'),
-        findsOneWidget);
+    expect(find.text('No access tokens yet.'), findsOneWidget);
     expect(find.text('ChatGPT'), findsNothing);
     expect(find.text('Connect'), findsNothing);
     expect(find.text('Connected'), findsNothing);
@@ -674,45 +739,54 @@ void main() {
   });
 
   testWidgets(
-      'Privacy preserves scans and account unless deletion is confirmed',
+      'Privacy removes obsolete photo controls and requires account deletion confirmation',
       (tester) async {
-    final repository = _SettingsRepository();
-    final body = _BodyRepository();
-    await tester.pumpWidget(_app(
-        PrivacySettingsView(repository: repository, bodyRepository: body)));
+    final repository = _SettingsRepository(), body = _BodyRepository();
+    await tester.pumpWidget(_app(PrivacySettingsView(
+        repository: repository,
+        privacyRepository: FakePrivacyRepository(),
+        bodyRepository: body)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete saved photos'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    expect(find.text('Saved photos'), findsNothing);
+    expect(find.text('Delete saved photos'), findsNothing);
     expect(body.deletions, 0);
-    await tester.tap(find.text('Delete saved photos'));
+    await tester.scrollUntilVisible(find.text('Delete account'), 250);
+    await tester.ensureVisible(find.text('Delete account'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete photos'));
-    await tester.pumpAndSettle();
-    expect(body.deletions, 1);
-    expect(body.overview.records.length, 1);
-    expect(find.text('0'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Delete account'), 120);
     await tester.tap(find.text('Delete account'));
     await tester.pumpAndSettle();
+    expect(find.text('Permanently delete account?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(repository.deletions, 0);
   });
 
-  testWidgets('Export loads real repository data into a readable JSON page',
+  testWidgets('Export sends actual account JSON to native share sheet',
       (tester) async {
     final repository = _SettingsRepository();
+    String? exported;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('setcraft/settings'),
+            (call) async {
+      if (call.method == 'shareExport')
+        exported = (call.arguments as Map)['json'] as String;
+      return null;
+    });
+    addTearDown(() => TestDefaultBinaryMessengerBinding
+        .instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('setcraft/settings'), null));
     await tester.pumpWidget(_app(PrivacySettingsView(
-        repository: repository, bodyRepository: _BodyRepository())));
+        repository: repository, privacyRepository: FakePrivacyRepository())));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Export my data'), 120);
+    await tester.scrollUntilVisible(find.text('Export my data'), 250);
+    await tester.ensureVisible(find.text('Export my data'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Export my data'));
     await tester.pumpAndSettle();
     expect(repository.exports, 1);
-    expect(find.text('Copy JSON'), findsOneWidget);
-    expect(find.textContaining('test@example.com'), findsOneWidget);
+    expect(exported, contains('test@example.com'));
+    expect(find.text('Copy JSON'), findsNothing);
     expect(repository.deletions, 0);
   });
 
@@ -733,7 +807,9 @@ void main() {
       TrainingSettingsView(repository: _SettingsRepository()),
       EquipmentSettingsView(repository: _SettingsRepository()),
       PrivacySettingsView(
-          repository: _SettingsRepository(), bodyRepository: _BodyRepository()),
+          privacyRepository: FakePrivacyRepository(),
+          repository: _SettingsRepository(),
+          bodyRepository: _BodyRepository()),
     ]) {
       await tester.pumpWidget(_app(page, scale: 1.8));
       await tester.pumpAndSettle();

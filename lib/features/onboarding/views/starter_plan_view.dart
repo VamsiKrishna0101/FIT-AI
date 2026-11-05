@@ -18,6 +18,7 @@ import '../data/discovery_repository.dart';
 import 'discovery_onboarding_gate.dart';
 import 'training_preferences_view.dart';
 import 'equipment_selection_view.dart';
+import '../../profile/views/ai_sharing_consent.dart';
 
 class StarterOnboardingGate extends StatefulWidget {
   final Widget child;
@@ -97,6 +98,7 @@ class _StarterOnboardingGateState extends State<StarterOnboardingGate> {
 }
 
 class StarterPlanView extends StatefulWidget {
+  final Future<bool> Function(BuildContext) requestAiConsent;
   final StarterPlanRepository? repository;
   final SubscriptionService? subscription;
   final Map<String, dynamic>? initialRun;
@@ -108,6 +110,7 @@ class StarterPlanView extends StatefulWidget {
       this.subscription,
       this.initialRun,
       this.profileLoader,
+      this.requestAiConsent = ensureAiSharingConsent,
       required this.onComplete});
   @override
   State<StarterPlanView> createState() => _StarterPlanViewState();
@@ -243,6 +246,12 @@ class _StarterPlanViewState extends State<StarterPlanView>
     _owner = await CacheScope.userId();
     if (!mounted) return;
     try {
+      if (!mounted) return;
+      if (retry || widget.initialRun == null) {
+        if (!mounted) return;
+        final approved = await widget.requestAiConsent(context);
+        if (!approved || !await _sameOwner()) return;
+      }
       var run = !retry && widget.initialRun != null
           ? widget.initialRun!
           : await _repo.start();
@@ -326,6 +335,7 @@ class _StarterPlanViewState extends State<StarterPlanView>
   }
 
   Future<void> _refreshForUnlock() async {
+    if (!await widget.requestAiConsent(context) || !await _sameOwner()) return;
     _timer?.cancel();
     setState(() {
       _run = null;

@@ -9,6 +9,8 @@ import '../models/nutrition_diet_models.dart';
 import '../repositories/food_planning_repository.dart';
 import 'meal_portion_view.dart';
 import 'saved_meal_editor_view.dart';
+import '../../profile/views/ai_sharing_consent.dart';
+import '../../profile/repositories/settings_account_repository.dart';
 
 const foodSlots = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
 const foodDays = [
@@ -190,6 +192,13 @@ class _FoodRoutineViewState extends State<FoodRoutineView> {
 
   Future<void> _suggest() async {
     if (_busy) return;
+    try {
+      if (!await ensureAiSharingConsent(context)) return;
+    } catch (error) {
+      if (mounted) setState(() => _error = accountSettingsError(error));
+      return;
+    }
+    if (!mounted) return;
     setState(() {
       _busy = true;
       _error = null;

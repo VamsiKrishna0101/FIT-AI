@@ -19,15 +19,18 @@ import 'widgets/weekly_plan_schedule.dart';
 import '../../body_scan/models/body_assessment_models.dart';
 import '../../body_scan/views/body_entry_view.dart';
 import 'widgets/plan_schedule_sheet.dart';
+import '../../profile/views/ai_sharing_consent.dart';
 
 class WeeklyPlanView extends StatefulWidget {
   final WeeklyPlanRepository? repository;
   final String? initialPlanId;
   final bool fromOnboarding;
+  final Future<bool> Function(BuildContext) requestAiConsent;
   const WeeklyPlanView(
       {super.key,
       this.repository,
       this.initialPlanId,
+      this.requestAiConsent = ensureAiSharingConsent,
       this.fromOnboarding = false});
 
   @override
@@ -206,6 +209,11 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
         }
       }
       final start = schedule.start;
+      if (!mounted ||
+          !await widget.requestAiConsent(context) ||
+          !await _sameOwner()) {
+        return;
+      }
       final monday =
           DateTime(start.year, start.month, start.day - start.weekday + 1);
       final run = await _repo.generate(
@@ -280,6 +288,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
         repository: _repo,
         initialRun: _run!,
         weekStart: _week,
+        requestAiConsent: widget.requestAiConsent,
       ),
     );
     final result = await Navigator.of(context).push(route);

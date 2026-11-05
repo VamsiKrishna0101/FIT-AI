@@ -1,37 +1,46 @@
-import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../core/cache/cache_scope.dart';
-import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
-import '../../../core/theme/fitness_theme.dart';
 import '../../auth/views/auth_view.dart';
-import '../../body_scan/models/body_assessment_models.dart';
-import '../../body_scan/repositories/body_assessment_repository.dart';
+import '../../health/views/health_connection_view.dart';
+import '../../subscription/subscription_service.dart';
 import '../repositories/settings_repository.dart';
+import '../repositories/privacy_repository.dart';
+import '../repositories/settings_account_repository.dart';
+import '../repositories/support_repository.dart';
+import '../services/settings_device.dart';
+import 'ai_sharing_consent.dart';
+import 'mcp_connections_view.dart';
 import 'settings_components.dart';
+import 'settings_editor_components.dart';
+import 'support_views.dart';
 
 class PrivacySettingsView extends StatefulWidget {
   final SettingsRepository? repository;
-  final BodyAssessmentRepository? bodyRepository;
-  const PrivacySettingsView({super.key, this.repository, this.bodyRepository});
-
+  final PrivacyRepository? privacyRepository;
+  // Kept for existing callers; privacy no longer fetches or manages body photos.
+  final Object? bodyRepository;
+  const PrivacySettingsView(
+      {super.key,
+      this.repository,
+      this.privacyRepository,
+      this.bodyRepository});
   @override
   State<PrivacySettingsView> createState() => _PrivacySettingsViewState();
 }
 
 class _PrivacySettingsViewState extends State<PrivacySettingsView> {
   late final _repository = widget.repository ?? SettingsRepository();
-  late final _bodyRepository =
-      widget.bodyRepository ?? BodyAssessmentRepository.shared;
-  List<BodyAssessment> _records = [];
-  bool _loading = true, _busy = false, _photoLoadFailed = false;
+  late final _privacy = widget.privacyRepository ?? PrivacyRepository();
+  Map<String, dynamic>? _config, _consent;
+  bool _loading = true, _busy = false;
   String? _owner, _message;
-  int get _photoCount =>
-      _records.fold(0, (total, entry) => total + entry.photos.length);
-
+  bool get _aiAllowed =>
+      _consent?['aiPlanningConsent'] == true &&
+      _consent?['aiPlanningPolicyVersion'] == _config?['aiPolicyVersion'];
   @override
   void initState() {
     super.initState();
@@ -41,23 +50,19 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
   Future<void> _load() async {
     try {
       final owner = await CacheScope.userId();
-      _owner = owner;
-      final body = await _bodyRepository.load();
+      final config = await _privacy.configuration(),
+          consent = await _privacy.consent();
       if (!mounted || await CacheScope.userId() != owner) return;
       setState(() {
         _owner = owner;
-        _records = body.records;
-        _loading = false;
-        _photoLoadFailed = false;
+        _config = config;
+        _consent = consent;
+        _message = null;
       });
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _photoLoadFailed = true;
-          _message = 'Could not load saved photos. Please retry.';
-        });
-      }
+    } catch (error) {
+      if (mounted) setState(() => _message = accountSettingsError(error));
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -69,58 +74,52 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
     });
     try {
       if (_owner == null || await CacheScope.userId() != _owner) {
-        throw StateError('Your session changed. Reopen Settings.');
+        throw StateError('Your account changed. Reopen Settings.');
       }
       await action();
     } catch (error) {
-      if (mounted) {
-        setState(() => _message = BodyAssessmentRepository.message(error));
-      }
+      if (mounted) setState(() => _message = accountSettingsError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _removePhotos() async {
-    final confirmed = await confirmSettingsAction(context,
-        title: 'Delete saved photos?',
-        message:
-            'Remove the saved photos shown here. Your entered measurements stay in your account.',
-        action: 'Delete photos',
-        destructive: true);
-    if (!confirmed || !mounted) return;
-    await _run(() async {
-      for (final entry
-          in _records.where((entry) => entry.photos.isNotEmpty).toList()) {
-        if (await CacheScope.userId() != _owner) {
-          throw StateError('Your session changed.');
-        }
-        final updated = await _bodyRepository.deletePhotos(entry.id);
-        if (!mounted || await CacheScope.userId() != _owner) return;
-        setState(() => _records = _records
-            .map((record) => record.id == updated.id ? updated : record)
-            .toList());
-      }
-      if (mounted) {
-        setState(() => _message =
-            'Saved photos deleted. Your measurements are preserved.');
-      }
-    });
-  }
-
-  Future<void> _export() => _run(() async {
-        final data = await _repository.exportData();
-        if (mounted) {
-          await Navigator.push(
-              context, AppPageRoute<void>(page: _DataExportView(data: data)));
+  Future<void> _aiSharing(bool value) => _run(() async {
+        if (value) {
+          if (!await ensureAiSharingConsent(context,
+              repository: _privacy, review: true)) {
+            return;
+          }
+          final consent = await _privacy.consent();
+          if (mounted) setState(() => _consent = consent);
+        } else {
+          final consent = await _privacy.setAiConsent(
+              false, _config!['aiPolicyVersion'] as String);
+          if (mounted) {
+            setState(() {
+              _consent = consent;
+              _message =
+                  'Future AI sharing requests are stopped. Work already sent to the provider may finish.';
+            });
+          }
         }
       });
-
+  Future<void> _export() => _run(() async {
+        final data = await _repository.exportData();
+        if (await CacheScope.userId() != _owner) {
+          throw StateError('Your account changed. Reopen Settings.');
+        }
+        await SettingsDevice.shareExport(data);
+      });
+  Future<void> _link(String value) => _run(() => openSettingsLink(value));
   Future<void> _deleteAccount() async {
+    final store = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+        ? 'the App Store'
+        : 'Google Play';
     final confirmed = await confirmSettingsAction(context,
         title: 'Permanently delete account?',
         message:
-            'Your account, plans, workouts, health records and saved photos will be removed. This cannot be undone. Deleting your account does not cancel a Google Play subscription. Manage it in Google Play first.',
+            'Your account, plans, workouts, nutrition, health records, support conversations and associated photos will be removed. This cannot be undone. Deleting your account does not cancel a subscription. Manage it in $store first.',
         action: 'Delete account',
         destructive: true);
     if (!confirmed || !mounted) return;
@@ -134,88 +133,124 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) => SettingsPage(
-        title: 'Privacy',
-        subtitle: 'Your data. Your choice.',
-        children: [
-          if (_busy)
-            const Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: LinearProgressIndicator()),
-          if (_message != null) SettingsNotice(_message!),
-          if (_photoCount > 0 || _photoLoadFailed || _records.isNotEmpty)
-            SettingsGroup(title: 'Saved photos', children: [
-              SettingsRow(
-                  icon: CupertinoIcons.photo_on_rectangle,
-                  title: 'Saved photos',
-                  value: _loading
-                      ? 'Loading…'
-                      : _photoLoadFailed
-                          ? 'Unavailable'
-                          : '$_photoCount'),
-              SettingsRow(
-                  icon: CupertinoIcons.trash,
-                  title: 'Delete saved photos',
-                  subtitle: _photoCount == 0
-                      ? 'No saved photos to delete'
-                      : 'Remove previously saved photos',
-                  destructive: true,
-                  onTap:
-                      _busy || _loading || _photoLoadFailed || _photoCount == 0
-                          ? null
-                          : _removePhotos),
-            ]),
-          if (!_loading && _photoLoadFailed)
-            TextButton(
-                onPressed: _load, child: const FitnessText('Retry loading')),
-          SettingsGroup(title: 'Your account data', children: [
-            SettingsRow(
-                icon: CupertinoIcons.arrow_down_doc,
-                title: 'Export my data',
-                subtitle: 'View and copy your account data as JSON',
-                onTap: _busy || _owner == null ? null : _export),
-            SettingsRow(
-                icon: CupertinoIcons.person_crop_circle_badge_xmark,
-                title: 'Delete account',
-                subtitle: 'Permanently remove your account and its data',
-                destructive: true,
-                onTap: _busy || _owner == null ? null : _deleteAccount),
-          ]),
-          const SettingsNotice(
-              'Delete account removes your account and its associated records.'),
-        ],
-      );
-}
-
-class _DataExportView extends StatelessWidget {
-  final Map<String, dynamic> data;
-  const _DataExportView({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final json = const JsonEncoder.withIndent('  ').convert(data);
-    return SettingsPage(
-      title: 'Your data export',
-      subtitle:
-          'This export contains personal account data. Choose where you share it.',
-      bottom: LiquidChromeButton(
-          title: 'Copy JSON',
-          onPressed: () async {
-            await Clipboard.setData(ClipboardData(text: json));
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: FitnessText('Export copied')));
-            }
-          }),
-      children: [
-        SelectableText(json,
-            style: const TextStyle(
-                fontFamily: 'monospace',
-                color: FitnessTheme.silver,
-                fontSize: 12,
-                height: 1.5))
-      ],
-    );
+  Future<void> _privacyTicket() async {
+    await _run(() async {
+      final support = SupportRepository();
+      await support.open();
+      if (!mounted) return;
+      final id = await Navigator.push<String>(
+          context,
+          AppPageRoute<String>(
+              page:
+                  SupportTicketForm(repository: support, category: 'PRIVACY')));
+      if (id != null && mounted) {
+        await Navigator.push(
+            context,
+            AppPageRoute<void>(
+                page: SupportTicketView(id: id, repository: support)));
+      }
+    });
   }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+      canPop: !_busy,
+      child: SettingsPage(title: 'Privacy & Data', subtitle: '', children: [
+        if (_busy)
+          const Padding(
+              padding: EdgeInsets.only(bottom: 18),
+              child: LinearProgressIndicator()),
+        if (_message != null) SettingsNotice(_message!),
+        if (_loading)
+          const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CupertinoActivityIndicator())),
+        if (!_loading && _config == null)
+          TextButton(
+              onPressed: _load, child: const FitnessText('Retry loading')),
+        SettingsGroup(title: 'Privacy', dividerIndent: 16, children: [
+          SettingsRow(
+              title: 'Privacy policy',
+              subtitle: _config?['privacyPolicyUpdated'] as String? ??
+                  (_config?['privacyPolicyUrl'] == null
+                      ? 'Not published yet'
+                      : null),
+              onTap: _busy || _config?['privacyPolicyUrl'] == null
+                  ? null
+                  : () => _link(_config!['privacyPolicyUrl'] as String)),
+          if (_config?['termsUrl'] is String)
+            SettingsRow(
+                title: 'Terms of use',
+                onTap:
+                    _busy ? null : () => _link(_config!['termsUrl'] as String)),
+        ]),
+        if (_consent != null)
+          SettingsGroup(title: 'AI sharing', dividerIndent: 16, children: [
+            SettingsRow(
+                title: 'Personal plans',
+                subtitle:
+                    'Provider: ${_config?['aiProvider'] ?? 'AI sharing provider'}',
+                trailingWidget: CupertinoSwitch(
+                    value: _aiAllowed,
+                    activeTrackColor: Colors.white,
+                    thumbColor: _aiAllowed ? Colors.black : Colors.white,
+                    onChanged: _busy ? null : _aiSharing)),
+          ]),
+        const SettingsDisclosure(
+            title: 'Data use',
+            summary: 'What’s stored and shared',
+            children: [
+              SettingsNotice(
+                  'Your profile and logs keep plans and progress in sync.'),
+              SettingsNotice(
+                  'Manage access in your health app. Health imports and photos are excluded from AI plans.'),
+              SettingsNotice(
+                  'AI planning shares only the data listed in the consent notice, with your permission.'),
+              SettingsNotice(
+                  'Support can read the messages and screenshots you send.'),
+              SettingsNotice(
+                  'See the privacy policy for retention and your rights. JSON exports include records, not image files.'),
+            ]),
+        SettingsGroup(title: 'Connections', dividerIndent: 16, children: [
+          SettingsRow(
+              title: 'Health connection',
+              subtitle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                  ? 'Apple Health'
+                  : 'Health Connect',
+              onTap: _busy
+                  ? null
+                  : () => Navigator.push(context,
+                      AppPageRoute<void>(page: const HealthConnectionView()))),
+          SettingsRow(
+              title: 'MCP',
+              onTap: _busy
+                  ? null
+                  : () => Navigator.push(context,
+                      AppPageRoute<void>(page: const McpConnectionsView()))),
+        ]),
+        SettingsGroup(title: 'Your data', dividerIndent: 16, children: [
+          SettingsRow(
+              title: 'Export my data',
+              value: 'JSON',
+              onTap: _busy || _owner == null ? null : _export),
+          SettingsRow(
+              title: 'Privacy question', onTap: _busy ? null : _privacyTicket),
+          if (_config?['privacyEmail'] is String)
+            SettingsRow(
+                title: 'Privacy contact',
+                subtitle: _config!['privacyEmail'] as String,
+                onTap: _busy
+                    ? null
+                    : () => _link('mailto:${_config!['privacyEmail']}')),
+          SettingsRow(
+              title: 'Manage subscription',
+              onTap: _busy || _owner == null
+                  ? null
+                  : () => _run(SubscriptionService.shared.manage)),
+          SettingsRow(
+              title: 'Delete account',
+              destructive: true,
+              onTap: _busy || _owner == null ? null : _deleteAccount),
+        ]),
+      ]));
 }

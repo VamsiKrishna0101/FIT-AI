@@ -279,8 +279,9 @@ void main() {
       'Plan requests run together; loaded content fades in and refresh preserves its state',
       (tester) async {
     final repository = _DelayedPlans();
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pump();
     expect(repository.availabilityStarted, true);
     expect(repository.plansStarted, true);
@@ -304,8 +305,9 @@ void main() {
   testWidgets('History closes before the selected plan changes underneath it',
       (tester) async {
     final repository = _DelayedPlans()..complete();
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();

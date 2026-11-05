@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:setcraft/core/components/app_date_filter.dart';
+
+AppFilterDropdown<T> calendarDropdown<T>(WidgetTester tester, String key) =>
+    tester.widget<AppFilterDropdown<T>>(find.byWidgetPredicate((widget) =>
+        widget is AppFilterDropdown<T> && widget.dropdownKey == ValueKey(key)));
 
 Future<void> selectCalendarOption(
     WidgetTester tester, String key, String label) async {
@@ -16,8 +21,13 @@ Future<void> selectCalendarOption(
     await tester.scrollUntilVisible(option, 120,
         scrollable: menu, maxScrolls: 60);
   }
-  await tester.ensureVisible(option);
+  // Checked popup items own taps through their enclosing menu item.
+  final entry = find.ancestor(
+      of: option,
+      matching: find.byWidgetPredicate((widget) => widget is PopupMenuItem));
+  final target = entry.evaluate().isEmpty ? option : entry.first;
+  await tester.ensureVisible(target);
   await tester.pumpAndSettle();
-  await tester.tap(option);
+  await tester.tap(target);
   await tester.pumpAndSettle();
 }

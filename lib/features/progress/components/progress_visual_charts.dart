@@ -15,12 +15,14 @@ class ProgressVisualBar {
 class ProgressColumnChart extends StatelessWidget {
   final List<ProgressVisualBar> bars;
   final Color color;
+  final double minBarWidth;
   final int? selected;
   final ValueChanged<int>? onSelected;
   const ProgressColumnChart(
       {super.key,
       required this.bars,
       this.color = progressStrength,
+      this.minBarWidth = 44,
       this.selected,
       this.onSelected});
 
@@ -31,8 +33,89 @@ class ProgressColumnChart extends StatelessWidget {
         bars.fold<double>(1, (v, bar) => math.max(v, bar.value ?? 0));
     final scale = MediaQuery.textScalerOf(context).scale(12) / 12;
     return LayoutBuilder(builder: (context, box) {
-      final width =
-          math.max(box.maxWidth, bars.length * 44.0 * scale.clamp(1, 1.5));
+      final width = math.max(
+          box.maxWidth, bars.length * minBarWidth * scale.clamp(1, 1.5));
+      // Build labels, hit targets and full-height bars once. Animation changes
+      // only the plot's paint transform, so no bar is laid out on every frame.
+      final plot = Row(children: [
+        for (var i = 0; i < bars.length; i++)
+          Expanded(
+              child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                      width: bars[i].value == null ? 9 : 22,
+                      height: math.max(2, (bars[i].value ?? 0) / maxValue * 68),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          gradient: bars[i].value == null
+                              ? null
+                              : LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                      color.withValues(
+                                          alpha:
+                                              selected == null || selected == i
+                                                  ? 1
+                                                  : .45),
+                                      color.withValues(alpha: .18)
+                                    ]),
+                          color: bars[i].value == null
+                              ? DSColors.borderHi
+                              : null))))
+      ]);
+      final labels = RepaintBoundary(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        for (var i = 0; i < bars.length; i++)
+          Expanded(
+              child: Semantics(
+                  label: bars[i].tooltip,
+                  button: onSelected != null,
+                  selected: selected == i,
+                  child: Tooltip(
+                      message: bars[i].tooltip,
+                      child: InkWell(
+                          key: ValueKey('progress-visual-bar-$i'),
+                          borderRadius: BorderRadius.circular(10),
+                          onTap:
+                              onSelected == null ? null : () => onSelected!(i),
+                          child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 3),
+                              child: ExcludeSemantics(
+                                  child: Column(children: [
+                                SizedBox(
+                                    height: 22 * scale,
+                                    child: Text(
+                                        progressShortValue(
+                                            context, bars[i].value),
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: selected == i
+                                                ? progressSilver
+                                                : progressMuted,
+                                            fontWeight: FontWeight.w500))),
+                                const SizedBox(height: 78),
+                                Text(bars[i].label,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        height: 1.3,
+                                        color: selected == i
+                                            ? progressSilver
+                                            : progressMuted)),
+                              ])))))))
+      ]));
+      final grid = Positioned(
+          left: 0,
+          right: 0,
+          top: 22 * scale,
+          height: 72,
+          child: CustomPaint(painter: _GridPainter()));
       return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
@@ -40,95 +123,19 @@ class ProgressColumnChart extends StatelessWidget {
               child: MotionProgress(
                   dataKey: bars.map((b) => '${b.label}:${b.value}').join('|'),
                   builder: (context, progress) => Stack(children: [
+                        grid,
                         Positioned(
                             left: 0,
                             right: 0,
                             top: 22 * scale,
                             height: 72,
-                            child: CustomPaint(painter: _GridPainter())),
-                        Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (var i = 0; i < bars.length; i++)
-                                Expanded(
-                                    child: Semantics(
-                                        label: bars[i].tooltip,
-                                        button: onSelected != null,
-                                        selected: selected == i,
-                                        child: Tooltip(
-                                            message: bars[i].tooltip,
-                                            child: InkWell(
-                                                key: ValueKey(
-                                                    'progress-visual-bar-$i'),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                onTap: onSelected == null
-                                                    ? null
-                                                    : () => onSelected!(i),
-                                                child: Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 3),
-                                                    child: ExcludeSemantics(
-                                                        child: Column(
-                                                            children: [
-                                                          SizedBox(
-                                                              height:
-                                                                  22 * scale,
-                                                              child: Text(
-                                                                  progressShortValue(
-                                                                      context,
-                                                                      bars[i]
-                                                                          .value),
-                                                                  maxLines: 1,
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          11,
-                                                                      color: selected ==
-                                                                              i
-                                                                          ? progressSilver
-                                                                          : progressMuted,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w500))),
-                                                          SizedBox(
-                                                              height: 72,
-                                                              child: Align(
-                                                                  alignment:
-                                                                      Alignment
-                                                                          .bottomCenter,
-                                                                  child: Container(
-                                                                      width: bars[i].value == null ? 9 : 22,
-                                                                      height: math.max(2, (bars[i].value ?? 0) / maxValue * 68 * progress),
-                                                                      decoration: BoxDecoration(
-                                                                          borderRadius: BorderRadius.circular(6),
-                                                                          gradient: bars[i].value == null
-                                                                              ? null
-                                                                              : LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
-                                                                                  color.withValues(alpha: selected == null || selected == i ? 1 : .45),
-                                                                                  color.withValues(alpha: .18)
-                                                                                ]),
-                                                                          color: bars[i].value == null ? DSColors.borderHi : null)))),
-                                                          const SizedBox(
-                                                              height: 6),
-                                                          Text(bars[i].label,
-                                                              maxLines: 1,
-                                                              softWrap: false,
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              style: TextStyle(
-                                                                  fontSize: 10,
-                                                                  height: 1.3,
-                                                                  color: selected ==
-                                                                          i
-                                                                      ? progressSilver
-                                                                      : progressMuted)),
-                                                        ]))))))),
-                            ]),
+                            child: RepaintBoundary(
+                                child: Transform.scale(
+                                    scaleX: 1,
+                                    scaleY: progress,
+                                    alignment: Alignment.bottomCenter,
+                                    child: plot))),
+                        labels,
                       ]))));
     });
   }

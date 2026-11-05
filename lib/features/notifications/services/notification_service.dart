@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/storage/secure_session_store.dart';
@@ -190,7 +191,14 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
       });
 
   Future<void> detach() => _serialized(() async {
-        await RestNotificationService.shared.detach();
+        try {
+          await RestNotificationService.shared.detach();
+        } on MissingPluginException {
+          // Older native builds may lack local alerts. Still remove the push
+          // registration for the account before its credentials are cleared.
+        } on PlatformException {
+          // A local notification error must not block remote push cleanup.
+        }
         await _detach();
       });
 

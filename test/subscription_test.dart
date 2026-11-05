@@ -49,6 +49,7 @@ MembershipOffer exampleOffer(String interval, {bool trial = true}) {
 
 class PreviewMembership extends SubscriptionService {
   String? selected;
+  int purchases = 0;
   bool fail = false;
   final bool iPhone;
   PreviewMembership(
@@ -80,6 +81,7 @@ class PreviewMembership extends SubscriptionService {
 
   @override
   Future<void> purchase(String interval) async {
+    purchases++;
     selected = interval;
   }
 
@@ -281,6 +283,15 @@ void main() {
             .hasAccess,
         false);
   });
+  test('missing billing plugin explains the required native app restart', () {
+    expect(
+        SubscriptionService.message(MissingPluginException('setupPurchases')),
+        contains('Stop the app and run it again from Android Studio'));
+    expect(
+        SubscriptionService.message(PlatformException(
+            code: 'billing', message: 'Store configuration is unavailable.')),
+        'Store configuration is unavailable.');
+  });
   test('free phase uses actual paid renewal price and exact 14-day eligibility',
       () {
     GooglePlayProductDetails product({String period = 'P2W'}) =>
@@ -332,6 +343,38 @@ void main() {
         SubscriptionService.googleOffer(product(), 'annual',
             allowTrial: true, expectedPeriod: 'P1M'),
         isNull);
+  });
+  testWidgets('RevenueCat opens once and keeps canceled membership locked',
+      (tester) async {
+    final service = PreviewMembership(trial: false);
+    service.access = SubscriptionAccess(
+        {...accessData('available'), 'billingProvider': 'revenuecat'});
+    await tester
+        .pumpWidget(app(SubscriptionView(service: service, blocking: true)));
+    await tester.pumpAndSettle();
+    expect(service.purchases, 1);
+    expect(service.access!.hasAccess, false);
+    service.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(service.purchases, 1);
+  });
+  testWidgets('RevenueCat entry honors onboarding validation', (tester) async {
+    final service = PreviewMembership(trial: false);
+    service.access = SubscriptionAccess(
+        {...accessData('available'), 'billingProvider': 'revenuecat'});
+    var validations = 0;
+    await tester.pumpWidget(app(SubscriptionView(
+      service: service,
+      blocking: true,
+      beforePurchase: () async {
+        validations++;
+        return false;
+      },
+    )));
+    await tester.pumpAndSettle();
+    expect(validations, 1);
+    expect(service.purchases, 0);
+    expect(service.access!.hasAccess, false);
   });
   testWidgets('price is visible, annual and monthly update the same checkout',
       (tester) async {

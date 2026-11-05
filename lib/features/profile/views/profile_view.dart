@@ -1,6 +1,5 @@
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/components/profile_avatar.dart';
@@ -21,14 +20,19 @@ import 'settings_components.dart';
 import 'settings_preferences_view.dart';
 import 'training_settings_view.dart';
 import '../../notifications/views/notification_settings_view.dart';
-import '../../subscription/subscription_view.dart';
+import '../../subscription/subscription_service.dart';
 import '../../../core/watch/views/apple_watch_settings_view.dart';
 import '../../../core/watch/watch_sync_service.dart';
 
 class ProfileView extends StatefulWidget {
   final SettingsRepository? repository;
   final McpRepository? mcpRepository;
-  const ProfileView({super.key, this.repository, this.mcpRepository});
+  final SubscriptionService? subscriptionService;
+  const ProfileView(
+      {super.key,
+      this.repository,
+      this.mcpRepository,
+      this.subscriptionService});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -39,6 +43,7 @@ class _ProfileViewState extends State<ProfileView> {
   Map<String, dynamic>? _profile;
   String? _error;
   bool _signingOut = false;
+  bool _openingPremium = false;
 
   @override
   void initState() {
@@ -66,6 +71,36 @@ class _ProfileViewState extends State<ProfileView> {
   Future<void> _open(Widget page) async {
     await Navigator.push(context, AppPageRoute<void>(page: page));
     if (mounted) unawaited(_load());
+  }
+
+  Future<void> _openPremium() async {
+    if (_openingPremium) return;
+    setState(() => _openingPremium = true);
+    final service = widget.subscriptionService ?? SubscriptionService.shared;
+    try {
+      await service.initialize();
+      if (!mounted) return;
+      if (service.access?.hasAccess == true) {
+        await service.manage();
+      } else if (service.plansAvailable) {
+        await service.purchase(service.offers.containsKey('annual')
+            ? 'annual'
+            : service.offers.keys.first);
+      } else {
+        throw StateError(service.catalogError ??
+            'Membership is unavailable. Please try again.');
+      }
+      if (service.error case final error?) {
+        throw StateError(error);
+      }
+    } catch (failure) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: FitnessText(SubscriptionService.message(failure))));
+      }
+    } finally {
+      if (mounted) setState(() => _openingPremium = false);
+    }
   }
 
   Widget _buildWatchStatusPill() {
@@ -238,46 +273,37 @@ class _ProfileViewState extends State<ProfileView> {
 
           SettingsGroup(
             title: 'Preferences',
+            dividerIndent: 16,
             children: [
               SettingsRow(
-                icon: CupertinoIcons.sparkles,
                 title: 'Setcraft Premium',
-                subtitle: 'Trial, subscription and billing',
-                onTap: () => _open(const SubscriptionView()),
+                onTap: _openingPremium ? null : _openPremium,
               ),
               SettingsRow(
-                icon: CupertinoIcons.bell,
                 title: 'Notifications',
-                subtitle: 'Coach check-ins & workout reminders',
                 onTap: () => _open(const NotificationSettingsView()),
               ),
               SettingsRow(
-                icon: CupertinoIcons.globe,
-                title: 'App preferences',
-                value:
-                    '${LanguageManager.shared.currentLanguage.nativeName} • kg',
+                title: 'Language',
+                value: LanguageManager.shared.currentLanguage.nativeName,
                 onTap: () => _open(const SettingsPreferencesView()),
               ),
               SettingsRow(
-                icon: CupertinoIcons.lock_shield,
-                title: 'Privacy',
-                subtitle: 'Private journal, biometrics & data export',
+                title: 'Privacy & Data',
                 onTap: () =>
                     _open(PrivacySettingsView(repository: _repository)),
               ),
               SettingsRow(
-                icon: CupertinoIcons.info_circle,
-                title: 'Help & about',
-                value: 'v1.0.0',
+                title: 'Help & Support',
                 onTap: () => _open(const SettingsAboutView()),
               ),
             ],
           ),
 
           SettingsGroup(
+            dividerIndent: 16,
             children: [
               SettingsRow(
-                icon: CupertinoIcons.square_arrow_right,
                 title: _signingOut ? 'Signing out…' : 'Sign out',
                 destructive: true,
                 onTap: _signingOut ? null : _signOut,

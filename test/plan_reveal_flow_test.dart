@@ -161,6 +161,7 @@ void main() {
     phone(tester);
     final repo = StarterRepo(), service = TrialService();
     await tester.pumpWidget(app(StarterPlanView(
+        requestAiConsent: (_) async => true,
         repository: repo,
         subscription: service,
         profileLoader: () async => profile,
@@ -212,6 +213,7 @@ void main() {
       sample.remove('exercise');
     }
     await tester.pumpWidget(app(StarterPlanView(
+        requestAiConsent: (_) async => true,
         repository: repo,
         initialRun: legacy,
         subscription: TrialService(),
@@ -248,6 +250,7 @@ void main() {
       'contentLanguage': 'en',
     };
     await tester.pumpWidget(app(StarterPlanView(
+        requestAiConsent: (_) async => true,
         repository: repo,
         subscription: TrialService(),
         profileLoader: () async => profile,
@@ -288,6 +291,7 @@ void main() {
     phone(tester);
     final pending = Completer<Map<String, dynamic>>();
     await tester.pumpWidget(app(StarterPlanView(
+        requestAiConsent: (_) async => true,
         repository: StarterRepo(),
         subscription: TrialService(),
         profileLoader: () => pending.future,
@@ -304,6 +308,7 @@ void main() {
       (tester) async {
     phone(tester);
     await tester.pumpWidget(app(StarterPlanView(
+        requestAiConsent: (_) async => true,
         repository: StarterRepo(),
         subscription: TrialService(),
         profileLoader: () async => {
@@ -325,6 +330,7 @@ void main() {
       phone(tester, const Size(320, 740));
       await tester.pumpWidget(app(
           StarterPlanView(
+              requestAiConsent: (_) async => true,
               repository: StarterRepo(),
               subscription: TrialService(),
               profileLoader: () async =>

@@ -10,6 +10,7 @@ import 'package:setcraft/core/localization/language_manager.dart';
 import 'package:setcraft/core/localization/app_language.dart';
 import 'package:setcraft/core/storage/secure_session_store.dart';
 import 'package:setcraft/features/progress/repositories/progress_repository.dart';
+import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
 
 String token(String owner) =>
     '${base64Url.encode(utf8.encode('{}'))}.${base64Url.encode(utf8.encode(jsonEncode({
@@ -97,6 +98,19 @@ void main() {
     expect((await newer)['value'], 2);
     expect((await duplicate)['value'], 2);
     expect((await repository.cached('', '4w'))!['value'], 2);
+  });
+
+  test('Body changes invalidate the cached Progress overview', () async {
+    final load = repository.load('', '4w');
+    await waitFor(adapter, 1);
+    adapter.complete(0, 10);
+    await load;
+    expect(await repository.cached('', '4w'), isNotNull);
+    final invalidated = expectLater(
+        ProgressRepository.shared.updates.stream, emits('invalidated'));
+    await BodyAssessmentRepository.shared.invalidate();
+    await invalidated;
+    expect(await repository.cached('', '4w'), isNull);
   });
 
   test('A response for a previous account cannot populate the new account',

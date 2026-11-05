@@ -177,8 +177,9 @@ void main() {
       'Opening an older week reviews its plan and preserves the generation limit',
       (tester) async {
     final repository = _HistoryRepository();
-    await tester
-        .pumpWidget(MaterialApp(home: WeeklyPlanView(repository: repository)));
+    await tester.pumpWidget(MaterialApp(
+        home: WeeklyPlanView(
+            requestAiConsent: (_) async => true, repository: repository)));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('History'));
     await tester.tap(find.text('History'));

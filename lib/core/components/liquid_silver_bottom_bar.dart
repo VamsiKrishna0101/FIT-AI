@@ -13,7 +13,7 @@ import '../theme/ds_motion.dart';
 import 'navigation_glyph.dart';
 
 /// Use backdrop refraction on iOS when Impeller supports shader filters.
-/// Other renderers use the same translucent finish over a blurred backdrop.
+/// Android paints the translucent finish without live backdrop passes.
 bool get _supportsLiquidOptics =>
     ui.ImageFilter.isShaderFilterSupported &&
     defaultTargetPlatform == TargetPlatform.iOS;
@@ -422,6 +422,11 @@ class _NavigationGlass extends StatelessWidget {
         ),
         child: finish,
       );
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      // The shell and lens otherwise require two backdrop passes on every
+      // scroll frame. Keep their translucent finish, rim and moving selection
+      // without that GPU cost on Android.
+      surface = finish;
     } else {
       final blurSigma = lens ? .6 : 22.0;
       surface = BackdropFilter(
