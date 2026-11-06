@@ -11,7 +11,8 @@ enum SocialProvider { apple, google }
 class SocialSignIn {
   static const googleEnabled = bool.fromEnvironment('SETCRAFT_GOOGLE_SIGN_IN',
       defaultValue: GoogleAuthConfig.androidEnabled);
-  static const appleEnabled = bool.fromEnvironment('SETCRAFT_APPLE_SIGN_IN');
+  static const appleEnabled = bool.fromEnvironment('SETCRAFT_APPLE_SIGN_IN',
+      defaultValue: true);
   static const _googleServerId = String.fromEnvironment(
       'SETCRAFT_GOOGLE_SERVER_CLIENT_ID',
       defaultValue: GoogleAuthConfig.serverClientId);

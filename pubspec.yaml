@@ -65,7 +65,17 @@ flutter:
         - asset: assets/fonts/Inter.ttf
   assets:
     - assets/fonts/OFL.txt
-    - assets/branding/
+    # Explicit entries keep the retired welcome video out of new app bundles.
+    - assets/branding/google_g_logo.png
+    - assets/branding/LUCIDE_LICENSE
+    - assets/branding/setcraft-hero-cinematic.jpg
+    - assets/branding/setcraft-icon.png
+    - assets/branding/setcraft-mark.svg
+    - assets/branding/setcraft-premium-strength-v1.png
+    - assets/branding/setcraft-training-hero-v1.png
+    - assets/branding/setcraft-welcome-editorial-v1.webp
+    - assets/branding/setcraft-welcome-training-v2.png
+    - assets/branding/trial-bin.png
     - assets/onboarding_images/
     - assets/onboarding_bodies/
     - assets/exercise_anatomy/

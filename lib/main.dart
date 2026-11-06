@@ -1,4 +1,3 @@
-import 'features/onboarding/components/welcome_background_video.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
@@ -57,11 +56,6 @@ Future<Widget> _initializeHome() async {
     await LanguageManager.shared
         .syncAccountLanguage()
         .timeout(const Duration(seconds: 4), onTimeout: () {});
-  }
-  if ((token == null || token.isEmpty) &&
-      !WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
-          .disableAnimations) {
-    await WelcomeVideoPreload.prepare();
   }
   return (token != null && token.isNotEmpty)
       ? authenticatedHome()

@@ -17,6 +17,7 @@ import '../../train/models/training_session.dart';
 import '../../train/repositories/training_repository.dart';
 import '../../train/views/train_view.dart';
 import '../components/progress_surface.dart';
+import '../components/progress_photos.dart';
 import '../components/progress_visual_cards.dart';
 import '../models/progress_chart_data.dart';
 import '../models/progress_models.dart';
@@ -59,6 +60,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
   bool _loading = true, _failed = false;
   String? _loadedQuery;
   int _request = 0;
+  int _photoRefresh = 0;
   StreamSubscription<TrainingDay>? _training;
   StreamSubscription<String>? _updates;
 
@@ -148,6 +150,7 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
     final query = _query;
     setState(() {
       _loading = true;
+      if (refresh) _photoRefresh++;
       _failed = false;
       if (clear || _loadedQuery != query.toString()) _data = null;
       _loadedQuery = query.toString();
@@ -438,6 +441,10 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
                                       LiquidSilverBottomBar.scrollBottomInset(
                                           context)),
                                   sliver: SliverList.list(children: [
+                                    if (!widget.standalone)
+                                      ProgressPhotoShelf(
+                                          isActive: widget.isActive,
+                                          refreshVersion: _photoRefresh),
                                     if (_failed)
                                       Row(children: [
                                         Expanded(

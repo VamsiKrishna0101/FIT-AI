@@ -1,6 +1,6 @@
 import 'package:setcraft/features/onboarding/views/schedule_location_view.dart';
 import 'package:setcraft/features/onboarding/views/lifestyle_nutrition_limitations_view.dart';
-import 'package:setcraft/features/onboarding/components/welcome_background_video.dart';
+import 'package:setcraft/features/onboarding/components/welcome_background_image.dart';
 import 'package:setcraft/features/onboarding/components/onboarding_progress_bar.dart';
 import 'package:setcraft/features/onboarding/components/biometric_ruler_card.dart';
 import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
@@ -264,18 +264,84 @@ void main() {
   });
 
   testWidgets(
-      'Welcome retains its video, short headline and Get started action',
+      'Welcome uses a local image and retains its headline and Get started action',
       (tester) async {
     phone(tester);
     final c = await model();
     await tester.pumpWidget(app(OnboardingView(controller: c)));
     await tester.pumpAndSettle();
-    expect(find.byType(WelcomeBackgroundVideo), findsOneWidget);
-    expect(find.byType(Image), findsNothing);
+    expect(find.byType(WelcomeBackgroundImage), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('welcome-editorial-image')), findsOneWidget);
     expect(find.text('Train smarter.\nGet stronger.'), findsOneWidget);
     expect(find.text('Get started'), findsOneWidget);
     expect(find.text('Log in'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     c.dispose();
   });
+
+  for (final spec in [
+    (
+      name: 'small',
+      size: const Size(320, 568),
+      scale: 1.0,
+      locale: const Locale('en', 'GB'),
+      notch: 20.0
+    ),
+    (
+      name: 'phone',
+      size: const Size(393, 852),
+      scale: 1.0,
+      locale: const Locale('en', 'GB'),
+      notch: 44.0
+    ),
+    (
+      name: 'large',
+      size: const Size(430, 932),
+      scale: 1.0,
+      locale: const Locale('en', 'GB'),
+      notch: 59.0
+    ),
+    (
+      name: 'large-text-fr',
+      size: const Size(393, 852),
+      scale: 1.5,
+      locale: const Locale('fr', 'FR'),
+      notch: 44.0
+    ),
+  ]) {
+    testWidgets('Welcome photo fits ${spec.name}', (tester) async {
+      phone(tester, spec.size);
+      tester.view.padding = FakeViewPadding(top: spec.notch, bottom: 24);
+      tester.view.viewPadding = FakeViewPadding(top: spec.notch, bottom: 24);
+      final c = await model(language: spec.locale.languageCode);
+      await tester.pumpWidget(app(OnboardingView(controller: c),
+          scale: spec.scale, locale: spec.locale));
+      await tester.runAsync(() => precacheImage(
+          tester
+              .widget<Image>(
+                  find.byKey(const ValueKey('welcome-editorial-image')))
+              .image,
+          tester.element(find.byType(WelcomeBackgroundImage))));
+      await tester.pumpAndSettle();
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(WelcomeBackgroundImage), findsOneWidget);
+      if (spec.scale == 1) {
+        expect(
+            tester
+                .getRect(find.byKey(const ValueKey('welcome-get-started')))
+                .bottom,
+            lessThanOrEqualTo(spec.size.height - 24));
+      }
+      await capture(tester, 'welcome-editorial-${spec.name}');
+      await tester
+          .ensureVisible(find.byKey(const ValueKey('welcome-get-started')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('welcome-get-started')).hitTestable(),
+          findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      c.dispose();
+    });
+  }
 }

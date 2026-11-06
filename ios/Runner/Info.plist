@@ -12,11 +12,13 @@
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Take body progress photos for your private fitness journal.</string>
+	<string>Take progress photos for your fitness journal.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Choose body progress photos to save or review in your private fitness journal.</string>
+	<string>Choose progress photos to save in your fitness journal.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Choose health readings to share with your Setcraft account: steps, active calories, workouts, sleep. Optional weight and body fat help track Body progress. Readings are uploaded to Setcraft to show your daily activity and progress.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Setcraft logs completed workouts, active calories, and fitness sessions to Apple Health.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Phone motion gently animates the water illustration while it is visible. Motion readings stay on your phone.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

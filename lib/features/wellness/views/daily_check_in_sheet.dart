@@ -34,6 +34,7 @@ Future<Map<String, dynamic>?> showDailyCheckInSheet(BuildContext context,
     );
 
 class DailyCheckInSheet extends StatefulWidget {
+  final bool fullScreen;
   final DateTime date;
   final Map<String, dynamic>? entry;
   final int? syncedSleepMinutes;
@@ -41,6 +42,7 @@ class DailyCheckInSheet extends StatefulWidget {
   final DateTime Function()? clock;
   const DailyCheckInSheet(
       {super.key,
+      this.fullScreen = false,
       required this.date,
       this.entry,
       this.syncedSleepMinutes,
@@ -206,12 +208,22 @@ class _DailyCheckInSheetState extends State<DailyCheckInSheet> {
                         borderRadius: BorderRadius.circular(16),
                         borderSide:
                             const BorderSide(color: FitnessTheme.silver)))),
-            child: Material(
-                color: FitnessTheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-                clipBehavior: Clip.antiAlias,
-                child: _content(context))));
+            child: widget.fullScreen
+                ? Scaffold(
+                    resizeToAvoidBottomInset: false,
+                    backgroundColor: FitnessTheme.canvas,
+                    appBar: AppBar(
+                        foregroundColor: FitnessTheme.silver,
+                        title: const FitnessText('Sleep & recovery',
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500))),
+                    body: _content(context))
+                : Material(
+                    color: FitnessTheme.surface,
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(24)),
+                    clipBehavior: Clip.antiAlias,
+                    child: _content(context))));
   }
 
   Widget _content(BuildContext context) => PopScope(
@@ -223,7 +235,8 @@ class _DailyCheckInSheetState extends State<DailyCheckInSheet> {
                 bottom: MediaQuery.viewInsetsOf(context).bottom),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * .88),
+                  maxHeight: MediaQuery.sizeOf(context).height *
+                      (widget.fullScreen ? 1 : .88)),
               child: SingleChildScrollView(
                   key: const ValueKey('daily-check-in-sheet'),
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -237,15 +250,23 @@ class _DailyCheckInSheetState extends State<DailyCheckInSheet> {
                                       fontSize: 21,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: -.4))),
-                          IconButton(
-                              key: const ValueKey('daily-check-in-close'),
-                              tooltip: fitnessText(context, 'Close'),
-                              onPressed:
-                                  _saving ? null : () => Navigator.pop(context),
-                              icon: const Icon(CupertinoIcons.xmark,
-                                  size: 20, color: FitnessTheme.muted)),
+                          if (!widget.fullScreen)
+                            IconButton(
+                                key: const ValueKey('daily-check-in-close'),
+                                tooltip: fitnessText(context, 'Close'),
+                                onPressed: _saving
+                                    ? null
+                                    : () => Navigator.pop(context),
+                                icon: const Icon(CupertinoIcons.xmark,
+                                    size: 20, color: FitnessTheme.muted)),
                         ]),
                         const SizedBox(height: 22),
+                        if (widget.fullScreen) ...[
+                          Text(CacheScope.todayKey(widget.date),
+                              style: const TextStyle(
+                                  color: FitnessTheme.muted, fontSize: 12)),
+                          const SizedBox(height: 16),
+                        ],
                         const FitnessText('Sleep duration',
                             style: TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w500)),
@@ -286,7 +307,7 @@ class _DailyCheckInSheetState extends State<DailyCheckInSheet> {
                               padding: const EdgeInsets.only(top: 16),
                               child: FitnessText(_error!,
                                   style: const TextStyle(
-                                      color: FitnessTheme.coral,
+                                      color: FitnessTheme.silver,
                                       fontSize: 12))),
                         const SizedBox(height: 24),
                         FilledButton(

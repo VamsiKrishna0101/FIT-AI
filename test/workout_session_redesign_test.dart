@@ -198,6 +198,28 @@ void main() {
     ApiClient.shared.client.httpClientAdapter = adapter;
     addTearDown(() => ApiClient.shared.client.httpClientAdapter = previous);
   });
+
+  testWidgets('Finishing a full workout offers an optional progress photo once',
+      (tester) async {
+    adapter.day = sample(finished: true);
+    adapter.day['session']['status'] = 'IN_PROGRESS';
+    await tester.pumpWidget(screen(adapter.day));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('workout-primary-action')));
+    await settle(tester);
+    expect(find.text('Your effort. Captured.'), findsOneWidget);
+    expect(find.text('Take a photo'), findsOneWidget);
+    expect(find.text('Maybe later'), findsOneWidget);
+    await tester.tap(find.text('Maybe later'));
+    await settle(tester);
+    expect(find.text('Workout summary'), findsOneWidget);
+    expect(find.text('Your effort. Captured.'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(screen(adapter.day));
+    await settle(tester);
+    expect(find.text('Your effort. Captured.'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('Log each set explicitly before advancing to the next movement',
       (tester) async {
     await tester.pumpWidget(screen(adapter.day));

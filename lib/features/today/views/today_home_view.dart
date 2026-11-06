@@ -18,6 +18,7 @@ import '../../train/repositories/training_repository.dart';
 import '../../train/components/workout_saved_notice.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../components/today_dashboard.dart';
+import 'update_stats_view.dart';
 import '../repositories/today_repository.dart';
 import '../../wellness/views/daily_check_in_sheet.dart';
 import '../models/daily_check_in_prompt.dart';
@@ -310,6 +311,13 @@ class _TodayHomeViewState extends State<TodayHomeView>
         AppPageRoute<void>(builder: (_) => page),
       );
 
+  Future<void> _openStats() async {
+    await Navigator.of(context).push(AppPageRoute<void>(
+        page: UpdateStatsView(
+            date: _selectedDate, initial: _homeData, clock: widget.clock)));
+    if (mounted) await _loadHome();
+  }
+
   Future<void> _saveWorkout() async {
     if (_savingWorkout) return;
     final date = CacheScope.todayKey(_selectedDate);
@@ -379,6 +387,7 @@ class _TodayHomeViewState extends State<TodayHomeView>
                 : null,
             onSleep:
                 canEditSleepDate(_selectedDate, _now) ? _openCheckIn : null,
+            onUpdateStats: _openStats,
           ),
         ),
       );

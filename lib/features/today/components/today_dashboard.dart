@@ -22,6 +22,7 @@ import '../../../core/components/profile_avatar.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../wellness/models/sleep_edit_window.dart';
 import 'weekly_rhythm_calendar.dart';
+import 'update_stats_card.dart';
 import '../../nutrition/components/nutrition_summary_card.dart';
 import '../../nutrition/components/water_intake_card.dart';
 
@@ -53,6 +54,7 @@ class TodayDashboard extends StatelessWidget {
   final VoidCallback? onAddMeal;
   final VoidCallback? onWater;
   final VoidCallback? onSleep;
+  final VoidCallback? onUpdateStats;
 
   const TodayDashboard({
     super.key,
@@ -68,6 +70,7 @@ class TodayDashboard extends StatelessWidget {
     this.onDateSelected,
     this.weekDays,
     this.onSleep,
+    this.onUpdateStats,
     required this.onRefresh,
     required this.onProfile,
     required this.onSession,
@@ -352,6 +355,10 @@ class TodayDashboard extends StatelessWidget {
                             onTap: onWater),
                       ],
                     ])),
+                if (!loading && onUpdateStats != null) ...[
+                  const SizedBox(height: 24),
+                  UpdateStatsCard(onPressed: onUpdateStats!),
+                ],
               ]),
             )
           ],

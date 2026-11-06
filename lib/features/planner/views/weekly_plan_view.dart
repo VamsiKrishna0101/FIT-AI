@@ -25,13 +25,17 @@ class WeeklyPlanView extends StatefulWidget {
   final WeeklyPlanRepository? repository;
   final String? initialPlanId;
   final bool fromOnboarding;
+  final bool startGenerationOnOpen;
+  final DateTime? initialStartDate;
   final Future<bool> Function(BuildContext) requestAiConsent;
   const WeeklyPlanView(
       {super.key,
       this.repository,
       this.initialPlanId,
       this.requestAiConsent = ensureAiSharingConsent,
-      this.fromOnboarding = false});
+      this.fromOnboarding = false,
+      this.startGenerationOnOpen = false,
+      this.initialStartDate});
 
   @override
   State<WeeklyPlanView> createState() => _WeeklyPlanViewState();
@@ -51,6 +55,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
   Timer? _unlockTimer;
   String? _owner;
   bool _progressOpen = false;
+  bool _autoGenerationStarted = false;
   bool get _running => ['QUEUED', 'RUNNING'].contains(_run?['status']);
   bool get _canGenerate => _availability?['canGenerate'] == true;
   bool get _cooldownActive => _availability?['cooldownActive'] == true;
@@ -67,8 +72,7 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
   @override
   void initState() {
     super.initState();
-    final today = DateUtils.dateOnly(DateTime.now());
-    _week = today;
+    _week = DateUtils.dateOnly(widget.initialStartDate ?? DateTime.now());
     _load();
   }
 
@@ -143,6 +147,13 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       if (_running && !_progressOpen) {
         _timer?.cancel();
         _timer = Timer.periodic(const Duration(seconds: 3), (_) => _poll());
+      }
+
+      if (widget.startGenerationOnOpen && !_autoGenerationStarted) {
+        _autoGenerationStarted = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _canGenerate && !_running) unawaited(_generate());
+        });
       }
 
       _unlockTimer?.cancel();

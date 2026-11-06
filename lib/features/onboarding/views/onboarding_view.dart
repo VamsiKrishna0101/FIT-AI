@@ -8,7 +8,7 @@ import '../../../core/localization/fitness_text.dart';
 import '../../auth/views/auth_view.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/welcome_training_intro.dart';
-import '../components/welcome_background_video.dart';
+import '../components/welcome_background_image.dart';
 import '../viewmodels/onboarding_controller.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
 import 'onboarding_journey.dart';
@@ -67,28 +67,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(fit: StackFit.expand, children: [
-        const WelcomeBackgroundVideo(),
-        const Positioned.fill(
-            child: DecoratedBox(
-                decoration: BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: [
-                0,
-                .36,
-                .60,
-                .84,
-                1
-              ],
-              colors: [
-                Color(0x33000000),
-                Color(0x3D000000),
-                Color(0x6B000000),
-                Color(0xD1000000),
-                Color(0xFA000000)
-              ]),
-        ))),
+        const WelcomeBackgroundImage(),
         SafeArea(
             child: LayoutBuilder(
                 builder: (context, constraints) => SingleChildScrollView(

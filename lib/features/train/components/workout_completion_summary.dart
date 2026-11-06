@@ -13,10 +13,12 @@ import 'training_widgets.dart';
 class WorkoutCompletionSummary extends StatelessWidget {
   final TrainingDay day;
   final VoidCallback onEdit, onRetry;
+  final VoidCallback? onAddPhoto;
   const WorkoutCompletionSummary(
       {super.key,
       required this.day,
       required this.onEdit,
+      this.onAddPhoto,
       required this.onRetry});
 
   @override
@@ -78,9 +80,8 @@ class WorkoutCompletionSummary extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
                   decoration: BoxDecoration(
-                    color: day.pendingSync
-                        ? DSColors.bgRaised
-                        : const Color(0xFFCDEBDD),
+                    color:
+                        day.pendingSync ? DSColors.bgRaised : DSColors.silver,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -89,9 +90,7 @@ class WorkoutCompletionSummary extends StatelessWidget {
                             ? CupertinoIcons.arrow_up_circle
                             : CupertinoIcons.check_mark,
                         size: 12,
-                        color: day.pendingSync
-                            ? DSColors.silver
-                            : const Color(0xFF245B44)),
+                        color: day.pendingSync ? DSColors.silver : DSColors.bg),
                     const SizedBox(width: 5),
                     Flexible(
                         child: Text(
@@ -102,9 +101,8 @@ class WorkoutCompletionSummary extends StatelessWidget {
                           fontSize: 11,
                           height: 1.35,
                           fontWeight: FontWeight.w600,
-                          color: day.pendingSync
-                              ? DSColors.silver
-                              : const Color(0xFF245B44)),
+                          color:
+                              day.pendingSync ? DSColors.silver : DSColors.bg),
                     )),
                   ]),
                 ),
@@ -153,7 +151,7 @@ class WorkoutCompletionSummary extends StatelessWidget {
                       fontSize: 12,
                       height: 1.5,
                       color: day.missingLoadSets > 0
-                          ? DSColors.coral
+                          ? DSColors.silver
                           : DSColors.muted)),
             ],
           ]),
@@ -161,6 +159,22 @@ class WorkoutCompletionSummary extends StatelessWidget {
         if (day.pendingSync) ...[
           const SizedBox(height: 14),
           WorkoutSyncNotice(blocked: day.syncBlocked, onRetry: onRetry),
+        ],
+        if (onAddPhoto != null) ...[
+          const SizedBox(height: 14),
+          TrainingSurface(
+              child: Row(children: [
+            const Icon(CupertinoIcons.camera, color: DSColors.silver, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Text(copy('Capture your progress'),
+                    style:
+                        const TextStyle(color: DSColors.silver, fontSize: 14))),
+            TextButton(
+                onPressed: onAddPhoto,
+                child: Text(copy('Add photo'),
+                    style: const TextStyle(color: DSColors.silver))),
+          ])),
         ],
         const SizedBox(height: 22),
         Wrap(
@@ -305,7 +319,7 @@ class _ExerciseSummaryState extends State<_ExerciseSummary> {
                           ? CupertinoIcons.checkmark_circle_fill
                           : CupertinoIcons.circle,
                   size: 12,
-                  color: item.isCompleted ? DSColors.accent : DSColors.muted),
+                  color: item.isCompleted ? DSColors.silver : DSColors.muted),
             ),
             const SizedBox(width: 5),
             Expanded(

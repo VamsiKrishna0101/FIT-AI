@@ -1,4 +1,8 @@
 import '../components/workout_warmup.dart';
+import '../../progress/components/progress_photos.dart';
+import '../../progress/repositories/progress_photo_repository.dart';
+import '../../../core/cache/cache_scope.dart';
+import '../../../core/navigation/onboarding_page_route.dart';
 import '../../notifications/services/rest_notification_service.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
@@ -14,6 +18,8 @@ import '../components/workout_set_entry.dart';
 import '../components/workout_rest_timer.dart';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/fitness_theme.dart';
+import '../../planner/services/weekly_plan_prompt_service.dart';
+import '../../planner/views/weekly_plan_view.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
@@ -524,18 +530,56 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
       );
 
   Future<void> _finish() async {
+    final wasFinished = _day.finished;
     setState(() => _busy = true);
     try {
       if (_day.items.isNotEmpty) await _saveEnteredSets(_day.items[_index].id);
       await _mutate('POST', '/finish');
       _updateRest(null);
       unawaited(HapticFeedback.mediumImpact().catchError((Object _) {}));
+      if (!wasFinished &&
+          _day.finished &&
+          _day.date == CacheScope.todayKey(_now) &&
+          _day.items.isNotEmpty &&
+          _day.items.every((item) => item.isCompleted)) {
+        // Run after the saved summary renders; photo errors never fail a workout.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_offerAfterWorkoutPrompts());
+        });
+      }
     } catch (error) {
       _error(TrainingRepository.errorMessage(
           error, 'Could not finish. Please try again.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _offerProgressPhoto() async {
+    try {
+      final show = await ProgressPhotoRepository.shared.claimPrompt(_day.date);
+      if (mounted && show && ModalRoute.of(context)?.isCurrent == true) {
+        await showProgressPhotoCapture(context,
+            workoutDate: _day.date, afterWorkout: true);
+      }
+    } catch (_) {/* The saved workout remains available. */}
+  }
+
+  Future<void> _offerAfterWorkoutPrompts() async {
+    await _offerProgressPhoto();
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    final generate = await WeeklyPlanPromptService.shared
+        .maybePromptAfterWorkout(context, completedDate: _day.date);
+    if (!generate || !mounted || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    final completedDate = DateTime.tryParse(_day.date) ?? _now;
+    final daysUntilNextMonday = 8 - completedDate.weekday;
+    final nextWeek = DateUtils.dateOnly(
+        completedDate.add(Duration(days: daysUntilNextMonday)));
+    await Navigator.of(context).push(AppPageRoute<void>(
+        page: WeeklyPlanView(
+            startGenerationOnOpen: true, initialStartDate: nextWeek)));
   }
 
   int? _activeNumber(TodayPlanItemModel item) {
@@ -1294,6 +1338,8 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   Widget _summary() => MotionEntrance(
       child: WorkoutCompletionSummary(
           day: _day,
+          onAddPhoto: () =>
+              showProgressPhotoCapture(context, workoutDate: _day.date),
           onEdit: () => setState(() => _editingFinished = true),
           onRetry: () => _sync(retry: true)));
 }

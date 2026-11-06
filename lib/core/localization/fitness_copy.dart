@@ -1,4 +1,5 @@
 import 'plan_checkout_copy.dart';
+import 'manual_entries_copy.dart';
 import 'notification_copy.dart';
 import 'onboarding_conversation_copy.dart';
 import 'welcome_presentation_copy.dart';
@@ -36,7 +37,8 @@ final _displayTerms = {
 String fitnessText(BuildContext context, String text,
     {Map<String, Object> values = const {}}) {
   final locale = Localizations.localeOf(context).languageCode;
-  var translated = notificationTranslation(locale, text) ??
+  var translated = manualEntriesTranslation(locale, text) ??
+      notificationTranslation(locale, text) ??
       planCheckoutTranslation(locale, text) ??
       onboardingConversationTranslation(locale, text) ??
       welcomePresentationTranslation(locale, text) ??

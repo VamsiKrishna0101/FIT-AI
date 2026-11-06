@@ -15,6 +15,7 @@ import '../models/body_progress_summary.dart';
 import '../repositories/body_assessment_repository.dart';
 
 class BodyEntryView extends StatefulWidget {
+  final DateTime? initialDate;
   final BodyAssessment? existing;
   final BodyAssessmentRepository? repository;
   final Future<void> Function(Map<String, dynamic>)? onSubmit;
@@ -23,6 +24,7 @@ class BodyEntryView extends StatefulWidget {
   final BodyMeasurementBaseline? baseline;
   const BodyEntryView(
       {super.key,
+      this.initialDate,
       this.existing,
       this.repository,
       this.onSubmit,
@@ -56,8 +58,8 @@ class _BodyEntryViewState extends State<BodyEntryView> {
   void initState() {
     super.initState();
     _height.text = widget.baseline?.height?.toStringAsFixed(0) ?? '';
-    _date =
-        DateTime.parse(widget.existing?.recordedDate ?? CacheScope.todayKey());
+    _date = DateTime.parse(widget.existing?.recordedDate ??
+        CacheScope.todayKey(widget.initialDate));
     for (final key in bodyMetricSpecs.keys) {
       final metric = widget.existing?.metrics[key];
       _sources[key] = metric != null && !metric.isPhotoEstimate
@@ -358,7 +360,7 @@ class _BodyEntryViewState extends State<BodyEntryView> {
                               child: FitnessText(_error!,
                                   style: const TextStyle(
                                       fontSize: 13,
-                                      color: FitnessTheme.coral)))),
+                                      color: FitnessTheme.silver)))),
                   ],
                 )),
                 Padding(

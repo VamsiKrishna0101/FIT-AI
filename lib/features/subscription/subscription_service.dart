@@ -117,7 +117,7 @@ class SubscriptionService extends ChangeNotifier {
     final key = useTestStore && kDebugMode
         ? 'test_tnFavxCGcfuBKXvOAGJrgbfrWtm'
         : ios
-            ? const String.fromEnvironment('REVENUECAT_IOS_KEY')
+            ? const String.fromEnvironment('REVENUECAT_IOS_KEY', defaultValue: 'appl_JeWpuFoZFkyUzLKctzvLubqjHYi')
             : const String.fromEnvironment('REVENUECAT_ANDROID_KEY');
     if (key.isEmpty || (!kDebugMode && key.startsWith('test_'))) {
       throw StateError('Store billing is not configured for this release.');

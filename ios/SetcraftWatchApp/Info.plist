@@ -23,7 +23,7 @@
     <key>WKApplication</key>
     <true/>
     <key>WKCompanionAppBundleIdentifier</key>
-    <string>com.fitai.setcraft</string>
+    <string>com.setcraft.app</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>workout-processing</string>

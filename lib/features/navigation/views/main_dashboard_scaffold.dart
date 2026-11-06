@@ -21,6 +21,7 @@ import '../../../core/storage/secure_session_store.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../notifications/views/notification_settings_view.dart';
 import '../../planner/views/weekly_plan_view.dart';
+import '../../planner/services/weekly_plan_prompt_service.dart';
 import '../../wellness/views/sleep_entry_view.dart';
 import '../../nutrition/views/food_library_view.dart';
 import '../../today/repositories/today_repository.dart';
@@ -41,6 +42,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
   late int _currentIndex;
   final Set<int> _visitedTabs = {0};
   bool _modeReady = false;
+  bool _checkingDashboardOpen = false;
   StreamSubscription<Map<String, String>>? _notifications;
 
   @override
@@ -55,8 +57,8 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
     AppDataMode.shared.addListener(_datasetChanged);
     SubscriptionService.shared.addListener(_datasetChanged);
     unawaited(_initializeMode());
-    _notifications =
-        NotificationService.shared.opened.listen((_) => _takeNotification());
+    _notifications = NotificationService.shared.opened
+        .listen((_) => unawaited(_handleDashboardOpen()));
     unawaited(NotificationService.shared.refresh());
   }
 
@@ -79,6 +81,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
       unawaited(
           HealthSyncService.shared.syncIfEnabled().catchError((Object _) {}));
       unawaited(_resumePhoneSleep());
+      unawaited(_handleDashboardOpen());
     }
   }
 
@@ -96,17 +99,37 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
     await AppDataMode.shared.initialize();
     if (mounted) setState(() => _modeReady = true);
     if (mounted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _takeNotification());
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => unawaited(_handleDashboardOpen()));
     }
   }
 
-  Future<void> _takeNotification() async {
-    if (!mounted || !_modeReady) return;
+  Future<void> _handleDashboardOpen() async {
+    if (!mounted || !_modeReady || _checkingDashboardOpen) return;
+    _checkingDashboardOpen = true;
+    try {
+      final notificationHandled = await _takeNotification();
+      if (notificationHandled ||
+          !mounted ||
+          ModalRoute.of(context)?.isCurrent != true) {
+        return;
+      }
+      final generate =
+          await WeeklyPlanPromptService.shared.maybePromptOnAppOpen(context);
+      if (generate && mounted && ModalRoute.of(context)?.isCurrent == true) {
+        _openRoute(const WeeklyPlanView(startGenerationOnOpen: true));
+      }
+    } finally {
+      _checkingDashboardOpen = false;
+    }
+  }
+
+  Future<bool> _takeNotification() async {
+    if (!mounted || !_modeReady) return false;
     final data = NotificationService.shared.takePending();
-    if (data == null ||
-        data['userId'] != await SecureSessionStore.shared.userId ||
-        !mounted) {
-      return;
+    if (data == null) return false;
+    if (data['userId'] != await SecureSessionStore.shared.userId || !mounted) {
+      return true;
     }
     final dashboard = ModalRoute.of(context);
     Navigator.of(context).popUntil((route) => route == dashboard);
@@ -154,6 +177,7 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
         _openRoute(const NotificationSettingsView());
         break;
     }
+    return true;
   }
 
   void _onTabSelected(int index) {
