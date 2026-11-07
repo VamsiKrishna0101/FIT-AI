@@ -35,7 +35,7 @@ class LiquidWaterVisual extends StatefulWidget {
       this.perspective = true,
       this.ambientMotion = true,
       this.phaseOffset = 0,
-      this.tint = const Color(0xFF7EBFD2)});
+      this.tint = const Color(0xFF2997FF)});
   @override
   State<LiquidWaterVisual> createState() => _LiquidWaterVisualState();
 }
@@ -369,7 +369,7 @@ class LiquidWaterPainter extends CustomPainter {
       this.tilt = 0,
       this.depthTilt = 0,
       this.perspective = true,
-      this.tint = const Color(0xFF7EBFD2),
+      this.tint = const Color(0xFF2997FF),
       this.wave = 0,
       this.settle = 1,
       this.energy = .4,

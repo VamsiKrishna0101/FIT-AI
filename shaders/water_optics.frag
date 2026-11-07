@@ -322,18 +322,17 @@ void main() {
     vec3 normal = normalize(vec3(-surface.y * .75 - gradient.x * .65,
                                  -gradient.y * .65 + sin(uPitch) * .12, 1.0));
 
-    // Depth-dependent transmission: clear at the lip, denser below it.
-    vec3 shallow = uTint * .84 + vec3(.015);
-    vec3 deep = uTint * .42 + vec3(.008, .018, .022) * uPerspective;
+    // Depth-dependent transmission: clear crystal blue water, rich sapphire blue in depth.
+    vec3 shallow = mix(uTint * 1.12, vec3(.28, .68, 1.0), .24);
+    vec3 deep = mix(uTint * .75, vec3(.02, .24, .68), .48 * uPerspective);
     vec3 colour = mix(shallow, deep, smoothstep(0.0, 1.0, immersion));
-    colour *= exp(-vec3(.42, .16, .08) * immersion * uPerspective);
+    colour *= exp(-vec3(.32, .10, .02) * immersion * uPerspective);
 
-    // Refracted light forms soft, connected caustics inside the water.
-    float c1 = sin(dot(q, vec2(9.0, 6.0)) + uPhase * .6 + 1.1 * sin(w2));
-    float c2 = sin(dot(q, vec2(-4.0, 13.0)) - uPhase * .8 + .8 * sin(w1));
-    float caustic = pow(clamp(1.0 - abs(c1 + c2) * .75, 0.0, 1.0), 16.0);
-    float causticGain = mix(.035, .11, immersion) * mix(.45, 1.0, uPerspective);
-    colour += (uTint * .45 + vec3(.28)) * caustic * causticGain;
+    // Soft, natural internal fluid light flow with no sharp marks or lines.
+    float fluidFlow = .5 + .5 * sin(dot(q, vec2(1.6, 1.1)) - uPhase * .6 + .4 * sin(w1));
+    float fluidShimmer = .5 + .5 * sin(dot(q, vec2(-1.2, 2.2)) + uPhase * .4);
+    float internalLight = fluidFlow * fluidShimmer * mix(.06, .14, immersion) * mix(.5, 1.0, uPerspective);
+    colour += (uTint * .75 + vec3(.15, .35, .65)) * internalLight;
 
     // A shallow visible surface catches a broad studio reflection and small
     // specular glints. Its depth follows the actual fill and camera pitch.
@@ -344,14 +343,14 @@ void main() {
     float fresnel = .02 + .98 * pow(1.0 - max(dot(normal, view), 0.0), 5.0);
     float specular = pow(max(dot(normal, normalize(vec3(-.18, -.12, 1.0))), 0.0), 90.0);
     float reflection = .5 + .5 * sin(q.x * 1.8 + gradient.x * 3.0 + uPhase * .2);
-    vec3 reflected = mix(uTint * .55, vec3(.80, .90, .94), reflection);
+    vec3 reflected = mix(uTint * .65, vec3(.85, .94, 1.0), reflection);
     colour = mix(colour, reflected, top * (.18 + fresnel * 2.0));
-    colour += vec3(.72, .85, .91) * specular * top * .27;
+    colour += vec3(.75, .88, .98) * specular * top * .27;
 
     float lip = exp(-depth / .65);
-    colour += vec3(.65, .78, .82) * lip * (.10 + specular * .18);
+    colour += vec3(.70, .85, .95) * lip * (.10 + specular * .18);
     // A lens-like side falloff gives the vessel thickness without a flat rim.
     float side = min(p.x - uRange.x, uRange.y - p.x) / shortSide;
-    colour *= 1.0 - .12 * exp(-max(side, 0.0) * 32.0);
+    colour *= 1.0 - .08 * exp(-max(side, 0.0) * 32.0);
     fragColor = vec4(clamp(colour, 0.0, 1.0), 1.0);
 }

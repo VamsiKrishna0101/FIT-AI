@@ -218,10 +218,10 @@ void paintLiquidPool(Canvas canvas, Size size,
     } else {
       waterPaint.shader =
           ui.Gradient.linear(Offset(0, tank.level), Offset(0, deepest), [
-        Color.lerp(tint, Colors.white, .06)!.withValues(alpha: .72),
-        Color.lerp(tint, perspective ? const Color(0xFF123847) : Colors.black,
-                perspective ? .6 : .28)!
-            .withValues(alpha: .94)
+        Color.lerp(tint, Colors.white, .18)!.withValues(alpha: .85),
+        Color.lerp(tint, const Color(0xFF003875), perspective ? .5 : .25)!
+            .withValues(alpha: .96)
+
       ]);
     }
     canvas.drawPath(body, waterPaint);
@@ -238,22 +238,6 @@ void paintLiquidPool(Canvas canvas, Size size,
                   Colors.white.withValues(alpha: .045),
                   Colors.transparent
                 ]).createShader(bounds));
-      for (var band = 0; band < (perspective ? 2 : 0); band++) {
-        final points = crest
-            .map((point) => Offset(
-                point.dx,
-                point.dy +
-                    (deepest - point.dy) * (.2 + band * .23) +
-                    math.sin(point.dx / size.width * 8 - phase * .6 + band) *
-                        1.5))
-            .toList();
-        canvas.drawPath(
-            liquidCurve(points),
-            Paint()
-              ..color = Colors.white.withValues(alpha: .018)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.1);
-      }
       canvas.restore();
     }
     // The meniscus follows the fluid and refracts light at its surface.
@@ -288,21 +272,6 @@ void paintLiquidPool(Canvas canvas, Size size,
           ..strokeWidth = .65);
     canvas.restore();
   }
-  if (!perspective) {
-    for (final step in [.25, .5, .75]) {
-      canvas.drawLine(
-          Offset(size.width - 11, size.height * step),
-          Offset(size.width - 6, size.height * step),
-          Paint()
-            ..color = const Color(0x29FFFFFF)
-            ..strokeWidth = 1);
-    }
-  }
-  canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          Rect.fromLTWH(7, 8, 1.2, math.max(0, size.height - 16)),
-          const Radius.circular(2)),
-      Paint()..color = const Color(0x0CFFFFFF));
   canvas.restore();
   canvas.drawRRect(
       tank.vessel,

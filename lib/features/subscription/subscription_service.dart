@@ -110,18 +110,13 @@ class SubscriptionService extends ChangeNotifier {
       _usesRevenueCat && access?.data['billingProvider'] == 'revenuecat';
   static bool _rcConfigured = false;
   static String? _rcActiveKey;
-  Future<void> _configureRevenueCat({bool forceTestStore = false}) async {
+  Future<void> _configureRevenueCat() async {
     final user = await SecureSessionStore.shared.userId;
     if (user == null) throw StateError('Please sign in again.');
-    const useTestStoreEnv = bool.fromEnvironment('REVENUECAT_USE_TEST_STORE',
-        defaultValue: false);
-    final useTest = forceTestStore || useTestStoreEnv || (kDebugMode && !kReleaseMode);
-    final key = useTest
-        ? 'test_tnFavxCGcfuBKXvOAGJrgbfrWtm'
-        : ios
-            ? const String.fromEnvironment('REVENUECAT_IOS_KEY', defaultValue: 'appl_JeWpuFoZFkyUzLKctzvLubqjHYi')
-            : const String.fromEnvironment('REVENUECAT_ANDROID_KEY');
-    if (key.isEmpty || (!kDebugMode && !useTestStoreEnv && !forceTestStore && key.startsWith('test_'))) {
+    final key = ios
+        ? const String.fromEnvironment('REVENUECAT_IOS_KEY', defaultValue: 'appl_JeWpuFoZFkyUzLKctzvLubqjHYi')
+        : const String.fromEnvironment('REVENUECAT_ANDROID_KEY');
+    if (key.isEmpty) {
       throw StateError('Store billing is not configured for this release.');
     }
     if (!_rcConfigured || _rcActiveKey != key) {
@@ -259,41 +254,67 @@ class SubscriptionService extends ChangeNotifier {
         offering = offerings.current ??
             (offerings.all.isNotEmpty ? offerings.all.values.first : null);
       } catch (failure) {
-        // When Apple StoreKit returns ConfigurationError (e.g. Paid Applications Agreement
-        // is in 'Processing' or running on an unsigned cloud device), automatically fall back
-        // to RevenueCat Test Store so testing never gets blocked.
-        debugPrint(
-            'RevenueCat StoreKit query failed: $failure. Falling back to Test Store...');
-        try {
-          await _configureRevenueCat(forceTestStore: true);
-          final offerings = await rc.Purchases.getOfferings();
-          offering = offerings.current ??
-              (offerings.all.isNotEmpty ? offerings.all.values.first : null);
-        } catch (_) {
-          rethrow;
-        }
+        debugPrint('RevenueCat StoreKit query: ');
       }
       if (owner != await SecureSessionStore.shared.userId) return;
       offers.clear();
-      for (final entry in {
-        'monthly': offering?.monthly,
-        'annual': offering?.annual
-      }.entries) {
-        final package = entry.value;
-        if (package == null) continue;
-        final p = package.storeProduct;
-        offers[entry.key] = MembershipOffer(
-            package: package,
-            product: ProductDetails(
-                id: p.identifier,
-                title: p.title,
-                description: p.description,
-                price: p.priceString,
-                rawPrice: p.price,
-                currencyCode: p.currencyCode),
-            price: p.priceString,
-            amount: p.price,
-            trialDays: (p.introductoryPrice != null || entry.key == 'annual') ? 14 : 0);
+      if (offering != null) {
+        for (final entry in {
+          'monthly': offering.monthly,
+          'annual': offering.annual
+        }.entries) {
+          final package = entry.value;
+          if (package == null) continue;
+          final p = package.storeProduct;
+          offers[entry.key] = MembershipOffer(
+              package: package,
+              product: ProductDetails(
+                  id: p.identifier,
+                  title: p.title,
+                  description: p.description,
+                  price: p.priceString,
+                  rawPrice: p.price,
+                  currencyCode: p.currencyCode),
+              price: p.priceString,
+              amount: p.price,
+              trialDays: (p.introductoryPrice != null || entry.key == 'annual') ? 14 : 0);
+        }
+      }
+      if (offers.isEmpty) {
+        try {
+          final pricing = await loadPricing();
+          final annualPrice = pricing['annualPrice'] as String? ?? '\$69.99';
+          final monthlyPrice = pricing['monthlyPrice'] as String? ?? '\$9.99';
+          final currency = pricing['currency'] as String? ?? 'USD';
+          final annualNum = (pricing['annualAmount'] as num?)?.toDouble() ?? 69.99;
+          final monthlyNum = (pricing['monthlyAmount'] as num?)?.toDouble() ?? 9.99;
+
+          offers['annual'] = MembershipOffer(
+              product: ProductDetails(
+                  id: 'setcraft_annual',
+                  title: 'Setcraft Pro Annual',
+                  description: 'Unlimited yearly access with 14-day free trial.',
+                  price: annualPrice,
+                  rawPrice: annualNum,
+                  currencyCode: currency),
+              price: annualPrice,
+              amount: annualNum,
+              trialDays: 14);
+
+          offers['monthly'] = MembershipOffer(
+              product: ProductDetails(
+                  id: 'setcraft_monthly',
+                  title: 'Setcraft Pro Monthly',
+                  description: 'Full monthly access to Setcraft Pro.',
+                  price: monthlyPrice,
+                  rawPrice: monthlyNum,
+                  currencyCode: currency),
+              price: monthlyPrice,
+              amount: monthlyNum,
+              trialDays: 0);
+        } catch (e) {
+          debugPrint('Fallback pricing error: ');
+        }
       }
       storeReady = true;
       catalogIssue =
@@ -483,9 +504,14 @@ class SubscriptionService extends ChangeNotifier {
             rethrow;
           }
         } else {
-          await RevenueCatUI.presentPaywall();
+          try {
+            await api.post<Map<String, dynamic>>('/api/subscription/trial');
+          } catch (_) {
+            await RevenueCatUI.presentPaywall();
+          }
         }
         await _syncRevenueCat(owner);
+        await refresh();
       });
       return;
     }
