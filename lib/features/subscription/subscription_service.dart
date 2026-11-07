@@ -505,9 +505,9 @@ class SubscriptionService extends ChangeNotifier {
           }
         } else {
           try {
-            await api.post<Map<String, dynamic>>('/api/subscription/trial');
-          } catch (_) {
-            await RevenueCatUI.presentPaywall();
+            await api.post<Map<String, dynamic>>('/api/subscription/start-trial');
+          } catch (e) {
+            debugPrint('Start trial error: $e');
           }
         }
         await _syncRevenueCat(owner);
