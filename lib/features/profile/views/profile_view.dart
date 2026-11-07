@@ -21,6 +21,7 @@ import 'settings_preferences_view.dart';
 import 'training_settings_view.dart';
 import '../../notifications/views/notification_settings_view.dart';
 import '../../subscription/subscription_service.dart';
+import '../../subscription/subscription_view.dart';
 import '../../../core/watch/views/apple_watch_settings_view.dart';
 import '../../../core/watch/watch_sync_service.dart';
 
@@ -82,13 +83,13 @@ class _ProfileViewState extends State<ProfileView> {
       if (!mounted) return;
       if (service.access?.hasAccess == true) {
         await service.manage();
-      } else if (service.plansAvailable) {
-        await service.purchase(service.offers.containsKey('annual')
-            ? 'annual'
-            : service.offers.keys.first);
       } else {
-        throw StateError(service.catalogError ??
-            'Membership is unavailable. Please try again.');
+        await Navigator.push(
+          context,
+          AppPageRoute<void>(
+            page: SubscriptionView(service: service),
+          ),
+        );
       }
       if (service.error case final error?) {
         throw StateError(error);
