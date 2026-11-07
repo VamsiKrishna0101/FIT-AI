@@ -109,23 +109,26 @@ class SubscriptionService extends ChangeNotifier {
   bool get usesRevenueCat =>
       _usesRevenueCat && access?.data['billingProvider'] == 'revenuecat';
   static bool _rcConfigured = false;
-  Future<void> _configureRevenueCat() async {
+  static String? _rcActiveKey;
+  Future<void> _configureRevenueCat({bool forceTestStore = false}) async {
     final user = await SecureSessionStore.shared.userId;
     if (user == null) throw StateError('Please sign in again.');
-    const useTestStore = bool.fromEnvironment('REVENUECAT_USE_TEST_STORE',
-        defaultValue: kDebugMode);
-    final key = useTestStore && kDebugMode
+    const useTestStoreEnv = bool.fromEnvironment('REVENUECAT_USE_TEST_STORE',
+        defaultValue: false);
+    final useTest = forceTestStore || useTestStoreEnv || (kDebugMode && !kReleaseMode);
+    final key = useTest
         ? 'test_tnFavxCGcfuBKXvOAGJrgbfrWtm'
         : ios
             ? const String.fromEnvironment('REVENUECAT_IOS_KEY', defaultValue: 'appl_JeWpuFoZFkyUzLKctzvLubqjHYi')
             : const String.fromEnvironment('REVENUECAT_ANDROID_KEY');
-    if (key.isEmpty || (!kDebugMode && key.startsWith('test_'))) {
+    if (key.isEmpty || (!kDebugMode && !useTestStoreEnv && !forceTestStore && key.startsWith('test_'))) {
       throw StateError('Store billing is not configured for this release.');
     }
-    if (!_rcConfigured) {
+    if (!_rcConfigured || _rcActiveKey != key) {
       await rc.Purchases.configure(
           rc.PurchasesConfiguration(key)..appUserID = user);
       _rcConfigured = true;
+      _rcActiveKey = key;
     } else if (await rc.Purchases.appUserID != user) {
       await rc.Purchases.logIn(user);
     }
@@ -250,7 +253,26 @@ class SubscriptionService extends ChangeNotifier {
       }
       final owner = await SecureSessionStore.shared.userId;
       await _configureRevenueCat();
-      final offering = (await rc.Purchases.getOfferings()).current;
+      rc.Offering? offering;
+      try {
+        final offerings = await rc.Purchases.getOfferings();
+        offering = offerings.current ??
+            (offerings.all.isNotEmpty ? offerings.all.values.first : null);
+      } catch (failure) {
+        // When Apple StoreKit returns ConfigurationError (e.g. Paid Applications Agreement
+        // is in 'Processing' or running on an unsigned cloud device), automatically fall back
+        // to RevenueCat Test Store so testing never gets blocked.
+        debugPrint(
+            'RevenueCat StoreKit query failed: $failure. Falling back to Test Store...');
+        try {
+          await _configureRevenueCat(forceTestStore: true);
+          final offerings = await rc.Purchases.getOfferings();
+          offering = offerings.current ??
+              (offerings.all.isNotEmpty ? offerings.all.values.first : null);
+        } catch (_) {
+          rethrow;
+        }
+      }
       if (owner != await SecureSessionStore.shared.userId) return;
       offers.clear();
       for (final entry in {
@@ -270,11 +292,13 @@ class SubscriptionService extends ChangeNotifier {
                 rawPrice: p.price,
                 currencyCode: p.currencyCode),
             price: p.priceString,
-            amount: p.price);
+            amount: p.price,
+            trialDays: (p.introductoryPrice != null || entry.key == 'annual') ? 14 : 0);
       }
       storeReady = true;
       catalogIssue =
           offers.isEmpty ? SubscriptionCatalogIssue.productsMissing : null;
+      catalogError = null;
       notifyListeners();
       return;
     }
@@ -448,7 +472,19 @@ class SubscriptionService extends ChangeNotifier {
         final owner = await SecureSessionStore.shared.userId;
         if (owner == null) throw StateError('Please sign in again.');
         await _configureRevenueCat();
-        await RevenueCatUI.presentPaywall();
+        final selected = offers[interval];
+        if (selected?.package != null) {
+          try {
+            await rc.Purchases.purchasePackage(selected!.package!);
+          } on PlatformException catch (e) {
+            if (e.code == '1' || e.message?.toLowerCase().contains('cancel') == true) {
+              return;
+            }
+            rethrow;
+          }
+        } else {
+          await RevenueCatUI.presentPaywall();
+        }
         await _syncRevenueCat(owner);
       });
       return;

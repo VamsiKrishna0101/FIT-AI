@@ -9,6 +9,10 @@ on:
         description: 'Backend Base URL (ngrok)'
         required: false
         default: 'https://4ac5-2401-4900-1c27-feeb-8a9-4f63-4c4d-14d5.ngrok-free.app'
+      use_test_store:
+        description: 'Use RevenueCat Test Store (true for cloud testing / pending agreements)'
+        required: false
+        default: 'true'
 
 jobs:
   build-ipa:
@@ -49,15 +53,21 @@ jobs:
       - name: Build iOS Application (Release, No Codesign)
         env:
           BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://4ac5-2401-4900-1c27-feeb-8a9-4f63-4c4d-14d5.ngrok-free.app' }}
+          USE_TEST_STORE: ${{ github.event.inputs.use_test_store || 'true' }}
         run: |
           if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
             cd mobile
           fi
-          echo "Building iOS with backend URL: $BACKEND_URL"
+          echo "Building iOS with backend URL: $BACKEND_URL (use_test_store=$USE_TEST_STORE)"
           curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
             -H "ngrok-skip-browser-warning: true" -H "Accept: application/json" \
             "${BACKEND_URL%/}/health" | python3 -c 'import json, sys; health = json.load(sys.stdin); assert health.get("status") == "ok", "Backend health check failed"; print("Backend health check passed")'
-          flutter build ios --release --no-codesign --no-pub --dart-define=FITAI_API_BASE_URL="$BACKEND_URL"
+          flutter build ios --release --no-codesign --no-pub \
+            --dart-define=SETCRAFT_API_BASE_URL="$BACKEND_URL" \
+            --dart-define=FITAI_API_BASE_URL="$BACKEND_URL" \
+            --dart-define=REVENUECAT_USE_TEST_STORE="$USE_TEST_STORE" \
+            --dart-define=REVENUECAT_IOS_KEY="appl_JeWpuFoZFkyUzLKctzvLubqjHYi" \
+            --dart-define=SETCRAFT_APPLE_SIGN_IN=true
 
       - name: Package Unsigned IPA for Cloud Testing
         run: |
@@ -68,14 +78,14 @@ jobs:
           mkdir -p build/ios/ipa/Payload "$GITHUB_WORKSPACE/output"
           cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
           cd build/ios/ipa
-          zip -q -r -y "$GITHUB_WORKSPACE/output/FitAI-Runner.ipa" Payload
-          unzip -t "$GITHUB_WORKSPACE/output/FitAI-Runner.ipa" | tail -n 1
-          ls -lh "$GITHUB_WORKSPACE/output/FitAI-Runner.ipa"
+          zip -q -r -y "$GITHUB_WORKSPACE/output/Setcraft-Runner.ipa" Payload
+          unzip -t "$GITHUB_WORKSPACE/output/Setcraft-Runner.ipa" | tail -n 1
+          ls -lh "$GITHUB_WORKSPACE/output/Setcraft-Runner.ipa"
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fitai-ios-ipa
-          path: output/FitAI-Runner.ipa
+          name: setcraft-ios-ipa
+          path: output/Setcraft-Runner.ipa
           if-no-files-found: error
           retention-days: 14
