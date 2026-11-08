@@ -4,7 +4,9 @@ on:
   push:
     branches: [ main, master ]
     paths:
-      - 'mobile/**'
+      - 'lib/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
       - '.github/workflows/deploy-testflight.yml'
   workflow_dispatch:
     inputs:
@@ -81,8 +83,12 @@ jobs:
 
       - name: Generate ExportOptions.plist
         run: |
-          mkdir -p mobile/ios
-          cat << 'EOF' > mobile/ios/ExportOptions.plist
+          EXPORT_DIR="ios"
+          if [ -d "mobile/ios" ]; then
+            EXPORT_DIR="mobile/ios"
+          fi
+          mkdir -p "$EXPORT_DIR"
+          cat << 'EOF' > "$EXPORT_DIR/ExportOptions.plist"
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -105,7 +111,7 @@ jobs:
           </dict>
           </plist>
           EOF
-          echo "ExportOptions.plist created."
+          echo "ExportOptions.plist created at $EXPORT_DIR/ExportOptions.plist"
 
       - name: Build Signed iOS IPA
         env:
@@ -141,13 +147,13 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY="appl_JeWpuFoZFkyUzLKctzvLubqjHYi" \
             --dart-define=SETCRAFT_APPLE_SIGN_IN=true
 
-          ls -lh build/ios/ipa/*.ipa
+          find . -name "*.ipa" -ls
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: setcraft-signed-testflight-ipa
-          path: mobile/build/ios/ipa/*.ipa
+          path: "**/build/ios/ipa/*.ipa"
           if-no-files-found: error
           retention-days: 14
 
@@ -161,7 +167,11 @@ jobs:
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
           cp ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 ~/.private_keys/
 
-          IPA_PATH=$(find mobile/build/ios/ipa -name "*.ipa" | head -n 1)
+          IPA_PATH=$(find . -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "Error: No IPA file found to upload!"
+            exit 1
+          fi
           echo "Uploading $IPA_PATH to TestFlight..."
 
           xcrun altool --upload-app \
