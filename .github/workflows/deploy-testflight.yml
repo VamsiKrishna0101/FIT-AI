@@ -50,6 +50,29 @@ jobs:
           fi
           flutter pub get --enforce-lockfile
 
+      - name: Ensure SQLite Native Assets
+        run: |
+          mkdir -p "$RUNNER_TEMP/sqlite_cache"
+          echo "Pre-downloading SQLite native library for iOS arm64..."
+          curl -f -L --retry 10 --retry-delay 2 --retry-all-errors \
+            -o "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" \
+            https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.5.2/libsqlite3.arm64.ios.dylib || true
+          
+          EXPECTED_HASH="f1bc69a4304a21e472c15f849c34ae46539483cfa7ce901f54175c6d6cc17991"
+          if [ -s "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" ]; then
+            ACTUAL_HASH=$(shasum -a 256 "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" | awk '{print $1}')
+            echo "Downloaded actual hash: $ACTUAL_HASH"
+            echo "Expected hash:        $EXPECTED_HASH"
+            if [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
+              echo "Hash verified successfully. Starting local HTTP server on port 8089..."
+              python3 -m http.server 8089 --directory "$RUNNER_TEMP/sqlite_cache" &
+              sleep 2
+              find "$PUB_CACHE/hosted/pub.dev" -name "description.dart" -exec sed -i '' \
+                's|https://github.com/simolus3/sqlite3.dart/releases/download/\$RELEASE_TAG/\$FILENAME|http://127.0.0.1:8089/\$FILENAME|g' {} +
+              echo "Successfully patched sqlite3 build hook to use local mirror."
+            fi
+          fi
+
       - name: Configure Code Signing & Keychain
         env:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
@@ -60,7 +83,7 @@ jobs:
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 24)
-          
+
           # Decode certificate and provisioning profile
           echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
           echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
@@ -77,106 +100,259 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN_PATH"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-          # Install provisioning profile (UUID and name)
+          # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/e51cc713-08e6-475e-a107-946e8b0ba29a.mobileprovision
-          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/Setcraft_AppStore_Distribution.mobileprovision
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
           echo "Installed provisioning profiles successfully."
 
-          # Configure Manual Signing for CI Release
-          for pbx in ios/Runner.xcodeproj/project.pbxproj mobile/ios/Runner.xcodeproj/project.pbxproj; do
-            if [ -f "$pbx" ]; then
-              sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$pbx"
-              sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "Apple Distribution"/g' "$pbx"
-              echo "Updated $pbx to Manual Apple Distribution signing."
-            fi
-          done
-
-          for xcconfig in ios/Flutter/Release.xcconfig mobile/ios/Flutter/Release.xcconfig; do
-            if [ -f "$xcconfig" ]; then
-              echo "CODE_SIGN_STYLE = Manual" >> "$xcconfig"
-              echo "CODE_SIGN_IDENTITY = Apple Distribution" >> "$xcconfig"
-              echo "PROVISIONING_PROFILE_SPECIFIER = Setcraft AppStore Distribution" >> "$xcconfig"
-              echo "DEVELOPMENT_TEAM = 7WZXCCWWHM" >> "$xcconfig"
-              echo "Updated $xcconfig."
-            fi
-          done
+          # Force Xcode project to Manual signing with Apple Distribution identity
+          APP_DIR="."
+          if [ -d "mobile/ios" ]; then
+            APP_DIR="mobile"
+          fi
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$APP_DIR/ios/Runner.xcodeproj/project.pbxproj"
+          sed -i '' 's/"iPhone Developer"/"Apple Distribution"/g' "$APP_DIR/ios/Runner.xcodeproj/project.pbxproj"
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$APP_DIR/ios/Runner.xcodeproj/project.pbxproj"
+          
+          # Append configuration overrides to Release.xcconfig
+          xcconfig="$APP_DIR/ios/Flutter/Release.xcconfig"
+          echo "" >> "$xcconfig"
+          echo "CODE_SIGN_STYLE = Manual" >> "$xcconfig"
+          echo "CODE_SIGN_IDENTITY = Apple Distribution" >> "$xcconfig"
+          echo "DEVELOPMENT_TEAM = 7WZXCCWWHM" >> "$xcconfig"
+          echo "PROVISIONING_PROFILE_SPECIFIER = Setcraft AppStore Distribution" >> "$xcconfig"
 
       - name: Generate ExportOptions.plist
         run: |
-          EXPORT_DIR="ios"
-          if [ -d "mobile/ios" ]; then
-            EXPORT_DIR="mobile/ios"
-          fi
-          mkdir -p "$EXPORT_DIR"
-          cat << 'EOF' > "$EXPORT_DIR/ExportOptions.plist"
+          cat <<EOF > $RUNNER_TEMP/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>7WZXCCWWHM</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>signingCertificate</key>
-              <string>Apple Distribution</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>com.setcraft.app</key>
-                  <string>Setcraft AppStore Distribution</string>
-              </dict>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>compileBitcode</key>
-              <false/>
+            <key>destination</key>
+            <string>export</string>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>teamID</key>
+            <string>7WZXCCWWHM</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.setcraft.app</key>
+              <string>Setcraft AppStore Distribution</string>
+            </dict>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>compileBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
           </dict>
           </plist>
           EOF
-          echo "ExportOptions.plist created at $EXPORT_DIR/ExportOptions.plist"
+          cat $RUNNER_TEMP/ExportOptions.plist
 
       - name: Build Signed iOS IPA
         env:
           BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app' }}
         run: |
+          APP_DIR="."
+          if [ -d "mobile/ios" ]; then
+            APP_DIR="mobile"
+          fi
+          cd "$APP_DIR"
+          
+          # Build signed IPA using custom ExportOptions
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'lib/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/deploy-testflight.yml'
+  workflow_dispatch:
+    inputs:
+      backend_url:
+        description: 'Backend Base URL (ngrok / API)'
+        required: false
+        default: 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app'
+
+jobs:
+  deploy-testflight:
+    name: Build & Upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.47.5'
+          cache: true
+
+      - name: Verify Environment
+        run: |
+          flutter --version
+          pod --version
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Install Dependencies
+        run: |
           if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
             cd mobile
           fi
-          echo "Building iOS with backend URL: $BACKEND_URL"
-          for attempt in 1 2 3 4 5; do
-            echo "Checking backend health (attempt $attempt/5)..."
-            if curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
-              -H "ngrok-skip-browser-warning: true" -H "Accept: application/json" \
-              "${BACKEND_URL%/}/health" 2>/dev/null | grep -q '"status":"ok"'; then
-              echo "Backend health check passed!"
-              break
-            fi
-            if [ "$attempt" -eq 5 ]; then
-              echo "Warning: Backend health check did not pass, proceeding with build..."
-            else
-              sleep 3
-            fi
-          done
+          flutter pub get --enforce-lockfile
 
-          BUILD_NUMBER=${{ github.run_number }}
-          echo "Using build number: $BUILD_NUMBER"
+      - name: Ensure SQLite Native Assets
+        run: |
+          mkdir -p "$RUNNER_TEMP/sqlite_cache"
+          echo "Pre-downloading SQLite native library for iOS arm64..."
+          curl -f -L --retry 10 --retry-delay 2 --retry-all-errors \
+            -o "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" \
+            https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.5.2/libsqlite3.arm64.ios.dylib || true
+          
+          EXPECTED_HASH="f1bc69a4304a21e472c15f849c34ae46539483cfa7ce901f54175c6d6cc17991"
+          if [ -s "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" ]; then
+            ACTUAL_HASH=$(shasum -a 256 "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" | awk '{print $1}')
+            echo "Downloaded actual hash: $ACTUAL_HASH"
+            echo "Expected hash:        $EXPECTED_HASH"
+            if [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
+              echo "Hash verified successfully. Starting local HTTP server on port 8089..."
+              python3 -m http.server 8089 --directory "$RUNNER_TEMP/sqlite_cache" &
+              sleep 2
+              find "$PUB_CACHE/hosted/pub.dev" -name "description.dart" -exec sed -i '' \
+                's|https://github.com/simolus3/sqlite3.dart/releases/download/\$RELEASE_TAG/\$FILENAME|http://127.0.0.1:8089/\$FILENAME|g' {} +
+              echo "Successfully patched sqlite3 build hook to use local mirror."
+            fi
+          fi
 
+      - name: Configure Code Signing & Keychain
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 24)
+
+          # Decode certificate and provisioning profile
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import distribution certificate to keychain
+          security import "$CERTIFICATE_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+          # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "Installed provisioning profiles successfully."
+
+          # Force Xcode project to Manual signing with Apple Distribution identity
+          APP_DIR="."
+          if [ -d "mobile/ios" ]; then
+            APP_DIR="mobile"
+          fi
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$APP_DIR/ios/Runner.xcodeproj/project.pbxproj"
+          sed -i '' 's/"iPhone Developer"/"Apple Distribution"/g' "$APP_DIR/ios/Runner.xcodeproj/project.pbxproj"
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$APP_DIR/ios/Runner.xcodeproj/project.pbxproj"
+          
+          # Append configuration overrides to Release.xcconfig
+          xcconfig="$APP_DIR/ios/Flutter/Release.xcconfig"
+          echo "" >> "$xcconfig"
+          echo "CODE_SIGN_STYLE = Manual" >> "$xcconfig"
+          echo "CODE_SIGN_IDENTITY = Apple Distribution" >> "$xcconfig"
+          echo "DEVELOPMENT_TEAM = 7WZXCCWWHM" >> "$xcconfig"
+          echo "PROVISIONING_PROFILE_SPECIFIER = Setcraft AppStore Distribution" >> "$xcconfig"
+
+      - name: Generate ExportOptions.plist
+        run: |
+          cat <<EOF > $RUNNER_TEMP/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>destination</key>
+            <string>export</string>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>teamID</key>
+            <string>7WZXCCWWHM</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.setcraft.app</key>
+              <string>Setcraft AppStore Distribution</string>
+            </dict>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>compileBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+          cat $RUNNER_TEMP/ExportOptions.plist
+
+      - name: Build Signed iOS IPA
+        env:
+          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app' }}
+        run: |
+          APP_DIR="."
+          if [ -d "mobile/ios" ]; then
+            APP_DIR="mobile"
+          fi
+          cd "$APP_DIR"
+          
+          # Build signed IPA using custom ExportOptions
+          BUILD_NUM=${{ github.run_number }}
           flutter build ipa --release \
-            --build-number="$BUILD_NUMBER" \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define=SETCRAFT_API_BASE_URL="$BACKEND_URL" \
-            --dart-define=FITAI_API_BASE_URL="$BACKEND_URL" \
-            --dart-define=REVENUECAT_IOS_KEY="appl_JeWpuFoZFkyUzLKctzvLubqjHYi" \
-            --dart-define=SETCRAFT_APPLE_SIGN_IN=true
+            --build-name="1.0.0" \
+            --build-number="$BUILD_NUM" \
+            --dart-define="BACKEND_BASE_URL=$BACKEND_URL" \
+            --export-options-plist=$RUNNER_TEMP/ExportOptions.plist \
+            -v
 
-          find . -name "*.ipa" -ls
+          # Verify output artifact
+          ls -la build/ios/ipa/*.ipa
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: setcraft-signed-testflight-ipa
-          path: "**/build/ios/ipa/*.ipa"
+          name: Setcraft-Runner-ipa
+          path: '**/build/ios/ipa/*.ipa'
           if-no-files-found: error
           retention-days: 14
 
@@ -186,25 +362,23 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys ~/.private_keys
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
-          cp ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 ~/.private_keys/
+          # Save private key for altool
+          KEY_DIR=~/.appstoreconnect/private_keys
+          mkdir -p "$KEY_DIR"
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_DIR/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          chmod 600 "$KEY_DIR/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
 
-          IPA_PATH=$(find . -name "*.ipa" | head -n 1)
-          if [ -z "$IPA_PATH" ]; then
-            echo "Error: No IPA file found to upload!"
-            exit 1
-          fi
-          echo "Uploading $IPA_PATH to TestFlight..."
+          # Find generated IPA
+          IPA_PATH=$(find . -name "*.ipa" -type f | head -n 1)
+          echo "Found IPA at: $IPA_PATH"
 
+          # Upload via xcrun altool
           xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA_PATH" \
+            -f "$IPA_PATH" \
+            -t ios \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
             --show-progress
-
-          echo "Upload to TestFlight completed successfully!"
 
       - name: Clean Up Keychain
         if: always()
