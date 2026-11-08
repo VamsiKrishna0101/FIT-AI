@@ -53,24 +53,29 @@ jobs:
       - name: Ensure SQLite Native Assets
         run: |
           mkdir -p "$RUNNER_TEMP/sqlite_cache"
-          echo "Pre-downloading SQLite native library for iOS arm64..."
-          curl -f -L --retry 10 --retry-delay 2 --retry-all-errors \
-            -o "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" \
-            https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.5.2/libsqlite3.arm64.ios.dylib || true
+          echo "Copying bundled SQLite native library..."
+          
+          if [ -f "libsqlite3.arm64.ios.dylib" ]; then
+            cp "libsqlite3.arm64.ios.dylib" "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib"
+          elif [ -f "ios/native_assets/libsqlite3.arm64.ios.dylib" ]; then
+            cp "ios/native_assets/libsqlite3.arm64.ios.dylib" "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib"
+          fi
           
           EXPECTED_HASH="f1bc69a4304a21e472c15f849c34ae46539483cfa7ce901f54175c6d6cc17991"
-          if [ -s "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" ]; then
-            ACTUAL_HASH=$(shasum -a 256 "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" | awk '{print $1}')
-            echo "Downloaded actual hash: $ACTUAL_HASH"
-            echo "Expected hash:        $EXPECTED_HASH"
-            if [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
-              echo "Hash verified successfully. Starting local HTTP server on port 8089..."
-              python3 -m http.server 8089 --directory "$RUNNER_TEMP/sqlite_cache" &
-              sleep 2
-              find "$PUB_CACHE/hosted/pub.dev" -name "description.dart" -exec sed -i '' \
-                's|https://github.com/simolus3/sqlite3.dart/releases/download/\$RELEASE_TAG/\$FILENAME|http://127.0.0.1:8089/\$FILENAME|g' {} +
-              echo "Successfully patched sqlite3 build hook to use local mirror."
-            fi
+          ACTUAL_HASH=$(shasum -a 256 "$RUNNER_TEMP/sqlite_cache/libsqlite3.arm64.ios.dylib" | awk '{print $1}')
+          echo "Bundled file hash: $ACTUAL_HASH"
+          echo "Expected hash:     $EXPECTED_HASH"
+          
+          if [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
+            echo "Hash verified successfully. Starting local mirror HTTP server on port 8089..."
+            python3 -m http.server 8089 --directory "$RUNNER_TEMP/sqlite_cache" &
+            sleep 2
+            find "$PUB_CACHE/hosted/pub.dev" -name "description.dart" -exec sed -i '' \
+              's|https://github.com/simolus3/sqlite3.dart/releases/download/\$RELEASE_TAG/\$FILENAME|http://127.0.0.1:8089/\$FILENAME|g' {} +
+            echo "Successfully patched sqlite3 build hook to use local mirror."
+          else
+            echo "Error: Bundled hash mismatch!"
+            exit 1
           fi
 
       - name: Configure Code Signing & Keychain
