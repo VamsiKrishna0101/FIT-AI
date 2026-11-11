@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
     inputs:
       backend_url:
-        description: 'Backend Base URL (ngrok / API)'
+        description: 'Backend Base URL'
         required: false
-        default: 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app'
+        default: 'https://api.setcraft.fit'
 
 jobs:
   deploy-testflight:
@@ -183,7 +183,7 @@ jobs:
 
       - name: Build Signed iOS IPA
         env:
-          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app' }}
+          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://api.setcraft.fit' }}
         run: |
           APP_DIR="."
           if [ -d "mobile/ios" ]; then

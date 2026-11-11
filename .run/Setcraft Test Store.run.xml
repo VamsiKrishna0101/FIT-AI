@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Setcraft Test Store" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
-    <option name="additionalArgs" value="--dart-define=REVENUECAT_USE_TEST_STORE=true --dart-define=SETCRAFT_API_BASE_URL=https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app" />
+    <option name="additionalArgs" value="--dart-define=REVENUECAT_USE_TEST_STORE=true --dart-define=SETCRAFT_API_BASE_URL=https://api.setcraft.fit" />
     <method />
   </configuration>
 </component>

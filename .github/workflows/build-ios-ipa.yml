@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       backend_url:
-        description: 'Backend Base URL (ngrok)'
+        description: 'Backend Base URL'
         required: false
-        default: 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app'
+        default: 'https://api.setcraft.fit'
 
 jobs:
   build-ipa:
@@ -48,7 +48,7 @@ jobs:
 
       - name: Build iOS Application (Release, No Codesign)
         env:
-          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://27dc-2401-4900-889d-5b4b-dd79-e94c-4489-b65b.ngrok-free.app' }}
+          BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://api.setcraft.fit' }}
         run: |
           if [ -d "mobile" ] && [ -f "mobile/pubspec.yaml" ]; then
             cd mobile
