@@ -37,3 +37,19 @@
    dependency).
 
 Live heart rate needs real Apple Watch hardware; simulators show 0 BPM.
+
+## TestFlight (GitHub Actions) signing
+
+`deploy-testflight.yml` signs manually, so the watch app needs its own profile:
+
+1. developer.apple.com → Identifiers → **+** App ID `com.setcraft.app.watchkitapp`,
+   enable **HealthKit**.
+2. Profiles → **+** → App Store Connect → pick that App ID and the Apple
+   Distribution certificate → download the `.mobileprovision`.
+3. Base64 it and add it as the repository secret
+   `WATCH_PROVISIONING_PROFILE_BASE64`
+   (macOS/Linux: `base64 -i file.mobileprovision`; Windows PowerShell:
+   `[Convert]::ToBase64String([IO.File]::ReadAllBytes("file.mobileprovision"))`).
+
+`GoogleService-Info.plist` is gitignored and optional: the "Thin Binary" phase
+copies it into the app only when the file exists.
