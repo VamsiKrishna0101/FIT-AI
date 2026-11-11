@@ -22,6 +22,7 @@ import '../components/onboarding_motion.dart';
 import 'training_preferences_view.dart';
 import 'equipment_selection_view.dart';
 import '../../profile/views/ai_sharing_consent.dart';
+import '../../profile/views/support_views.dart';
 
 class StarterOnboardingGate extends StatefulWidget {
   final Widget child;
@@ -147,13 +148,20 @@ class _StarterPlanViewState extends State<StarterPlanView>
   bool get _movementIssue =>
       _failed && _failureCode == 'STARTER_REVIEW_REQUIRED';
   bool get _canRetry => !_failed || _run?['canRetry'] != false;
+  // Only an access failure leads to membership; other failures are not billing.
+  bool get _membershipIssue =>
+      _failed &&
+      const {'PREMIUM_REQUIRED', 'SUBSCRIPTION_REQUIRED'}
+          .contains(_failureCode);
   String get _failureMessage => _equipmentIssue
       ? 'We could not match a complete week to your equipment. Check what you have available.'
       : _movementIssue
           ? 'We could not match exercises to your movement notes. Review them if anything has changed.'
           : _canRetry
               ? 'Your answers are saved. You do not need to fill them in again.'
-              : 'Your answers are saved. Planning is unavailable right now.';
+              : _membershipIssue
+                  ? 'Your answers are saved. Check your membership to continue.'
+                  : 'Your answers are saved. Planning is unavailable right now. Our team can help.';
   Map<String, dynamic>? get _preview =>
       _ready && (_run!['plan'] as Map)['preview'] is Map
           ? Map<String, dynamic>.from((_run!['plan'] as Map)['preview'] as Map)
@@ -253,7 +261,13 @@ class _StarterPlanViewState extends State<StarterPlanView>
       if (retry || widget.initialRun == null) {
         if (!mounted) return;
         final approved = await widget.requestAiConsent(context);
-        if (!approved || !await _sameOwner()) return;
+        if (!await _sameOwner()) return;
+        if (!approved) {
+          // Declining must not leave an endless loading screen.
+          setState(() => _error =
+              'Your plan is created with AI planning. Your answers are saved, so you can agree whenever you are ready.');
+          return;
+        }
       }
       var run = !retry && widget.initialRun != null
           ? widget.initialRun!
@@ -658,7 +672,11 @@ class _StarterPlanViewState extends State<StarterPlanView>
                         pill: true,
                         solid: true,
                         showArrow: false,
-                        title: _canRetry ? 'Try again' : 'View membership',
+                        title: _canRetry
+                            ? 'Try again'
+                            : _membershipIssue
+                                ? 'View membership'
+                                : 'Help & Support',
                         loadingTitle: _refreshingPlan
                             ? 'Updating your plan…'
                             : 'Checking your plan…',
@@ -669,8 +687,10 @@ class _StarterPlanViewState extends State<StarterPlanView>
                                 ? () => _begin(retry: true)
                                 : () => Navigator.of(context).push(
                                     AppPageRoute<void>(
-                                        page: SubscriptionView(
-                                            service: _subscription)))),
+                                        page: _membershipIssue
+                                            ? SubscriptionView(
+                                                service: _subscription)
+                                            : const HelpSupportView()))),
                 ])),
           ])),
         ));
