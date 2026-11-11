@@ -8,6 +8,8 @@ struct WatchWorkoutSnapshot: Codable {
     let activeItemIndex: Int
     let items: [WatchExerciseItem]
     let rest: WatchRestPayload?
+    let hapticRestAlerts: Bool?
+    let heartRateEnabled: Bool?
 }
 
 struct WatchExerciseItem: Codable, Identifiable {

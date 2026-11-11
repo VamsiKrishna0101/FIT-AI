@@ -173,6 +173,20 @@ Future<void> settle(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// The next set cannot be logged while resting; skipping the rest unlocks it.
+Future<void> skipRestAfterGate(WidgetTester tester) async {
+  FilledButton primary() => tester.widget<FilledButton>(
+      find.byKey(const ValueKey('workout-primary-action')));
+  expect(find.byKey(const ValueKey('minimized-rest-timer')), findsOneWidget);
+  expect(primary().onPressed, isNull,
+      reason: 'Log set stays disabled during rest');
+  await tester.tap(find.descendant(
+      of: find.byKey(const ValueKey('minimized-rest-timer')),
+      matching: find.text('Skip rest')));
+  await settle(tester);
+  expect(primary().onPressed, isNotNull);
+}
+
 void main() {
   late _Adapter adapter;
   var owner = 0;
@@ -240,6 +254,7 @@ void main() {
       expect(
           adapter.writes.where((request) => request.path.contains('/complete')),
           isEmpty);
+      if (number < 3) await skipRestAfterGate(tester);
     }
     expect(adapter.writes.where((request) => request.method == 'PUT'),
         hasLength(3));
@@ -420,6 +435,7 @@ void main() {
     await settle(tester);
     expect(adapter.writes.single.data['weight'], isNull);
     for (var number = 2; number <= 3; number++) {
+      await skipRestAfterGate(tester);
       final field = find.byKey(ValueKey('set-reps-$number'));
       await tester.scrollUntilVisible(field, 200,
           scrollable: find

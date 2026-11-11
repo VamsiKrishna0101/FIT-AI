@@ -12,9 +12,12 @@ import '../../../core/theme/fitness_theme.dart';
 import '../repositories/settings_account_repository.dart';
 import '../repositories/support_repository.dart';
 import '../services/settings_device.dart';
+import '../legal/legal_content.dart';
 import 'ai_sharing_consent.dart';
+import 'legal_document_view.dart';
 import 'settings_components.dart';
 import 'settings_editor_components.dart';
+import '../../rating/views/rate_app_modal.dart';
 
 Widget accountAction(String title, VoidCallback? onPressed,
         {bool busy = false}) =>
@@ -169,19 +172,29 @@ class _HelpSupportViewState extends State<HelpSupportView> {
               SettingsNotice('Manage billing in Settings → Setcraft Premium.'),
             ]),
         SettingsGroup(dividerIndent: 16, children: [
-          if (_config['supportEmail'] is String)
-            SettingsRow(
-                title: 'Email support',
-                subtitle: _config['supportEmail'] as String,
-                onTap: () => _link('mailto:${_config['supportEmail']}')),
-          if (_config['termsUrl'] is String)
-            SettingsRow(
-                title: 'Terms of use',
-                onTap: () => _link(_config['termsUrl'] as String)),
-          if (_config['privacyPolicyUrl'] is String)
-            SettingsRow(
-                title: 'Privacy policy',
-                onTap: () => _link(_config['privacyPolicyUrl'] as String)),
+          SettingsRow(
+              title: 'Rate Setcraft',
+              subtitle: 'Share your feedback or rate on the store',
+              onTap: () => RateAppModal.show(context)),
+          SettingsRow(
+              title: 'Email support',
+              subtitle: (_config['supportEmail'] as String?) ??
+                  'support@setcraft.fit',
+              onTap: () => _link(
+                  'mailto:${(_config['supportEmail'] as String?) ?? 'support@setcraft.fit'}')),
+          SettingsRow(
+              title: 'Terms of Use',
+              onTap: () => Navigator.push(
+                  context,
+                  AppPageRoute<void>(
+                      page: const LegalDocumentView(document: termsOfUse)))),
+          SettingsRow(
+              title: 'Privacy Policy',
+              onTap: () => Navigator.push(
+                  context,
+                  AppPageRoute<void>(
+                      page:
+                          const LegalDocumentView(document: privacyPolicy)))),
           SettingsRow(
               title: 'Setcraft',
               value: _info['appVersion'] is String

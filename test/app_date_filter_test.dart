@@ -125,7 +125,7 @@ void main() {
       'Every calendar menu opens below its field with a working scroll cue',
       (tester) async {
     await open(tester, host((_) {}));
-    for (final suffix in ['filter', 'month-picker', 'year-picker']) {
+    for (final suffix in ['month-picker', 'year-picker']) {
       final field = find.byKey(ValueKey('app-calendar-$suffix'));
       await tester.ensureVisible(field);
       await tester.pumpAndSettle();
@@ -265,5 +265,75 @@ void main() {
       }
       await tester.pumpWidget(const SizedBox());
     }
+  });
+
+  testWidgets(
+      'Option A quick preset pills allow 1-tap filtering and visual feedback',
+      (tester) async {
+    AppCalendarSelection? result;
+    await open(tester, host((value) => result = value));
+
+    expect(find.byKey(const ValueKey('app-calendar-pill-preset-today')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('app-calendar-pill-preset-this-week')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('app-calendar-pill-preset-last-week')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('app-calendar-pill-preset-this-month')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('app-calendar-pill-preset-all')),
+        findsOneWidget);
+
+    final todayPill = tester.widget<Semantics>(find
+        .ancestor(
+            of: find.byKey(const ValueKey('app-calendar-pill-preset-today')),
+            matching: find.byType(Semantics))
+        .first);
+    expect(todayPill.properties.selected, isTrue);
+
+    final lastWeekFinder =
+        find.byKey(const ValueKey('app-calendar-pill-preset-last-week'));
+    await tester.ensureVisible(lastWeekFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(lastWeekFinder);
+    await tester.pumpAndSettle();
+
+    final lastWeekPill = tester.widget<Semantics>(find
+        .ancestor(
+            of: find.byKey(const ValueKey('app-calendar-pill-preset-last-week')),
+            matching: find.byType(Semantics))
+        .first);
+    expect(lastWeekPill.properties.selected, isTrue);
+
+    await tap(tester, 'app-calendar-apply');
+    expect(result!.start, DateTime(2026, 10, 26));
+    expect(result!.end, DateTime(2026, 11, 1));
+
+    await tester.tap(find.byType(AppDateFilterButton));
+    await tester.pumpAndSettle();
+
+    final thisMonthFinder =
+        find.byKey(const ValueKey('app-calendar-pill-preset-this-month'));
+    await tester.ensureVisible(thisMonthFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(thisMonthFinder);
+    await tester.pumpAndSettle();
+
+    final thisMonthPill = tester.widget<Semantics>(find
+        .ancestor(
+            of: find
+                .byKey(const ValueKey('app-calendar-pill-preset-this-month')),
+            matching: find.byType(Semantics))
+        .first);
+    expect(thisMonthPill.properties.selected, isTrue);
+
+    await tap(tester, 'app-calendar-day-2026-11-02');
+    final thisMonthAfterDayTap = tester.widget<Semantics>(find
+        .ancestor(
+            of: find
+                .byKey(const ValueKey('app-calendar-pill-preset-this-month')),
+            matching: find.byType(Semantics))
+        .first);
+    expect(thisMonthAfterDayTap.properties.selected, isFalse);
   });
 }

@@ -8,12 +8,13 @@ import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/about_you_controls.dart';
 import '../components/biometric_ruler_card.dart';
 import '../components/onboarding_scaffold.dart';
-import '../components/training_hero.dart';
 import '../components/onboarding_focus_body.dart';
 import '../models/experience_level.dart';
 import '../viewmodels/about_you_viewmodel.dart';
 import 'schedule_location_view.dart';
 import '../../../core/theme/fitness_theme.dart';
+import '../components/onboarding_coach.dart';
+import '../components/onboarding_motion.dart';
 
 // MARK: - Combined Screen 02 & 03: About You & Your Experience (Apple iOS Premium)
 class AboutYouExperienceView extends StatefulWidget {
@@ -24,7 +25,7 @@ class AboutYouExperienceView extends StatefulWidget {
       {super.key,
       this.controller,
       this.onContinue,
-      this.collectMeasurements = false});
+      this.collectMeasurements = true});
 
   @override
   State<AboutYouExperienceView> createState() => _AboutYouExperienceViewState();
@@ -118,7 +119,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
   Widget build(BuildContext context) {
     final language = _viewModel.selectedLanguage;
     final titles = [
-      'Let’s make it yours.',
+      'Let’s make it yours',
       'A little about you',
       'Your starting point',
       language.experienceSectionTitle,
@@ -126,9 +127,9 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
     ];
     final subtitles = [
       language.namePlaceholder,
-      'This helps personalize your experience.',
-      'Confirm your age, height, weight and target.',
-      'Choose the description that feels most like you.',
+      'This helps personalize your experience',
+      'Confirm your age, height, weight and target',
+      language.experienceSectionSubtitle,
       '',
     ];
     return OnboardingScaffold(
@@ -179,7 +180,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
               onSubmitted: (_) {
                 if (_validAge) _onContinue();
               }),
-        if (_part == 0)
+        if (_part == 0) ...[
           LiquidNameInput(
               controller: _nameController,
               label: language.nameLabel,
@@ -187,10 +188,18 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
               onChanged: (value) {
                 final valid = _viewModel.name.trim().length >= 2;
                 _viewModel.setName(value);
+                OnboardingCoach.typedName(value);
                 if (valid != (_viewModel.name.trim().length >= 2)) {
                   setState(() {});
                 }
               }),
+          const SizedBox(height: 18),
+          // Each letter of the name pops in as a little jelly tile.
+          ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _nameController,
+              builder: (context, value, _) =>
+                  NameLetterTiles(name: value.text)),
+        ],
         if (_part == 1) ...[
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             for (final gender in ['MALE', 'FEMALE'])
@@ -222,21 +231,6 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
                     subtitle: language.experienceSubtitle(level),
                     selected: _viewModel.selectedExperience == level,
                     onTap: () => _viewModel.selectExperience(level))),
-        if (_part == 3) ...[
-          const SizedBox(height: 8),
-          OnboardingContextNote(
-              title: 'The right starting point matters.',
-              detail: switch (_viewModel.selectedExperience) {
-                ExperienceLevel.beginner =>
-                  'Your experience helps us choose approachable exercises and a manageable starting workload.',
-                ExperienceLevel.intermediate =>
-                  'Your plan can build on movements you know, with a clear structure for progressing.',
-                ExperienceLevel.advanced =>
-                  'Your experience helps guide exercise selection, workload and progression.',
-                null =>
-                  'Choose your experience so your plan starts at the right level for you.',
-              }),
-        ],
       ],
     );
   }
@@ -400,7 +394,7 @@ class _AboutYouExperienceViewState extends State<AboutYouExperienceView> {
           key: ValueKey('select-biometric-$metric'),
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            HapticFeedback.selectionClick();
+            OnboardingCoach.select();
             setState(() => _selectedMetric = metric);
           },
           child: Padding(

@@ -4,18 +4,17 @@ import 'package:flutter/material.dart';
 import '../../../core/cache/cache_scope.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
+import '../../auth/data/social_sign_in.dart';
 import '../../auth/views/auth_view.dart';
-import '../../health/views/health_connection_view.dart';
-import '../../subscription/subscription_service.dart';
+import '../legal/legal_content.dart';
 import '../repositories/settings_repository.dart';
 import '../repositories/privacy_repository.dart';
 import '../repositories/settings_account_repository.dart';
 import '../repositories/support_repository.dart';
 import '../services/settings_device.dart';
 import 'ai_sharing_consent.dart';
-import 'mcp_connections_view.dart';
+import 'legal_document_view.dart';
 import 'settings_components.dart';
-import 'settings_editor_components.dart';
 import 'support_views.dart';
 
 class PrivacySettingsView extends StatefulWidget {
@@ -23,11 +22,13 @@ class PrivacySettingsView extends StatefulWidget {
   final PrivacyRepository? privacyRepository;
   // Kept for existing callers; privacy no longer fetches or manages body photos.
   final Object? bodyRepository;
+  final SocialSignIn? socialSignIn;
   const PrivacySettingsView(
       {super.key,
       this.repository,
       this.privacyRepository,
-      this.bodyRepository});
+      this.bodyRepository,
+      this.socialSignIn});
   @override
   State<PrivacySettingsView> createState() => _PrivacySettingsViewState();
 }
@@ -112,6 +113,8 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
         await SettingsDevice.shareExport(data);
       });
   Future<void> _link(String value) => _run(() => openSettingsLink(value));
+  void _open(LegalDocument document) => Navigator.push(context,
+      AppPageRoute<void>(page: LegalDocumentView(document: document)));
   Future<void> _deleteAccount() async {
     final store = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
         ? 'the App Store'
@@ -124,6 +127,14 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
         destructive: true);
     if (!confirmed || !mounted) return;
     await _run(() async {
+      // Apple requires revoking Sign in with Apple tokens on deletion.
+      if (!kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.iOS &&
+          await _privacy.usesAppleSignIn() &&
+          !await (widget.socialSignIn ?? SocialSignIn()).revokeApple()) {
+        throw StateError(
+            'Confirm with Apple to finish deleting your account.');
+      }
       await _repository.deleteAccount(expectedOwner: _owner!);
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
@@ -168,85 +179,40 @@ class _PrivacySettingsViewState extends State<PrivacySettingsView> {
         if (!_loading && _config == null)
           TextButton(
               onPressed: _load, child: const FitnessText('Retry loading')),
-        SettingsGroup(title: 'Privacy', dividerIndent: 16, children: [
+        SettingsGroup(dividerIndent: 16, children: [
           SettingsRow(
-              title: 'Privacy policy',
-              subtitle: _config?['privacyPolicyUpdated'] as String? ??
-                  (_config?['privacyPolicyUrl'] == null
-                      ? 'Not published yet'
-                      : null),
-              onTap: _busy || _config?['privacyPolicyUrl'] == null
-                  ? null
-                  : () => _link(_config!['privacyPolicyUrl'] as String)),
-          if (_config?['termsUrl'] is String)
-            SettingsRow(
-                title: 'Terms of use',
-                onTap:
-                    _busy ? null : () => _link(_config!['termsUrl'] as String)),
+              title: 'Privacy Policy',
+              onTap: _busy ? null : () => _open(privacyPolicy)),
+          SettingsRow(
+              title: 'Terms of Use',
+              onTap: _busy ? null : () => _open(termsOfUse)),
         ]),
         if (_consent != null)
-          SettingsGroup(title: 'AI sharing', dividerIndent: 16, children: [
+          SettingsGroup(dividerIndent: 16, children: [
             SettingsRow(
-                title: 'Personal plans',
-                subtitle:
-                    'Provider: ${_config?['aiProvider'] ?? 'AI sharing provider'}',
+                title: 'AI plan generation',
+                subtitle: 'Shares goals and logs with '
+                    '${(_config?['aiProvider'] as String?) ?? 'our AI provider'}',
                 trailingWidget: CupertinoSwitch(
                     value: _aiAllowed,
                     activeTrackColor: Colors.white,
                     thumbColor: _aiAllowed ? Colors.black : Colors.white,
                     onChanged: _busy ? null : _aiSharing)),
           ]),
-        const SettingsDisclosure(
-            title: 'Data use',
-            summary: 'What’s stored and shared',
-            children: [
-              SettingsNotice(
-                  'Your profile and logs keep plans and progress in sync.'),
-              SettingsNotice(
-                  'Manage access in your health app. Health imports and photos are excluded from AI plans.'),
-              SettingsNotice(
-                  'AI planning shares only the data listed in the consent notice, with your permission.'),
-              SettingsNotice(
-                  'Support can read the messages and screenshots you send.'),
-              SettingsNotice(
-                  'See the privacy policy for retention and your rights. JSON exports include records, not image files.'),
-            ]),
-        SettingsGroup(title: 'Connections', dividerIndent: 16, children: [
-          SettingsRow(
-              title: 'Health connection',
-              subtitle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-                  ? 'Apple Health'
-                  : 'Health Connect',
-              onTap: _busy
-                  ? null
-                  : () => Navigator.push(context,
-                      AppPageRoute<void>(page: const HealthConnectionView()))),
-          SettingsRow(
-              title: 'MCP',
-              onTap: _busy
-                  ? null
-                  : () => Navigator.push(context,
-                      AppPageRoute<void>(page: const McpConnectionsView()))),
-        ]),
-        SettingsGroup(title: 'Your data', dividerIndent: 16, children: [
+        SettingsGroup(dividerIndent: 16, children: [
           SettingsRow(
               title: 'Export my data',
-              value: 'JSON',
               onTap: _busy || _owner == null ? null : _export),
           SettingsRow(
               title: 'Privacy question', onTap: _busy ? null : _privacyTicket),
           if (_config?['privacyEmail'] is String)
             SettingsRow(
-                title: 'Privacy contact',
-                subtitle: _config!['privacyEmail'] as String,
+                title: 'Contact privacy team',
                 onTap: _busy
                     ? null
                     : () => _link('mailto:${_config!['privacyEmail']}')),
-          SettingsRow(
-              title: 'Manage subscription',
-              onTap: _busy || _owner == null
-                  ? null
-                  : () => _run(SubscriptionService.shared.manage)),
+        ]),
+        SettingsGroup(dividerIndent: 16, children: [
           SettingsRow(
               title: 'Delete account',
               destructive: true,

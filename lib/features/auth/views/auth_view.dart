@@ -407,39 +407,40 @@ class _AuthViewState extends State<AuthView> {
                                                       color:
                                                           Color(0xFF292929))),
                                             ])),
-                                        Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                  child: _ProviderButton(
-                                                      key: const ValueKey(
-                                                          'auth-apple'),
-                                                      title: copy.continueApple,
-                                                      apple: true,
-                                                      configured: apple,
-                                                      onPressed: _isSubmitting
-                                                          ? null
-                                                          : () =>
-                                                              _continueWithProvider(
-                                                                  SocialProvider
-                                                                      .apple))),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                  child: _ProviderButton(
-                                                      key: const ValueKey(
-                                                          'auth-google'),
-                                                      title: copy
-                                                          .continueGoogle,
-                                                      apple: false,
-                                                      configured: google,
-                                                      onPressed: _isSubmitting
-                                                          ? null
-                                                          : () =>
-                                                              _continueWithProvider(
-                                                                  SocialProvider
-                                                                      .google))),
-                                            ]),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            if (apple)
+                                              _ProviderButton(
+                                                  key: const ValueKey(
+                                                      'auth-apple'),
+                                                  title: copy.continueApple,
+                                                  apple: true,
+                                                  configured: apple,
+                                                  onPressed: _isSubmitting
+                                                      ? null
+                                                      : () =>
+                                                          _continueWithProvider(
+                                                              SocialProvider
+                                                                  .apple)),
+                                            if (apple && google)
+                                              const SizedBox(height: 12),
+                                            if (google)
+                                              _ProviderButton(
+                                                  key: const ValueKey(
+                                                      'auth-google'),
+                                                  title: copy.continueGoogle,
+                                                  apple: false,
+                                                  configured: google,
+                                                  onPressed: _isSubmitting
+                                                      ? null
+                                                      : () =>
+                                                          _continueWithProvider(
+                                                              SocialProvider
+                                                                  .google)),
+                                          ],
+                                        ),
                                         if (!apple && !google)
                                           const Padding(
                                               padding: EdgeInsets.only(top: 12),
@@ -552,7 +553,7 @@ class _ProviderButton extends StatelessWidget {
                     height: 19,
                     cacheWidth: 57,
                     excludeFromSemantics: true),
-              Text(apple ? 'Apple' : 'Google',
+              Text(title,
                   style: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w500)),
             ]),

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import WatchKit
 import WatchConnectivity
 import HealthKit
 
@@ -16,6 +17,9 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
     @Published var activeCalories: Double = 0
     @Published var elapsedSeconds: Int = 0
     @Published var isConnectedToPhone: Bool = false
+    /// Settings chosen on the iPhone (Profile → Apple Watch).
+    @Published var hapticRestAlerts: Bool = true
+    @Published var heartRateEnabled: Bool = true
     
     // MARK: - Private Properties
     private let healthStore = HKHealthStore()
@@ -23,6 +27,9 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
     private var workoutSession: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var timer: Timer?
+    /// True while authorization/session creation is in flight, so repeated
+    /// snapshots cannot start a second HKWorkoutSession.
+    private var isStartingWorkout = false
     
     override init() {
         super.init()
@@ -36,7 +43,8 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
     // MARK: - Workout Lifecycle
     
     func startHealthKitWorkout() {
-        guard HKHealthStore.isHealthDataAvailable(), workoutSession == nil else { return }
+        guard HKHealthStore.isHealthDataAvailable(), workoutSession == nil, !isStartingWorkout else { return }
+        isStartingWorkout = true
         
         let typesToShare: Set = [
             HKQuantityType.workoutType()
@@ -47,7 +55,11 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
         ]
         
         healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead) { [weak self] success, _ in
-            guard success, let self = self else { return }
+            guard let self = self else { return }
+            guard success else {
+                DispatchQueue.main.async { self.isStartingWorkout = false }
+                return
+            }
             
             let configuration = HKWorkoutConfiguration()
             configuration.activityType = .traditionalStrengthTraining
@@ -60,23 +72,36 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
                 self.workoutSession?.delegate = self
                 self.builder?.delegate = self
                 
-                self.builder?.dataSource = HKLiveWorkoutDataSource(healthStore: self.healthStore, workoutConfiguration: configuration)
+                let dataSource = HKLiveWorkoutDataSource(healthStore: self.healthStore, workoutConfiguration: configuration)
+                if !self.heartRateEnabled, let hr = HKQuantityType.quantityType(forIdentifier: .heartRate) {
+                    dataSource.disableCollection(for: hr)
+                }
+                self.builder?.dataSource = dataSource
                 
                 let startDate = Date()
                 self.workoutSession?.startActivity(with: startDate)
                 self.builder?.beginCollection(withStart: startDate) { _, _ in }
                 
                 DispatchQueue.main.async {
+                    self.isStartingWorkout = false
                     self.isSessionActive = true
                     self.startTimer()
                 }
             } catch {
                 print("Failed to start HealthKit workout session: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.workoutSession = nil
+                    self.builder = nil
+                    self.isStartingWorkout = false
+                }
             }
         }
     }
     
     func endHealthKitWorkout() {
+        timer?.invalidate()
+        timer = nil
+        guard workoutSession != nil else { return }
         workoutSession?.end()
         builder?.endCollection(withEnd: Date()) { [weak self] success, _ in
             self?.builder?.finishWorkout { _, _ in
@@ -154,6 +179,7 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
     }
     
     private func broadcastBiometricsToPhone() {
+        guard heartRateEnabled, let session = session, session.isReachable else { return }
         let payload: [String: Any] = [
             "action": "BIOMETRIC_UPDATE",
             "heartRate": Int(heartRate),
@@ -166,6 +192,8 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
     
     private func sendToPhone(_ payload: [String: Any]) {
         guard let session = session, session.activationState == .activated else { return }
+        var payload = payload
+        if let sessionId = snapshot?.sessionId { payload["sessionId"] = sessionId }
         if session.isReachable {
             session.sendMessage(payload, replyHandler: nil, errorHandler: nil)
         } else {
@@ -212,11 +240,21 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
             }
         }
         
+        if payload.isEmpty {
+            // Phone cleared the session while the watch was not reachable.
+            self.snapshot = nil
+            self.rest = nil
+            self.endHealthKitWorkout()
+            return
+        }
+
         if let data = try? JSONSerialization.data(withJSONObject: payload),
            let snapshot = try? JSONDecoder().decode(WatchWorkoutSnapshot.self, from: data) {
             self.snapshot = snapshot
             self.activeItemIndex = snapshot.activeItemIndex
             self.rest = snapshot.rest
+            self.hapticRestAlerts = snapshot.hapticRestAlerts ?? true
+            self.heartRateEnabled = snapshot.heartRateEnabled ?? true
             
             // Auto start healthkit tracking if not running
             if !self.isSessionActive {

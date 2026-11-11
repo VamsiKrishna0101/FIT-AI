@@ -51,7 +51,7 @@ class _DelayedPlans extends WeeklyPlanRepository {
   final second = week('second', '2026-10-05');
 
   @override
-  Future<Map<String, dynamic>> availability() {
+  Future<Map<String, dynamic>> availability({bool refresh = false}) {
     availabilityStarted = true;
     return available.future;
   }

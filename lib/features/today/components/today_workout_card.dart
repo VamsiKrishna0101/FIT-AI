@@ -104,7 +104,8 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
 
     final isCompleted = w?.status == 'COMPLETED';
     final isInProgress = w?.status == 'IN_PROGRESS';
-    final hasActiveSession = w != null && w.status != 'REST_DAY';
+    final isRestDay = w?.status == 'REST_DAY';
+    final hasActiveSession = w != null && !isRestDay;
     final doneCount = items.where((i) => !i.isPending).length;
 
     final String statusLabel = isCompleted
@@ -112,6 +113,8 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
         : (isInProgress
             ? 'IN PROGRESS'
             : (hasActiveSession ? 'UP NEXT' : 'REST DAY'));
+
+    final displayTitle = isRestDay ? 'Rest & Recovery' : title;
 
     return LiquidGlassBox(
       borderRadius: 26,
@@ -127,13 +130,15 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
                 height: 6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: isRestDay
+                      ? const Color(0xFFD6C7F8)
+                      : Colors.white.withValues(alpha: 0.85),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: FitnessText(
-                  'TODAY\'S STRAIN TARGET',
+                  isRestDay ? 'TODAY\'S RECOVERY' : 'TODAY\'S STRAIN TARGET',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -164,7 +169,7 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
 
           // ── Title & Meta ──────────────────────────────────────────────
           Text(
-            title,
+            displayTitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -175,184 +180,250 @@ class _TodayWorkoutCardState extends State<TodayWorkoutCard> {
               color: Colors.white,
             ),
           ),
-          if (metaParts.isNotEmpty || avgRpe != null) ...[
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (var i = 0; i < metaParts.length; i++) ...[
-                  if (i > 0) const _MetaDot(),
-                  Text(
-                    metaParts[i],
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.0,
-                      color: Colors.white.withValues(alpha: 0.55),
-                    ),
-                  ),
-                ],
-                if (avgRpe != null) ...[
-                  if (metaParts.isNotEmpty) const _MetaDot(),
-                  Text(
-                    '${avgRpe.toStringAsFixed(1)} RPE',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                      color: Color(0xFF5AC8FA),
-                    ),
-                  ),
-                ],
-              ],
+          if (isRestDay) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Your plan has no workout scheduled today. Take time to recharge and rebuild.',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: Colors.white.withValues(alpha: 0.65),
+              ),
             ),
-          ],
-          if (items.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _PlanProgress(done: doneCount, total: items.length),
-          ],
-          const SizedBox(height: 14),
-
-          // ── Up-Next Exercise Preview ──────────────────────────────────
-          if (activeItem != null)
-            GestureDetector(
-              onTap: () => _openExerciseDetail(activeItem),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.16),
-                      Colors.white.withValues(alpha: 0.04),
-                    ],
-                  ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 0.8,
                 ),
-                padding: const EdgeInsets.all(0.8),
-                child: FitVideoSurface(
-                  url: activeItem.exercise.url,
-                  fit: BoxFit.contain,
-                  aspectRatio: activeItem.exercise.demoAspectRatio,
-                  neutralBackground: true,
-                  backgroundColor: Colors.white,
-                  borderRadius: BorderRadius.circular(19),
-                  overlays: [
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.15),
-                            Colors.black.withValues(alpha: 0.85),
-                          ],
-                          stops: const [0.35, 0.65, 1.0],
-                        ),
-                      ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFE2DCF1).withValues(alpha: 0.2),
                     ),
-                    // Primary focus glass chip
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: LiquidGlassPill(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FitnessText(
-                              'PRIMARY FOCUS',
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.0,
-                                color: Colors.white.withValues(alpha: 0.55),
-                              ),
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              activeItem.exercise.bodyPart.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    child: const Icon(
+                      CupertinoIcons.moon_fill,
+                      size: 18,
+                      color: Color(0xFFD6C7F8),
                     ),
-                    Positioned(
-                      left: 14,
-                      right: 14,
-                      bottom: 12,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  activeItem.exercise.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: -0.2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${activeItem.targetSets} Sets × ${activeItem.targetReps} Reps • ${activeItem.targetWeight > 0 ? '${activeItem.targetWeight} kg' : 'Bodyweight'}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white.withValues(alpha: 0.70),
-                                  ),
-                                ),
-                              ],
-                            ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Muscle Repair & Growth',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
-                          const SizedBox(width: 10),
-                          const LiquidOrbIcon(
-                            icon: CupertinoIcons.arrow_right,
-                            size: 38,
-                            iconSize: 15,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Light mobility, proper hydration, and sleep fuel your gains.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ] else ...[
+            if (metaParts.isNotEmpty || avgRpe != null) ...[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (var i = 0; i < metaParts.length; i++) ...[
+                    if (i > 0) const _MetaDot(),
+                    Text(
+                      metaParts[i],
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                        color: Colors.white.withValues(alpha: 0.55),
                       ),
                     ),
                   ],
+                  if (avgRpe != null) ...[
+                    if (metaParts.isNotEmpty) const _MetaDot(),
+                    Text(
+                      '${avgRpe.toStringAsFixed(1)} RPE',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        color: Color(0xFF5AC8FA),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+            if (items.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _PlanProgress(done: doneCount, total: items.length),
+            ],
+            const SizedBox(height: 14),
+
+            // ── Up-Next Exercise Preview ──────────────────────────────────
+            if (activeItem != null)
+              GestureDetector(
+                onTap: () => _openExerciseDetail(activeItem),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.16),
+                        Colors.white.withValues(alpha: 0.04),
+                      ],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(0.8),
+                  child: FitVideoSurface(
+                    url: activeItem.exercise.url,
+                    fit: BoxFit.contain,
+                    aspectRatio: activeItem.exercise.demoAspectRatio,
+                    neutralBackground: true,
+                    backgroundColor: Colors.white,
+                    borderRadius: BorderRadius.circular(19),
+                    overlays: [
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.15),
+                              Colors.black.withValues(alpha: 0.85),
+                            ],
+                            stops: const [0.35, 0.65, 1.0],
+                          ),
+                        ),
+                      ),
+                      // Primary focus glass chip
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        child: LiquidGlassPill(
+                          borderRadius: 12,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              FitnessText(
+                                'PRIMARY FOCUS',
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.0,
+                                  color: Colors.white.withValues(alpha: 0.55),
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                activeItem.exercise.bodyPart.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 14,
+                        right: 14,
+                        bottom: 12,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    activeItem.exercise.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${activeItem.targetSets} Sets × ${activeItem.targetReps} Reps • ${activeItem.targetWeight > 0 ? '${activeItem.targetWeight} kg' : 'Bodyweight'}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white.withValues(alpha: 0.70),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const LiquidOrbIcon(
+                              icon: CupertinoIcons.arrow_right,
+                              size: 38,
+                              iconSize: 15,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          if (activeItem != null) const SizedBox(height: 14),
+            if (activeItem != null) const SizedBox(height: 14),
+          ],
 
           // ── View Full Plan (single full-width action) ─────────────────
           LiquidGlassButton(
             onTap: _openFullPlan,
             height: 54,
             borderRadius: 27,
-            prominent: true,
+            prominent: !isRestDay,
             padding: const EdgeInsets.only(left: 22, right: 7),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: FitnessText(
-                    'VIEW FULL PLAN',
+                    isRestDay ? 'VIEW TRAINING SCHEDULE' : 'VIEW FULL PLAN',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.6,

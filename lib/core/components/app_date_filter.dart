@@ -372,6 +372,13 @@ class _AppCalendarState extends State<AppCalendar> {
       });
 
   void _filter(String value) => setState(() {
+        if (value == 'preset-all' || value == 'all') {
+          _mode = AppCalendarMode.all;
+          _days = {};
+          _start = null;
+          _end = null;
+          return;
+        }
         if (value.startsWith('preset-')) {
           _anchor = value == 'preset-last-week'
               ? DateTime(_today.year, _today.month, _today.day - 7)
@@ -401,6 +408,103 @@ class _AppCalendarState extends State<AppCalendar> {
         _start = null;
         _end = null;
       });
+
+  String? get _activePreset {
+    if (_mode == AppCalendarMode.all) return 'preset-all';
+    if (_mode == AppCalendarMode.day &&
+        _days.length == 1 &&
+        _days.contains(_today)) {
+      return 'preset-today';
+    }
+    final currentWeekStart = calendarWeekStart(_today);
+    final lastWeekAnchor = DateTime(_today.year, _today.month, _today.day - 7);
+    final lastWeekStart = calendarWeekStart(lastWeekAnchor);
+    if (_mode == AppCalendarMode.week) {
+      final anchorWeek = calendarWeekStart(_anchor);
+      if (anchorWeek == currentWeekStart) return 'preset-this-week';
+      if (anchorWeek == lastWeekStart) return 'preset-last-week';
+    }
+    if (_mode == AppCalendarMode.range) {
+      final currentWeekSunday = DateTime(currentWeekStart.year,
+          currentWeekStart.month, currentWeekStart.day + 6);
+      final currentWeekEnd = widget.allowFuture
+          ? currentWeekSunday
+          : (currentWeekSunday.isAfter(_today) ? _today : currentWeekSunday);
+      if (_start == currentWeekStart && _end == currentWeekEnd) {
+        return 'preset-this-week';
+      }
+      final lastWeekSunday = DateTime(
+          lastWeekStart.year, lastWeekStart.month, lastWeekStart.day + 6);
+      final lastWeekEnd =
+          lastWeekSunday.isAfter(_today) ? _today : lastWeekSunday;
+      if (_start == lastWeekStart && _end == lastWeekEnd) {
+        return 'preset-last-week';
+      }
+      if (_start == DateTime(_today.year, _today.month) && _end == _today) {
+        return 'preset-this-month';
+      }
+    }
+    return null;
+  }
+
+  Widget _buildPresetPills(
+      BuildContext context, Map<String, String> presets) {
+    if (presets.isEmpty) return const SizedBox.shrink();
+    final active = _activePreset;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final entry in presets.entries) ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Semantics(
+                button: true,
+                selected: active == entry.key,
+                child: InkWell(
+                  key: ValueKey('${widget.keyPrefix}-pill-${entry.key}'),
+                  onTap: () => _filter(entry.key),
+                  borderRadius: BorderRadius.circular(20),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: active == entry.key
+                          ? FitnessTheme.silver
+                          : const Color(0xFF222428),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: active == entry.key
+                            ? FitnessTheme.silver
+                            : const Color(0x24FFFFFF),
+                        width: .7,
+                      ),
+                    ),
+                    child: FitnessText(
+                      entry.value,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: active == entry.key
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: active == entry.key
+                            ? Colors.black
+                            : FitnessTheme.silver,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   void _tap(DateTime date) {
     if (date.isBefore(DateTime(2000)) || date.isAfter(_last)) return;
@@ -501,15 +605,24 @@ class _AppCalendarState extends State<AppCalendar> {
       AppCalendarMode.range: 'Date range',
       AppCalendarMode.all: 'All time',
     };
-    final filters = <String, String>{
-      if (widget.modes.contains(AppCalendarMode.day)) 'preset-today': 'Today',
-      if (widget.modes.contains(AppCalendarMode.week) ||
-          widget.modes.contains(AppCalendarMode.range)) ...{
-        'preset-this-week': 'This week',
-        'preset-last-week': 'Last week',
+    final presets = <String, String>{
+      if (widget.modes.length > 1) ...{
+        if (widget.modes.contains(AppCalendarMode.day)) 'preset-today': 'Today',
+        if (widget.modes.contains(AppCalendarMode.week) ||
+            widget.modes.contains(AppCalendarMode.range))
+          'preset-this-week': 'This week',
+        if (!widget.allowFuture) ...{
+          if (widget.modes.contains(AppCalendarMode.week) ||
+              widget.modes.contains(AppCalendarMode.range))
+            'preset-last-week': 'Last week',
+          if (widget.modes.contains(AppCalendarMode.range))
+            'preset-this-month': 'This month',
+          if (widget.modes.contains(AppCalendarMode.all))
+            'preset-all': 'All time',
+        },
       },
-      if (widget.modes.contains(AppCalendarMode.range))
-        'preset-this-month': 'This month',
+    };
+    final filters = <String, String>{
       for (final mode in widget.modes) mode.name: labels[mode]!,
     };
     DropdownMenuItem<String> option(
@@ -558,11 +671,15 @@ class _AppCalendarState extends State<AppCalendar> {
                                       icon: const Icon(CupertinoIcons.xmark,
                                           size: 17)),
                                 ]),
+                                if (presets.isNotEmpty) ...[
+                                  const SizedBox(height: 14),
+                                  _buildPresetPills(context, presets),
+                                ],
                                 const SizedBox(height: 14),
                                 AppFilterDropdown<String>(
                                   dropdownKey:
                                       ValueKey('${widget.keyPrefix}-filter'),
-                                  label: 'Time range',
+                                  label: 'Selection mode',
                                   value: _mode.name,
                                   items: [
                                     for (final entry in filters.entries)

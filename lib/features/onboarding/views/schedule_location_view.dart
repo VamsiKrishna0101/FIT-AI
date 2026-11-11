@@ -4,7 +4,6 @@ import '../../../core/localization/fitness_copy.dart';
 
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/onboarding_scaffold.dart';
-import '../components/training_hero.dart';
 import '../viewmodels/schedule_location_viewmodel.dart';
 import '../models/training_schedule_models.dart';
 import 'equipment_selection_view.dart';
@@ -94,10 +93,9 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
         _ => language.trainingLocationQuestion,
       },
       subtitle: switch (_part) {
-        0 =>
-          'Choose a week you can keep coming back to. You can change it later.',
-        1 => 'We’ll use your available time to shape each session.',
-        _ => 'Your plan will use the space and equipment you actually have.',
+        0 => language.weeklyCommitmentSubtitle,
+        1 => language.sessionDurationSubtitle,
+        _ => 'Your plan will use the space and equipment you actually have',
       },
       actionTitle: language.continueButtonTitle,
       loading: _advancing,
@@ -112,21 +110,16 @@ class _ScheduleLocationViewState extends State<ScheduleLocationView> {
                     title: fitnessText(context, '{count} days a week', values: {
                       'count': option.daysCount == 6 ? '6+' : option.daysCount
                     }),
+                    subtitle: language.daysPerWeekSubtitle(option),
                     selected: _viewModel.selectedDays == option,
                     onTap: () => _viewModel.selectDays(option))),
-        if (_part == 0 && _viewModel.selectedDays != null) ...[
-          const SizedBox(height: 10),
-          const OnboardingContextNote(
-              title: 'Consistency starts with a realistic week.',
-              detail:
-                  'Next, choose your session length and equipment. Together, these shape your plan.'),
-        ],
         if (_part == 1)
           for (final option in WorkoutDurationOption.values)
             Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: OnboardingChoice(
                     title: language.durationOptionTitle(option),
+                    subtitle: language.durationOptionSubtitle(option),
                     selected: _viewModel.selectedDuration == option,
                     onTap: () => _viewModel.selectDuration(option))),
         if (_part == 2)

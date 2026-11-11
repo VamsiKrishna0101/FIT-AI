@@ -164,7 +164,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         if (mounted) {
           setState(() {
             _leaving = false;
-            _loadError = 'Could not sign out. Please retry.';
+            _loadError = 'Could not sign out · Please retry';
           });
         }
       }
@@ -353,6 +353,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                                                           key: ValueKey(
                                                               'membership-$interval'),
                                                           interval: interval,
+                                                          creatorDiscountPct:
+                                                              interval ==
+                                                                      'annual'
+                                                                  ? service
+                                                                      .creatorDiscountPercent
+                                                                  : null,
                                                           offer: candidate,
                                                           savings: interval ==
                                                                   'annual'
@@ -366,6 +372,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                                                               : () => setState(
                                                                   () => _interval =
                                                                       interval))),
+                                              _CreatorCodeCard(
+                                                  service: service),
                                               if (_refreshing &&
                                                   service.offers.isEmpty)
                                                 const Padding(
@@ -483,7 +491,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                                                           const EdgeInsets.only(
                                                               top: 8),
                                                       child: FitnessText(
-                                                          'Cancel anytime in {store}.',
+                                                          'Cancel anytime in {store}',
                                                           values: {
                                                             'store': service
                                                                 .storeName
@@ -563,6 +571,7 @@ class _PlanChoice extends StatelessWidget {
   final MembershipOffer offer;
   final bool selected;
   final int? savings;
+  final double? creatorDiscountPct;
   final VoidCallback? onTap;
   const _PlanChoice(
       {super.key,
@@ -570,14 +579,26 @@ class _PlanChoice extends StatelessWidget {
       required this.offer,
       required this.selected,
       this.savings,
+      this.creatorDiscountPct,
       this.onTap});
   @override
   Widget build(BuildContext context) {
     final annual = interval == 'annual';
+    final hasDiscount =
+        annual && creatorDiscountPct != null && creatorDiscountPct! > 0;
+    final effectiveAmount = hasDiscount
+        ? offer.amount * (1 - (creatorDiscountPct! / 100))
+        : offer.amount;
+    final discountedPrice = hasDiscount
+        ? NumberFormat.simpleCurrency(
+                name: offer.currencyCode,
+                locale: Localizations.localeOf(context).toLanguageTag())
+            .format(effectiveAmount)
+        : null;
     final month = NumberFormat.simpleCurrency(
             name: offer.currencyCode,
             locale: Localizations.localeOf(context).toLanguageTag())
-        .format(offer.amount / 12);
+        .format(effectiveAmount / 12);
     return Semantics(
         button: true,
         selected: selected,
@@ -604,7 +625,21 @@ class _PlanChoice extends StatelessWidget {
                                     style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600))),
-                            if (annual && savings != null)
+                            if (hasDiscount)
+                              Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(6)),
+                                child: Text('-${creatorDiscountPct!.toInt()}%',
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.black)),
+                              )
+                            else if (annual && savings != null)
                               FitnessText('Save {percent}%',
                                   values: {'percent': savings!},
                                   style: const TextStyle(
@@ -623,13 +658,27 @@ class _PlanChoice extends StatelessWidget {
                           const SizedBox(height: 8),
                           Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 6,
+                              spacing: 8,
                               children: [
-                                Text(offer.price,
-                                    style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: -.6)),
+                                if (hasDiscount) ...[
+                                  Text(discountedPrice!,
+                                      style: const TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: -.6,
+                                          color: Colors.white)),
+                                  Text(offer.price,
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          decoration:
+                                              TextDecoration.lineThrough,
+                                          color: FitnessTheme.muted)),
+                                ] else
+                                  Text(offer.price,
+                                      style: const TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: -.6)),
                                 FitnessText(annual ? '/year' : '/month',
                                     style: const TextStyle(
                                         fontSize: 13,
@@ -646,6 +695,275 @@ class _PlanChoice extends StatelessWidget {
                                   height: 1.4,
                                   color: FitnessTheme.muted)),
                         ])))));
+  }
+}
+
+class _CreatorCodeCard extends StatefulWidget {
+  final SubscriptionService service;
+  const _CreatorCodeCard({required this.service});
+
+  @override
+  State<_CreatorCodeCard> createState() => _CreatorCodeCardState();
+}
+
+class _CreatorCodeCardState extends State<_CreatorCodeCard> {
+  bool _expanded = false;
+  bool _loading = false;
+  String? _error;
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _apply() async {
+    final code = _controller.text.trim();
+    if (code.isEmpty) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await widget.service.validateAndApplyCreatorCode(code);
+      if (mounted) {
+        setState(() {
+          _controller.clear();
+          _expanded = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString().replaceFirst('StateError: ', '').replaceFirst('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final applied = widget.service.appliedCreatorCode;
+    if (applied != null) {
+      final name = widget.service.creatorName ?? 'Creator';
+      final pct = widget.service.creatorDiscountPercent?.toInt() ?? 20;
+      return Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF141517),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF28282B)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$applied applied',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$pct% Creator Discount with $name',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: FitnessTheme.silver,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18, color: FitnessTheme.muted),
+              tooltip: 'Remove creator code',
+              onPressed: () {
+                widget.service.removeCreatorCode();
+                setState(() => _error = null);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!_expanded) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          style: TextButton.styleFrom(
+            foregroundColor: FitnessTheme.silver,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          ),
+          onPressed: () => setState(() => _expanded = true),
+          icon: const Icon(Icons.local_offer_outlined, size: 16),
+          label: const Text(
+            'Have a Creator Code?',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141517),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF28282B)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_offer_outlined, size: 16, color: FitnessTheme.silver),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Creator Discount Code',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.close_rounded, size: 18, color: FitnessTheme.muted),
+                onPressed: () => setState(() {
+                  _expanded = false;
+                  _error = null;
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D0E10),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF2A2A2E)),
+                  ),
+                  child: Center(
+                    child: TextField(
+                      controller: _controller,
+                      textCapitalization: TextCapitalization.characters,
+                      autocorrect: false,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: .5,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'e.g. ALEX20',
+                        hintStyle: TextStyle(
+                          color: Color(0xFF5A5A60),
+                          fontSize: 13,
+                          fontWeight: FontWeight.normal,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onSubmitted: (_) => _apply(),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 44,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    elevation: 0,
+                  ),
+                  onPressed: _loading ? null : _apply,
+                  child: _loading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black,
+                          ),
+                        )
+                      : const Text(
+                          'APPLY',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: .5,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFFFF6B6B),
+              ),
+            ),
+          ],
+          if (widget.service.ios) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                onTap: () => widget.service.presentCodeRedemptionSheet(),
+                child: const Text(
+                  'Have an App Store offer code? Redeem',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: FitnessTheme.silver,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -668,14 +986,14 @@ class _AvailabilityNotice extends StatelessWidget {
     };
     final text = switch (issue) {
       SubscriptionCatalogIssue.mobileOnly =>
-        'Membership is available in the iOS and Android app.',
+        'Membership is available in the iOS and Android app',
       SubscriptionCatalogIssue.setupPending =>
-        'Your plan is saved. Please try again later.',
+        'Your plan is saved · Please try again later',
       SubscriptionCatalogIssue.storeUnavailable =>
-        'Open {store} and try again.',
-      SubscriptionCatalogIssue.productsMissing => 'Please try again shortly.',
+        'Open {store} and try again',
+      SubscriptionCatalogIssue.productsMissing => 'Please try again shortly',
       SubscriptionCatalogIssue.connection =>
-        detail ?? 'Please try again shortly.',
+        detail ?? 'Please try again shortly',
     };
     return Semantics(
         liveRegion: true,

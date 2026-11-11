@@ -90,6 +90,14 @@ class SubscriptionService extends ChangeNotifier {
   bool busy = false, storeReady = false, awaitingConfirmation = false;
   SubscriptionCatalogIssue? catalogIssue;
   String? catalogError;
+  String? appliedCreatorCode;
+  Map<String, dynamic>? creatorDiscountDetails;
+
+  double? get creatorDiscountPercent =>
+      (creatorDiscountDetails?['discountPercent'] as num?)?.toDouble();
+
+  String? get creatorName =>
+      creatorDiscountDetails?['creatorName'] as String?;
   Future<void>? _initializing;
   int? _initializingRevision;
   StreamSubscription<List<PurchaseDetails>>? _purchases;
@@ -486,6 +494,61 @@ class SubscriptionService extends ChangeNotifier {
     return savings > 0 ? savings : null;
   }
 
+  Future<Map<String, dynamic>> validateAndApplyCreatorCode(String code) async {
+    final trimmed = code.trim().toUpperCase();
+    if (trimmed.isEmpty) {
+      throw StateError('Please enter a creator code');
+    }
+    try {
+      final response = await api.post<Map<String, dynamic>>(
+        '/api/subscription/creator-code/validate',
+        data: {'code': trimmed},
+      );
+      final data = response.data ?? {};
+      if (data['valid'] == true) {
+        appliedCreatorCode = data['code'] as String? ?? trimmed;
+        creatorDiscountDetails = data;
+        try {
+          final userId = await SecureSessionStore.shared.userId;
+          if (userId != null) {
+            await api.post<Map<String, dynamic>>(
+              '/api/subscription/creator-code/apply',
+              data: {'code': appliedCreatorCode},
+            );
+          }
+        } catch (e) {
+          debugPrint('Creator attribution link error: $e');
+        }
+        notifyListeners();
+        return data;
+      } else {
+        throw StateError(data['message'] as String? ?? 'Invalid creator code');
+      }
+    } on DioException catch (dioErr) {
+      final serverMsg = dioErr.response?.data is Map
+          ? (dioErr.response?.data as Map)['error'] as String?
+          : null;
+      throw StateError(serverMsg ?? 'Invalid or inactive creator code');
+    }
+  }
+
+  void removeCreatorCode() {
+    appliedCreatorCode = null;
+    creatorDiscountDetails = null;
+    notifyListeners();
+  }
+
+  Future<void> presentCodeRedemptionSheet() async {
+    if (ios) {
+      try {
+        final queue = SKPaymentQueueWrapper();
+        await queue.presentCodeRedemptionSheet();
+      } catch (e) {
+        debugPrint('App Store code sheet error: $e');
+      }
+    }
+  }
+
   Future<void> purchase(String interval) async {
     if (busy || awaitingConfirmation) return;
     if (_usesRevenueCat) {
@@ -493,6 +556,17 @@ class SubscriptionService extends ChangeNotifier {
         final owner = await SecureSessionStore.shared.userId;
         if (owner == null) throw StateError('Please sign in again.');
         await _configureRevenueCat();
+        if (appliedCreatorCode != null) {
+          try {
+            await rc.Purchases.setAttributes({'creator_code': appliedCreatorCode!});
+            await api.post<Map<String, dynamic>>(
+              '/api/subscription/creator-code/apply',
+              data: {'code': appliedCreatorCode},
+            );
+          } catch (e) {
+            debugPrint('RC creator attribute error: $e');
+          }
+        }
         final selected = offers[interval];
         if (selected?.package != null) {
           try {
@@ -560,25 +634,25 @@ class SubscriptionService extends ChangeNotifier {
           await rc.Purchases.restorePurchases();
           await _syncRevenueCat(owner);
           notice = access?.hasAccess == true
-              ? 'Membership restored.'
-              : 'No active membership found.';
+              ? 'Membership restored'
+              : 'No active membership found';
           return;
         }
         _listen();
         if ((!android && !ios) || !await store.isAvailable()) {
-          throw StateError('Restore purchases is available in the mobile app.');
+          throw StateError('Restore purchases is available in the mobile app');
         }
         await store.restorePurchases();
         await refresh();
         notice =
-            'Restoring purchases. Your membership will update after verification.';
+            'Restoring purchases · Your membership will update after verification';
       });
   Future<void> _verify(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.pending) {
         awaitingConfirmation = true;
         notice =
-            'Waiting for $storeName confirmation. You can safely return later.';
+            'Waiting for $storeName confirmation · You can safely return later';
         notifyListeners();
         continue;
       }
@@ -588,7 +662,7 @@ class SubscriptionService extends ChangeNotifier {
         notice = null;
         error = purchase.status == PurchaseStatus.canceled
             ? null
-            : '$storeName could not complete this purchase. Please try again.';
+            : '$storeName could not complete this purchase · Please try again';
         notifyListeners();
         continue;
       }
@@ -608,11 +682,15 @@ class SubscriptionService extends ChangeNotifier {
                 ? {
                     'transactionId': purchase.purchaseID,
                     'signedTransaction':
-                        purchase.verificationData.serverVerificationData
+                        purchase.verificationData.serverVerificationData,
+                    if (appliedCreatorCode != null)
+                      'creatorCode': appliedCreatorCode,
                   }
                 : {
                     'purchaseToken':
-                        purchase.verificationData.serverVerificationData
+                        purchase.verificationData.serverVerificationData,
+                    if (appliedCreatorCode != null)
+                      'creatorCode': appliedCreatorCode,
                   });
         if (owner != await SecureSessionStore.shared.userId) continue;
         access = SubscriptionAccess(
@@ -649,8 +727,11 @@ class SubscriptionService extends ChangeNotifier {
         }
       });
   Future<void> openLegal(String key) => _run(() async {
-        final value = access?.data[key];
-        final uri = value is String ? Uri.tryParse(value) : null;
+        final fallback = key == 'termsUrl'
+            ? 'https://setcraft.fit/terms.html'
+            : 'https://setcraft.fit/privacy.html';
+        final raw = (access?.data[key] as String?) ?? fallback;
+        final uri = Uri.tryParse(raw);
         if (uri == null ||
             uri.scheme != 'https' ||
             !await launchUrl(uri, mode: LaunchMode.externalApplication)) {

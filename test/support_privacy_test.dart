@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:setcraft/features/profile/repositories/support_repository.dart';
 import 'package:setcraft/features/profile/views/support_views.dart';
 import 'package:setcraft/features/profile/views/privacy_settings_view.dart';
+import 'package:setcraft/features/profile/legal/legal_content.dart';
+import 'package:setcraft/features/profile/views/legal_document_view.dart';
 import 'package:setcraft/features/profile/views/ai_sharing_consent.dart';
 import 'helpers/fake_privacy_repository.dart';
 
@@ -182,8 +184,7 @@ void main() {
         isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
   });
-  testWidgets(
-      'AI sharing needs an explicit choice and cannot be enabled without a policy',
+  testWidgets('AI sharing asks first and records consent only on Agree',
       (tester) async {
     final repo = FakePrivacyRepository();
     bool? result;
@@ -195,26 +196,38 @@ void main() {
             child: const Text('Review sharing')))));
     await tester.tap(find.text('Review sharing'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('ai-sharing-notice')), findsOneWidget);
+    expect(find.textContaining('OpenAI, a third-party AI service'),
+        findsOneWidget);
     expect(repo.changes, isEmpty);
-    await tester.tap(find.text('Not now'));
-    await tester.pumpAndSettle();
-    expect(result, false);
-    expect(repo.changes, isEmpty);
-    await tester.tap(find.text('Review sharing'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Agree & continue'));
+    await tester.tap(find.byKey(const ValueKey('ai-sharing-agree')));
     await tester.pumpAndSettle();
     expect(result, true);
     expect(repo.changes, [true]);
-    repo.values['aiPlanningConsent'] = false;
-    repo.config.remove('privacyPolicyUrl');
+
+    // Already granted for this version: no second prompt.
+    result = null;
     await tester.tap(find.text('Review sharing'));
     await tester.pumpAndSettle();
-    final agree = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'Agree & continue'));
-    expect(agree.onPressed, isNull);
-    await tester.tap(find.text('Not now'));
+    expect(find.byKey(const ValueKey('ai-sharing-notice')), findsNothing);
+    expect(result, true);
+  });
+  testWidgets('Declining the AI sharing notice records nothing',
+      (tester) async {
+    final repo = FakePrivacyRepository();
+    bool? result;
+    await tester.pumpWidget(app(Builder(
+        builder: (context) => TextButton(
+            onPressed: () async {
+              result = await ensureAiSharingConsent(context, repository: repo);
+            },
+            child: const Text('Review sharing')))));
+    await tester.tap(find.text('Review sharing'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('ai-sharing-decline')));
+    await tester.pumpAndSettle();
+    expect(result, false);
+    expect(repo.changes, isEmpty);
   });
   testWidgets(
       'Privacy revocation persists and keeps the current value when saving fails',
@@ -236,6 +249,45 @@ void main() {
     expect(repo.changes, [false]);
     expect(tester.widget<CupertinoSwitch>(find.byType(CupertinoSwitch)).value,
         false);
+  });
+  testWidgets('Privacy Policy opens in the app as a list of sections',
+      (tester) async {
+    await tester.pumpWidget(
+        app(PrivacySettingsView(privacyRepository: FakePrivacyRepository())));
+    await tester.pumpAndSettle();
+    expect(find.text('MCP'), findsNothing);
+    expect(find.text('Data use'), findsNothing);
+    await tester.tap(find.text('Privacy Policy'));
+    await tester.pumpAndSettle();
+    expect(find.byType(LegalDocumentView), findsOneWidget);
+    for (final section in privacyPolicy.sections.take(4)) {
+      expect(find.text(section.title), findsOneWidget);
+    }
+    await tester.tap(find.text('AI Plan Generation'));
+    await tester.pumpAndSettle();
+    expect(find.byType(LegalSectionView), findsOneWidget);
+    expect(find.textContaining('OpenAI, a third-party AI service'),
+        findsOneWidget);
+  });
+  testWidgets('Legal screens fit small screens with large text',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 740);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    for (final doc in [privacyPolicy, termsOfUse]) {
+      for (final page in <Widget>[
+        LegalDocumentView(document: doc),
+        for (final s in doc.sections)
+          LegalSectionView(document: doc, section: s),
+      ]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpWidget(app(page, scale: 1.8));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      }
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
   });
   testWidgets('Support and privacy fit small screens with large text',
       (tester) async {
@@ -268,7 +320,11 @@ void main() {
       'settings-ticket-thread':
           SupportTicketView(id: 'ticket', repository: FakeSupport()),
       'settings-privacy-data':
-          PrivacySettingsView(privacyRepository: FakePrivacyRepository())
+          PrivacySettingsView(privacyRepository: FakePrivacyRepository()),
+      'settings-privacy-policy':
+          const LegalDocumentView(document: privacyPolicy),
+      'settings-privacy-policy-section': LegalSectionView(
+          document: privacyPolicy, section: privacyPolicy.sections[3]),
     }.entries) {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(app(entry.value));

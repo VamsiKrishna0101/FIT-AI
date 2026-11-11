@@ -17,8 +17,9 @@ struct ExerciseDetailView: View {
     private var nextSetNumber: Int {
         guard let item = currentExercise else { return 1 }
         let logged = Set(item.loggedSets.map { $0.setNumber })
-        for i in 1...item.targetSets {
-            if !logged.contains(i) { return i }
+        guard item.targetSets > 0 else { return (logged.max() ?? 0) + 1 }
+        for i in 1...item.targetSets where !logged.contains(i) {
+            return i
         }
         return item.targetSets + 1
     }

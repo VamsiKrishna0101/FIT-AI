@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import '../theme/ds_motion.dart';
 import '../theme/fitness_theme.dart';
+import '../components/blur_through.dart';
 
 Widget _pageFade(
         BuildContext context, Animation<double> animation, Widget child) =>
@@ -68,9 +69,18 @@ class AppPageRoute<T> extends CupertinoPageRoute<T> {
   Widget buildTransitions(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation, Widget child) {
     if (MediaQuery.disableAnimationsOf(context)) return child;
-    return super.buildTransitions(context, const AlwaysStoppedAnimation(1),
-        const AlwaysStoppedAnimation(0), _pageFade(context, animation, child));
+    return super.buildTransitions(
+        context,
+        const AlwaysStoppedAnimation(1),
+        const AlwaysStoppedAnimation(0),
+        pageTransition(context, animation, secondaryAnimation, child));
   }
+
+  /// The visible page motion; the Cupertino wrapper above keeps back swipes.
+  @protected
+  Widget pageTransition(BuildContext context, Animation<double> animation,
+          Animation<double> secondaryAnimation, Widget child) =>
+      _pageFade(context, animation, child);
 }
 
 class OnboardingPageRoute<T> extends AppPageRoute<T> {
@@ -103,8 +113,27 @@ class OnboardingPageRoute<T> extends AppPageRoute<T> {
     }
   }
 
+  // Long enough for the blur-through to read as one smooth dissolve.
+  static const stepTransition = Duration(milliseconds: 480);
+  static const stepReturn = Duration(milliseconds: 380);
+
+  /// Steps dissolve through a soft blur: the outgoing step blurs and lifts
+  /// away while the next sharpens into place. Mochi and the bubble fly above
+  /// as heroes, so they stay crisp throughout.
+  @override
+  Widget pageTransition(BuildContext context, Animation<double> animation,
+          Animation<double> secondaryAnimation, Widget child) =>
+      BlurThrough(
+          // The outgoing step dissolves first; the next one follows it in.
+          enter: animation,
+          exit: secondaryAnimation,
+          enterCurve: const Interval(.4, 1),
+          exitCurve: const Interval(0, .42),
+          background: FitnessTheme.canvas,
+          child: SizedBox.expand(child: child));
+
   OnboardingPageRoute(
       {required super.page,
-      super.duration = DSMotion.pageTransition,
-      super.reverseDuration = DSMotion.pageTransition});
+      super.duration = stepTransition,
+      super.reverseDuration = stepReturn});
 }

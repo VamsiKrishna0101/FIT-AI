@@ -6,7 +6,7 @@ class Endpoints {
   );
   static final String baseUrl = _configuredBaseUrl.isNotEmpty
       ? _configuredBaseUrl
-      : 'https://4ac5-2401-4900-1c27-feeb-8a9-4f63-4c4d-14d5.ngrok-free.app';
+      : 'https://api.setcraft.fit';
 
   // Auth
   static const String sendOtp = '/api/auth/send-otp';

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../models/progress_models.dart';
+import '../../onboarding/components/coach_mascot.dart';
 
 const progressMuted = DSColors.muted;
 const progressSilver = DSColors.silver;
@@ -330,22 +331,28 @@ class _Bone extends StatelessWidget {
 
 class ProgressEmpty extends StatelessWidget {
   final String message;
-  const ProgressEmpty(this.message, {super.key});
+
+  /// Whole-list empty states show Mochi; small chart cards keep the icon.
+  final bool coach;
+  const ProgressEmpty(this.message, {super.key, this.coach = false});
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 4),
       child: Row(children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .04),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: DSColors.border, width: .7),
+        if (coach)
+          const CoachMascot(size: 44)
+        else
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .04),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: DSColors.border, width: .7),
+            ),
+            child: const Icon(CupertinoIcons.chart_bar,
+                size: 15, color: DSColors.muted),
           ),
-          child: const Icon(CupertinoIcons.chart_bar,
-              size: 15, color: DSColors.muted),
-        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(fitnessText(context, message),

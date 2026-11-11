@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/localization/fitness_text.dart';
 import '../../../core/theme/ds_motion.dart';
 
-/// A short value proposition with a single, reduced-motion-aware entrance.
+/// The welcome promise and what it covers, with a reduced-motion-aware entrance.
 class WelcomeTrainingIntro extends StatefulWidget {
   final bool compact;
   const WelcomeTrainingIntro({super.key, this.compact = false});
@@ -55,28 +55,22 @@ class _WelcomeTrainingIntroState extends State<WelcomeTrainingIntro>
         children: [
           _item(
               0,
-              const Text('SETCRAFT',
-                  textScaler: TextScaler.noScaling,
-                  style: TextStyle(
-                      fontSize: 27,
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                      fontStyle: FontStyle.italic,
-                      letterSpacing: -.8,
-                      color: Color(0xFFA0A0AA)))),
-          const SizedBox(height: 32),
-          _item(
-              1,
               Semantics(
                   header: true,
-                  child: FitnessText('Train smarter.\nGet stronger.',
+                  child: FitnessText('Your plan, built around you.',
                       style: TextStyle(
-                          fontSize: widget.compact ? 34 : 38,
-                          height: 1.24,
+                          fontSize: widget.compact ? 30 : 34,
+                          height: 1.18,
                           fontWeight: FontWeight.w700,
-                          fontStyle: FontStyle.italic,
                           letterSpacing: -.9,
                           color: Colors.white)))),
+          const SizedBox(height: 12),
+          _item(
+              1,
+              const FitnessText(
+                  'Personal workouts, nutrition & recovery.\nSee your progress, all in one place.',
+                  style: TextStyle(
+                      fontSize: 15, height: 1.45, color: Color(0xFF9A9AA2)))),
         ],
       );
 }

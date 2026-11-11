@@ -1,6 +1,7 @@
 import 'package:setcraft/features/onboarding/views/schedule_location_view.dart';
 import 'package:setcraft/features/onboarding/views/lifestyle_nutrition_limitations_view.dart';
-import 'package:setcraft/features/onboarding/components/welcome_background_image.dart';
+import 'package:setcraft/features/onboarding/components/coach_mascot.dart';
+import 'package:setcraft/features/onboarding/components/welcome_coach_stage.dart';
 import 'package:setcraft/features/onboarding/components/onboarding_progress_bar.dart';
 import 'package:setcraft/features/onboarding/components/biometric_ruler_card.dart';
 import 'package:setcraft/features/onboarding/views/training_preferences_view.dart';
@@ -264,16 +265,16 @@ void main() {
   });
 
   testWidgets(
-      'Welcome uses a local image and retains its headline and Get started action',
+      'Welcome greets with Mochi, its promise and the Get started action',
       (tester) async {
     phone(tester);
     final c = await model();
     await tester.pumpWidget(app(OnboardingView(controller: c)));
     await tester.pumpAndSettle();
-    expect(find.byType(WelcomeBackgroundImage), findsOneWidget);
-    expect(
-        find.byKey(const ValueKey('welcome-editorial-image')), findsOneWidget);
-    expect(find.text('Train smarter.\nGet stronger.'), findsOneWidget);
+    expect(find.byType(WelcomeCoachStage), findsOneWidget);
+    expect(find.byType(CoachHero), findsOneWidget);
+    expect(find.text("Hi! I'm Mochi, your AI coach"), findsOneWidget);
+    expect(find.text('Your plan, built around you.'), findsOneWidget);
     expect(find.text('Get started'), findsOneWidget);
     expect(find.text('Log in'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
@@ -310,23 +311,16 @@ void main() {
       notch: 44.0
     ),
   ]) {
-    testWidgets('Welcome photo fits ${spec.name}', (tester) async {
+    testWidgets('Welcome fits ${spec.name}', (tester) async {
       phone(tester, spec.size);
       tester.view.padding = FakeViewPadding(top: spec.notch, bottom: 24);
       tester.view.viewPadding = FakeViewPadding(top: spec.notch, bottom: 24);
       final c = await model(language: spec.locale.languageCode);
       await tester.pumpWidget(app(OnboardingView(controller: c),
           scale: spec.scale, locale: spec.locale));
-      await tester.runAsync(() => precacheImage(
-          tester
-              .widget<Image>(
-                  find.byKey(const ValueKey('welcome-editorial-image')))
-              .image,
-          tester.element(find.byType(WelcomeBackgroundImage))));
       await tester.pumpAndSettle();
-      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull);
       expect(tester.takeException(), isNull);
-      expect(find.byType(WelcomeBackgroundImage), findsOneWidget);
+      expect(find.byType(WelcomeCoachStage), findsOneWidget);
       if (spec.scale == 1) {
         expect(
             tester
@@ -334,7 +328,7 @@ void main() {
                 .bottom,
             lessThanOrEqualTo(spec.size.height - 24));
       }
-      await capture(tester, 'welcome-editorial-${spec.name}');
+      await capture(tester, 'welcome-coach-${spec.name}');
       await tester
           .ensureVisible(find.byKey(const ValueKey('welcome-get-started')));
       await tester.pumpAndSettle();

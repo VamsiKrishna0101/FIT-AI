@@ -17,21 +17,21 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>$(FLUTTER_BUILD_NAME)</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$(FLUTTER_BUILD_NUMBER)</string>
     <key>WKApplication</key>
     <true/>
     <key>WKCompanionAppBundleIdentifier</key>
     <string>com.setcraft.app</string>
-    <key>UIBackgroundModes</key>
+    <key>WKBackgroundModes</key>
     <array>
         <string>workout-processing</string>
     </array>
     <key>NSHealthShareUsageDescription</key>
     <string>Setcraft uses your heart rate and calories to track your active workout on Apple Watch.</string>
     <key>NSHealthUpdateUsageDescription</key>
-    <string>Setcraft saves completed workouts, active calories, and heart rate data to Apple Health.</string>
+    <string>Setcraft saves completed strength workouts to Apple Health.</string>
 </dict>
 </plist>
 

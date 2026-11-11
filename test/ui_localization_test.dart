@@ -16,6 +16,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:setcraft/core/localization/app_language.dart';
 import 'package:setcraft/core/localization/language_manager.dart';
 import 'package:setcraft/core/localization/fitness_copy_data.dart';
+import 'package:setcraft/core/localization/notification_copy.dart';
 import 'package:setcraft/features/body_scan/models/body_assessment_models.dart';
 import 'package:setcraft/features/body_scan/models/training_map_models.dart';
 import 'package:setcraft/features/body_scan/repositories/body_assessment_repository.dart';
@@ -97,6 +98,42 @@ void main() {
           findsOneWidget);
       expect(tester.takeException(), isNull, reason: language.code);
     }
+    await tester.pumpWidget(const SizedBox());
+    await LanguageManager.shared.restoreAccountLanguage('en');
+  });
+
+  test('notification copy covers every language with matching placeholders',
+      () {
+    final english = notificationCopyData['en']!;
+    final placeholder = RegExp(r'\{\w+\}');
+    List<String?> marks(String text) =>
+        placeholder.allMatches(text).map((m) => m[0]).toList()..sort();
+    for (final locale in notificationCopyData.entries) {
+      expect(locale.value.keys.toSet(), english.keys.toSet(),
+          reason: locale.key);
+      for (final term in english.entries) {
+        expect(locale.value[term.key], isNotEmpty);
+        expect(marks(locale.value[term.key]!), marks(term.value),
+            reason: '${locale.key}: ${term.key}');
+      }
+    }
+  });
+
+  testWidgets('notification settings show translated labels and headers',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 1600);
+    addTearDown(tester.view.reset);
+    await LanguageManager.shared.restoreAccountLanguage('de');
+    final data = FakeNotifications()..values['enabled'] = true;
+    await tester.pumpWidget(_app(
+        NotificationSettingsView(repository: data, service: FakePush(data)),
+        AppLanguage.values.firstWhere((l) => l.code.startsWith('de'))));
+    await tester.pumpAndSettle();
+    expect(find.text('Trainingserinnerungen'), findsOneWidget);
+    expect(find.text('Trainingstage · 6:00 PM'), findsOneWidget);
+    expect(find.text('Ruhezeiten'), findsOneWidget);
+    expect(find.text('Workout reminders'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await LanguageManager.shared.restoreAccountLanguage('en');
   });

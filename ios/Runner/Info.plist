@@ -14,9 +14,9 @@
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Take progress photos for your fitness journal.</string>
+	<string>Take progress photos for your fitness journal or capture screenshots for support.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Choose progress photos to save in your fitness journal.</string>
+	<string>Choose progress photos for your fitness journal or attach screenshots when contacting support.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Choose health readings to share with your Setcraft account: steps, active calories, workouts, sleep. Optional weight and body fat help track Body progress. Readings are uploaded to Setcraft to show your daily activity and progress.</string>
 	<key>NSHealthUpdateUsageDescription</key>

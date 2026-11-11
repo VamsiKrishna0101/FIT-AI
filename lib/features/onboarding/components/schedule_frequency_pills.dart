@@ -2,9 +2,9 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/training_schedule_models.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Apple iOS Premium Schedule Frequency Segmented Pills
 class ScheduleFrequencyPills extends StatelessWidget {
@@ -40,7 +40,7 @@ class ScheduleFrequencyPills extends StatelessWidget {
                 label: '${label}d',
                 isSelected: option == selectedOption,
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  OnboardingCoach.select();
                   onSelected(option);
                 },
               ),

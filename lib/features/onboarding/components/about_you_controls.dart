@@ -2,7 +2,7 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Apple iOS Premium About You Controls
 
@@ -120,7 +120,7 @@ class AppleGenderSelector extends StatelessWidget {
               title: maleLabel,
               isSelected: selectedGender == 'MALE',
               onTap: () {
-                HapticFeedback.selectionClick();
+                OnboardingCoach.select();
                 onSelected('MALE');
               },
             ),
@@ -131,7 +131,7 @@ class AppleGenderSelector extends StatelessWidget {
               title: femaleLabel,
               isSelected: selectedGender == 'FEMALE',
               onTap: () {
-                HapticFeedback.selectionClick();
+                OnboardingCoach.select();
                 onSelected('FEMALE');
               },
             ),
@@ -246,7 +246,7 @@ class BiometricsHeaderWithUnits extends StatelessWidget {
                   isSelected: isImperial,
                   onTap: () {
                     if (!isImperial) {
-                      HapticFeedback.selectionClick();
+                      OnboardingCoach.select();
                       onUnitChanged(true);
                     }
                   },
@@ -257,7 +257,7 @@ class BiometricsHeaderWithUnits extends StatelessWidget {
                   isSelected: !isImperial,
                   onTap: () {
                     if (isImperial) {
-                      HapticFeedback.selectionClick();
+                      OnboardingCoach.select();
                       onUnitChanged(false);
                     }
                   },

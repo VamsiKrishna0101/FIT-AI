@@ -21,13 +21,14 @@ import 'package:setcraft/features/train/views/saved_routines_view.dart';
 import 'package:setcraft/features/today/components/weekly_rhythm_calendar.dart';
 import 'package:setcraft/core/components/session_overview_card.dart';
 import 'package:setcraft/features/today/views/today_home_view.dart';
+import 'package:setcraft/features/planner/views/weekly_plan_view.dart';
 import 'today_date_filter_test.dart' show DateAdapter;
 import 'training_session_test.dart' as training;
 import 'saved_routines_view_test.dart' show RoutineAdapter;
 
 class HubAdapter extends RoutineAdapter {
   Completer<void>? holdCreate;
-  bool failCreate = false, completed = false, rest = false, started = false;
+  bool failCreate = false, completed = false, rest = false, started = false, noPlan = false;
   bool todayHome = false;
   int completedSets = 0;
   final home = DateAdapter()..recordedReadiness = true;
@@ -53,7 +54,12 @@ class HubAdapter extends RoutineAdapter {
                     : null
             ..['restDay'] = rest
             ..['name'] = workoutName;
-      (day['items'] as List).first['setTargets'] = targets;
+      if (noPlan) {
+        day['items'] = <dynamic>[];
+        day['planId'] = null;
+      } else {
+        (day['items'] as List).first['setTargets'] = targets;
+      }
       day['routines'] = [
         ...List.generate(
             5,
@@ -82,6 +88,22 @@ class HubAdapter extends RoutineAdapter {
       return ResponseBody.fromString(jsonEncode({'data': day}), 200, headers: {
         Headers.contentTypeHeader: ['application/json']
       });
+    }
+    if (options.path == '/api/plans/availability') {
+      return ResponseBody.fromString(
+          jsonEncode({
+            'data': {
+              'canGenerate': true,
+              'cooldownActive': false,
+              'nextGenerationAt': null,
+              'lastPlanId': noPlan ? null : 'plan-1',
+              'pendingRun': null,
+            }
+          }),
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/json']
+          });
     }
     if (options.path == '/api/workout/exercises') {
       return ResponseBody.fromString(
@@ -133,7 +155,12 @@ class HubAdapter extends RoutineAdapter {
       final day = training.fixture(date)
         ..['session'] = null
         ..['name'] = workoutName;
-      (day['items'] as List).first['setTargets'] = targets;
+      if (noPlan) {
+        day['items'] = <dynamic>[];
+        day['planId'] = null;
+      } else {
+        (day['items'] as List).first['setTargets'] = targets;
+      }
       savedWorkouts.add({
         'id': 'new-routine-${savedWorkouts.length}',
         'name': options.data['name'],
@@ -219,6 +246,25 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   }
+
+  testWidgets(
+      'Train shows Generate plan when no plan is generated and redirects to planner',
+      (tester) async {
+    phone(tester);
+    adapter.noPlan = true;
+    adapter.workoutName = 'Workout';
+    await tester.pumpWidget(app(const TrainView()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No plan generated'), findsOneWidget);
+    expect(find.text('Generate plan'), findsWidgets);
+    expect(find.text('Or add exercise manually'), findsOneWidget);
+
+    await tester.tap(find.text('Generate plan').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(WeeklyPlanView), findsOneWidget);
+  });
 
   testWidgets(
       'Library stays first; Train previews have no competing row actions',

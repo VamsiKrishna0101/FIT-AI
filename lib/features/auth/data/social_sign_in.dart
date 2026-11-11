@@ -87,4 +87,41 @@ class SocialSignIn {
       await auth.signOut();
     }
   }
+
+  /// Account deletion: Apple requires revoking Sign in with Apple tokens.
+  /// Re-confirms with Apple for a fresh authorization code, then revokes it
+  /// through Firebase. Returns false only when the person cancels the sheet.
+  /// Other failures (for example a missing Firebase Apple key configuration)
+  /// return true so deletion is never blocked; the server still removes the
+  /// Firebase user.
+  Future<bool> revokeApple() async {
+    if (!available(SocialProvider.apple) ||
+        defaultTargetPlatform != TargetPlatform.iOS) {
+      return true;
+    }
+    if (Firebase.apps.isEmpty) await Firebase.initializeApp();
+    final auth = FirebaseAuth.instance;
+    try {
+      await auth.signOut();
+      final result = await auth.signInWithProvider(AppleAuthProvider());
+      final code = result.additionalUserInfo?.authorizationCode;
+      if (code != null && code.isNotEmpty) {
+        await auth.revokeTokenWithAuthorizationCode(code);
+      }
+      return true;
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'web-context-canceled' ||
+          error.code == 'popup-closed-by-user' ||
+          error.code == 'canceled') {
+        return false;
+      }
+      debugPrint('Apple token revocation failed: ${error.code}');
+      return true;
+    } catch (_) {
+      debugPrint('Apple token revocation failed.');
+      return true;
+    } finally {
+      await auth.signOut();
+    }
+  }
 }

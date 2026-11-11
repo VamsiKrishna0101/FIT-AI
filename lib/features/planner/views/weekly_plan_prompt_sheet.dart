@@ -82,15 +82,16 @@ class WeeklyPlanPromptSheet extends StatelessWidget {
                     width: 62,
                     height: 62,
                     decoration: BoxDecoration(
-                      color: DSColors.accent.withValues(alpha: .12),
+                      color: const Color(0xFF161616),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: DSColors.accent.withValues(alpha: .28),
+                        color: const Color(0x2AFFFFFF),
+                        width: 1,
                       ),
                     ),
                     child: const Icon(
                       CupertinoIcons.calendar_badge_plus,
-                      color: DSColors.accent,
+                      color: Colors.white,
                       size: 26,
                     ),
                   ),
@@ -100,7 +101,7 @@ class WeeklyPlanPromptSheet extends StatelessWidget {
                   'SETCRAFT  /  WEEKLY PLAN',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: DSColors.accent,
+                    color: DSColors.muted,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -150,11 +151,11 @@ class WeeklyPlanPromptSheet extends StatelessWidget {
                     onPressed: canGenerate
                         ? () => Navigator.of(context).pop(true)
                         : null,
-                    icon: const Icon(CupertinoIcons.sparkles, size: 18),
+                    icon: const Icon(CupertinoIcons.sparkles, size: 18, color: Colors.black),
                     label: const FitnessText('Generate weekly plan'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: DSColors.accent,
-                      foregroundColor: DSColors.onAccent,
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                       disabledBackgroundColor: DSColors.bgRaised,
                       disabledForegroundColor: DSColors.muted,
                       textStyle: const TextStyle(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:setcraft/core/components/liquid_chrome_button.dart';
+import 'package:setcraft/core/navigation/onboarding_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,7 +71,8 @@ void main() {
     expect(button.title, 'Continue');
     expect(find.byType(CircularProgressIndicator, skipOffstage: false),
         findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(
+        OnboardingPageRoute.stepTransition + const Duration(milliseconds: 20));
     goalScaffold = tester.widget<OnboardingScaffold>(find.descendant(
         of: find.byType(GoalSelectionView, skipOffstage: false),
         matching: find.byType(OnboardingScaffold, skipOffstage: false),

@@ -102,7 +102,8 @@ void main() {
     await tester.pump();
     // Continue paints its busy state before starting the next question.
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 90));
+    // The outgoing question has blurred away; the next is still sharpening.
+    await tester.pump(const Duration(milliseconds: 160));
     expect(find.text('Choose your days'), findsOneWidget);
     expect(find.text('Choose your session length'), findsOneWidget);
     expect(tester.getRect(find.byType(LiquidChromeButton)), buttonBefore);
@@ -112,13 +113,12 @@ void main() {
         tester.widgetList<IgnorePointer>(ignored).any((w) => w.ignoring), true);
     final fades = [
       for (final title in ['Choose your days', 'Choose your session length'])
-        tester.widget<FadeTransition>(find
-            .ancestor(
-                of: find.text(title), matching: find.byType(FadeTransition))
+        tester.widget<Opacity>(find
+            .ancestor(of: find.text(title), matching: find.byType(Opacity))
             .first),
     ];
-    expect(fades.first.opacity.value, 0);
-    expect(fades.last.opacity.value, inExclusiveRange(0, 1));
+    expect(fades.first.opacity, 0);
+    expect(fades.last.opacity, inExclusiveRange(0, 1));
     await capture(tester, 'motion-onboarding-mid');
     await tester.pumpAndSettle();
     expect(find.text('Choose your days'), findsNothing);

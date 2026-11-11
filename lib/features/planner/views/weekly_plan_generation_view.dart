@@ -10,6 +10,7 @@ import '../../../core/theme/fitness_theme.dart';
 import '../repositories/weekly_plan_repository.dart';
 import 'widgets/plan_particle_orb.dart';
 import '../../profile/views/ai_sharing_consent.dart';
+import '../../onboarding/components/coach_mascot.dart';
 
 class WeeklyPlanGenerationView extends StatefulWidget {
   final WeeklyPlanRepository repository;
@@ -231,7 +232,17 @@ class _WeeklyPlanGenerationViewState extends State<WeeklyPlanGenerationView>
                 '${DateFormat.MMMd(locale).format(week)} – ${DateFormat.MMMd(locale).format(lastDay)}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: DSColors.muted, fontSize: 12)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
+            Center(
+                child: CoachMascot(
+                    key: const ValueKey('weekly-plan-coach'),
+                    size: 76,
+                    mood: _complete
+                        ? CoachMood.cheer
+                        : _failed || _unavailable
+                            ? CoachMood.listening
+                            : CoachMood.thinking)),
+            const SizedBox(height: 10),
             FitnessText(headline,
                 textAlign: TextAlign.center,
                 style: const TextStyle(

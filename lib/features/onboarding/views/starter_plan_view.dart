@@ -16,6 +16,9 @@ import '../../planner/views/widgets/plan_particle_orb.dart';
 import '../../profile/repositories/settings_repository.dart';
 import '../data/discovery_repository.dart';
 import 'discovery_onboarding_gate.dart';
+import '../components/coach_mascot.dart';
+import '../components/coach_speech.dart';
+import '../components/onboarding_motion.dart';
 import 'training_preferences_view.dart';
 import 'equipment_selection_view.dart';
 import '../../profile/views/ai_sharing_consent.dart';
@@ -491,7 +494,9 @@ class _StarterPlanViewState extends State<StarterPlanView>
       ? FitnessTheme(
           child: Scaffold(
           backgroundColor: Colors.black,
-          body: SafeArea(
+          // The reveal opens with a confetti burst above Mochi's cheer.
+          body: Stack(fit: StackFit.expand, children: [
+            SafeArea(
               child: Center(
                   child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
@@ -512,6 +517,11 @@ class _StarterPlanViewState extends State<StarterPlanView>
                           key: const ValueKey('starter-preview-scroll'),
                           padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
                           children: [
+                        const CoachSpeech(
+                            key: ValueKey('starter-coach'),
+                            mood: CoachMood.cheer,
+                            text: 'Done! I built this week around your answers'),
+                        const SizedBox(height: 24),
                         StarterPlanPreview(
                             preview: _preview!,
                             profile: _profile,
@@ -548,6 +558,8 @@ class _StarterPlanViewState extends State<StarterPlanView>
                           ])),
                 ]),
           ))),
+            const Positioned.fill(child: ConfettiBurst()),
+          ]),
         ))
       : FitnessTheme(
           child: Scaffold(
@@ -562,7 +574,16 @@ class _StarterPlanViewState extends State<StarterPlanView>
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                     children: [
                   ...[
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 12),
+                    Center(
+                        child: CoachHero(
+                            child: CoachMascot(
+                                key: const ValueKey('starter-building-coach'),
+                                size: 92,
+                                mood: _failed || _error != null
+                                    ? CoachMood.listening
+                                    : CoachMood.thinking))),
+                    const SizedBox(height: 16),
                     FitnessText(
                         _failed || _error != null
                             ? 'We could not finish your plan'

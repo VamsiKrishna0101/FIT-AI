@@ -13,11 +13,17 @@ class WorkoutWarmup extends StatelessWidget {
   final Map<String, dynamic>? warmup;
   final bool compact;
   final Future<WorkoutExerciseModel?> Function(String)? loadExercise;
+  final bool isCompleted;
+  final VoidCallback? onComplete;
+
   const WorkoutWarmup(
       {super.key,
       required this.warmup,
       this.compact = false,
-      this.loadExercise});
+      this.loadExercise,
+      this.isCompleted = false,
+      this.onComplete});
+
   @override
   Widget build(BuildContext context) {
     final steps = (warmup?['steps'] as List? ?? []).whereType<Map>().toList();
@@ -31,12 +37,45 @@ class WorkoutWarmup extends StatelessWidget {
               type: MaterialType.transparency,
               child: ExpansionTile(
                 key: const ValueKey('workout-warmup'),
+                initiallyExpanded: !isCompleted,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
                 childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-                title: const FitnessText('Warm-up',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                title: Row(
+                  children: [
+                    const FitnessText('Warm-up',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600)),
+                    if (isCompleted) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF22C55E).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFF22C55E).withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(CupertinoIcons.checkmark_alt,
+                                size: 12, color: Color(0xFF22C55E)),
+                            SizedBox(width: 4),
+                            FitnessText('Completed',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF22C55E))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 subtitle: FitnessText(
                     'About {minutes} min · before working sets',
                     values: {'minutes': warmup?['durationMinutes'] ?? 5},
@@ -78,6 +117,14 @@ class WorkoutWarmup extends StatelessWidget {
                           fontSize: 11,
                           color: FitnessTheme.muted,
                           height: 1.45)),
+                  if (!isCompleted && onComplete != null) ...[
+                    const SizedBox(height: 14),
+                    TrainingButton(
+                      label: 'Complete Warm-up',
+                      primary: true,
+                      onPressed: onComplete,
+                    ),
+                  ],
                 ],
               ))),
     );
@@ -93,9 +140,18 @@ class WorkoutWarmup extends StatelessWidget {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  const FitnessText('Warm-up',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  Row(
+                    children: [
+                      const FitnessText('Warm-up',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w500)),
+                      if (isCompleted) ...[
+                        const SizedBox(width: 6),
+                        const Icon(CupertinoIcons.checkmark_alt_circle_fill,
+                            size: 14, color: Color(0xFF22C55E)),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: 5),
                   FitnessText('{count} steps',
                       values: {'count': steps.length},
@@ -261,9 +317,14 @@ class WorkoutWarmup extends StatelessWidget {
                         ]))),
                         const SizedBox(height: 14),
                         TrainingButton(
-                            label: 'Done',
+                            label: isCompleted ? 'Done' : 'Complete Warm-up',
                             primary: true,
-                            onPressed: () => Navigator.pop(context)),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              if (!isCompleted) {
+                                onComplete?.call();
+                              }
+                            }),
                       ]),
                 ))),
       );

@@ -69,7 +69,8 @@ class ProgressAttendanceCard extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       height: 1.1)),
               const SizedBox(height: 4),
-              Text(fitnessText(context, 'Workouts'),
+              // Days trained also counts days with sets but no finished workout.
+              Text(fitnessText(context, 'Completed workouts'),
                   style: const TextStyle(color: progressMuted, fontSize: 11)),
             ]),
           ]),
@@ -77,7 +78,17 @@ class ProgressAttendanceCard extends StatelessWidget {
           SizedBox(
               height: 44 + 16 * scale,
               child: LayoutBuilder(
-                  builder: (context, box) => ListView.builder(
+                  builder: (context, box) => ShaderMask(
+                      // Fades the leading edge when earlier days scroll in.
+                      shaderCallback: (rect) => LinearGradient(colors: [
+                            days.length > 7
+                                ? Colors.transparent
+                                : Colors.white,
+                            Colors.white
+                          ], stops: const [0, .035])
+                              .createShader(rect),
+                      blendMode: BlendMode.dstIn,
+                      child: ListView.builder(
                       key: ValueKey(
                           'progress-attendance-days-${days.firstOrNull}-${days.lastOrNull}'),
                       scrollDirection: Axis.horizontal,
@@ -119,21 +130,21 @@ class ProgressAttendanceCard extends StatelessWidget {
                                                   color: DSColors.border)
                                               : null),
                                       child: Center(
-                                          child: active
-                                              ? const Icon(
-                                                  CupertinoIcons.check_mark,
-                                                  color: DSColors.bg,
-                                                  size: 13)
-                                              : Text('${day.day}',
-                                                  style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: future
+                                          child: Text('${day.day}',
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: active
+                                                      ? FontWeight.w700
+                                                      : FontWeight.w400,
+                                                  color: active
+                                                      ? DSColors.bg
+                                                      : future
                                                           ? DSColors.muted
                                                               .withValues(
                                                                   alpha: .45)
                                                           : progressMuted)))),
                                 ]))));
-                      }))),
+                      })))),
         ]));
   }
 }
@@ -145,7 +156,11 @@ class ProgressMuscleChartCard extends StatelessWidget {
       {super.key, required this.muscles, required this.onMuscle});
   @override
   Widget build(BuildContext context) {
-    final ordered = [...muscles]..sort((a, b) =>
+    // Zero-set muscles would draw as stubs that look like small values.
+    final ordered = muscles
+        .where((muscle) => (progressNumber(muscle['directSets']) ?? 0) > 0)
+        .toList()
+      ..sort((a, b) =>
         (progressNumber(b['directSets']) ?? 0)
             .compareTo(progressNumber(a['directSets']) ?? 0));
     return ProgressSurface(
@@ -208,7 +223,7 @@ class ProgressExerciseChartShelf extends StatelessWidget {
         ('Sets', progressNumber(row['loggedSets'])),
         ('Reps', progressNumber(row['totalReps'])),
         ('Volume', progressNumber(row['volume'])),
-      ];
+      ].where((item) => item.$2 != null).toList();
       return ProgressSurface(
           padding: const EdgeInsets.all(12),
           key: ValueKey('progress-exercise-${row['id']}'),
@@ -238,8 +253,14 @@ class ProgressExerciseChartShelf extends StatelessWidget {
                 SizedBox(
                     height: 34,
                     width: double.infinity,
-                    child: points.isEmpty
-                        ? const SizedBox.shrink()
+                    // One reading cannot show a trend.
+                    child: points.length < 2
+                        ? Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                                fitnessText(context, 'First session logged'),
+                                style: const TextStyle(
+                                    fontSize: 11, color: progressMuted)))
                         : ExcludeSemantics(
                             child: ProgressSparkline(
                                 points: points, color: progressStrength))),
@@ -424,12 +445,13 @@ class _ProgressNutritionDonutCardState
     const names = ['Protein', 'Carbs', 'Fat'];
     final selected = _selected;
     final centreValue = selected == null
-        ? progressShortValue(context, macros.days == 0 ? null : macros.total)
+        ? progressShortValue(
+            context, macros.days == 0 ? null : macros.dailyTotal)
         : macros.total > 0
             ? '${progressValue(context, macros.calories[selected] / macros.total * 100, digits: 0)}%'
             : '0%';
     final centreLabel =
-        fitnessText(context, selected == null ? 'Macro kcal' : names[selected]);
+        fitnessText(context, selected == null ? 'kcal per day' : names[selected]);
     final ring = SizedBox(
         width: 148,
         height: 148,
@@ -487,7 +509,7 @@ class _ProgressNutritionDonutCardState
             button: true,
             selected: selected == i,
             label:
-                '${fitnessText(context, names[i])} · ${progressValue(context, macros.grams[i], unit: 'g')}',
+                '${fitnessText(context, names[i])} · ${progressValue(context, macros.dailyGrams[i], unit: 'g', digits: 0)}',
             child: InkWell(
                 key: ValueKey('progress-macro-${names[i]}'),
                 borderRadius: BorderRadius.circular(10),
@@ -514,9 +536,13 @@ class _ProgressNutritionDonutCardState
                                     fontSize: 11,
                                     height: 1.3)),
                             Text(
-                                progressValue(context,
-                                    macros.days == 0 ? null : macros.grams[i],
-                                    unit: 'g'),
+                                progressValue(
+                                    context,
+                                    macros.days == 0
+                                        ? null
+                                        : macros.dailyGrams[i],
+                                    unit: 'g',
+                                    digits: 0),
                                 style: const TextStyle(
                                     color: progressMuted,
                                     fontSize: 10,
@@ -549,8 +575,7 @@ class _ProgressNutritionDonutCardState
                     style:
                         const TextStyle(fontSize: 11, color: progressMuted))),
             Text(
-                fitnessText(context, '{count} days',
-                    values: {'count': macros.days}),
+                '${fitnessText(context, 'Daily average')} · ${fitnessText(context, '{count} days', values: {'count': macros.days})}',
                 style: const TextStyle(fontSize: 10, color: progressMuted)),
           ]),
           const SizedBox(height: 8),
@@ -637,7 +662,14 @@ class _ProgressDailyTrendsCardState extends State<ProgressDailyTrendsCard> {
           const SizedBox(height: 5),
           if (selected != null)
             Text(
-                '${widget.days.length > 14 ? '${fitnessText(context, 'Weekly average')} · ' : ''}${DateFormat('EEE d MMM', locale).format(bars[selected].date)}',
+                widget.days.length > 14
+                    ? fitnessText(context, 'Daily average, week of {date}',
+                        values: {
+                            'date': DateFormat('d MMM', locale)
+                                .format(bars[selected].date)
+                          })
+                    : DateFormat('EEE d MMM', locale)
+                        .format(bars[selected].date),
                 style: const TextStyle(
                     color: progressMuted, fontSize: 11, height: 1.4)),
           const SizedBox(height: 10),

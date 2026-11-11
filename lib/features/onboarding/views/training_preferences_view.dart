@@ -11,14 +11,14 @@ import '../../../core/cache/user_data_cache.dart';
 import '../../../core/storage/onboarding_draft.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../components/training_style_picker.dart';
-import '../models/training_style.dart';
 import '../../auth/views/auth_view.dart';
 import '../../auth/data/auth_repository.dart';
+import 'lifestyle_nutrition_limitations_view.dart';
 import '../../../core/storage/secure_session_store.dart';
 import '../../../core/navigation/prepare_authenticated_home.dart';
 import '../components/onboarding_scaffold.dart';
 import '../components/onboarding_focus_body.dart';
-import 'package:flutter/services.dart';
+import '../components/onboarding_coach.dart';
 
 const trainingMuscles = <String, String>{
   'chest': 'Chest',
@@ -45,16 +45,6 @@ const _days = [
   'SUNDAY'
 ];
 
-const _splitMuscles = {
-  'chest': 'Chest',
-  'back': 'Back',
-  'legs': 'Legs',
-  'shoulders': 'Shoulders',
-  'biceps': 'Biceps',
-  'triceps': 'Triceps',
-  'core': 'Core',
-};
-
 /// Final setup step, also available to existing members from Body and Profile.
 class TrainingPreferencesView extends StatefulWidget {
   final bool editProfile;
@@ -71,27 +61,18 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
   static const _minimumDaysMessage =
       'Select at least 2 training days to continue.';
   static const _restDayMessage = 'Keep at least one rest day in your week.';
-  static const _customDaysMessage =
-      'Choose at least one muscle group for each training day.';
-  final _customEditorKey = GlobalKey();
-
   String? get _trainingDaysError {
     if (_draft.trainingDays.length < 2) return _minimumDaysMessage;
     if (_draft.trainingDays.length > 6) return _restDayMessage;
     return null;
   }
 
-  bool get _showActionError =>
-      !widget.editProfile &&
-      (_part == 1 || (_part == 2 && _draft.trainingSplit == 'CUSTOM'));
+  bool get _showActionError => !widget.editProfile && _part == 1;
 
   OnboardingDraft _draft = OnboardingDraft();
   late final OnboardingController? _controller =
       widget.editProfile ? null : widget.controller ?? OnboardingController();
-  final _notes = TextEditingController(),
-      _allergies = TextEditingController(),
-      _dislikes = TextEditingController(),
-      _budget = TextEditingController();
+  final _notes = TextEditingController();
   bool _loading = true, _saving = false, _loadFailed = false;
   int _part = 0;
   String? _error;
@@ -99,9 +80,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
   @override
   void initState() {
     super.initState();
-    for (final field in [_notes, _allergies, _dislikes, _budget]) {
-      field.addListener(_formChanged);
-    }
+    _notes.addListener(_formChanged);
     _load();
   }
 
@@ -120,26 +99,13 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
         if (await CacheScope.userId() != user) return;
         _profileUser = user;
         final j = Map<String, dynamic>.from(response.data!['data'] as Map);
-        _draft = OnboardingDraft.fromJson(
-            {...j, 'customWeeklyFoodBudget': j['foodBudgetAmount']});
+        _draft = OnboardingDraft.fromJson(j);
       } else {
         if (!_controller!.ready) await _controller!.initialize();
         _draft = _controller!.draft;
       }
       if (!mounted) return;
       _notes.text = _draft.customLimitations ?? '';
-      _allergies.text = _draft.foodAllergies.join(', ');
-      _dislikes.text = _draft.dislikedFoods.join(', ');
-      _budget.text = _draft.customWeeklyFoodBudget?.toString() ?? '';
-      _draft.foodBudgetCurrency ??= switch (_draft.countryCode) {
-        'GB' => 'GBP',
-        'CH' => 'CHF',
-        'SE' => 'SEK',
-        'NO' => 'NOK',
-        'DK' => 'DKK',
-        'IN' => 'INR',
-        _ => 'EUR'
-      };
       if (!['ANY', 'MORNING', 'AFTERNOON', 'EVENING']
           .contains(_draft.preferredTime)) {
         _draft.preferredTime = 'ANY';
@@ -171,23 +137,9 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
   void _formChanged() {
     if (_loading || widget.editProfile) return;
     _draft.customLimitations = _notes.text.trim();
-    _draft.foodAllergies = _list(_allergies.text);
-    _draft.dislikedFoods = _list(_dislikes.text);
-    final budget = double.tryParse(_budget.text.trim());
-    if (_budget.text.trim().isEmpty) {
-      _draft.customWeeklyFoodBudget = null;
-    } else if (budget != null && budget.isFinite && budget > 0) {
-      _draft.customWeeklyFoodBudget = budget;
-    }
     _controller?.checkpoint();
   }
 
-  List<String> _list(String value) => value
-      .split(',')
-      .map((v) => v.trim())
-      .where((v) => v.isNotEmpty)
-      .toSet()
-      .toList();
   Future<void> _save() async {
     if (_saving || _loading || _loadFailed) return;
     if (widget.editProfile && await CacheScope.userId() != _profileUser) {
@@ -197,10 +149,6 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
       }
       return;
     }
-    final allergies = _list(_allergies.text), dislikes = _list(_dislikes.text);
-    final amount = _budget.text.trim().isEmpty
-        ? null
-        : double.tryParse(_budget.text.trim());
     String? error = _trainingDaysError;
     if (error == null &&
         _draft.trainingSplit == 'PUSH_PULL_LEGS' &&
@@ -213,43 +161,16 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
             3) {
       error = 'Choose at least three days for push / pull / legs.';
     }
-    if (error == null &&
-        _draft.trainingSplit == 'CUSTOM' &&
-        (_draft.trainingDays.length < 2 ||
-            _draft.trainingDays.any((day) =>
-                _draft.customTrainingSplit[day]?.isNotEmpty != true))) {
-      error = _customDaysMessage;
-    }
-    if (allergies.length > 20 ||
-        dislikes.length > 20 ||
-        [...allergies, ...dislikes].any((v) => v.length > 60)) {
-      error = 'Use up to 20 short food names in each field.';
-    }
-    if (_budget.text.trim().isNotEmpty &&
-        (amount == null ||
-            !amount.isFinite ||
-            amount <= 0 ||
-            amount > 100000)) {
-      error = 'Enter a valid weekly budget, or leave it blank.';
-    }
     if (error != null) {
       setState(() {
         _error = error;
         if (!widget.editProfile) {
-          _part = error!.contains('budget') || error.contains('food names')
-              ? 3
-              : error.contains('push / pull / legs') ||
-                      error == _customDaysMessage
-                  ? 2
-                  : 1;
+          _part = error!.contains('push / pull / legs') ? 2 : 1;
         }
       });
       return;
     }
     _draft.customLimitations = _notes.text.trim();
-    _draft.foodAllergies = allergies;
-    _draft.dislikedFoods = dislikes;
-    _draft.customWeeklyFoodBudget = amount;
     final count = _draft.trainingDays.length;
     if (count >= 2) {
       _draft.daysPerWeek = count >= 6 ? 'DAYS_6_PLUS' : 'DAYS_$count';
@@ -311,7 +232,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
       });
 
   Future<void> _advance() async {
-    if (widget.editProfile || _part == 3) {
+    if (widget.editProfile) {
       await _save();
       return;
     }
@@ -332,18 +253,43 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                     3) <
             3) {
       error = 'Choose at least three days for push / pull / legs.';
-    } else if (_part == 2 &&
-        _draft.trainingSplit == 'CUSTOM' &&
-        (_draft.trainingDays.length < 2 ||
-            _draft.trainingDays.any((day) =>
-                _draft.customTrainingSplit[day]?.isNotEmpty != true))) {
-      error = _customDaysMessage;
     }
     FocusScope.of(context).unfocus();
+    if (error != null) {
+      setState(() => _error = error);
+      return;
+    }
+    if (_part < 2) {
+      setState(() {
+        _error = null;
+        _part++;
+      });
+      return;
+    }
+    // _part == 2: completed workout split! Continue to Fuel & Recovery step
     setState(() {
-      _error = error;
-      if (error == null) _part++;
+      _saving = true;
+      _error = null;
     });
+    try {
+      final count = _draft.trainingDays.length;
+      if (count >= 2) {
+        _draft.daysPerWeek = count >= 6 ? 'DAYS_6_PLUS' : 'DAYS_$count';
+      }
+      _draft.completedStep = 6;
+      _controller!.checkpoint();
+      if (!mounted) return;
+      if (widget.onContinue != null) {
+        widget.onContinue!();
+      } else {
+        await OnboardingPageRoute(
+                page: LifestyleNutritionLimitationsView(
+                    controller: _controller!))
+            .open(context);
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _chooseTrainingDays() {
@@ -355,147 +301,122 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
 
   void _selectTrainingStyle(String value) {
     _change(() => _draft.trainingSplit = value);
-    if (value != 'CUSTOM') return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final editorContext = _customEditorKey.currentContext;
-      if (mounted && editorContext != null) {
-        Scrollable.ensureVisible(editorContext,
-            duration: DSMotion.duration(context, DSMotion.regular),
-            curve: DSMotion.effects);
-      }
-    });
   }
 
-  Widget _trainingDayChoices() => Wrap(spacing: 7, runSpacing: 8, children: [
-        for (final day in _days)
-          _chip(
-              day[0] + day.substring(1, 3).toLowerCase(),
-              _draft.trainingDays.contains(day),
-              (selected) => _change(() {
-                    final values = [..._draft.trainingDays];
-                    if (selected) {
-                      values.add(day);
-                    } else {
-                      values.remove(day);
-                    }
-                    _draft.trainingDays = values;
-                    if (_error == _minimumDaysMessage ||
-                        _error == _restDayMessage) {
-                      _error = _trainingDaysError;
-                    }
-                  })),
-      ]);
-
-  void _suggestDayMuscles() {
-    if (_trainingDaysError != null) {
-      _chooseTrainingDays();
-      return;
-    }
-    final suggestion = TrainingStylePreview(
-        OnboardingDraft.fromJson(_draft.toJson())..trainingSplit = 'AUTO');
-    final days = suggestion.selectedDays;
-    final groups = suggestion.groups;
-    _change(() {
-      _draft.customTrainingSplit = {
-        ..._draft.customTrainingSplit,
-        for (var i = 0; i < days.length; i++)
-          if (_draft.customTrainingSplit[days[i]]?.isNotEmpty != true)
-            days[i]: [...groups[i]],
-      };
-      if (_error == _customDaysMessage) _error = null;
-    });
+  Widget _dayPill(String day) {
+    final selected = _draft.trainingDays.contains(day);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: AnimatedContainer(
+        duration: DSMotion.press,
+        height: 64,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: selected ? FitnessTheme.silver : const Color(0xFF1B1C1E),
+          border: Border.all(
+            color: selected ? FitnessTheme.silver : const Color(0xFF2C2E31),
+            width: selected ? 1.0 : 0.8,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              OnboardingCoach.select();
+              _change(() {
+                final values = [..._draft.trainingDays];
+                if (selected) {
+                  values.remove(day);
+                } else {
+                  values.add(day);
+                }
+                _draft.trainingDays = values;
+                if (_error == _minimumDaysMessage ||
+                    _error == _restDayMessage) {
+                  _error = _trainingDaysError;
+                }
+              });
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FitnessText(
+                  day[0],
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? Colors.black : Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                FitnessText(
+                  day.substring(1, 3).toLowerCase(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: selected
+                        ? const Color(0xFF333333)
+                        : const Color(0xFF888888),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _customTrainingDays() {
-    final days = _days.where(_draft.trainingDays.contains).toList();
-    final needsSuggestions =
-        days.any((day) => _draft.customTrainingSplit[day]?.isNotEmpty != true);
-    return Column(
-        key: _customEditorKey,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const FitnessText(
-              'Choose muscle groups for each training day. We’ll choose exercises for your plan.',
-              style: TextStyle(
-                  color: FitnessTheme.muted, fontSize: 13, height: 1.5)),
-          const SizedBox(height: 12),
-          if (_trainingDaysError != null && widget.editProfile) ...[
-            FitnessText(_trainingDaysError!,
-                style:
-                    const TextStyle(color: FitnessTheme.coral, fontSize: 12)),
-            const SizedBox(height: 10),
-            _trainingDayChoices(),
-          ] else if (_trainingDaysError != null)
-            OutlinedButton.icon(
-                key: const ValueKey('custom-choose-training-days'),
-                onPressed: _chooseTrainingDays,
-                icon: const Icon(CupertinoIcons.calendar, size: 16),
-                label: const FitnessText('Choose training days'))
-          else ...[
-            OutlinedButton.icon(
-                key: const ValueKey('custom-suggest-muscles'),
-                onPressed: needsSuggestions ? _suggestDayMuscles : null,
-                icon: const Icon(CupertinoIcons.sparkles, size: 16),
-                label: const FitnessText('Suggest muscle groups')),
-            const SizedBox(height: 8),
-            const FitnessText(
-                'Suggestions fill empty days. Your choices stay as you set them.',
+  Widget _timeChoice(String value, String label) {
+    final selected = (_draft.preferredTime ?? 'ANY') == value;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: AnimatedContainer(
+        duration: DSMotion.press,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: selected ? FitnessTheme.silver : const Color(0xFF1B1C1E),
+          border: Border.all(
+            color: selected ? FitnessTheme.silver : const Color(0xFF2C2E31),
+            width: .8,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              OnboardingCoach.select();
+              _change(() => _draft.preferredTime = value);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: FitnessText(
+                label,
                 style: TextStyle(
-                    color: FitnessTheme.muted, fontSize: 11, height: 1.4)),
-          ],
-          for (final day in days) ...[
-            const SizedBox(height: 18),
-            Container(
-                key: ValueKey('custom-training-day-$day'),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                    color: FitnessTheme.canvas,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: FitnessTheme.line)),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FitnessText(day[0] + day.substring(1).toLowerCase(),
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 6),
-                      const FitnessText('Select one or more muscle groups',
-                          style: TextStyle(
-                              fontSize: 12, color: FitnessTheme.muted)),
-                      const SizedBox(height: 12),
-                      Wrap(spacing: 7, runSpacing: 8, children: [
-                        for (final muscle in _splitMuscles.entries)
-                          _chip(
-                              muscle.value,
-                              _draft.customTrainingSplit[day]
-                                      ?.contains(muscle.key) ==
-                                  true,
-                              (selected) => _change(() {
-                                    final muscles = [
-                                      ...?_draft.customTrainingSplit[day]
-                                    ];
-                                    if (selected) {
-                                      muscles.add(muscle.key);
-                                    } else {
-                                      muscles.remove(muscle.key);
-                                    }
-                                    _draft.customTrainingSplit = {
-                                      ..._draft.customTrainingSplit,
-                                      day: muscles,
-                                    };
-                                    if (_error == _customDaysMessage &&
-                                        days.every((day) =>
-                                            _draft.customTrainingSplit[day]
-                                                ?.isNotEmpty ==
-                                            true)) {
-                                      _error = null;
-                                    }
-                                  })),
-                      ]),
-                    ])),
-          ],
-        ]);
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Colors.black : Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
+
+  Widget _trainingDayChoices() => Row(
+        children: [
+          for (int i = 0; i < _days.length; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            Expanded(child: _dayPill(_days[i])),
+          ],
+        ],
+      );
 
   @override
   void dispose() {
@@ -503,41 +424,36 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
       _controller?.dispose();
     }
     _notes.dispose();
-    _allergies.dispose();
-    _dislikes.dispose();
-    _budget.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => OnboardingScaffold(
-        step: 7,
-        sectionLabel: 'Almost ready',
+        step: 6,
+        totalSteps: 7,
+        sectionLabel: 'Workout split',
         showProgress: !widget.editProfile,
+        showCoach: !widget.editProfile,
         part: _part,
-        parts: 4,
+        parts: widget.editProfile ? 4 : 3,
         canPop: widget.editProfile || _part == 0,
         title: widget.editProfile
             ? 'Training preferences'
             : const [
                 'What do you want to focus on?',
-                'Which days work for you?',
-                'Your training style',
-                'Final details',
+                'Select your workout days',
+                'Workout split',
               ][_part],
         subtitle: widget.editProfile
-            ? 'Your priorities, your schedule, your way to train.'
+            ? 'Your priorities, your schedule, your way to train'
             : const [
                 'Choose as many as you like',
-                'Choose at least two training days.',
-                '',
-                'Optional',
+                'Pick the days that fit your weekly routine',
+                'Choose how you want to train',
               ][_part],
         actionTitle: widget.editProfile
             ? 'Save preferences'
-            : _part < 3
-                ? 'Continue'
-                : 'Build my plan',
+            : 'Continue',
         onBack: () {
           if (!widget.editProfile && _part > 0) {
             setState(() {
@@ -642,56 +558,46 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
             if (widget.editProfile || _part == 1) ...[
               const SizedBox(height: 14),
               _PreferenceCard(
+                  plain: !widget.editProfile,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    const _Heading(
-                        'Your week', 'Choose at least two training days.'),
-                    const SizedBox(height: 12),
+                    if (widget.editProfile) ...[
+                      const _Heading(
+                          'Your week', 'Choose at least two training days.'),
+                      const SizedBox(height: 12),
+                    ],
                     _trainingDayChoices(),
-                    const SizedBox(height: 14),
-                    DropdownButtonFormField<String>(
-                        initialValue: _draft.preferredTime ?? 'ANY',
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                            labelText: fitnessText(context, 'Preferred time'),
-                            fillColor: const Color(0xFF171819),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16)),
-                        dropdownColor: const Color(0xFF252628),
-                        borderRadius: BorderRadius.circular(16),
-                        icon: const Icon(CupertinoIcons.chevron_down,
-                            size: 16, color: FitnessTheme.muted),
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'ANY',
-                              child: FitnessText('Whenever works')),
-                          DropdownMenuItem(
-                              value: 'MORNING', child: FitnessText('Morning')),
-                          DropdownMenuItem(
-                              value: 'AFTERNOON',
-                              child: FitnessText('Afternoon')),
-                          DropdownMenuItem(
-                              value: 'EVENING', child: FitnessText('Evening'))
-                        ],
-                        onChanged: (value) =>
-                            _change(() => _draft.preferredTime = value)),
+                    const SizedBox(height: 28),
+                    FitnessText(
+                      fitnessText(context, 'Preferred workout time'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -.2,
+                        color: FitnessTheme.silver,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _timeChoice('ANY', 'Whenever works'),
+                        _timeChoice('MORNING', 'Morning'),
+                        _timeChoice('AFTERNOON', 'Afternoon'),
+                        _timeChoice('EVENING', 'Evening'),
+                      ],
+                    ),
                   ])),
             ],
             if (widget.editProfile || _part == 2) ...[
               const SizedBox(height: 14),
               _PreferenceCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TrainingStylePicker(
-                        draft: _draft,
-                        customDayEditor: _draft.trainingSplit == 'CUSTOM'
-                            ? _customTrainingDays()
-                            : null,
-                        onChanged: _selectTrainingStyle),
-                  ],
-                ),
+                plain: !widget.editProfile,
+                child: TrainingStylePicker(
+                    draft: _draft,
+                    onChanged: _selectTrainingStyle),
               ),
             ],
             if (widget.editProfile || _part == 3) ...[
@@ -704,71 +610,38 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                   ],
                   children: [
                     TextField(
-                        controller: _notes,
-                        maxLength: 500,
-                        minLines: 2,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                            counterText: '',
-                            hintText:
-                                fitnessText(context, 'Movements to avoid')))
-                  ]),
-              const SizedBox(height: 14),
-              _OptionalPreferenceCard(
-                  key: ValueKey(
-                      'food-preferences-${_error?.contains('budget') == true || _error?.contains('food names') == true}'),
-                  title: 'Food preferences',
-                  controllers: [_allergies, _dislikes, _budget],
-                  expand: _error?.contains('budget') == true ||
-                      _error?.contains('food names') == true,
-                  children: [
-                    TextField(
-                        controller: _allergies,
-                        maxLength: 500,
-                        decoration: InputDecoration(
-                            counterText: '',
-                            labelText: fitnessText(context, 'Food allergies'),
-                            hintText: fitnessText(
-                                context, 'Separate foods with commas'))),
-                    const SizedBox(height: 10),
-                    TextField(
-                        controller: _dislikes,
-                        maxLength: 500,
-                        decoration: InputDecoration(
-                            counterText: '',
-                            labelText: fitnessText(
-                                context, 'Foods you avoid or dislike'))),
-                    const SizedBox(height: 10),
-                    TextField(
-                        controller: _budget,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        decoration: InputDecoration(
-                            labelText:
-                                fitnessText(context, 'Weekly food budget'),
-                            hintText: fitnessText(context, 'Optional'))),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                        initialValue: _draft.foodBudgetCurrency,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                            labelText: fitnessText(context, 'Currency')),
-                        items: [
-                          for (final currency in [
-                            'GBP',
-                            'EUR',
-                            'CHF',
-                            'SEK',
-                            'NOK',
-                            'DKK',
-                            'USD',
-                            'INR'
-                          ])
-                            DropdownMenuItem(
-                                value: currency, child: FitnessText(currency))
-                        ],
-                        onChanged: (value) =>
-                            _change(() => _draft.foodBudgetCurrency = value)),
+                      controller: _notes,
+                      maxLength: 500,
+                      minLines: 2,
+                      maxLines: 4,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFF191A1D),
+                        counterText: '',
+                        hintText: fitnessText(context,
+                            'Lower back pain, avoid barbell squats, bad shoulder'),
+                        hintStyle: const TextStyle(
+                            color: Color(0xFF666666), fontSize: 13),
+                        contentPadding: const EdgeInsets.all(14),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF28292C), width: 0.8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF28292C), width: 0.8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Colors.white, width: 1.0),
+                        ),
+                      ),
+                    ),
                   ]),
             ],
           ],
@@ -802,7 +675,7 @@ class _TrainingPreferencesViewState extends State<TrainingPreferencesView> {
                 onTap: onSelected == null
                     ? null
                     : () {
-                        HapticFeedback.selectionClick();
+                        OnboardingCoach.select();
                         onSelected(!selected);
                       },
                 child: Padding(
@@ -859,14 +732,28 @@ class _OptionalPreferenceCardState extends State<_OptionalPreferenceCard> {
               title: FitnessText(widget.title,
                   style: const TextStyle(
                       fontSize: 15, fontWeight: FontWeight.w500)),
-              trailing: FitnessText(
+              trailing: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _open
+                      ? const Color(0xFF2C2E31)
+                      : const Color(0xFF222326),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: FitnessText(
                   _open
                       ? 'Close'
                       : widget.controllers.any((c) => c.text.trim().isNotEmpty)
                           ? 'Edit'
                           : 'Add',
-                  style:
-                      const TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _open ? Colors.white : const Color(0xFFAAAAAA),
+                  ),
+                ),
+              ),
               children: widget.children,
             )),
       );

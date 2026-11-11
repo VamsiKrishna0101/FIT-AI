@@ -142,7 +142,8 @@ void main() {
             : findsNWidgets(2));
     expect(
         find.byKey(const ValueKey('navigation-active-pill')), findsOneWidget);
-    expect(find.text('Today'), findsNothing);
+    // App Store style: a label under each icon (drawn again inside the lens).
+    expect(find.text('Today'), findsNWidgets(2));
     expect(find.byTooltip('Today'), findsOneWidget);
     await tester.tap(find.byTooltip('Body'));
     await tester.pumpAndSettle();
@@ -170,12 +171,12 @@ void main() {
       expect(bar.left, 0);
       expect(bar.right, width);
       expect(bar.bottom, 852);
-      expect(capsule.left, greaterThanOrEqualTo(18));
-      expect(capsule.right, lessThanOrEqualTo(width - 18));
-      expect(capsule.width, lessThanOrEqualTo(300));
-      expect(capsule.height, closeTo(52, .01));
-      expect(capsule.bottom, closeTo(852 - 34 - 22, .01));
-      expect(tabs.bottom, closeTo(capsule.bottom - 2, .01));
+      expect(capsule.left, greaterThanOrEqualTo(24));
+      expect(capsule.right, lessThanOrEqualTo(width - 24));
+      expect(capsule.width, lessThanOrEqualTo(400));
+      expect(capsule.height, closeTo(54, .01));
+      expect(capsule.bottom, closeTo(852 - 34 - 16, .01));
+      expect(tabs.bottom, closeTo(capsule.bottom - 3, .01));
       expect(
           tester
               .getRect(find.byKey(const ValueKey('navigation-content')))
@@ -227,7 +228,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('The dock and lens stay black with a visible glass selection',
+  testWidgets('The dock is clear dark glass with a lighter glass selection',
       (tester) async {
     phone(tester);
     await tester.pumpWidget(const _NavigationPreview());
@@ -259,10 +260,10 @@ void main() {
         expect(shell.computeLuminance(), lessThan(.012),
             reason: 'The dock must retain its black finish');
         expect(selection.computeLuminance(),
-            greaterThan(shell.computeLuminance() + .002),
-            reason: 'The selection must separate from the dark shell');
-        expect(selection.computeLuminance(), lessThan(.03),
-            reason: 'The selection must be dark glass rather than silver');
+            greaterThan(shell.computeLuminance() + .01),
+            reason: 'The selection must read as a lighter glass pill');
+        expect(selection.computeLuminance(), lessThan(.12),
+            reason: 'The selection must stay translucent rather than silver');
       } finally {
         image.dispose();
       }

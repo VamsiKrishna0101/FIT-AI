@@ -3,7 +3,6 @@ import '../../../core/components/content_transition.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/theme/fitness_theme.dart';
@@ -12,7 +11,9 @@ import '../data/equipment_repository.dart';
 import '../models/equipment_copy.dart';
 import '../models/equipment_models.dart';
 import '../viewmodels/equipment_viewmodel.dart';
-import 'lifestyle_nutrition_limitations_view.dart';
+import 'training_preferences_view.dart';
+import '../components/onboarding_coach.dart';
+import '../components/welcome_buddies.dart';
 
 class EquipmentSelectionView extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -32,7 +33,7 @@ class EquipmentSelectionView extends StatefulWidget {
 class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
   late final EquipmentViewModel _viewModel;
   EquipmentGroup _group = EquipmentGroup.weights;
-  bool _moreMachinesExpanded = false, _submitting = false;
+  bool _submitting = false;
   String? _saveError;
   @override
   void initState() {
@@ -70,7 +71,7 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
         Navigator.of(context).pop(true);
       } else {
         await OnboardingPageRoute(
-                page: LifestyleNutritionLimitationsView(
+                page: TrainingPreferencesView(
                     controller: _viewModel.controller))
             .open(context);
       }
@@ -114,17 +115,19 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
     final language = _viewModel.selectedLanguage;
     final selected = _viewModel.selectedIds;
     final noEquipment = selected.contains('bodyweight_only');
-    final primary = EquipmentCatalog.mainItems
-        .where((item) => item.group == _group)
-        .toList();
-    final machineCount = EquipmentCatalog.additionalMachines
-        .where((item) => selected.contains(item.id))
-        .length;
+    final items = [
+      ...EquipmentCatalog.mainItems.where((item) => item.group == _group),
+      if (_group == EquipmentGroup.machines)
+        ...EquipmentCatalog.additionalMachines,
+    ];
     return OnboardingScaffold(
         step: _viewModel.currentStep,
         sectionLabel: 'Your equipment',
         totalSteps: _viewModel.totalSteps,
         showProgress: !widget.editProfile,
+        // Mochi and the dumbbell buddy belong to setup, not Profile settings.
+        showCoach: !widget.editProfile,
+        buddy: BuddyKind.dumbbell,
         title: EquipmentCopy.equipmentTitle(language),
         subtitle: EquipmentCopy.subtitle(language),
         actionTitle: widget.editProfile
@@ -149,7 +152,7 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
           else ...[
             if (_viewModel.needsExactSelection) ...[
               const FitnessText(
-                  'Choose your exact equipment to update your saved setup.',
+                  'Choose your exact equipment to update your saved setup',
                   style: TextStyle(
                       fontSize: 13, color: FitnessTheme.muted, height: 1.4)),
               const SizedBox(height: 14),
@@ -185,53 +188,13 @@ class _EquipmentSelectionViewState extends State<EquipmentSelectionView> {
                             EquipmentCatalog.byId[id]?.group == group)
                         .length,
                     onTap: () {
-                      HapticFeedback.selectionClick();
+                      OnboardingCoach.select();
                       setState(() => _group = group);
                     }),
             ]),
             const SizedBox(height: 16),
             ContentTransition(
-                child:
-                    KeyedSubtree(key: ValueKey(_group), child: _grid(primary))),
-            if (_group == EquipmentGroup.machines) ...[
-              const SizedBox(height: 12),
-              Material(
-                  color: FitnessTheme.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () => setState(
-                          () => _moreMachinesExpanded = !_moreMachinesExpanded),
-                      child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(children: [
-                            Expanded(
-                                child: FitnessText(
-                                    EquipmentCopy.moreMachinesLabel(language),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500))),
-                            if (machineCount > 0) ...[
-                              FitnessText('$machineCount',
-                                  style: const TextStyle(
-                                      color: FitnessTheme.silver,
-                                      fontSize: 12)),
-                              const SizedBox(width: 10),
-                            ],
-                            Icon(
-                                _moreMachinesExpanded
-                                    ? CupertinoIcons.chevron_up
-                                    : CupertinoIcons.chevron_down,
-                                size: 14,
-                                color: FitnessTheme.muted),
-                          ])))),
-              ContentResize(
-                  child: _moreMachinesExpanded
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: _grid(EquipmentCatalog.additionalMachines))
-                      : const SizedBox.shrink()),
-            ],
+                child: KeyedSubtree(key: ValueKey(_group), child: _grid(items))),
           ],
           if (_saveError != null) ...[
             const SizedBox(height: 14),

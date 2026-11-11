@@ -8,6 +8,20 @@ AppFilterDropdown<T> calendarDropdown<T>(WidgetTester tester, String key) =>
 
 Future<void> selectCalendarOption(
     WidgetTester tester, String key, String label) async {
+  final prefix = key.replaceAll('-filter', '');
+  final pill = find.ancestor(
+    of: find.text(label),
+    matching: find.byWidgetPredicate((w) =>
+        w.key is ValueKey<String> &&
+        (w.key as ValueKey<String>).value.startsWith('$prefix-pill-')),
+  );
+  if (pill.evaluate().isNotEmpty) {
+    await tester.ensureVisible(pill.first);
+    await tester.pumpAndSettle();
+    await tester.tap(pill.first);
+    await tester.pumpAndSettle();
+    return;
+  }
   final field = find.byKey(ValueKey(key));
   await tester.ensureVisible(field);
   await tester.pumpAndSettle();

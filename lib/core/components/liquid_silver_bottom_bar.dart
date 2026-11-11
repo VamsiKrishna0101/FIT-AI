@@ -18,8 +18,13 @@ bool get _supportsLiquidOptics =>
     ui.ImageFilter.isShaderFilterSupported &&
     defaultTargetPlatform == TargetPlatform.iOS;
 
-/// A compact, icon-only floating dock. Labels remain available to assistive
-/// technology and tooltips without changing the dock's geometry by locale.
+/// Height of one tab (icon over label) and the glass margin around the row.
+const double _tabHeight = 48;
+const double _shellInset = 3;
+const Color _unselected = Color(0xFFA1A1A6);
+
+/// An App Store style floating tab bar: clear glass capsule, icon over a
+/// small label, and a lighter glass pill that slides to the selected tab.
 class LiquidSilverBottomBar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
@@ -198,17 +203,21 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
     final duration = reduced ? Duration.zero : DSMotion.selection;
     final highContrast = MediaQuery.highContrastOf(context);
     final direction = Directionality.of(context);
+    // Float clear of the home indicator with visible page beneath the glass.
+    final bottom = MediaQuery.paddingOf(context).bottom + 16;
     return Padding(
       key: const ValueKey('navigation-bar'),
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 22),
-      child: SafeArea(
-        top: false,
+      padding: EdgeInsets.fromLTRB(24, 8, 24, bottom),
+      child: MediaQuery.removePadding(
+        context: context,
+        removeBottom: true,
         child: Center(
           heightFactor: 1,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300),
+            constraints: const BoxConstraints(maxWidth: 400),
             child: LayoutBuilder(builder: (context, constraints) {
-              final size = Size(constraints.maxWidth - 4, 48);
+              final size = Size(
+                  constraints.maxWidth - _shellInset * 2, _tabHeight);
               // The lens paints above the icons so its optics bend them, and
               // outside the dock's clip so a pressed lens can swell past it.
               return Stack(clipBehavior: Clip.none, children: [
@@ -216,7 +225,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
                   key: const ValueKey('navigation-capsule'),
                   highContrast: highContrast,
                   child: Padding(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(_shellInset),
                     child: SizedBox(
                       key: const ValueKey('navigation-tabs'),
                       height: size.height,
@@ -245,7 +254,7 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
                 ),
                 Positioned.fill(
                   child: Padding(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(_shellInset),
                     child: Stack(clipBehavior: Clip.none, children: [
                       _LiquidSelection(
                         position:
@@ -271,19 +280,16 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
     );
   }
 
-  /// Crisp glyphs shown only inside the lens, magnified while it is held.
+  /// Crisp tab faces shown only inside the lens, magnified while it is held.
   Widget _lensIcons(double scale) => Row(children: [
         for (var index = 0; index < 4; index++)
           Expanded(
-            child: SizedBox(
-              height: 48,
-              child: Center(
-                child: Transform.scale(
-                  scale: scale,
-                  child: NavigationGlyph(
-                      kind: _icons[index], color: DSColors.navGlassText),
-                ),
-              ),
+            child: Transform.scale(
+              scale: scale,
+              child: _TabFace(
+                  kind: _icons[index],
+                  label: widget.labels[index],
+                  color: DSColors.navGlassText),
             ),
           ),
       ]);
@@ -308,20 +314,57 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
           highlightColor: Colors.transparent,
           child: TweenAnimationBuilder<Color?>(
             tween: ColorTween(
-                end:
-                    selected ? DSColors.navGlassText : const Color(0xFFB3B3B3)),
+                end: selected ? DSColors.navGlassText : _unselected),
             duration: duration,
             curve: DSMotion.effects,
-            builder: (context, color, _) => SizedBox(
-              height: 48,
-              child: Center(
-                  child: NavigationGlyph(
-                      kind: _icons[index],
-                      color: color ?? DSColors.navGlassText)),
-            ),
+            builder: (context, color, _) => _TabFace(
+                kind: _icons[index],
+                label: widget.labels[index],
+                color: color ?? DSColors.navGlassText),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Icon over a small label, as in the iOS tab bar. Like UITabBar, labels do
+/// not grow with text scaling; tooltips and semantics carry the full label.
+class _TabFace extends StatelessWidget {
+  const _TabFace(
+      {required this.kind, required this.label, required this.color});
+  final NavigationGlyphKind kind;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+        .copyWith(
+            fontSize: 10,
+            height: 1.2,
+            fontWeight: FontWeight.w600,
+            letterSpacing: .1,
+            color: color);
+    return SizedBox(
+      height: _tabHeight,
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        NavigationGlyph(kind: kind, color: color, size: 22),
+        const SizedBox(height: 2),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ExcludeSemantics(
+              child: Text(label,
+                  maxLines: 1,
+                  softWrap: false,
+                  textScaler: TextScaler.noScaling,
+                  style: style),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 }
@@ -336,9 +379,13 @@ class _GlassCapsule extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(100),
+          // A wide, faint shadow: the glass floats rather than casting a hard edge.
           boxShadow: const [
             BoxShadow(
-                color: Color(0x33000000), blurRadius: 14, offset: Offset(0, 4)),
+                color: Color(0x40000000),
+                blurRadius: 30,
+                spreadRadius: -6,
+                offset: Offset(0, 10)),
           ],
         ),
         child: _NavigationGlass(
@@ -375,30 +422,40 @@ class _NavigationGlass extends StatelessWidget {
       );
     }
 
-    // Black translucent glass keeps the original dark dock. Refraction and
-    // the fine rim supply the glass effect without a silver surface fill.
+    // Clear dark glass, as in the iOS 26 tab bar: the page shows through and
+    // the blur/refraction do the work. Android has no backdrop pass, so its
+    // shell is denser to keep the icons legible over busy content.
+    final android = defaultTargetPlatform == TargetPlatform.android &&
+        !_supportsLiquidOptics;
     final finish = DecoratedBox(
       key: ValueKey(lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(100),
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: lens
+              // The selected pill is a lighter, milky glass.
               ? [
-                  Color.lerp(const Color(0x80404040), const Color(0x88484848),
+                  Color.lerp(const Color(0x2EFFFFFF), const Color(0x3DFFFFFF),
                       pressure)!,
-                  Color.lerp(const Color(0x70242424), const Color(0x782C2C2C),
+                  Color.lerp(const Color(0x1FFFFFFF), const Color(0x2BFFFFFF),
                       pressure)!,
-                  Color.lerp(const Color(0x80303030), const Color(0x88383838),
+                  Color.lerp(const Color(0x24FFFFFF), const Color(0x33FFFFFF),
                       pressure)!,
                 ]
-              : const [
-                  Color(0xAA202020),
-                  Color(0x99121212),
-                  Color(0xAA0A0A0A),
-                ],
-          stops: const [0, .55, 1],
+              : android
+                  ? const [
+                      Color(0xA62A2A2D),
+                      Color(0x991C1C1E),
+                      Color(0xA6161618),
+                    ]
+                  : const [
+                      Color(0x662C2C2E),
+                      Color(0x4D1C1C1E),
+                      Color(0x5C161618),
+                    ],
+          stops: const [0, .5, 1],
         ),
       ),
       child: child,
@@ -410,25 +467,27 @@ class _NavigationGlass extends StatelessWidget {
         shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
         settings: glass.LiquidGlassSettings(
           glassColor: const Color(0x08000000),
-          thickness: lens ? 8 + pressure * 4 : 12,
-          blur: lens ? .6 : 12,
-          refractiveIndex: lens ? 1.16 + pressure * .04 : 1.12,
+          // Thicker glass bends the page more strongly at the rounded edges.
+          thickness: lens ? 14 + pressure * 6 : 20,
+          blur: lens ? .6 : 8,
+          refractiveIndex: lens ? 1.2 + pressure * .05 : 1.2,
           // Dispersion splits the icon edges into RGB fringes at this scale.
           chromaticAberration: 0,
           lightAngle: -math.pi / 3,
-          lightIntensity: lens ? .12 + pressure * .08 : .08,
-          ambientStrength: .01,
-          saturation: 1,
+          lightIntensity: lens ? .35 + pressure * .15 : .25,
+          ambientStrength: .03,
+          // Apple's glass lifts the colours it shows through.
+          saturation: 1.4,
         ),
         child: finish,
       );
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
+    } else if (android) {
       // The shell and lens otherwise require two backdrop passes on every
       // scroll frame. Keep their translucent finish, rim and moving selection
       // without that GPU cost on Android.
       surface = finish;
     } else {
-      final blurSigma = lens ? .6 : 22.0;
+      final blurSigma = lens ? .6 : 16.0;
       surface = BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
         child: finish,
@@ -543,8 +602,9 @@ class _LiquidSelectionState extends State<_LiquidSelection>
           final slot = widget.width / 4;
           // Holding swells the lens past the dock like a drop of glass;
           // speed squashes it, wide and short, in the direction of travel.
-          final width = (slot - 8) * (1 + stretch + pressure * .14);
-          final height = 42 * (1 + pressure * .20 - stretch * .22);
+          final width = (slot - 4) * (1 + stretch + pressure * .12);
+          final height =
+              (widget.height - 4) * (1 + pressure * .12 - stretch * .22);
           final center = ((physicalPosition + .5) * slot)
               .clamp(width / 2, widget.width - width / 2);
           final lens = Rect.fromLTWH(center - width / 2,
@@ -607,7 +667,7 @@ class _GlassRim extends CustomPainter {
     final rim = RRect.fromRectAndRadius(bounds, const Radius.circular(100));
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = highContrast ? 1.2 : (lens ? .75 : .55);
+      ..strokeWidth = highContrast ? 1.2 : (lens ? .8 : .7);
     if (highContrast) {
       paint.color = DSColors.silver;
     } else if (lens) {
@@ -626,15 +686,16 @@ class _GlassRim extends CustomPainter {
         stops: const [0.0, 0.22, 0.50, 0.72, 1.0],
       ).createShader(bounds);
     } else {
-      // Dock rim: subtle specular on top-left corner only.
+      // Dock rim: a bright top-left catchlight and a softer bottom-right
+      // glint, the two specular edges of Apple's glass.
       paint.shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withValues(alpha: .38),
-          Colors.white.withValues(alpha: .14),
+          Colors.white.withValues(alpha: .5),
+          Colors.white.withValues(alpha: .16),
           Colors.white.withValues(alpha: .06),
-          Colors.white.withValues(alpha: .18),
+          Colors.white.withValues(alpha: .28),
         ],
         stops: const [0, .32, .70, 1],
       ).createShader(bounds);

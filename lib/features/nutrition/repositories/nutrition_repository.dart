@@ -11,6 +11,7 @@ import '../../today/repositories/today_repository.dart';
 import '../../history/repositories/history_repository.dart';
 import '../models/nutrition_diet_models.dart';
 import '../models/food_catalog_page.dart';
+import '../utils/food_search_helper.dart';
 
 class NutritionRepository {
   NutritionRepository._();
@@ -204,8 +205,14 @@ class NutritionRepository {
 
   Future<List<NutritionFoodItemModel>> searchFoodCatalog(
       {String? query, String? category}) async {
+    final cleanQuery = query?.trim() ?? '';
+    final normalized = cleanQuery.isNotEmpty
+        ? FoodSearchHelper.normalizeForCatalogQuery(cleanQuery)
+        : '';
+    final effectiveQuery = normalized.isNotEmpty ? normalized : cleanQuery;
+
     final key = await CacheScope.userKey(
-        'food_catalog_generic_300_v1_${LanguageManager.shared.currentLanguage.code}_${query ?? ''}_${category ?? ''}');
+        'food_catalog_generic_300_v3_${LanguageManager.shared.currentLanguage.code}_${effectiveQuery}_${category ?? ''}');
     final entry = await LocalCache.shared.getEntry(key);
     List<NutritionFoodItemModel> parse(List rows) => rows
         .map((row) => NutritionFoodItemModel.fromJson(
@@ -218,7 +225,7 @@ class NutritionRepository {
       final response = await ApiClient.shared.get<Map<String, dynamic>>(
           Endpoints.nutritionItems,
           queryParameters: {
-            if (query?.isNotEmpty == true) 'search': query,
+            if (effectiveQuery.isNotEmpty) 'search': effectiveQuery,
             if (category?.isNotEmpty == true) 'category': category
           });
       final rows = response.data!['data'] as List;
@@ -230,9 +237,9 @@ class NutritionRepository {
     }
   }
 
-  Future<FoodCatalogPage> getFoodPage(
+  Future<FoodCatalogPage> _fetchFoodPageInternal(
       {int page = 1,
-      String search = '',
+      required String search,
       String? category,
       String focus = 'ALL',
       String sort = 'NAME',
@@ -248,7 +255,7 @@ class NutritionRepository {
       if (category != null) 'category': category,
     };
     final data = await UserDataCache.shared.load(
-        source == 'LIBRARY' ? 'generic_food_pages_v1' : 'custom_food_pages',
+        source == 'LIBRARY' ? 'generic_food_pages_v3' : 'custom_food_pages',
         query.toString(), () async {
       final response = await ApiClient.shared.get<Map<String, dynamic>>(
           '/api/nutrition/catalog',
@@ -262,6 +269,52 @@ class NutritionRepository {
       throw StateError('Your session changed.');
     }
     return FoodCatalogPage.fromJson(data);
+  }
+
+  Future<FoodCatalogPage> getFoodPage(
+      {int page = 1,
+      String search = '',
+      String? category,
+      String focus = 'ALL',
+      String sort = 'NAME',
+      String source = 'LIBRARY'}) async {
+    final cleanSearch = search.trim();
+    if (cleanSearch.isEmpty) {
+      return _fetchFoodPageInternal(
+          page: page,
+          search: '',
+          category: category,
+          focus: focus,
+          sort: sort,
+          source: source);
+    }
+
+    final normalized = FoodSearchHelper.normalizeForCatalogQuery(cleanSearch);
+    final effectiveSearch = normalized.isNotEmpty ? normalized : cleanSearch;
+
+    var pageResult = await _fetchFoodPageInternal(
+        page: page,
+        search: effectiveSearch,
+        category: category,
+        focus: focus,
+        sort: sort,
+        source: source);
+
+    // If normalized query returned 0 foods and cleanSearch is different, fallback to cleanSearch
+    if (pageResult.foods.isEmpty && effectiveSearch != cleanSearch.toLowerCase()) {
+      final fallbackResult = await _fetchFoodPageInternal(
+          page: page,
+          search: cleanSearch,
+          category: category,
+          focus: focus,
+          sort: sort,
+          source: source);
+      if (fallbackResult.foods.isNotEmpty) {
+        pageResult = fallbackResult;
+      }
+    }
+
+    return pageResult;
   }
 
   void dispose() => _plans.close();

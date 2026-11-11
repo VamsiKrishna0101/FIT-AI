@@ -11,13 +11,12 @@ import 'anatomical_training_map.dart';
 import 'body_controls.dart';
 import 'body_calendar.dart';
 import 'body_muscle_details_sheet.dart';
-import 'body_training_scale.dart';
 
 class BodyMapPalette {
-  static const planned = Color(0xFF8BA9CC);
-  static const progress = Color(0xFFC6A77D);
-  static const completed = Color(0xFF80B69E);
-  static const neutral = Color(0xFF595E64);
+  static const planned = Color(0xFF5E9EFF); // High-tech electric cerulean for planned targets
+  static const progress = Color(0xFFFFB347); // Vibrant radiant amber for in progress
+  static const completed = Color(0xFF34D399); // Crisp athletic emerald mint for completed
+  static const neutral = Color(0xFF2A2E35); // Sleek matte obsidian for untouched muscles
 }
 
 class BodyMuscleMapCard extends StatefulWidget {
@@ -58,17 +57,30 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
   bool _trained = true, _back = false;
   BodyDateSelection get _selection =>
       widget.selection ?? BodyDateSelection.thisWeek(DateTime.now());
+
   Color _color(BodyMapRegion r) {
     if (_trained) {
-      return bodyTrainingColor(
-          r.involvedSets, bodyTrainingBands(), BodyMapPalette.neutral);
+      if (r.completedSets == 0 && r.assistingSets == 0 && r.status == 'none') {
+        return BodyMapPalette.neutral;
+      }
+      final isCompleted =
+          (r.plannedSets > 0 && r.completedSets >= r.plannedSets) ||
+          r.status == 'completed' ||
+          (r.plannedSets == 0 && r.completedSets >= 3);
+      final isInProgress = !isCompleted &&
+          (r.status == 'in_progress' ||
+              r.completedSets > 0 ||
+              r.assistingSets > 0 ||
+              r.status == 'logged');
+
+      if (isCompleted) return BodyMapPalette.completed;
+      if (isInProgress) return BodyMapPalette.progress;
+      return BodyMapPalette.neutral;
     }
+
+    // In Planned mode: only Planned
     if (r.plannedSets == 0) return BodyMapPalette.neutral;
-    return r.status == 'completed'
-        ? BodyMapPalette.completed
-        : r.status == 'in_progress'
-            ? BodyMapPalette.progress
-            : BodyMapPalette.planned;
+    return BodyMapPalette.planned;
   }
 
   String get _period {
@@ -104,7 +116,7 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
         isScrollControlled: true,
         useSafeArea: true,
         showDragHandle: false,
-        backgroundColor: const Color(0xFF181A1D),
+        backgroundColor: const Color(0xFF14171A),
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             side: BorderSide(color: Color(0x18FFFFFF), width: .7)),
@@ -132,7 +144,6 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
-    final bands = bodyTrainingBands();
     final colors = {
       for (final r in data?.regions ?? <BodyMapRegion>[]) r.id: _color(r)
     };
@@ -146,8 +157,8 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                     alignment: AlignmentDirectional.centerStart,
                     child: CupertinoSlidingSegmentedControl<bool>(
                         groupValue: _trained,
-                        backgroundColor: const Color(0xFF17191C),
-                        thumbColor: const Color(0xFF34383D),
+                        backgroundColor: const Color(0xFF16191D),
+                        thumbColor: const Color(0xFF2C3036),
                         padding: const EdgeInsets.all(3),
                         onValueChanged: (trained) {
                           if (trained == null || trained == _trained) return;
@@ -161,12 +172,12 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                                     ? 'body-map-trained'
                                     : 'body-map-plan'),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 10),
+                                    horizontal: 14, vertical: 10),
                                 child: FitnessText(
                                     trained ? 'Trained' : 'Planned',
                                     style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w600,
                                         color: trained == _trained
                                             ? Colors.white
                                             : FitnessTheme.muted)))
@@ -185,7 +196,9 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
               children: [
                 Text(_period,
                     style: const TextStyle(
-                        fontSize: 12, color: FitnessTheme.muted)),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: FitnessTheme.muted)),
                 FitnessText(
                     _trained ? '{count} sets logged' : '{count} sets planned',
                     values: {
@@ -196,7 +209,9 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                               : data.plannedSets
                     },
                     style: const TextStyle(
-                        fontSize: 12, color: FitnessTheme.silver)),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: FitnessTheme.silver)),
               ]),
           Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 2),
@@ -206,23 +221,11 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                   runSpacing: 8,
                   children: _trained
                       ? [
-                          for (final band in bands)
-                            _legend(
-                                band.color,
-                                band.last == null
-                                    ? fitnessText(context, '{count}+ sets',
-                                        values: {'count': band.first})
-                                    : fitnessText(
-                                        context, '{first}–{last} sets',
-                                        values: {
-                                            'first': band.first,
-                                            'last': band.last!
-                                          })),
+                          _legend(BodyMapPalette.progress, 'In progress'),
+                          _legend(BodyMapPalette.completed, 'Completed'),
                         ]
                       : [
                           _legend(BodyMapPalette.planned, 'Planned'),
-                          _legend(BodyMapPalette.progress, 'In progress'),
-                          _legend(BodyMapPalette.completed, 'Completed'),
                         ])),
           if (widget.error != null)
             TextButton(
@@ -256,12 +259,13 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                                   colors: colors,
                                   satin: true,
                                   onSelected: _details)))))),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Center(
               child: CupertinoSlidingSegmentedControl<bool>(
                   groupValue: _back,
                   backgroundColor: const Color(0xFF141618),
-                  thumbColor: const Color(0xFF34383D),
+                  thumbColor: const Color(0xFF2C3036),
+                  padding: const EdgeInsets.all(3),
                   onValueChanged: (back) {
                     if (back != null) setState(() => _back = back);
                   },
@@ -271,10 +275,11 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
                       key:
                           ValueKey(back ? 'body-show-back' : 'body-show-front'),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                          horizontal: 16, vertical: 7),
                       child: FitnessText(back ? 'Back view' : 'Front view',
                           style: TextStyle(
                               fontSize: 11,
+                              fontWeight: FontWeight.w500,
                               color: _back == back
                                   ? Colors.white
                                   : FitnessTheme.muted)))
@@ -298,11 +303,24 @@ class _BodyMuscleMapCardState extends State<BodyMuscleMapCard> {
   Widget _legend(Color color, String label) =>
       Row(mainAxisSize: MainAxisSize.min, children: [
         Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 5),
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.35),
+                  blurRadius: 4,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            )),
+        const SizedBox(width: 6),
         FitnessText(label,
-            style: const TextStyle(fontSize: 10, color: FitnessTheme.muted)),
+            style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: FitnessTheme.muted)),
       ]);
 }

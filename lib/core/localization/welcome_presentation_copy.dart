@@ -32,6 +32,26 @@ const _copy = <String, List<String>>{
     "Entrenamiento, nutrición y recuperación.\nTodo tu progreso en un solo lugar.",
     "Allenamenti, nutrizione e recupero su misura.\nTutti i tuoi progressi in un unico posto."
   ],
+  "Hi! I'm Mochi, your AI coach": [
+    "Hi! Ich bin Mochi, dein KI-Coach",
+    "Bonjour ! Je suis Mochi, votre coach IA",
+    "Hej! Jag är Mochi, din AI-coach",
+    "Hei! Jeg er Mochi, din AI-coach",
+    "Hej! Jeg er Mochi, din AI-coach",
+    "Hoi! Ik ben Mochi, je AI-coach",
+    "¡Hola! Soy Mochi, tu coach de IA",
+    "Ciao! Sono Mochi, il tuo coach IA"
+  ],
+  "Done! I built this week around your answers": [
+    "Fertig! Ich habe diese Woche nach deinen Antworten geplant",
+    "C’est prêt ! J’ai construit cette semaine selon vos réponses",
+    "Klart! Jag byggde veckan utifrån dina svar",
+    "Ferdig! Jeg bygde uken rundt svarene dine",
+    "Færdig! Jeg byggede ugen ud fra dine svar",
+    "Klaar! Ik heb deze week op jouw antwoorden afgestemd",
+    "¡Listo! Armé esta semana según tus respuestas",
+    "Fatto! Ho creato questa settimana in base alle tue risposte"
+  ],
   "WORKOUT PREVIEW": [
     "TRAININGSVORSCHAU",
     "APERÇU D’ENTRAÎNEMENT",

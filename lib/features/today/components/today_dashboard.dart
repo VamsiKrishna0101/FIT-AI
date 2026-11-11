@@ -22,6 +22,8 @@ import '../../../core/components/profile_avatar.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../wellness/models/sleep_edit_window.dart';
 import 'weekly_rhythm_calendar.dart';
+import '../../onboarding/components/coach_mascot.dart';
+import '../../onboarding/components/coach_speech.dart';
 import 'update_stats_card.dart';
 import '../../nutrition/components/nutrition_summary_card.dart';
 import '../../nutrition/components/water_intake_card.dart';
@@ -55,6 +57,8 @@ class TodayDashboard extends StatelessWidget {
   final VoidCallback? onWater;
   final VoidCallback? onSleep;
   final VoidCallback? onUpdateStats;
+  final bool hasPlan, planGenerating;
+  final VoidCallback? onGeneratePlan;
 
   const TodayDashboard({
     super.key,
@@ -77,6 +81,9 @@ class TodayDashboard extends StatelessWidget {
     this.onSaveWorkout,
     this.savingWorkout = false,
     this.workoutSaved = false,
+    this.hasPlan = true,
+    this.planGenerating = false,
+    this.onGeneratePlan,
     required this.onTrain,
     required this.onNutrition,
     this.onAddMeal,
@@ -127,6 +134,10 @@ class TodayDashboard extends StatelessWidget {
         ? List.generate(7, (_) => const WeekDay(day: '', status: 'UNAVAILABLE'))
         : days;
     final actualToday = now ?? DateTime.now();
+    final coach = _coachLine(data?.todayWorkout,
+        hasPlan: hasPlan,
+        planGenerating: planGenerating,
+        streakDays: data?.user.streakDays ?? 0);
     final editSleep = canEditSleepDate(date, actualToday) ? onSleep : null;
     final previousWeek =
         sleepWeekStart(date).isBefore(sleepWeekStart(actualToday));
@@ -298,6 +309,16 @@ class TodayDashboard extends StatelessWidget {
                                   minHeight: 2),
                             ]))
                       else if (!loadFailed) ...[
+                        if (!historical && coach != null) ...[
+                          CoachSpeech(
+                              key: ValueKey('today-coach-${coach.$2.name}'),
+                              hero: false,
+                              mascotSize: 54,
+                              mood: coach.$2,
+                              text: coach.$1,
+                              values: {'count': data?.user.streakDays ?? 0}),
+                          const SizedBox(height: 22),
+                        ],
                         _Section(
                             key: const ValueKey('today-section-readiness'),
                             title: copy.text('recovery'),
@@ -324,6 +345,9 @@ class TodayDashboard extends StatelessWidget {
                         _SessionCard(
                             key: const ValueKey('today-session-card'),
                             workout: data?.todayWorkout,
+                            hasPlan: hasPlan,
+                            planGenerating: planGenerating,
+                            onGeneratePlan: onGeneratePlan,
                             past: DateUtils.dateOnly(date).isBefore(
                                 DateUtils.dateOnly(now ?? DateTime.now())),
                             onSaveWorkout: onSaveWorkout,
@@ -366,6 +390,33 @@ class TodayDashboard extends StatelessWidget {
       )),
     ]);
   }
+}
+
+/// Mochi's one line for today, matched to the session's state; null when Mochi
+/// has nothing useful to add.
+(String, CoachMood)? _coachLine(HomeTodayWorkout? workout,
+    {required bool hasPlan,
+    required bool planGenerating,
+    required int streakDays}) {
+  // Streak milestones outrank everything else on the day they are reached.
+  if (const {3, 7, 14, 21, 30}.contains(streakDays) ||
+      (streakDays > 30 && streakDays % 30 == 0)) {
+    return ('{count} days in a row. Who even are you 🔥', CoachMood.cheer);
+  }
+  if (workout == null) {
+    if (planGenerating) {
+      return ("I'm building your week right now", CoachMood.thinking);
+    }
+    return hasPlan
+        ? null
+        : ("Let's build your plan for this week", CoachMood.listening);
+  }
+  return switch (workout.status) {
+    'REST_DAY' => ('Rest day. Recovery builds muscle too', CoachMood.sleepy),
+    'COMPLETED' => ('Workout done today. Proud of you!', CoachMood.cheer),
+    // On ordinary training days the session card already says it all.
+    _ => null,
+  };
 }
 
 class _Header extends StatelessWidget {
@@ -481,10 +532,15 @@ class _SessionCard extends StatelessWidget {
   final SetcraftCopy copy;
   final VoidCallback onSession, onTrain;
   final VoidCallback? onSaveWorkout;
+  final bool hasPlan, planGenerating;
+  final VoidCallback? onGeneratePlan;
   final bool past, saving, saved;
   const _SessionCard(
       {super.key,
       required this.workout,
+      this.hasPlan = true,
+      this.planGenerating = false,
+      this.onGeneratePlan,
       required this.past,
       required this.onSaveWorkout,
       required this.saving,
@@ -496,13 +552,18 @@ class _SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = workout;
     final complete = w?.status == 'COMPLETED';
-    final rest = w == null || w.status == 'REST_DAY';
+    final isRestDay = w?.status == 'REST_DAY';
+    final rest = w == null || isRestDay;
+    // While a plan is generating, the same action reopens its progress.
+    final isNoPlan = w == null && (!hasPlan || planGenerating);
     final progress = w?.status == 'IN_PROGRESS';
     final missed =
         past && !rest && !complete && !progress && w.exerciseCount > 0;
     final guidance = SessionGuidance.fromNote(w?.aiNote,
         fallback: copy.text('todayAdaptiveEffort'));
-    final actionLabel = copy.text(rest
+    final actionLabel = isNoPlan
+        ? copy.text(planGenerating ? 'planGenerating' : 'generatePlan')
+        : copy.text(rest
         ? 'openPlan'
         : complete
             ? 'todayReviewSession'
@@ -520,31 +581,46 @@ class _SessionCard extends StatelessWidget {
                   : progress
                       ? SessionOverviewStatus.inProgress
                       : SessionOverviewStatus.notStarted,
-      title:
-          rest ? copy.text('todayNoSession') : w.sessionTitle ?? w.workoutTitle,
+      title: isRestDay
+          ? copy.text('restDay')
+          : (rest
+              ? (isNoPlan ? copy.text('noPlanGenerated') : copy.text('todayNoSession'))
+              : w.sessionTitle ?? w.workoutTitle),
       metrics: [
         if (!rest && w.durationMinutes > 0)
           '${w.durationMinutes} ${copy.text('minutes')}',
         if (!rest && w.exerciseCount > 0)
           '${w.exerciseCount} ${copy.text('exercises')}',
       ],
-      caption: !rest && guidance.effort != null
+      caption: isRestDay
           ? Text(
-              '${copy.text('todayTargetEffort')} · ${NumberFormat('0.#', copy.localeCode).format(guidance.effort)} / 10',
-              key: const ValueKey('today-effort-pill'),
-              style: const TextStyle(color: _muted, fontSize: 11))
-          : null,
+              copy.text('restDayBody'),
+              key: const ValueKey('today-rest-day-body'),
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 12,
+                height: 1.35,
+              ),
+            )
+          : (!rest && guidance.effort != null
+              ? Text(
+                  '${copy.text('todayTargetEffort')} · ${NumberFormat('0.#', copy.localeCode).format(guidance.effort)} / 10',
+                  key: const ValueKey('today-effort-pill'),
+                  style: const TextStyle(color: _muted, fontSize: 11))
+              : null),
       actionLabel: missed
           ? fitnessText(context, saved ? 'My workouts' : 'Save workout')
           : actionLabel,
-      onAction: missed
+      onAction: isNoPlan
+          ? (onGeneratePlan ?? onTrain)
+          : missed
           ? onSaveWorkout
           : rest
               ? onTrain
               : onSession,
-      onTap: rest ? onTrain : onSession,
+      onTap: isNoPlan ? (onGeneratePlan ?? onTrain) : (rest ? onTrain : onSession),
       busy: missed && saving,
-      primary: !rest,
+      primary: !rest || isNoPlan,
     );
   }
 }

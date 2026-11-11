@@ -1,5 +1,45 @@
 const _languages = ['de', 'fr', 'sv', 'no', 'da', 'nl', 'es', 'it'];
 const _copy = <String, List<String>>{
+  'Generate plan': [
+    'Plan erstellen',
+    'Générer un programme',
+    'Skapa plan',
+    'Generer plan',
+    'Generer plan',
+    'Plan genereren',
+    'Generar plan',
+    'Genera programma'
+  ],
+  'Generating your plan…': [
+    'Plan wird erstellt…',
+    'Programme en cours de création…',
+    'Planen skapas…',
+    'Planen genereres…',
+    'Planen genereres…',
+    'Plan wordt gemaakt…',
+    'Generando tu plan…',
+    'Programma in creazione…'
+  ],
+  'No plan generated': [
+    'Kein Plan erstellt',
+    'Aucun programme généré',
+    'Ingen plan skapad',
+    'Ingen plan generert',
+    'Ingen plan genereret',
+    'Geen plan gegenereerd',
+    'Ningún plan generado',
+    'Nessun programma generato'
+  ],
+  'Or add exercise manually': [
+    'Oder Übung manuell hinzufügen',
+    'Ou ajouter un exercice manuellement',
+    'Eller lägg till övning manuellt',
+    'Eller legg til øvelse manuelt',
+    'Eller tilføj øvelse manuelt',
+    'Of voeg oefening handmatig toe',
+    'O añadir ejercicio manualmente',
+    'Oppure aggiungi esercizio manualmente'
+  ],
   'Why this plan': [
     'Warum dieser Plan',
     'Pourquoi ce programme',

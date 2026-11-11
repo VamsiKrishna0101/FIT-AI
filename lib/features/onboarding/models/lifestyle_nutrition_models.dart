@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 // MARK: - Screen 06: Activity Level Outside Workouts (Matches Prisma ActivityLevel)
 enum ActivityLevelOption {
-  low('LOW', '🪑', 'Low', 'Sedentary / mostly desk job', 1.375),
-  moderate('MODERATE', '🚶', 'Moderate', 'On feet often / light movement', 1.55,
+  low('LOW', '🪑', 'Low', 'Mostly sitting (desk work)', 1.375),
+  moderate('MODERATE', '🚶', 'Moderate', 'On your feet / walking', 1.55,
       isRecommended: true),
-  high('HIGH', '🏃', 'High', 'Heavy physical labor / high steps', 1.725);
+  high('HIGH', '🏃', 'High', 'Active / physical work', 1.725);
 
   final String backendValue;
   final String emoji;

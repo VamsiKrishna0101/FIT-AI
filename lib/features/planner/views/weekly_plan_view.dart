@@ -19,6 +19,7 @@ import 'widgets/weekly_plan_schedule.dart';
 import '../../body_scan/models/body_assessment_models.dart';
 import '../../body_scan/views/body_entry_view.dart';
 import 'widgets/plan_schedule_sheet.dart';
+import 'widgets/weekly_measurement_prompt_sheet.dart';
 import '../../profile/views/ai_sharing_consent.dart';
 
 class WeeklyPlanView extends StatefulWidget {
@@ -209,15 +210,10 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
       });
       final body = await _repo.bodyOverview();
       if (!await _sameOwner()) return;
-      if (!WeeklyPlanRepository.hasEnteredMeasurements(body, DateTime.now())) {
-        if (!await _measurementsBeforePlanning(body)) return;
-        if (!await _sameOwner()) return;
-        final updated = await _repo.bodyOverview();
-        if (!WeeklyPlanRepository.hasEnteredMeasurements(
-            updated, DateTime.now())) {
-          throw StateError(
-              'Complete your measurements before creating your plan.');
-        }
+      if (!await _ensureMeasurementsBeforePlanning(body)) return;
+      final updated = await _repo.bodyOverview();
+      if (!WeeklyPlanRepository.hasEnteredMeasurements(updated, DateTime.now())) {
+        return;
       }
       final start = schedule.start;
       if (!mounted ||
@@ -252,15 +248,55 @@ class _WeeklyPlanViewState extends State<WeeklyPlanView> {
     }
   }
 
-  Future<bool> _measurementsBeforePlanning(BodyOverview body) async {
-    final route = AppPageRoute<bool>(
-        page: BodyEntryView(
-      baseline: BodyMeasurementBaseline(body),
-      requireBaseline: true,
-    ));
-    final saved = await Navigator.of(context).push(route);
-    await route.completed;
-    return saved == true && await _sameOwner();
+  DateTime? _latestWaistRecordedDate(BodyOverview body) {
+    DateTime? latest;
+    for (final record in body.records) {
+      if (record.status == 'SAVED' &&
+          !record.synthetic &&
+          record.metrics.containsKey('waistCm')) {
+        final d = DateTime.tryParse(record.recordedDate);
+        if (d != null && (latest == null || d.isAfter(latest))) {
+          latest = d;
+        }
+      }
+    }
+    return latest;
+  }
+
+  Future<bool> _ensureMeasurementsBeforePlanning(BodyOverview body) async {
+    final baseline = BodyMeasurementBaseline(body);
+    final waistDate = _latestWaistRecordedDate(body);
+    final isStale = waistDate == null ||
+        DateTime.now().difference(waistDate).inDays >= 7;
+
+    if (!baseline.isComplete || isStale) {
+      final confirmed = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        sheetAnimationStyle: DSMotion.sheetStyle(context),
+        backgroundColor: FitnessTheme.surface,
+        builder: (sheetContext) => WeeklyMeasurementPromptSheet(
+          overview: body,
+          baseline: baseline,
+          onOpenFullUpdate: () async {
+            final saved = await Navigator.of(context).push(AppPageRoute<bool>(
+              page: BodyEntryView(
+                baseline: baseline,
+                requireBaseline: true,
+              ),
+            ));
+            if (saved == true && sheetContext.mounted) {
+              Navigator.of(sheetContext).pop(true);
+            }
+          },
+        ),
+      );
+      if (confirmed != true) return false;
+      return await _sameOwner();
+    }
+    return true;
   }
 
   Future<void> _poll() async {

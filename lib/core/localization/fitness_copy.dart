@@ -3,6 +3,7 @@ import 'manual_entries_copy.dart';
 import 'notification_copy.dart';
 import 'onboarding_conversation_copy.dart';
 import 'welcome_presentation_copy.dart';
+import 'coach_copy.dart';
 import 'body_measurements_copy.dart';
 import 'package:flutter/widgets.dart';
 import 'fitness_copy_data.dart';
@@ -42,6 +43,7 @@ String fitnessText(BuildContext context, String text,
       planCheckoutTranslation(locale, text) ??
       onboardingConversationTranslation(locale, text) ??
       welcomePresentationTranslation(locale, text) ??
+      coachTranslation(locale, text) ??
       bodyMeasurementsTranslation(locale, text) ??
       progressPresentationTranslation(locale, text) ??
       trainingHubTranslation(locale, text) ??

@@ -8,7 +8,7 @@ import 'onboarding_controller.dart';
 // MARK: - Onboarding Screen 01 (Your Goal) ViewModel
 class GoalViewModel extends ChangeNotifier {
   final int currentStep = 2;
-  final int totalSteps = 8;
+  final int totalSteps = 7;
 
   WorkingTowardGoal? _selectedGoal;
   WorkingTowardGoal? get selectedGoal => _selectedGoal;

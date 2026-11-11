@@ -94,7 +94,7 @@ void main() {
           data: MediaQueryData(textScaler: TextScaler.linear(scale)),
           child: ProgressMuscleChartCard(muscles: [
             for (var i = ids.length - 1; i >= 0; i--)
-              {'id': ids[i], 'label': ids[i], 'directSets': 9 - i}
+              {'id': ids[i], 'label': ids[i], 'directSets': 10 - i}
           ], onMuscle: (row) => opened = row['id'] as String))));
       await tester.pumpAndSettle();
       final first = find.byKey(const ValueKey('progress-visual-bar-0'));
@@ -121,6 +121,22 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('Muscle chart hides zero-set muscles and shows empty state',
+      (tester) async {
+    await tester.pumpWidget(page(ProgressMuscleChartCard(muscles: const [
+      {'id': 'chest', 'label': 'chest', 'directSets': 4},
+      {'id': 'calves', 'label': 'calves', 'directSets': 0},
+    ], onMuscle: (_) {})));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('progress-visual-bar-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('progress-visual-bar-1')), findsNothing);
+    await tester.pumpWidget(page(ProgressMuscleChartCard(muscles: const [
+      {'id': 'calves', 'label': 'calves', 'directSets': 0},
+    ], onMuscle: (_) {})));
+    await tester.pumpAndSettle();
+    expect(find.text('No sets in this period'), findsOneWidget);
+  });
 
   testWidgets('Nutrition ring has one-line centre and selectable macro share',
       (tester) async {
@@ -150,7 +166,7 @@ void main() {
     final value = find.byKey(const ValueKey('progress-macro-centre-value'));
     final reset = find.byKey(const ValueKey('progress-macro-reset'));
     final total = tester.widget<Text>(value).data;
-    expect(find.text('Macro kcal'), findsOneWidget);
+    expect(find.text('kcal per day'), findsOneWidget);
     expect(reset, findsNothing);
 
     for (final macro in ['Protein', 'Carbs', 'Fat']) {
@@ -162,7 +178,7 @@ void main() {
       await tester.tap(reset);
       await tester.pumpAndSettle();
       expect(tester.widget<Text>(value).data, total);
-      expect(find.text('Macro kcal'), findsOneWidget);
+      expect(find.text('kcal per day'), findsOneWidget);
       expect(reset, findsNothing);
     }
     expect(tester.takeException(), isNull);

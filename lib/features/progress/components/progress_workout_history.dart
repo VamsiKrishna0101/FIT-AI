@@ -189,7 +189,7 @@ class ProgressWorkoutHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (sessions.isEmpty) {
-      return const ProgressEmpty('No workouts in this period');
+      return const ProgressEmpty('No workouts in this period', coach: true);
     }
     final groups = <String, List<ProgressJson>>{};
     for (final session in sessions) {

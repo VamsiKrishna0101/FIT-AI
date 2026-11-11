@@ -6,6 +6,8 @@ class TrainingDay {
 
   String get date => json['date'] as String;
   String get name => json['name'] as String? ?? 'Workout';
+  String? get planId => json['planId'] as String?;
+  bool get hasPlan => planId != null;
   bool get restDay => json['restDay'] == true;
   Map<String, dynamic>? get session =>
       (json['session'] as Map?)?.cast<String, dynamic>();

@@ -2,10 +2,10 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../core/localization/app_language.dart';
 import '../models/lifestyle_nutrition_models.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Apple iOS Eating Style Grid (Screen 07)
 class EatingStyleGrid extends StatelessWidget {
@@ -73,7 +73,7 @@ class _EatingStyleCardState extends State<_EatingStyleCard> {
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        OnboardingCoach.select();
         widget.onTap();
       },
       onTapDown: (_) => setState(() => _pressed = true),
@@ -248,7 +248,7 @@ class FoodBudgetSegmentedBar extends StatelessWidget {
                   label: opt.defaultLabel,
                   isSelected: isSelected,
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    OnboardingCoach.select();
                     onSelected(opt);
                   },
                 ),
@@ -262,7 +262,7 @@ class FoodBudgetSegmentedBar extends StatelessWidget {
                 label: customLabel,
                 isSelected: isCustomBudget,
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  OnboardingCoach.select();
                   onCustomTap();
                 },
               ),
@@ -421,7 +421,7 @@ class _StepperButtonState extends State<_StepperButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        OnboardingCoach.select();
         widget.onTap();
       },
       onTapDown: (_) => setState(() => _pressed = true),

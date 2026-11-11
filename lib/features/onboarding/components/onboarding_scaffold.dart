@@ -1,13 +1,26 @@
 import 'dart:async';
 import '../../../core/theme/ds_motion.dart';
 import '../../../core/components/motion.dart';
-import '../../../core/components/content_transition.dart';
+import '../../../core/components/blur_through.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/components/liquid_chrome_button.dart';
 import '../../../core/theme/fitness_theme.dart';
+import 'coach_mascot.dart';
+import 'coach_speech.dart';
 import 'onboarding_chrome.dart';
+import 'onboarding_coach.dart';
+import 'onboarding_motion.dart';
+import 'welcome_buddies.dart';
+
+String _stripTrailingDot(String text) {
+  var s = text.trim();
+  while (s.endsWith('.')) {
+    s = s.substring(0, s.length - 1).trim();
+  }
+  return s;
+}
 
 /// One scrollable content region and one reachable action across every step.
 class OnboardingScaffold extends StatelessWidget {
@@ -24,6 +37,13 @@ class OnboardingScaffold extends StatelessWidget {
   final String? actionMessage;
   final Widget? secondaryAction;
   final Widget? header;
+
+  /// Mochi introduces each step; the subtitle becomes Mochi's line.
+  final bool showCoach;
+  final CoachMood coachMood;
+
+  /// One of Mochi's buddies joins the steps it relates to.
+  final BuddyKind? buddy;
   const OnboardingScaffold(
       {super.key,
       required this.step,
@@ -42,6 +62,9 @@ class OnboardingScaffold extends StatelessWidget {
       this.canPop = true,
       this.secondaryAction,
       this.header,
+      this.showCoach = true,
+      this.coachMood = CoachMood.listening,
+      this.buddy,
       this.actionMessage,
       this.footer});
   @override
@@ -82,8 +105,17 @@ class OnboardingScaffold extends StatelessWidget {
                                     ? const SizedBox(height: 44)
                                     : OnboardingBackButton(
                                         onPressed: onBack!))),
+                      // Like a chat: Mochi and the bubble stay in place while
+                      // the question below dissolves into the next one.
+                      if (showCoach)
+                        Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+                            child: CoachSpeech(
+                                text: _stripTrailingDot(subtitle),
+                                mood: coachMood,
+                                buddy: buddy)),
                       Expanded(
-                          child: ContentTransition(
+                          child: _StepSwitcher(
                               child: KeyedSubtree(
                                   key: ValueKey('onboarding-page-$step-$part'),
                                   child: ListView(
@@ -91,15 +123,16 @@ class OnboardingScaffold extends StatelessWidget {
                                       keyboardDismissBehavior:
                                           ScrollViewKeyboardDismissBehavior
                                               .onDrag,
-                                      padding: const EdgeInsets.fromLTRB(
-                                          24, 32, 24, 28),
+                                      padding: EdgeInsets.fromLTRB(
+                                          24, showCoach ? 24 : 32, 24, 28),
                                       children: [
                                         if (header != null) ...[
                                           header!,
                                           const SizedBox(height: 24)
                                         ],
-                                        if (sectionLabel.isNotEmpty) ...[
-                                          FitnessText(sectionLabel,
+                                        if (!showCoach &&
+                                            sectionLabel.isNotEmpty) ...[
+                                          FitnessText(_stripTrailingDot(sectionLabel),
                                               textAlign: TextAlign.center,
                                               style: const TextStyle(
                                                   fontSize: 11,
@@ -108,16 +141,20 @@ class OnboardingScaffold extends StatelessWidget {
                                                   fontWeight: FontWeight.w600)),
                                           const SizedBox(height: 13),
                                         ],
-                                        FitnessText(title,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                fontSize: 32,
+                                        // With Mochi, the step reads as one
+                                        // left-aligned column, like a chat.
+                                        FitnessText(_stripTrailingDot(title),
+                                            textAlign: showCoach
+                                                ? TextAlign.start
+                                                : TextAlign.center,
+                                            style: TextStyle(
+                                                fontSize: showCoach ? 28 : 32,
                                                 fontWeight: FontWeight.w700,
                                                 letterSpacing: -.8,
                                                 height: 1.18)),
-                                        if (subtitle.isNotEmpty) ...[
+                                        if (!showCoach && subtitle.isNotEmpty) ...[
                                           const SizedBox(height: 14),
-                                          FitnessText(subtitle,
+                                          FitnessText(_stripTrailingDot(subtitle),
                                               textAlign: TextAlign.center,
                                               style: const TextStyle(
                                                   fontSize: 15,
@@ -125,7 +162,11 @@ class OnboardingScaffold extends StatelessWidget {
                                                   height: 1.45)),
                                         ],
                                         const SizedBox(height: 28),
-                                        ...children
+                                        for (var i = 0;
+                                            i < children.length;
+                                            i++)
+                                          StaggeredEntrance(
+                                              index: i, child: children[i]),
                                       ])))),
                       Container(
                           decoration:
@@ -153,7 +194,7 @@ class OnboardingScaffold extends StatelessWidget {
                                 MediaQuery.viewInsetsOf(context).bottom ==
                                     0) ...[
                               const SizedBox(height: 10),
-                              FitnessText(footer!,
+                              FitnessText(_stripTrailingDot(footer!),
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                       fontSize: 11, color: FitnessTheme.muted))
@@ -161,6 +202,32 @@ class OnboardingScaffold extends StatelessWidget {
                           ])),
                     ])),
               ))));
+}
+
+/// Sub-questions within a step dissolve through the same soft blur as steps.
+class _StepSwitcher extends StatelessWidget {
+  final Widget child;
+  const _StepSwitcher({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (DSMotion.reduced(context)) return child;
+    // The outgoing question blurs away first, then the next one sharpens in,
+    // so two questions are never fully visible together.
+    return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 420),
+        switchInCurve: DSMotion.contentIn,
+        switchOutCurve: DSMotion.contentOut,
+        transitionBuilder: (child, animation) =>
+            BlurThrough(enter: animation, child: child),
+        layoutBuilder: (current, previous) =>
+            Stack(alignment: Alignment.topCenter, children: [
+              for (final child in previous)
+                IgnorePointer(child: ExcludeSemantics(child: child)),
+              if (current != null) current,
+            ]),
+        child: child);
+  }
 }
 
 /// Keeps the action locked through both saves and local question transitions.
@@ -261,7 +328,7 @@ class OnboardingChoice extends StatelessWidget {
                     highlightColor: Colors.transparent,
                     borderRadius: BorderRadius.circular(18),
                     onTap: () {
-                      HapticFeedback.selectionClick();
+                      OnboardingCoach.select();
                       onTap();
                     },
                     child: Padding(
@@ -276,7 +343,7 @@ class OnboardingChoice extends StatelessWidget {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                FitnessText(title,
+                                FitnessText(_stripTrailingDot(title),
                                     style: TextStyle(
                                         color: Color.lerp(
                                             Colors.white, Colors.black, value),
@@ -285,7 +352,7 @@ class OnboardingChoice extends StatelessWidget {
                                         letterSpacing: -.2)),
                                 if (subtitle != null) ...[
                                   const SizedBox(height: 5),
-                                  FitnessText(subtitle!,
+                                  FitnessText(_stripTrailingDot(subtitle!),
                                       style: TextStyle(
                                           fontSize: 13,
                                           color: Color.lerp(FitnessTheme.muted,

@@ -159,6 +159,16 @@ const _recapCopy = <String, List<String>>{
     'Actividad',
     'Attività'
   ],
+  'Completed workouts': [
+    'Abgeschlossene Workouts',
+    'Séances terminées',
+    'Avslutade pass',
+    'Fullførte økter',
+    'Gennemførte træningspas',
+    'Voltooide workouts',
+    'Entrenamientos completados',
+    'Allenamenti completati'
+  ],
   'Days trained': [
     'Trainingstage',
     'Jours d’entraînement',
@@ -248,6 +258,46 @@ const _recapCopy = <String, List<String>>{
     'Macro-kcal',
     'kcal de macros',
     'kcal dei macro'
+  ],
+  'First session logged': [
+    'Erste Einheit erfasst',
+    'Première séance enregistrée',
+    'Första passet loggat',
+    'Første økt logget',
+    'Første træningspas logget',
+    'Eerste sessie gelogd',
+    'Primera sesión registrada',
+    'Prima sessione registrata'
+  ],
+  'kcal per day': [
+    'kcal pro Tag',
+    'kcal par jour',
+    'kcal per dag',
+    'kcal per dag',
+    'kcal pr. dag',
+    'kcal per dag',
+    'kcal por día',
+    'kcal al giorno'
+  ],
+  'Daily average': [
+    'Tagesdurchschnitt',
+    'Moyenne quotidienne',
+    'Dagligt snitt',
+    'Daglig gjennomsnitt',
+    'Dagligt gennemsnit',
+    'Daggemiddelde',
+    'Promedio diario',
+    'Media giornaliera'
+  ],
+  'Daily average, week of {date}': [
+    'Tagesdurchschnitt, Woche ab {date}',
+    'Moyenne quotidienne, semaine du {date}',
+    'Dagligt snitt, veckan från {date}',
+    'Daglig gjennomsnitt, uken fra {date}',
+    'Dagligt gennemsnit, ugen fra {date}',
+    'Daggemiddelde, week van {date}',
+    'Promedio diario, semana del {date}',
+    'Media giornaliera, settimana del {date}'
   ],
   'Weekly average': [
     'Wochendurchschnitt',

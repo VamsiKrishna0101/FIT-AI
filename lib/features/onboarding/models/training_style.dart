@@ -1,12 +1,12 @@
 import '../../../core/storage/onboarding_draft.dart';
 
 const trainingStyleNames = {
-  'AUTO': 'Recommend my weekly plan',
-  'FULL_BODY': 'Train my whole body each session',
-  'UPPER_LOWER': 'Alternate chest, back & arms with legs & core',
-  'PUSH_PULL_LEGS': 'Chest & triceps, back & biceps, then legs',
-  'MUSCLE_FOCUSED': 'Focus on different muscles each day',
-  'CUSTOM': 'Choose muscles for each day',
+  'AUTO': 'Recommended for you',
+  'FULL_BODY': 'Full body sessions',
+  'UPPER_LOWER': 'Upper & lower body split',
+  'PUSH_PULL_LEGS': 'Push, pull, legs split',
+  'MUSCLE_FOCUSED': 'Targeted muscle focus',
+  'CUSTOM': 'Custom daily split',
 };
 
 class TrainingStylePreview {
@@ -31,20 +31,14 @@ class TrainingStylePreview {
           draft.workoutDuration?.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ??
       45;
   String get recommended {
+    if (draft.experienceLevel == 'BEGINNER') {
+      return count <= 3 ? 'FULL_BODY' : 'UPPER_LOWER';
+    }
     final limitedHome = draft.trainingLocation == 'HOME' &&
         !draft.equipmentIds
             .any((id) => !['bodyweight_only', 'yoga_mat'].contains(id));
-    if (draft.experienceLevel == 'BEGINNER' &&
-        count >= 3 &&
-        minutes >= 30 &&
-        !limitedHome) {
-      return 'MUSCLE_FOCUSED';
-    }
     if (count <= 3 || (limitedHome && minutes < 30)) return 'FULL_BODY';
-    if (count == 6 &&
-        draft.experienceLevel != null &&
-        draft.experienceLevel != 'BEGINNER' &&
-        minutes >= 40 &&
+    if (count >= 5 &&
         ['BUILD_MUSCLE', 'GET_STRONGER'].contains(draft.workingToward)) {
       return 'PUSH_PULL_LEGS';
     }
@@ -68,9 +62,11 @@ class TrainingStylePreview {
   }
 
   List<List<String>> get groups => List.generate(selectedDays.length, (i) {
+        final custom = draft.customTrainingSplit[selectedDays[i]];
+        if (custom != null && custom.isNotEmpty) {
+          return custom;
+        }
         switch (resolved) {
-          case 'CUSTOM':
-            return draft.customTrainingSplit[selectedDays[i]] ?? [];
           case 'UPPER_LOWER':
             return i.isEven
                 ? ['chest', 'back', 'shoulders', 'biceps', 'triceps']
@@ -84,7 +80,14 @@ class TrainingStylePreview {
           case 'MUSCLE_FOCUSED':
             return focused(count)[i % focused(count).length];
           default:
-            return ['chest', 'back', 'legs'];
+            return const [
+              ['chest', 'back'],
+              ['legs', 'shoulders'],
+              ['biceps', 'triceps', 'core'],
+              ['chest', 'back', 'legs'],
+              ['chest', 'back'],
+              ['legs', 'core'],
+            ][i % 6];
         }
       });
   static List<List<String>> focused(int days) {

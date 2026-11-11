@@ -50,6 +50,9 @@ class OnboardingDraft {
   List<String> focusMuscles;
   List<String> foodAllergies;
   List<String> dislikedFoods;
+  List<String> stapleProteins;
+  List<String> stapleCarbs;
+  List<String> dietaryExclusions;
   String? foodBudgetCurrency;
 
   OnboardingDraft({
@@ -83,6 +86,9 @@ class OnboardingDraft {
     this.focusMuscles = const [],
     this.foodAllergies = const [],
     this.dislikedFoods = const [],
+    this.stapleProteins = const [],
+    this.stapleCarbs = const [],
+    this.dietaryExclusions = const [],
     this.foodBudgetCurrency,
     this.completedStep = 1,
   }) {
@@ -122,6 +128,9 @@ class OnboardingDraft {
         'focusMuscles': focusMuscles,
         'foodAllergies': foodAllergies,
         'dislikedFoods': dislikedFoods,
+        'stapleProteins': stapleProteins,
+        'stapleCarbs': stapleCarbs,
+        'dietaryExclusions': dietaryExclusions,
         'foodBudgetCurrency': foodBudgetCurrency,
         'completedStep': completedStep,
       };
@@ -195,6 +204,14 @@ class OnboardingDraft {
           (json['foodAllergies'] as List? ?? []).whereType<String>().toList(),
       dislikedFoods:
           (json['dislikedFoods'] as List? ?? []).whereType<String>().toList(),
+      stapleProteins: (json['stapleProteins'] as List? ?? [])
+          .whereType<String>()
+          .toList(),
+      stapleCarbs:
+          (json['stapleCarbs'] as List? ?? []).whereType<String>().toList(),
+      dietaryExclusions: (json['dietaryExclusions'] as List? ?? [])
+          .whereType<String>()
+          .toList(),
       foodBudgetCurrency: json['foodBudgetCurrency'] as String?,
       completedStep: json['completedStep'] as int? ?? 1,
     );
@@ -215,11 +232,14 @@ class OnboardingDraft {
         'customLimitations': customLimitations?.trim().isEmpty == true
             ? null
             : customLimitations,
-        'foodAllergies': foodAllergies,
+        'foodAllergies': [
+          ...foodAllergies,
+          ...dietaryExclusions,
+        ],
         'dislikedFoods': dislikedFoods,
-        'foodBudgetAmount': customWeeklyFoodBudget,
-        'foodBudgetCurrency':
-            customWeeklyFoodBudget == null ? null : foodBudgetCurrency,
+        'stapleProteins': stapleProteins,
+        'stapleCarbs': stapleCarbs,
+        'dietaryExclusions': dietaryExclusions,
       };
 
   static Future<OnboardingDraft> load() async {

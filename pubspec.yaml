@@ -63,8 +63,13 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter.ttf
+    # Rep, the coach, speaks in Nunito (SIL OFL, see Nunito-OFL.txt).
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf
   assets:
     - assets/fonts/OFL.txt
+    - assets/fonts/Nunito-OFL.txt
     # Explicit entries keep the retired welcome video out of new app bundles.
     - assets/branding/google_g_logo.png
     - assets/branding/LUCIDE_LICENSE
@@ -73,7 +78,6 @@ flutter:
     - assets/branding/setcraft-mark.svg
     - assets/branding/setcraft-premium-strength-v1.png
     - assets/branding/setcraft-training-hero-v1.png
-    - assets/branding/setcraft-welcome-editorial-v1.webp
     - assets/branding/setcraft-welcome-training-v2.png
     - assets/branding/trial-bin.png
     - assets/onboarding_images/

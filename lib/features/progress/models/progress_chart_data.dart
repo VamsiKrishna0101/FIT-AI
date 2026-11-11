@@ -95,6 +95,9 @@ class ProgressMacros {
   const ProgressMacros(this.grams, this.days);
   List<double> get calories => [grams[0] * 4, grams[1] * 4, grams[2] * 9];
   double get total => calories.fold(0, (a, b) => a + b);
+  List<double> get dailyGrams =>
+      [for (final g in grams) days == 0 ? g : g / days];
+  double get dailyTotal => days == 0 ? total : total / days;
   factory ProgressMacros.fromRows(List<ProgressJson> rows) {
     final complete = <String, List<double>>{};
     for (final row in rows) {

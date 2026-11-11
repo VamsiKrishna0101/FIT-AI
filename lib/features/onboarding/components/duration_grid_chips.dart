@@ -2,9 +2,9 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/training_schedule_models.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Apple iOS Premium Duration Segmented Stadium Bar (Screen 04)
 /// Unified 4-option frosted glass segmented control matching ScheduleFrequencyPills.
@@ -45,7 +45,7 @@ class DurationGridChips extends StatelessWidget {
                 label: titleBuilder(option),
                 isSelected: isSelected,
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  OnboardingCoach.select();
                   onSelected(option);
                 },
               ),

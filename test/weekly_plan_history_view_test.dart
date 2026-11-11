@@ -103,7 +103,7 @@ class _HistoryRepository extends WeeklyPlanRepository {
   Future<List<Map<String, dynamic>>> plans() async => [recent, previous];
 
   @override
-  Future<Map<String, dynamic>> availability() async => {
+  Future<Map<String, dynamic>> availability({bool refresh = false}) async => {
         'canGenerate': false,
         'cooldownActive': true,
         'lastPlanId': 'current',

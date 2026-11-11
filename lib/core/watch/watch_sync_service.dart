@@ -71,6 +71,7 @@ class WatchSyncService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('watch_haptic_rest', value);
+    await _resendSettings();
   }
 
   Future<void> setOpticalHrEnabled(bool value) async {
@@ -78,7 +79,22 @@ class WatchSyncService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('watch_optical_hr', value);
+    await _resendSettings();
   }
+
+  /// Watch settings travel with the workout snapshot, so a change made while a
+  /// workout is open reaches the watch right away.
+  Future<void> _resendSettings() async {
+    final snapshot = _latestSnapshot;
+    if (snapshot != null) await syncWorkoutState(snapshot);
+  }
+
+  @visibleForTesting
+  Map<String, dynamic> watchPayload(WatchWorkoutSnapshot snapshot) => {
+        ...snapshot.toJson(),
+        'hapticRestAlerts': _hapticRestAlerts,
+        'heartRateEnabled': _opticalHrEnabled,
+      };
 
   void _initChannel() {
     if (isSupported) {
@@ -199,7 +215,8 @@ class WatchSyncService extends ChangeNotifier {
 
     if (isSupported) {
       try {
-        await _channel.invokeMethod('updateWorkoutState', snapshot.toJson());
+        await _channel.invokeMethod(
+            'updateWorkoutState', watchPayload(snapshot));
       } catch (e) {
         debugPrint('[WatchSyncService] Failed to send state to watch: $e');
       }

@@ -12,25 +12,50 @@ import '../../train/repositories/training_repository.dart';
 import '../../body_scan/models/body_assessment_models.dart';
 import '../../body_scan/repositories/body_assessment_repository.dart';
 
+enum PlanStatus {
+  unknown,
+  none,
+  generating,
+  ready;
+
+  static PlanStatus fromAvailability(Map<String, dynamic> availability) {
+    if (availability['pendingRun'] is Map) return generating;
+    final current =
+        availability['hasCurrentPlan'] ?? availability['lastPlanId'] != null;
+    return current == true ? ready : none;
+  }
+}
+
 class WeeklyPlanRepository {
   final _syncedRuns = <String>{};
 
   Future<Map<String, dynamic>> _read(String path,
           {Map<String, dynamic>? query,
-          Duration ttl = const Duration(minutes: 5)}) =>
+          Duration ttl = const Duration(minutes: 5),
+          bool refresh = false}) =>
       UserDataCache.shared.load('plans', 'real-v3:$path:${query.toString()}',
           () async {
         final response = await ApiClient.shared
             .get<Map<String, dynamic>>(path, queryParameters: query);
         return Map<String, dynamic>.from(response.data!['data'] as Map);
-      }, ttl: ttl);
+      }, ttl: ttl, refresh: refresh);
   Future<BodyOverview> bodyOverview() => BodyAssessmentRepository.shared.load();
 
   static bool hasEnteredMeasurements(BodyOverview body, DateTime now) =>
       BodyMeasurementBaseline(body, now: now).isComplete;
 
-  Future<Map<String, dynamic>> availability() async {
-    return _read('/api/plans/availability', ttl: const Duration(seconds: 30));
+  Future<Map<String, dynamic>> availability({bool refresh = false}) async {
+    return _read('/api/plans/availability',
+        ttl: const Duration(seconds: 30), refresh: refresh);
+  }
+
+  /// Whether this week (or an upcoming one) has a plan. Unknown on failure.
+  Future<PlanStatus> planStatus({bool refresh = false}) async {
+    try {
+      return PlanStatus.fromAvailability(await availability(refresh: refresh));
+    } catch (_) {
+      return PlanStatus.unknown;
+    }
   }
 
   Future<List<Map<String, dynamic>>> plans() async {

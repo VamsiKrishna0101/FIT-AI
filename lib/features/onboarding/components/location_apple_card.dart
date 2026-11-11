@@ -2,9 +2,9 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/training_schedule_models.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Full-Width Liquid Glass Location Cards (Screen 05 — Apple iOS Focus)
 class LocationGridCards extends StatelessWidget {
@@ -80,7 +80,7 @@ class _LocationAppleCardState extends State<LocationAppleCard> {
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        OnboardingCoach.select();
         widget.onTap();
       },
       onTapDown: (_) => setState(() => _pressed = true),

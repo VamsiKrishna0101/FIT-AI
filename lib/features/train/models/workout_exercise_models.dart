@@ -292,11 +292,14 @@ class TodayPlanItemModel {
   bool get isCompleted => status == 'COMPLETED';
   bool get isSkipped => status == 'SKIPPED';
   bool get isPending => !isCompleted && !isSkipped;
+  // Weight is optional for body-weight / no-equipment movements. Mirrors the
+  // backend planner, which classifies by equipment even when the catalogue
+  // modality is `weight_reps`.
   bool get isBodyweight =>
       exercise.exerciseType == 'bodyweight_reps' ||
-      (exercise.exerciseType == null &&
-          exercise.equipment.toLowerCase().replaceAll(RegExp(r'[\s_-]'), '') ==
-              'bodyweight');
+      setTargets?['weightBasis'] == 'bodyweight' ||
+      RegExp(r'body ?weight|^none$', caseSensitive: false)
+          .hasMatch(exercise.equipment.replaceAll(RegExp(r'[_-]'), ' ').trim());
 
   TodayPlanItemModel copyWith({
     String? id,

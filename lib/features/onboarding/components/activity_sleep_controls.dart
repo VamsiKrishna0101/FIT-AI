@@ -2,9 +2,9 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/lifestyle_nutrition_models.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Apple iOS Activity Level Segmented Selector (Screen 06)
 class ActivityLevelSegmented extends StatelessWidget {
@@ -43,7 +43,7 @@ class ActivityLevelSegmented extends StatelessWidget {
                 label: opt.defaultLabel,
                 isSelected: isSelected,
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  OnboardingCoach.select();
                   onSelected(opt);
                 },
               ),
@@ -153,7 +153,7 @@ class SleepDurationChips extends StatelessWidget {
                 label: opt.defaultLabel,
                 isSelected: isSelected,
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  OnboardingCoach.select();
                   onSelected(opt);
                 },
               ),

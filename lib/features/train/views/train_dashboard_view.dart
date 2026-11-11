@@ -27,8 +27,11 @@ import 'saved_routines_view.dart';
 import 'create_workout_view.dart';
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../../planner/views/weekly_plan_card.dart';
+import '../../planner/views/weekly_plan_view.dart';
+import '../../planner/repositories/weekly_plan_repository.dart';
 import '../components/reschedule_workout_sheet.dart';
 import '../../../core/theme/fitness_theme.dart';
+import '../../onboarding/components/coach_mascot.dart';
 
 class TrainView extends StatefulWidget {
   final bool standalone;
@@ -57,6 +60,10 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   Timer? _syncTimer;
   StreamSubscription<TrainingDay>? _subscription;
   final _repo = TrainingRepository.shared;
+  final _planRepo = WeeklyPlanRepository();
+  PlanStatus _planStatus = PlanStatus.unknown;
+  bool get _hasPlan => _planStatus != PlanStatus.none;
+  bool get _planGenerating => _planStatus == PlanStatus.generating;
   final _savedWorkouts = <String>{};
   String copy(String key, {Map<String, Object> values = const {}}) =>
       fitnessText(context, key, values: values);
@@ -104,6 +111,17 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
           _loading = false;
           _error = null;
         });
+      }
+      if (!day.hasPlan) {
+        unawaited(_planRepo.planStatus(refresh: refresh).then((status) {
+          // A failed check keeps the last known answer.
+          if (mounted &&
+              generation == _generation &&
+              status != PlanStatus.unknown &&
+              _planStatus != status) {
+            setState(() => _planStatus = status);
+          }
+        }));
       }
     } catch (_) {
       if (mounted && generation == _generation) {
@@ -192,6 +210,21 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
       return null;
     });
     await _load();
+  }
+
+  Future<void> _openGeneratePlan() async {
+    if (_busy || _opening) return;
+    setState(() => _opening = true);
+    try {
+      final route = AppPageRoute<void>(
+        page: const WeeklyPlanView(startGenerationOnOpen: true),
+      );
+      await Navigator.of(context).push(route);
+      await route.completed;
+      if (mounted) await _load(refresh: true);
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
   }
 
   Future<void> _snoozeReminder() async {
@@ -442,14 +475,38 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                            Text(copy('No exercises yet'),
-                                style: const TextStyle(
-                                    fontSize: 14, color: trainingMuted)),
+                            Row(children: [
+                              const CoachMascot(size: 44),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: Text(copy('No exercises yet'),
+                                      style: const TextStyle(
+                                          fontSize: 14, color: trainingMuted))),
+                            ]),
                             if (!day.finished) ...[
                               const SizedBox(height: 12),
                               TrainingButton(
-                                  label: 'Add exercise',
-                                  onPressed: _busy ? null : _add),
+                                  label: !day.hasPlan && _planGenerating
+                                      ? 'Generating your plan…'
+                                      : (day.hasPlan || _hasPlan)
+                                          ? 'Add exercise'
+                                          : 'Generate plan',
+                                  onPressed: _busy
+                                      ? null
+                                      : (!day.hasPlan &&
+                                              (_planGenerating || !_hasPlan))
+                                          ? _openGeneratePlan
+                                          : _add),
+                              if (!day.hasPlan && !_hasPlan) ...[
+                                const SizedBox(height: 8),
+                                TextButton(
+                                    onPressed: _busy ? null : _add,
+                                    style: TextButton.styleFrom(
+                                        foregroundColor: trainingSilver,
+                                        minimumSize: const Size(0, 36)),
+                                    child: Text(copy('Or add exercise manually'),
+                                        style: const TextStyle(fontSize: 12))),
+                              ],
                             ],
                           ]))
                     else
@@ -725,6 +782,8 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
   }
 
   Widget _sessionCard(TrainingDay day) {
+    final hasPlan = day.hasPlan || _hasPlan;
+    final generating = !day.hasPlan && _planGenerating;
     final missed = day.date.compareTo(CacheScope.todayKey()) < 0 &&
         !day.started &&
         !day.restDay &&
@@ -735,13 +794,19 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
             ? 'Workout complete'
             : day.restDay
                 ? 'Recover & recharge'
-                : 'Your workout');
+                : (!hasPlan && day.items.isEmpty)
+                    ? 'No plan generated'
+                    : 'Your workout');
     final label = day.finished
         ? 'View summary'
         : day.restDay
             ? 'Build a workout'
             : day.items.isEmpty
-                ? 'Add exercise'
+                ? (generating
+                    ? 'Generating your plan…'
+                    : !hasPlan
+                        ? 'Generate plan'
+                        : 'Add exercise')
                 : missed
                     ? _savedWorkouts.contains(day.date)
                         ? 'My workouts'
@@ -758,7 +823,7 @@ class _TrainViewState extends State<TrainView> with WidgetsBindingObserver {
                 ? () => _action(() => _repo
                     .mutate(_date, 'PATCH', '/day', data: {'restDay': false}))
                 : day.items.isEmpty
-                    ? _add
+                    ? (generating || !hasPlan ? _openGeneratePlan : _add)
                     : missed
                         ? _savePastWorkout
                         : (!day.started && _date != CacheScope.todayKey())

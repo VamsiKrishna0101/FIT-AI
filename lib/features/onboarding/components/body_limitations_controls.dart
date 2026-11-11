@@ -2,9 +2,9 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'package:setcraft/core/localization/fitness_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/lifestyle_nutrition_models.dart';
+import 'onboarding_coach.dart';
 
 // MARK: - Apple iOS Body Limitations Multi-Select Chips (Screen 08)
 class BodyLimitationsChips extends StatelessWidget {
@@ -31,7 +31,7 @@ class BodyLimitationsChips extends StatelessWidget {
           option: opt,
           isSelected: isSelected,
           onTap: () {
-            HapticFeedback.selectionClick();
+            OnboardingCoach.select();
             onToggle(opt);
           },
         );
@@ -152,7 +152,7 @@ class CustomInjuryNoteCard extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  OnboardingCoach.select();
                   onQuickPresetTap(preset);
                 },
                 child: Container(

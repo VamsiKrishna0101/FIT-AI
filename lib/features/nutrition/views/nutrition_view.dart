@@ -170,7 +170,7 @@ class _NutritionViewState extends State<NutritionView> {
                   FitnessCard(
                     child: Row(children: [
                       const Expanded(
-                        child: FitnessText('Could not load nutrition.',
+                        child: FitnessText('Could not load nutrition',
                             style: TextStyle(
                                 color: FitnessTheme.muted, fontSize: 13)),
                       ),

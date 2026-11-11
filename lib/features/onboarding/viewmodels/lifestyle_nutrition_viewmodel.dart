@@ -8,8 +8,8 @@ import '../models/lifestyle_nutrition_models.dart';
 
 // MARK: - Lifestyle preferences view model
 class LifestyleNutritionViewModel extends ChangeNotifier {
-  final int currentStep = 6;
-  final int totalSteps = 8;
+  final int currentStep = 7;
+  final int totalSteps = 7;
 
   final OnboardingController controller;
   final bool _ownsController;
@@ -26,6 +26,18 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
   EatingStyleOption get eatingStyle => _eatingStyle;
   String _customEatingStyle = '';
   String get customEatingStyle => _customEatingStyle;
+
+  String _customLimitations = '';
+  String get customLimitations => _customLimitations;
+
+  Set<String> _dietaryExclusions = {};
+  Set<String> get dietaryExclusions => _dietaryExclusions;
+
+  Set<String> _stapleProteins = {};
+  Set<String> get stapleProteins => _stapleProteins;
+
+  Set<String> _stapleCarbs = {};
+  Set<String> get stapleCarbs => _stapleCarbs;
 
   Set<BodyLimitationOption> _limitations = {BodyLimitationOption.none};
   Set<BodyLimitationOption> get limitations => _limitations;
@@ -67,6 +79,10 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
       _eatingStyle = EatingStyleOption.fromBackend(draft.eatingStyle);
     }
     _customEatingStyle = draft.customEatingStyle ?? '';
+    _customLimitations = draft.customLimitations ?? '';
+    _dietaryExclusions = draft.dietaryExclusions.toSet();
+    _stapleProteins = draft.stapleProteins.toSet();
+    _stapleCarbs = draft.stapleCarbs.toSet();
     if (draft.limitations.isNotEmpty) {
       _limitations =
           draft.limitations.map(BodyLimitationOption.fromBackend).toSet();
@@ -107,6 +123,45 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
     controller.checkpoint();
   }
 
+  void setCustomLimitations(String value) {
+    _customLimitations = value;
+    draft.customLimitations = value.trim();
+    controller.checkpoint();
+  }
+
+  void toggleDietaryExclusion(String key) {
+    if (_dietaryExclusions.contains(key)) {
+      _dietaryExclusions.remove(key);
+    } else {
+      _dietaryExclusions.add(key);
+    }
+    draft.dietaryExclusions = _dietaryExclusions.toList();
+    controller.checkpoint();
+    notifyListeners();
+  }
+
+  void toggleStapleProtein(String key) {
+    if (_stapleProteins.contains(key)) {
+      _stapleProteins.remove(key);
+    } else {
+      _stapleProteins.add(key);
+    }
+    draft.stapleProteins = _stapleProteins.toList();
+    controller.checkpoint();
+    notifyListeners();
+  }
+
+  void toggleStapleCarb(String key) {
+    if (_stapleCarbs.contains(key)) {
+      _stapleCarbs.remove(key);
+    } else {
+      _stapleCarbs.add(key);
+    }
+    draft.stapleCarbs = _stapleCarbs.toList();
+    controller.checkpoint();
+    notifyListeners();
+  }
+
   void toggleLimitation(BodyLimitationOption opt) {
     if (opt.isExclusive) {
       _limitations = {BodyLimitationOption.none};
@@ -133,9 +188,13 @@ class LifestyleNutritionViewModel extends ChangeNotifier {
     draft.activityLevel = _activityLevel.backendValue;
     draft.sleepDuration = _sleepDuration.backendValue;
     draft.eatingStyle = _eatingStyle.backendValue;
+    draft.dietaryExclusions = _dietaryExclusions.toList();
+    draft.stapleProteins = _stapleProteins.toList();
+    draft.stapleCarbs = _stapleCarbs.toList();
     // Budget is optional; don't persist the old hard-coded dollar default.
     draft.weeklyFoodBudget = null;
     draft.limitations = _limitations.map((e) => e.backendValue).toList();
+    draft.customLimitations = _customLimitations.trim();
     draft.customEatingStyle = _eatingStyle == EatingStyleOption.other
         ? _customEatingStyle.trim()
         : null;

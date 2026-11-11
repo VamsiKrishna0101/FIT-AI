@@ -13,7 +13,7 @@ class EquipmentViewModel extends ChangeNotifier {
   bool needsExactSelection = false;
   String? loadError;
   final int currentStep = 5;
-  final int totalSteps = 8;
+  final int totalSteps = 7;
 
   final OnboardingController controller;
   final bool _ownsController;

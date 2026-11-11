@@ -9,7 +9,7 @@ import 'onboarding_controller.dart';
 // MARK: - Onboarding Screen 02 & 03 (About You & Experience) ViewModel
 class AboutYouViewModel extends ChangeNotifier {
   final int currentStep = 3;
-  final int totalSteps = 8;
+  final int totalSteps = 7;
 
   final OnboardingController controller;
   final bool _ownsController;
@@ -26,7 +26,7 @@ class AboutYouViewModel extends ChangeNotifier {
   int _age = 27; // Prompt default: 27
   int get age => _age;
 
-  bool _isImperial = true; // Prompt default: 5'10" and 178 lb
+  bool _isImperial = false; // Default to Metric (kg, cm) for Europe, Switzerland, Australia & UK
   bool get isImperial => _isImperial;
 
   // Canonical metric values stored in database (Mifflin-St Jeor requirements)

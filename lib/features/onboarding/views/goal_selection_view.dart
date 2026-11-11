@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/navigation/onboarding_page_route.dart';
 import '../components/onboarding_scaffold.dart';
-import '../components/training_hero.dart';
 import '../models/working_toward_goal.dart';
 import '../viewmodels/goal_viewmodel.dart';
 import 'about_you_experience_view.dart';
@@ -50,7 +49,10 @@ class _GoalSelectionViewState extends State<GoalSelectionView> {
       await _viewModel.continueToNextStep();
       if (!mounted) return;
       await OnboardingPageRoute(
-              page: AboutYouExperienceView(controller: _viewModel.controller))
+              page: AboutYouExperienceView(
+                controller: _viewModel.controller,
+                collectMeasurements: true,
+              ))
           .open(context);
     } finally {
       if (mounted) setState(() => _advancing = false);
@@ -84,24 +86,8 @@ class _GoalSelectionViewState extends State<GoalSelectionView> {
               padding: const EdgeInsets.only(bottom: 10),
               child: OnboardingChoice(
                   title: language.goalTitle(goal),
-                  subtitle: language.goalSubtitle(goal),
                   selected: selectedGoal == goal,
                   onTap: () => _viewModel.selectGoal(goal))),
-        if (selectedGoal != null) ...[
-          const SizedBox(height: 12),
-          OnboardingContextNote(
-              title: 'A clear goal. A plan with direction.',
-              detail: switch (selectedGoal) {
-                WorkingTowardGoal.loseBodyFat =>
-                  'Your goal helps shape training and nutrition together, with your schedule and preferences in mind.',
-                WorkingTowardGoal.buildMuscle =>
-                  'We’ll use your goal, experience and equipment to shape your training and nutrition.',
-                WorkingTowardGoal.getStronger =>
-                  'Your starting experience and logged lifts help guide how your training progresses.',
-                _ =>
-                  'We’ll build around what you can do consistently, then use your progress to guide the next step.',
-              }),
-        ],
       ],
     );
   }

@@ -128,7 +128,7 @@ class _Plans extends WeeklyPlanRepository {
       BodyOverview.fromJson({'records': []});
 
   @override
-  Future<Map<String, dynamic>> availability() async => {'canGenerate': true};
+  Future<Map<String, dynamic>> availability({bool refresh = false}) async => {'canGenerate': true};
 }
 
 Widget _app(Widget body,

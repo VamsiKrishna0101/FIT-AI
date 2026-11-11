@@ -125,8 +125,13 @@ class _WeeklyPlanCardState extends State<WeeklyPlanCard>
       if (mounted) await widget.onReturn?.call();
       return;
     }
+    final hasPlan = _availability?['lastPlanId'] != null;
+    final canGenerate = _availability?['canGenerate'] == true;
     final route = AppPageRoute<void>(
-      page: WeeklyPlanView(repository: _repository),
+      page: WeeklyPlanView(
+        repository: _repository,
+        startGenerationOnOpen: !hasPlan && canGenerate,
+      ),
     );
     await Navigator.of(context).push(route);
     await route.completed;

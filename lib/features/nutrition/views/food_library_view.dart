@@ -11,6 +11,7 @@ import '../components/food_library_filters.dart';
 import '../models/food_catalog_page.dart';
 import '../models/nutrition_diet_models.dart';
 import '../repositories/nutrition_repository.dart';
+import '../utils/food_search_helper.dart';
 import '../../../core/components/library_new_button.dart';
 import '../components/new_food_sheet.dart';
 import 'meal_portion_view.dart';
@@ -95,42 +96,13 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
     try {
       FoodCatalogPage result;
       if (widget.initialFoods != null) {
-        final terms = _search.text
-            .trim()
-            .toLowerCase()
-            .split(RegExp(r'\s+'))
-            .where((s) => s.isNotEmpty);
-        final filtered = widget.initialFoods!.where((f) {
-          final per100 = f.servingUnit == 'g' && f.servingSize > 0
-              ? 100 / f.servingSize
-              : 0.0;
-          final text = '${f.name} ${f.brand ?? ''}'.toLowerCase();
-          return (_category == null || _category == f.category) &&
-              terms.every(text.contains) &&
-              (_focus == 'ALL' ||
-                  per100 > 0 &&
-                      switch (_focus) {
-                        'PROTEIN' => f.proteinPerServing * per100 >= 15,
-                        'FIBRE' => f.fiberPerServing * per100 >= 3,
-                        _ => f.caloriesPerServing * per100 <= 100,
-                      });
-        }).toList();
-        double value(NutritionFoodItemModel f) => f.servingUnit == 'g' &&
-                f.servingSize > 0
-            ? (_sort == 'PROTEIN'
-                    ? f.proteinPerServing
-                    : f.caloriesPerServing) *
-                100 /
-                f.servingSize
-            : (_sort == 'PROTEIN' ? double.negativeInfinity : double.infinity);
-        filtered.sort((a, b) {
-          final comparison = _sort == 'NAME'
-              ? 0
-              : _sort == 'PROTEIN'
-                  ? value(b).compareTo(value(a))
-                  : value(a).compareTo(value(b));
-          return comparison != 0 ? comparison : a.name.compareTo(b.name);
-        });
+        final query = _search.text.trim();
+        final filtered = FoodSearchHelper.filterAndRank(
+            foods: widget.initialFoods!,
+            query: query,
+            category: _category,
+            focus: _focus,
+            sort: _sort);
         final pages = (filtered.length / _size).ceil();
         final page = _page.clamp(1, pages == 0 ? 1 : pages);
         result = FoodCatalogPage(
@@ -151,11 +123,37 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
             source: _source);
       }
       if (!mounted || request != _request) return;
+
+      var displayedFoods = result.foods;
+      var total = result.total;
+      var pages = result.totalPages;
+
+      final queryText = _search.text.trim();
+      if (queryText.isNotEmpty && displayedFoods.isNotEmpty && widget.initialFoods == null) {
+        final clientRanked = FoodSearchHelper.filterAndRank(
+          foods: displayedFoods,
+          query: queryText,
+          category: _category,
+          focus: _focus,
+          sort: _sort,
+        );
+        if (clientRanked.isNotEmpty) {
+          displayedFoods = clientRanked;
+        } else if (_sort == 'NAME') {
+          displayedFoods = List<NutritionFoodItemModel>.from(displayedFoods);
+          displayedFoods.sort((a, b) {
+            final sa = FoodSearchHelper.scoreFood(a, queryText);
+            final sb = FoodSearchHelper.scoreFood(b, queryText);
+            return sb.compareTo(sa);
+          });
+        }
+      }
+
       setState(() {
-        _foods = result.foods;
+        _foods = displayedFoods;
         _page = result.page;
-        _total = result.total;
-        _pages = result.totalPages;
+        _total = total;
+        _pages = pages;
         _loading = false;
       });
       if (_scroll.hasClients) _scroll.jumpTo(0);
@@ -163,7 +161,7 @@ class _FoodLibraryViewState extends State<FoodLibraryView> {
       if (mounted && request == _request) {
         setState(() {
           _loading = false;
-          _error = 'Could not load foods. Retry or add a custom meal.';
+          _error = 'Could not load foods · Retry or add a custom meal';
         });
       }
     }

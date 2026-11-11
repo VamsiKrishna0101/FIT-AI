@@ -7,6 +7,7 @@ import '../../notifications/services/rest_notification_service.dart';
 import '../../../core/components/motion.dart';
 import '../../../core/theme/ds_colors.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,7 @@ import '../../../core/theme/ds_motion.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../planner/services/weekly_plan_prompt_service.dart';
 import '../../planner/views/weekly_plan_view.dart';
+import '../../rating/services/rate_app_service.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import '../repositories/training_repository.dart';
@@ -27,6 +29,7 @@ import '../components/workout_form_guide.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/watch/watch_models.dart';
 import '../../../core/watch/watch_sync_service.dart';
+import '../../../core/watch/components/virtual_watch_sheet.dart';
 
 class WorkoutSessionView extends StatefulWidget {
   final TrainingDay initial;
@@ -51,6 +54,20 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   final _stepKeys = <int, GlobalKey>{};
   DateTime get _now => widget.clock?.call() ?? DateTime.now();
   bool _editingFinished = false;
+  bool _warmupCompleted = false;
+
+  bool get _hasWarmup {
+    final raw = (_day.json['warmup'] as Map?)?.cast<String, dynamic>();
+    final steps = (raw?['steps'] as List? ?? []);
+    return steps.isNotEmpty;
+  }
+
+  bool get _isWarmupDone =>
+      !_hasWarmup ||
+      _warmupCompleted ||
+      _day.loggedSets > 0 ||
+      _day.items.any((item) => item.isCompleted);
+
   final _setEntries = <String, GlobalKey<WorkoutSetEntryState>>{};
   final _repo = TrainingRepository.shared;
   late final _clock = ValueNotifier(_now);
@@ -58,6 +75,8 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   StreamSubscription<TrainingDay>? _syncSubscription;
   StreamSubscription<WatchIncomingAction>? _watchSubscription;
   final _restState = ValueNotifier<WorkoutRest?>(null);
+  // True while a rest countdown is running or paused with time left.
+  final _resting = ValueNotifier(false);
   bool _restOpen = false, _restNotified = false;
   int _restVersion = 0;
   Future<Map<String, dynamic>>? _previous;
@@ -69,6 +88,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _day = widget.initial;
+    _warmupCompleted = _day.loggedSets > 0 || _day.items.any((item) => item.isCompleted);
     final pending = _day.items.indexWhere((item) => item.isPending);
     final selected =
         _day.items.indexWhere((item) => item.id == widget.initialItemId);
@@ -78,6 +98,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
             ? 0
             : pending;
     _loadPrevious();
+    _restState.addListener(_syncResting);
     _restoreRest();
     _syncSubscription = _repo.changes.stream.listen((day) {
       if (!mounted || day.date != _day.date) return;
@@ -116,6 +137,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     _syncRestVisibility();
     final now = _now;
     _clock.value = now;
+    _syncResting();
     final rest = _restState.value;
     if (rest != null &&
         !rest.isPaused &&
@@ -127,6 +149,11 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         unawaited(HapticFeedback.lightImpact());
       }
     }
+  }
+
+  void _syncResting() {
+    final rest = _restState.value;
+    _resting.value = rest != null && rest.remaining(_now) > 0;
   }
 
   @override
@@ -183,6 +210,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     _watchSubscription?.cancel();
     WatchSyncService.shared.clearSession();
     _restState.dispose();
+    _resting.dispose();
     _clock.dispose();
     _setsVersion.dispose();
     for (final selection in _activeSelections.values) {
@@ -571,6 +599,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     final generate = await WeeklyPlanPromptService.shared
         .maybePromptAfterWorkout(context, completedDate: _day.date);
     if (!generate || !mounted || ModalRoute.of(context)?.isCurrent != true) {
+      if (mounted) await RateAppService.shared.maybePrompt(context);
       return;
     }
     final completedDate = DateTime.tryParse(_day.date) ?? _now;
@@ -797,6 +826,15 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
               },
             ),
 
+          // Debug builds only: a fake Apple Watch for testing without hardware.
+          if (kDebugMode && !_day.finished)
+            IconButton(
+                key: const ValueKey('virtual-watch-debug'),
+                tooltip: 'Virtual Apple Watch (debug)',
+                icon: const Icon(Icons.watch_outlined,
+                    size: 18, color: DSColors.silver),
+                onPressed: () => VirtualWatchSheet.show(context)),
+
           if (!_day.finished)
             Padding(
                 padding: const EdgeInsets.only(right: 20),
@@ -868,7 +906,13 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                                           horizontal: 18),
                                       child: WorkoutWarmup(
                                           warmup: (_day.json['warmup'] as Map?)
-                                              ?.cast<String, dynamic>())),
+                                              ?.cast<String, dynamic>(),
+                                          isCompleted: _isWarmupDone,
+                                          onComplete: () {
+                                            unawaited(HapticFeedback.mediumImpact()
+                                                .catchError((Object _) {}));
+                                            setState(() => _warmupCompleted = true);
+                                          })),
                                 Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 18),
@@ -903,11 +947,12 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     final selected = index == _index;
     final size = MediaQuery.textScalerOf(context).scale(14) + 30;
     final touchSize = (size + 4).clamp(48.0, double.infinity);
+    final locked = !_isWarmupDone && index > 0;
     return Semantics(
         key: _stepKeys.putIfAbsent(index, () => GlobalKey()),
         button: true,
         selected: selected,
-        enabled: !_busy,
+        enabled: !_busy && !locked,
         label: '${index + 1}: ${item.exercise.displayName}',
         value: item.isCompleted
             ? copy('Done')
@@ -917,13 +962,26 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         child: InkWell(
             onTap: _busy
                 ? null
-                : () {
-                    setState(() {
-                      _index = index;
-                      _loadPrevious();
-                    });
-                    _showCurrentStep();
-                  },
+                : locked
+                    ? () {
+                        unawaited(HapticFeedback.lightImpact()
+                            .catchError((Object _) {}));
+                        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(copy('Complete warm-up first')),
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    : () {
+                        setState(() {
+                          _index = index;
+                          _loadPrevious();
+                        });
+                        _showCurrentStep();
+                      },
             borderRadius: BorderRadius.circular(10),
             highlightColor: Colors.white.withValues(alpha: .08),
             splashColor: Colors.white.withValues(alpha: .12),
@@ -945,15 +1003,18 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                                     : DSColors.borderHi,
                                 width: selected ? 2 : 1)),
                         child: ExcludeSemantics(
-                            child: Text('${index + 1}',
-                                maxLines: 1,
-                                softWrap: false,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: item.isCompleted
-                                        ? Colors.black
-                                        : DSColors.silver))))))));
+                            child: locked
+                                ? const Icon(CupertinoIcons.lock_fill,
+                                    size: 13, color: DSColors.muted)
+                                : Text('${index + 1}',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: item.isCompleted
+                                            ? Colors.black
+                                            : DSColors.silver))))))));
   }
 
   Widget _movement(TodayPlanItemModel item) {
@@ -1055,6 +1116,47 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         padding: const EdgeInsets.all(12),
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (!_isWarmupDone) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: DSColors.bgRaised,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: DSColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(CupertinoIcons.lock_fill,
+                      size: 16, color: DSColors.muted),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          copy('Complete warm-up first'),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: DSColors.silver,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          copy('Finish the warm-up routine above to unlock your working sets.'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: DSColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           Padding(
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 14),
               child: Row(children: [
@@ -1120,7 +1222,7 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
                     .logs(item.id)
                     .where((row) => row['setNumber'] == number)
                     .firstOrNull,
-                disabled: _busy,
+                disabled: _busy || !_isWarmupDone,
                 onSave: (reps, weight, effort) async {
                   final wasLogged = _day
                       .logs(item.id)
@@ -1197,9 +1299,9 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
   Widget _footer(TodayPlanItemModel? item) => Builder(builder: (footerContext) {
         final keyboardInset = MediaQuery.viewInsetsOf(footerContext).bottom;
         if (item == null) return _buildFooter(item, keyboardInset);
-        return ValueListenableBuilder<int?>(
-            valueListenable: _selectionFor(item),
-            builder: (_, __, ___) => _buildFooter(item, keyboardInset));
+        return ListenableBuilder(
+            listenable: Listenable.merge([_selectionFor(item), _resting]),
+            builder: (_, __) => _buildFooter(item, keyboardInset));
       });
 
   Widget _buildFooter(TodayPlanItemModel? item, double keyboardInset) {
@@ -1209,28 +1311,40 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
         _day.logs(item!.id).any((log) => log['setNumber'] == active);
     final last =
         _day.items.where((row) => row.isPending && row.id != item?.id).isEmpty;
-    final label = summary
-        ? copy('Done')
-        : _editingFinished || editing
-            ? copy('Save changes')
-            : active != null
-                ? copy('Log set {number}', values: {'number': active})
-                : _day.allResolved || last
-                    ? copy('Finish workout')
-                    : copy('Next exercise');
+    final label = !_isWarmupDone
+        ? copy('Complete warm-up')
+        : summary
+            ? copy('Done')
+            : _editingFinished || editing
+                ? copy('Save changes')
+                : active != null
+                    ? copy('Log set {number}', values: {'number': active})
+                    : _day.allResolved || last
+                        ? copy('Finish workout')
+                        : copy('Next exercise');
     final VoidCallback? action = _busy
         ? null
-        : summary
-            ? () => Navigator.pop(context)
-            : _editingFinished
-                ? _saveFinishedEdits
-                : active != null && item != null
-                    ? () => _logSet(item, active)
-                    : _day.allResolved
-                        ? _finish
-                        : item?.isPending == true
-                            ? () => _completeAndAdvance(item!)
-                            : _nextExercise;
+        : !_isWarmupDone
+            ? () {
+                unawaited(HapticFeedback.mediumImpact()
+                    .catchError((Object _) {}));
+                setState(() => _warmupCompleted = true);
+              }
+            : summary
+                ? () => Navigator.pop(context)
+                : _editingFinished
+                    ? _saveFinishedEdits
+                    : active != null && item != null
+                        // A new set waits for the rest to end or be skipped;
+                        // corrections to logged sets stay available.
+                        ? _resting.value && !editing
+                            ? null
+                            : () => _logSet(item, active)
+                        : _day.allResolved
+                            ? _finish
+                            : item?.isPending == true
+                                ? () => _completeAndAdvance(item!)
+                                : _nextExercise;
     return Padding(
         padding: EdgeInsets.only(bottom: keyboardInset),
         child: SafeArea(
@@ -1335,11 +1449,16 @@ class _WorkoutSessionViewState extends State<WorkoutSessionView>
     return item.targetWeight > 0 ? item.targetWeight : null;
   }
 
+  Future<WorkoutComparison?>? _comparison;
+
   Widget _summary() => MotionEntrance(
       child: WorkoutCompletionSummary(
           day: _day,
+          comparison: _comparison ??= WorkoutComparison.of(
+              _day, (exerciseId) => _repo.previous(_day.date, exerciseId)),
           onAddPhoto: () =>
               showProgressPhotoCapture(context, workoutDate: _day.date),
           onEdit: () => setState(() => _editingFinished = true),
           onRetry: () => _sync(retry: true)));
 }
+

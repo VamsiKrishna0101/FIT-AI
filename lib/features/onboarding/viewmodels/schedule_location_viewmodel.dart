@@ -9,7 +9,7 @@ import '../models/training_schedule_models.dart';
 // MARK: - Schedule & Location ViewModel (Step 4 of 8)
 class ScheduleLocationViewModel extends ChangeNotifier {
   final int currentStep = 4;
-  final int totalSteps = 8;
+  final int totalSteps = 7;
 
   final OnboardingController controller;
   final bool _ownsController;
@@ -60,6 +60,17 @@ class ScheduleLocationViewModel extends ChangeNotifier {
   void selectDays(DaysPerWeekOption opt) {
     if (selectedDays == opt) return;
     draft.daysPerWeek = opt.backendValue;
+    final defaultDaysMap = <int, List<String>>{
+      2: ['MONDAY', 'THURSDAY'],
+      3: ['MONDAY', 'WEDNESDAY', 'FRIDAY'],
+      4: ['MONDAY', 'TUESDAY', 'THURSDAY', 'FRIDAY'],
+      5: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
+      6: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'],
+    };
+    final defaults = defaultDaysMap[opt.daysCount];
+    if (defaults != null) {
+      draft.trainingDays = defaults;
+    }
     controller.checkpoint();
     notifyListeners();
   }

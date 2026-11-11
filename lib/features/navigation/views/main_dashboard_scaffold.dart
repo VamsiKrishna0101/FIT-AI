@@ -27,6 +27,7 @@ import '../../nutrition/views/food_library_view.dart';
 import '../../today/repositories/today_repository.dart';
 import '../../subscription/subscription_view.dart';
 import '../../subscription/subscription_service.dart';
+import '../../rating/services/rate_app_service.dart';
 
 class MainDashboardScaffold extends StatefulWidget {
   final int initialIndex;
@@ -118,6 +119,8 @@ class _MainDashboardScaffoldState extends State<MainDashboardScaffold>
           await WeeklyPlanPromptService.shared.maybePromptOnAppOpen(context);
       if (generate && mounted && ModalRoute.of(context)?.isCurrent == true) {
         _openRoute(const WeeklyPlanView(startGenerationOnOpen: true));
+      } else if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+        await RateAppService.shared.maybePrompt(context);
       }
     } finally {
       _checkingDashboardOpen = false;

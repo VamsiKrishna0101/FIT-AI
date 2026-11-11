@@ -45,7 +45,7 @@ class _Repository extends WeeklyPlanRepository {
       });
 
   @override
-  Future<Map<String, dynamic>> availability() async => {
+  Future<Map<String, dynamic>> availability({bool refresh = false}) async => {
         'canGenerate': !generated || unlockedAfterSave,
         'cooldownActive': generated && !unlockedAfterSave,
         'lastPlanId': generated ? 'saved-plan' : null,

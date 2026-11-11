@@ -12,7 +12,6 @@ import '../../../core/navigation/onboarding_page_route.dart';
 import '../../../core/storage/secure_session_store.dart';
 import '../../../core/theme/fitness_theme.dart';
 import '../../profile/views/settings_components.dart';
-import '../../profile/views/settings_editor_components.dart';
 import '../repositories/notifications_repository.dart';
 import '../services/notification_service.dart';
 import '../services/rest_notification_service.dart';
@@ -24,20 +23,27 @@ String notificationError(Object error) {
   return 'Could not save notification settings. Please try again.';
 }
 
-bool notificationTimeIsQuiet(String time, Map<String, dynamic> preferences) {
-  int value(String time) {
-    final parts = time.split(':').map(int.parse).toList();
-    return parts[0] * 60 + parts[1];
-  }
-
-  final start = value(preferences['quietStart'] as String);
-  final end = value(preferences['quietEnd'] as String);
-  final current = value(time);
-  return start != end &&
-      (start < end
-          ? current >= start && current < end
-          : current >= start || current < end);
+/// Always 12-hour, e.g. "6:00 PM", whatever the phone's 24-hour setting.
+String formatReminderTime(BuildContext context, String hhmm) {
+  final parts = hhmm.split(':').map(int.parse).toList();
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  return DateFormat('h:mm a', locale)
+      .format(DateTime(2000, 1, 1, parts[0], parts[1]));
 }
+
+const _mealDetails = {
+  'BREAKFAST': 'If breakfast isn’t logged · {time}',
+  'LUNCH': 'If lunch isn’t logged · {time}',
+  'DINNER': 'If dinner isn’t logged · {time}',
+  'SNACK': 'If a snack isn’t logged · {time}',
+};
+
+const _mealNames = {
+  'BREAKFAST': 'Breakfast',
+  'LUNCH': 'Lunch',
+  'DINNER': 'Dinner',
+  'SNACK': 'Snack',
+};
 
 class NotificationSettingsView extends StatefulWidget {
   final NotificationsRepository? repository;
@@ -120,90 +126,116 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView>
     }
   }
 
+  Future<void> _save(Map<String, dynamic> changes) => _run(() async {
+        final data = await repository.save(changes);
+        if (mounted) setState(() => _preferences = data);
+      });
+
   Future<void> _toggle(bool enabled) => _run(() async {
         final value =
             enabled ? await service.enable() : await service.disable();
         if (mounted) setState(() => _preferences = value);
       });
 
-  String _clock(String value) {
-    final parts = value.split(':').map(int.parse).toList();
-    return TimeOfDay(hour: parts[0], minute: parts[1]).format(context);
-  }
+  String _time(String key) =>
+      formatReminderTime(context, _preferences![key] as String);
 
-  Future<void> _time(String key, String title) async {
+  Future<void> _pickTime(String key, String title) async {
     final parts =
         (_preferences![key] as String).split(':').map(int.parse).toList();
     final value = await showTimePicker(
         context: context,
         initialTime: TimeOfDay(hour: parts[0], minute: parts[1]),
-        helpText: fitnessText(context, title));
+        helpText: fitnessText(context, title),
+        // Always show the 12-hour picker with AM/PM.
+        builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(alwaysUse24HourFormat: false),
+            child: child!));
     if (value == null || !mounted) return;
-    await _run(() async {
-      final data = await repository.save({
-        key:
-            '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
-      });
-      if (mounted) setState(() => _preferences = data);
+    await _save({
+      key:
+          '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
     });
   }
 
-  Widget _row(IconData icon, String title, String key, String description,
-          String? timeKey) =>
-      Column(children: [
-        NotificationSwitch(
-            key: ValueKey('reminder-$key'),
-            title: title,
-            subtitle: description,
-            value: _preferences![key] == true,
-            onChanged: _busy
-                ? null
-                : (value) => _run(() async {
-                      final data = await repository.save({key: value});
-                      if (mounted) setState(() => _preferences = data);
-                    })),
-        if (timeKey != null && _preferences![key] == true)
-          SettingsRow(
-              title: 'Reminder time',
-              value: _clock(_preferences![timeKey] as String),
-              onTap: _busy ? null : () => _time(timeKey, title)),
-        if (key == 'meals' && _preferences!['meals'] == true)
-          Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              child: SettingsDropdown(
-                  label: 'Meal',
-                  value: _preferences!['mealType'] as String,
-                  fillColor: const Color(0xFF0D0D0D),
-                  choices: const {
-                    'BREAKFAST': 'Breakfast',
-                    'LUNCH': 'Lunch',
-                    'DINNER': 'Dinner',
-                    'SNACK': 'Snack'
-                  },
-                  onChanged: _busy
-                      ? null
-                      : (value) => _run(() async {
-                            final data =
-                                await repository.save({'mealType': value});
-                            if (mounted) setState(() => _preferences = data);
-                          }))),
-      ]);
+  Future<void> _pickMeal() async {
+    final meal = await showModalBottomSheet<String>(
+      context: context,
+      sheetAnimationStyle: DSMotion.sheetStyle(context),
+      backgroundColor: FitnessTheme.surface,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+        for (final entry in _mealNames.entries)
+          ListTile(
+              title: FitnessText(entry.value),
+              trailing: entry.key == _preferences!['mealType']
+                  ? const Icon(CupertinoIcons.checkmark, size: 18)
+                  : null,
+              onTap: () => Navigator.pop(context, entry.key)),
+        const SizedBox(height: 8),
+      ])),
+    );
+    if (meal == null || !mounted) return;
+    if (meal != _preferences!['mealType']) await _save({'mealType': meal});
+    if (mounted) await _pickTime('mealTime', 'Meal reminder');
+  }
 
-  String _trialDescription(Map<String, dynamic> preferences) {
+  Widget _reminder(
+          {required String key,
+          required String title,
+          required String detail,
+          String? timeKey,
+          required bool enabled,
+          VoidCallback? onEdit}) =>
+      ReminderRow(
+          key: ValueKey('reminder-$key'),
+          title: title,
+          detail: detail,
+          detailValues: timeKey == null ? const {} : {'time': _time(timeKey)},
+          value: _preferences![key] == true,
+          onEdit: enabled && !_busy && _preferences![key] == true
+              ? onEdit
+              : null,
+          onChanged:
+              enabled && !_busy ? (value) => _save({key: value}) : null);
+
+  String? _trialDetail(Map<String, dynamic> preferences) {
     final billing = preferences['billingInfo'];
-    if (billing is Map &&
-        billing['state'] == 'trial' &&
-        billing['trialSource'] == 'store') {
-      return billing['cancelAtPeriodEnd'] == true
-          ? 'Trial ending · Renewal cancelled'
-          : 'Trial ending · Manage renewal in your app store';
+    if (billing is Map && billing['state'] == 'trial') {
+      if (billing['trialSource'] == 'legacy') {
+        return 'Trial ending · No automatic charge';
+      }
+      if (billing['trialSource'] == 'store') {
+        return billing['cancelAtPeriodEnd'] == true
+            ? 'Trial ending · Renewal cancelled'
+            : 'Trial ending · Manage renewal in your app store';
+      }
     }
-    if (billing is Map &&
-        billing['state'] == 'trial' &&
-        billing['trialSource'] == 'legacy') {
-      return 'Trial ending · No automatic charge';
+    return null;
+  }
+
+  String _status(Map<String, dynamic> preferences, bool enabled, bool ready,
+      DateTime? pause) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    if (!enabled) return fitnessText(context, 'Notifications are off.');
+    if (pause != null) {
+      return fitnessText(context, 'Paused until {date}, {time}.', values: {
+        'date': DateFormat.MMMd(locale).format(pause.toLocal()),
+        'time': DateFormat('h:mm a', locale).format(pause.toLocal()),
+      });
     }
-    return 'Get updates before your trial ends and when access changes.';
+    final next = preferences['nextWorkoutReminder'];
+    final date =
+        next is Map ? DateTime.tryParse(next['date'] as String? ?? '') : null;
+    if (ready && date != null && preferences['workouts'] == true) {
+      return fitnessText(context, 'Next: {date} · {time} workout', values: {
+        'date': DateFormat.MMMEd(locale).format(date),
+        'time': formatReminderTime(context, next['time'] as String),
+      });
+    }
+    return ready ? fitnessText(context, 'Notifications are on.') : '';
   }
 
   @override
@@ -212,158 +244,160 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView>
     final enabled = preferences?['enabled'] == true;
     final ready =
         enabled && service.allowed && preferences?['deliveryReady'] == true;
-    final pause =
+    final pauseDate =
         DateTime.tryParse(preferences?['pausedUntil'] as String? ?? '');
-    final paused = pause != null && pause.isAfter(DateTime.now());
-    final next = preferences?['nextWorkoutReminder'];
-    final nextDate =
-        next is Map ? DateTime.tryParse(next['date'] as String? ?? '') : null;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final heroTitle = paused
-        ? 'Paused'
-        : ready && nextDate != null
-            ? 'Next workout reminder'
-            : ready
-                ? 'Stay in your rhythm'
-                : 'Your pace. Your reminders.';
-    final heroBody = paused
-        ? DateFormat.yMMMd(locale).add_jm().format(pause.toLocal())
-        : ready && nextDate != null
-            ? '${DateFormat.MMMEd(locale).format(nextDate)} · ${_clock(next['time'] as String)}'
-            : ready && preferences?['workouts'] == true
-                ? fitnessText(context, 'No upcoming workout reminder.')
-                : fitnessText(
-                    context,
-                    ready
-                        ? 'Notifications are on for this phone.'
-                        : 'Choose what you want to hear from Setcraft.');
+    final pause =
+        pauseDate != null && pauseDate.isAfter(DateTime.now()) ? pauseDate : null;
+    final quietOff = preferences != null &&
+        preferences['quietStart'] == preferences['quietEnd'];
 
-    return SettingsPage(title: 'Notifications', subtitle: '', children: [
-      Padding(
-          padding: const EdgeInsets.fromLTRB(0, 6, 0, 8),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            FitnessText(heroTitle,
-                style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -.7)),
-            const SizedBox(height: 8),
-            Text(heroBody,
-                style: const TextStyle(
-                    fontSize: 13, color: FitnessTheme.muted, height: 1.5)),
-          ])),
-      const SizedBox(height: 22),
-      if (_error != null) ...[
-        SettingsNotice(_error!, error: true),
-        if (preferences == null)
-          TextButton(onPressed: _load, child: const FitnessText('Retry')),
-      ],
-      if (preferences == null && _error == null)
-        const Center(
-            child: CircularProgressIndicator(color: FitnessTheme.silver)),
-      if (preferences != null) ...[
-        SettingsGroup(dividerIndent: 16, children: [
-          NotificationSwitch(
-              key: const ValueKey('remote-notifications'),
-              title: 'Allow notifications',
-              subtitle: '',
-              value: enabled,
-              onChanged: _busy ? null : _toggle),
-        ]),
-        if (!service.configured)
-          const SettingsNotice(
-              'Remote reminders unavailable. Rest alerts still work.'),
-        if (enabled && !service.allowed)
-          const SettingsNotice('Blocked in phone settings.'),
-        if (service.configured && preferences['deliveryReady'] != true)
-          const SettingsNotice('Delivery unavailable. Try again later.'),
-        SettingsGroup(dividerIndent: 16, title: 'Your reminders', children: [
-          _row(CupertinoIcons.flame, 'Workout reminders', 'workouts',
-              'On planned training days', 'workoutTime'),
-          _row(CupertinoIcons.sparkles, 'Weekly plans', 'plans',
-              'New plans and your next week', null),
-          _row(CupertinoIcons.chart_bar, 'Weekly summary', 'summaries',
-              'Your progress on Sundays', 'summaryTime'),
-          _row(CupertinoIcons.moon, 'Daily check-in', 'checkIns',
-              'Recovery check-in without a wearable', 'checkInTime'),
-          _row(CupertinoIcons.cart, 'Meal reminder', 'meals',
-              'For an unlogged meal', 'mealTime'),
-        ]),
-        if (rest.supported && _localAlertsAvailable)
-          SettingsGroup(dividerIndent: 16, title: 'During workouts', children: [
-            NotificationSwitch(
-                key: const ValueKey('rest-notifications'),
-                title: 'Rest timer alerts',
-                subtitle: 'For timers you start',
-                value: rest.enabled,
-                onChanged: _busy
-                    ? null
-                    : (value) => _run(() async {
-                          await rest.setEnabled(value);
-                          if (mounted) setState(() {});
-                        })),
-            if (rest.enabled && !rest.exactAllowed)
+    return SettingsPage(
+        title: 'Notifications',
+        subtitle: preferences == null
+            ? ''
+            : _status(preferences, enabled, ready, pause),
+        children: [
+          if (_error != null) ...[
+            SettingsNotice(_error!, error: true),
+            if (preferences == null)
+              TextButton(onPressed: _load, child: const FitnessText('Retry')),
+          ],
+          if (preferences == null && _error == null)
+            const Center(
+                child: CircularProgressIndicator(color: FitnessTheme.silver)),
+          if (preferences != null) ...[
+            SettingsGroup(dividerIndent: 16, children: [
+              ReminderRow(
+                  key: const ValueKey('remote-notifications'),
+                  title: 'Allow notifications',
+                  detail: '',
+                  value: enabled,
+                  onChanged: _busy ? null : _toggle),
+              if (enabled && service.configured && !service.allowed)
+                SettingsRow(
+                    title: 'Turned off in phone settings',
+                    subtitle: 'Tap to allow Setcraft notifications',
+                    onTap: () => AppSettings.openAppSettings(
+                        type: AppSettingsType.notification)),
+            ]),
+            if (!service.configured)
+              const SettingsNotice(
+                  'Reminders aren’t available in this version. Rest timer alerts still work.')
+            else if (enabled && preferences['deliveryReady'] != true)
+              const SettingsNotice(
+                  'Couldn’t reach the notification service. Try again later.'),
+            SettingsGroup(dividerIndent: 16, title: 'Reminders', children: [
+              _reminder(
+                  key: 'workouts',
+                  title: 'Workout reminders',
+                  detail: 'Training days · {time}',
+                  timeKey: 'workoutTime',
+                  enabled: enabled,
+                  onEdit: () => _pickTime('workoutTime', 'Workout reminders')),
+              _reminder(
+                  key: 'checkIns',
+                  title: 'Daily check-in',
+                  detail: 'How you slept and feel · {time}',
+                  timeKey: 'checkInTime',
+                  enabled: enabled,
+                  onEdit: () => _pickTime('checkInTime', 'Daily check-in')),
+              _reminder(
+                  key: 'meals',
+                  title: 'Meal reminder',
+                  detail: _mealDetails[preferences['mealType']] ??
+                      _mealDetails['LUNCH']!,
+                  timeKey: 'mealTime',
+                  enabled: enabled,
+                  onEdit: _pickMeal),
+              _reminder(
+                  key: 'summaries',
+                  title: 'Weekly summary',
+                  detail: 'Sundays · {time}',
+                  timeKey: 'summaryTime',
+                  enabled: enabled,
+                  onEdit: () => _pickTime('summaryTime', 'Weekly summary')),
+              _reminder(
+                  key: 'plans',
+                  title: 'New weekly plan',
+                  detail: 'When next week’s plan is ready',
+                  enabled: enabled),
+              _reminder(
+                  key: 'billing',
+                  title: 'Trial & billing',
+                  detail: _trialDetail(preferences) ??
+                      'Before your trial ends or access changes',
+                  enabled: enabled),
+            ]),
+            const SettingsNotice(
+                'Tap a reminder to change its time. You get at most 2 of these a day, and workouts come first. Plan and billing alerts don’t count.'),
+            SettingsGroup(dividerIndent: 16, title: 'Quiet hours', children: [
               SettingsRow(
-                  title: 'Precise timer alerts',
-                  subtitle: 'Allow precise timing',
+                  title: 'Quiet from',
+                  value: _time('quietStart'),
                   onTap: _busy
                       ? null
-                      : () => _run(() async {
-                            await rest.requestPreciseTiming();
-                            if (mounted) setState(() {});
+                      : () => _pickTime('quietStart', 'Quiet hours start')),
+              SettingsRow(
+                  title: 'Quiet until',
+                  value: _time('quietEnd'),
+                  onTap: _busy
+                      ? null
+                      : () => _pickTime('quietEnd', 'Quiet hours end')),
+            ]),
+            SettingsNotice(quietOff
+                ? 'Quiet hours are off. Set different times to turn them on.'
+                : 'Reminders due during quiet hours arrive when they end.'),
+            SettingsGroup(dividerIndent: 16, children: [
+              SettingsRow(
+                  title: pause != null ? 'Resume reminders' : 'Pause reminders',
+                  subtitle: pause != null
+                      ? 'Trial & billing alerts still arrive'
+                      : 'Stop all reminders for 7 days',
+                  onTap: !enabled || _busy
+                      ? null
+                      : () => _save({
+                            'pausedUntil': pause != null
+                                ? null
+                                : DateTime.now()
+                                    .add(const Duration(days: 7))
+                                    .toUtc()
+                                    .toIso8601String()
                           })),
-          ]),
-        SettingsGroup(dividerIndent: 16, title: 'Your quiet time', children: [
-          SettingsRow(
-              title: 'Starts',
-              value: _clock(preferences['quietStart'] as String),
-              onTap: _busy
-                  ? null
-                  : () => _time('quietStart', 'Quiet hours start')),
-          SettingsRow(
-              title: 'Ends',
-              value: _clock(preferences['quietEnd'] as String),
-              onTap: _busy ? null : () => _time('quietEnd', 'Quiet hours end')),
-          SettingsRow(
-              title: paused ? 'Resume reminders' : 'Pause reminders',
-              value: paused ? null : 'For 7 days',
-              onTap: !enabled || _busy
-                  ? null
-                  : () => _run(() async {
-                        final data = await repository.save({
-                          'pausedUntil': paused
+            ]),
+            if (rest.supported && _localAlertsAvailable)
+              SettingsGroup(
+                  dividerIndent: 16,
+                  title: 'During workouts',
+                  children: [
+                    ReminderRow(
+                        key: const ValueKey('rest-notifications'),
+                        title: 'Rest timer alerts',
+                        detail: 'When a rest timer you start ends',
+                        value: rest.enabled,
+                        onChanged: _busy
+                            ? null
+                            : (value) => _run(() async {
+                                  await rest.setEnabled(value);
+                                  if (mounted) setState(() {});
+                                })),
+                    if (rest.enabled && !rest.exactAllowed)
+                      SettingsRow(
+                          title: 'Precise timer alerts',
+                          subtitle: 'Allow alerts at the exact second',
+                          onTap: _busy
                               ? null
-                              : DateTime.now()
-                                  .add(const Duration(days: 7))
-                                  .toUtc()
-                                  .toIso8601String()
-                        });
-                        if (mounted) {
-                          setState(() => _preferences = data);
-                        }
-                      })),
-        ]),
-        SettingsNotice(preferences['quietStart'] == preferences['quietEnd']
-            ? 'Quiet hours are off.'
-            : 'Reminders wait until quiet time ends.'),
-        if (paused) const SettingsNotice('Account reminders stay on.'),
-        const SettingsNotice('Local time · Up to 2 routine reminders daily'),
-        SettingsGroup(dividerIndent: 16, title: 'Account', children: [
-          _row(CupertinoIcons.creditcard, 'Trial and renewal reminders',
-              'billing', _trialDescription(preferences), null),
-        ]),
-        SettingsDisclosure(
-            title: 'This phone',
-            summary: 'System settings and delivery test',
-            children: [
+                              : () => _run(() async {
+                                    await rest.requestPreciseTiming();
+                                    if (mounted) setState(() {});
+                                  })),
+                  ]),
+            SettingsGroup(dividerIndent: 16, title: 'This phone', children: [
               SettingsRow(
                   title: 'Phone notification settings',
                   onTap: () => AppSettings.openAppSettings(
                       type: AppSettingsType.notification)),
               SettingsRow(
                   title: _busy ? 'Please wait…' : 'Send test notification',
-                  subtitle: 'Check delivery on this phone',
                   onTap: !ready || _busy
                       ? null
                       : () => _run(() async {
@@ -373,46 +407,63 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView>
                               ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                       content: FitnessText(
-                                          'Test queued. It should arrive shortly.')));
+                                          'Test sent. It should arrive shortly.')));
                             }
                           })),
             ]),
-      ],
-    ]);
+          ],
+        ]);
   }
 }
 
-class NotificationSwitch extends StatelessWidget {
-  final String title, subtitle;
+/// One reminder: title, a detail line (with its time) and a switch.
+/// Tapping the text changes the time when [onEdit] is set.
+class ReminderRow extends StatelessWidget {
+  final String title, detail;
+  final Map<String, Object> detailValues;
   final bool value;
   final ValueChanged<bool>? onChanged;
-  const NotificationSwitch(
+  final VoidCallback? onEdit;
+  const ReminderRow(
       {super.key,
       required this.title,
-      required this.subtitle,
+      required this.detail,
+      this.detailValues = const {},
       required this.value,
-      required this.onChanged});
+      required this.onChanged,
+      this.onEdit});
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  Widget build(BuildContext context) {
+    final disabled = onChanged == null;
+    return Opacity(
+      opacity: disabled ? .45 : 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(children: [
           Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                FitnessText(title,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500)),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 5),
-                  FitnessText(subtitle,
+              child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onEdit,
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FitnessText(title,
                       style: const TextStyle(
-                          fontSize: 12,
-                          color: FitnessTheme.muted,
-                          height: 1.4)),
-                ],
-              ])),
+                          fontSize: 15, fontWeight: FontWeight.w500)),
+                  if (detail.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    FitnessText(detail,
+                        values: detailValues,
+                        style: TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: onEdit != null
+                                ? FitnessTheme.silver
+                                : FitnessTheme.muted)),
+                  ],
+                ]),
+          )),
           const SizedBox(width: 10),
           Semantics(
               label: title,
@@ -422,115 +473,9 @@ class NotificationSwitch extends StatelessWidget {
                   activeTrackColor: FitnessTheme.silver,
                   thumbColor: value ? Colors.black : Colors.white70)),
         ]),
-      );
-}
-
-class NotificationCategoryView extends StatefulWidget {
-  final String title, description, category;
-  final String? timeKey;
-  final Map<String, dynamic> preferences;
-  final NotificationsRepository repository;
-  const NotificationCategoryView(
-      {super.key,
-      required this.title,
-      required this.description,
-      required this.category,
-      required this.timeKey,
-      required this.preferences,
-      required this.repository});
-
-  @override
-  State<NotificationCategoryView> createState() =>
-      _NotificationCategoryViewState();
-}
-
-class _NotificationCategoryViewState extends State<NotificationCategoryView> {
-  late Map<String, dynamic> _preferences = Map.from(widget.preferences);
-  bool _busy = false;
-  String? _error;
-
-  Future<void> _save(Map<String, dynamic> changes) async {
-    if (_busy) return;
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final preferences = await widget.repository.save(changes);
-      if (mounted) setState(() => _preferences = preferences);
-    } catch (error) {
-      if (mounted) setState(() => _error = notificationError(error));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+      ),
+    );
   }
-
-  Future<void> _time() async {
-    final key = widget.timeKey!;
-    final current = (_preferences[key] as String).split(':');
-    final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay(
-            hour: int.parse(current[0]), minute: int.parse(current[1])));
-    if (time != null && mounted) {
-      await _save({
-        key:
-            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => SettingsPage(
-          title: widget.title,
-          subtitle: widget.description,
-          children: [
-            if (_error != null) SettingsNotice(_error!, error: true),
-            SettingsGroup(children: [
-              NotificationSwitch(
-                  title: widget.title,
-                  subtitle: 'Included when notifications are enabled.',
-                  value: _preferences[widget.category] == true,
-                  onChanged: _busy
-                      ? null
-                      : (value) => _save({widget.category: value})),
-              if (widget.timeKey != null &&
-                  notificationTimeIsQuiet(
-                      _preferences[widget.timeKey] as String, _preferences))
-                const SettingsNotice('Reminders wait until quiet time ends.'),
-              if (widget.timeKey != null)
-                SettingsRow(
-                    title: 'Reminder time',
-                    value: _preferences[widget.timeKey] as String,
-                    onTap: _busy ? null : _time),
-              if (widget.category == 'meals')
-                Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(children: [
-                      const Expanded(
-                          child: FitnessText('Meal',
-                              style: TextStyle(fontSize: 14))),
-                      DropdownButton<String>(
-                          value: _preferences['mealType'] as String,
-                          underline: const SizedBox(),
-                          items: ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']
-                              .map((slot) => DropdownMenuItem(
-                                  value: slot,
-                                  child: Text(
-                                      fitnessText(context,
-                                          '${slot[0]}${slot.substring(1).toLowerCase()}'),
-                                      style: const TextStyle(fontSize: 14))))
-                              .toList(),
-                          onChanged: _busy
-                              ? null
-                              : (slot) {
-                                  if (slot != null) _save({'mealType': slot});
-                                }),
-                    ])),
-            ]),
-            const SettingsNotice(
-                'Quiet hours always apply. Completed activities do not need a reminder.'),
-          ]);
 }
 
 Future<void> offerNotificationReminders(BuildContext context) async {

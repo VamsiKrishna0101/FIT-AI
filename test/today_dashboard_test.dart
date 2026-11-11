@@ -62,6 +62,8 @@ Widget _app(
         DateTime? selectedDate,
         VoidCallback? onProfile,
         VoidCallback? onSession,
+        bool hasPlan = true,
+        VoidCallback? onGeneratePlan,
         VoidCallback? onTrain}) =>
     MaterialApp(
       home: Builder(
@@ -77,6 +79,8 @@ Widget _app(
                       onRefresh: () async {},
                       onProfile: onProfile ?? () {},
                       onSession: onSession ?? () {},
+                      hasPlan: hasPlan,
+                      onGeneratePlan: onGeneratePlan,
                       onTrain: onTrain ?? () {},
                       onNutrition: () {},
                     )),
@@ -183,11 +187,45 @@ void main() {
       await tester.ensureVisible(find.text(label));
       await tester.pumpAndSettle();
       await tester.tap(find.text(label));
+      if (status == 'REST_DAY') {
+        expect(find.text('A day to recover'), findsOneWidget);
+        expect(find.text('Your plan has no workout scheduled today.'),
+            findsOneWidget);
+      }
       expect(sessions, status == 'REST_DAY' ? 0 : 1);
       expect(plans, status == 'REST_DAY' ? 1 : 0);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     }
+  });
+
+  testWidgets(
+      'Session card shows Generate plan and triggers redirect when no plan is generated',
+      (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    var generateCount = 0;
+    final noPlanData = HomeData.fromJson({
+      ..._data.toJson(),
+      'todayWorkout': null,
+    });
+
+    await tester.pumpWidget(_app(
+      data: noPlanData,
+      hasPlan: false,
+      onGeneratePlan: () => generateCount++,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No plan generated'), findsOneWidget);
+    expect(find.text('Generate plan'), findsOneWidget);
+
+    await tester.tap(find.text('Generate plan'));
+    await tester.pumpAndSettle();
+
+    expect(generateCount, 1);
   });
 
   testWidgets('Today header and profile stay fixed while content scrolls',

@@ -17,6 +17,9 @@ class FakePrivacyRepository extends PrivacyRepository {
   Future<Map<String, dynamic>> configuration() async => Map.from(config);
   @override
   Future<Map<String, dynamic>> consent() async => Map.from(values);
+  bool apple = false;
+  @override
+  Future<bool> usesAppleSignIn() async => apple;
   @override
   Future<Map<String, dynamic>> setAiConsent(
       bool granted, String version) async {

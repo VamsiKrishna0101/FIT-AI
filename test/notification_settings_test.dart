@@ -175,10 +175,9 @@ void main() {
 
   testWidgets('Category changes inline and saves only its requested preference',
       (tester) async {
-    final data = FakeNotifications();
+    final data = FakeNotifications()..values['enabled'] = true;
     await tester.pumpWidget(app(data, FakePush(data)));
     await tester.pumpAndSettle();
-    expect(find.byType(NotificationCategoryView), findsNothing);
     final workoutSwitch = find.descendant(
         of: find.byKey(const ValueKey('reminder-workouts')),
         matching: find.byType(CupertinoSwitch));
@@ -188,7 +187,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(data.values['workouts'], false);
     expect(data.values['plans'], true);
-    expect(data.values['enabled'], false);
+    expect(data.values['enabled'], true);
+  });
+
+  testWidgets('Reminders are disabled while notifications are off',
+      (tester) async {
+    final data = FakeNotifications();
+    await tester.pumpWidget(app(data, FakePush(data)));
+    await tester.pumpAndSettle();
+    final workoutSwitch = tester.widget<CupertinoSwitch>(find.descendant(
+        of: find.byKey(const ValueKey('reminder-workouts')),
+        matching: find.byType(CupertinoSwitch)));
+    expect(workoutSwitch.onChanged, isNull);
+    expect(find.text('Notifications are off.'), findsOneWidget);
+  });
+
+  testWidgets('Times always show in 12-hour format', (tester) async {
+    final data = FakeNotifications()..values['enabled'] = true;
+    await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(),
+        home: Builder(
+            builder: (context) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(alwaysUse24HourFormat: true),
+                child: NotificationSettingsView(
+                    repository: data,
+                    service: FakePush(data),
+                    restService: FakeRest())))));
+    await tester.pumpAndSettle();
+    expect(find.text('Training days · 6:00 PM'), findsOneWidget);
+    expect(find.textContaining('18:00'), findsNothing);
+    await tester.scrollUntilVisible(find.text('10:00 PM'), 250);
+    expect(find.text('10:00 PM'), findsOneWidget);
+    expect(find.text('8:00 AM'), findsOneWidget);
   });
 
   testWidgets(
@@ -200,11 +231,6 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final data = FakeNotifications()..values['enabled'] = true;
     await tester.pumpWidget(app(data, FakePush(data), scale: 1.5));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('This phone'), 300);
-    await tester.ensureVisible(find.text('This phone'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('This phone'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Send test notification'), 300);
     await tester.ensureVisible(find.text('Send test notification'));

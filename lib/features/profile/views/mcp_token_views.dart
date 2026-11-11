@@ -263,8 +263,13 @@ class _ClaudeConnectionViewState extends State<ClaudeConnectionView>
             FitnessText('Read-only access.',
                 style: TextStyle(
                     fontSize: 14, height: 1.5, color: FitnessTheme.silver)),
-            FitnessText('No photos shared.',
+            FitnessText('No photos or Apple Health data shared.',
                 style: TextStyle(fontSize: 12, color: FitnessTheme.muted)),
+            FitnessText(
+                'Data you allow is sent to Claude (Anthropic), a third-party AI service, and handled under its privacy policy. Revoke a token anytime to stop access.',
+                key: ValueKey('mcp-third-party-notice'),
+                style: TextStyle(
+                    fontSize: 12, height: 1.5, color: FitnessTheme.muted)),
           ]),
           if (_loading)
             const Padding(
@@ -467,7 +472,9 @@ class _CreateMcpTokenViewState extends State<CreateMcpTokenView> {
             ),
         ],
       ),
-      const SettingsNotice('Read-only · No photos.'),
+      const SettingsNotice('Read-only · No photos or Apple Health data.'),
+      const SettingsNotice(
+          'By generating a token, you allow the AI app you connect (such as Claude by Anthropic, a third party) to read the data selected above.'),
       if (_error != null) SettingsNotice(_error!, error: true),
       if (widget.embedded) ...[
         action,

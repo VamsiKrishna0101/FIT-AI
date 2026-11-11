@@ -36,7 +36,7 @@ class _ProgressRepository extends WeeklyPlanRepository {
   };
 
   @override
-  Future<Map<String, dynamic>> availability() async => {
+  Future<Map<String, dynamic>> availability({bool refresh = false}) async => {
         'canGenerate': false,
         'cooldownActive': false,
         'pendingRun': ['QUEUED', 'RUNNING'].contains(current['status'])

@@ -13,6 +13,8 @@ import '../../nutrition/views/food_library_view.dart';
 import '../../nutrition/views/hydration_view.dart';
 import '../../train/views/train_view.dart';
 import '../../train/views/saved_routines_view.dart';
+import '../../planner/views/weekly_plan_view.dart';
+import '../../planner/repositories/weekly_plan_repository.dart';
 import '../../train/models/training_session.dart';
 import '../../train/repositories/training_repository.dart';
 import '../../train/components/workout_saved_notice.dart';
@@ -64,6 +66,8 @@ class _TodayHomeViewState extends State<TodayHomeView>
   bool _checkingPrompt = false, _checkInOpen = false;
   bool _savingWorkout = false;
   final _savedWorkouts = <String, TrainingDay>{};
+  final _planRepo = WeeklyPlanRepository();
+  PlanStatus _planStatus = PlanStatus.unknown;
 
   @override
   void initState() {
@@ -232,6 +236,7 @@ class _TodayHomeViewState extends State<TodayHomeView>
 
     // Recovery history loads independently of the main cards.
     final recovery = _loadRecovery(request, owner, locale, refresh, date);
+    final planAvailability = _loadPlanAvailability(refresh);
     HomeData? fresh;
     try {
       fresh =
@@ -264,6 +269,27 @@ class _TodayHomeViewState extends State<TodayHomeView>
     }
     _schedulePrompt();
     await recovery;
+    await planAvailability;
+  }
+
+  Future<void> _loadPlanAvailability(bool refresh) async {
+    final status = await _planRepo.planStatus(refresh: refresh);
+    // A failed check keeps the last known answer.
+    if (status == PlanStatus.unknown) return;
+    if (mounted && _planStatus != status) {
+      setState(() => _planStatus = status);
+    }
+  }
+
+  Future<void> _openGeneratePlan() async {
+    await Navigator.of(context).push(
+      AppPageRoute<void>(
+        page: const WeeklyPlanView(startGenerationOnOpen: true),
+      ),
+    );
+    if (mounted) {
+      await _loadHome(refresh: true);
+    }
   }
 
   Future<void> _loadRecovery(int request, String owner, String locale,
@@ -370,6 +396,9 @@ class _TodayHomeViewState extends State<TodayHomeView>
             onSession: () => _open(TrainView(
                 standalone: true,
                 initialDate: CacheScope.todayKey(_selectedDate))),
+            hasPlan: _planStatus != PlanStatus.none,
+            planGenerating: _planStatus == PlanStatus.generating,
+            onGeneratePlan: _openGeneratePlan,
             onTrain: () => DateUtils.isSameDay(_selectedDate, _now)
                 ? widget.onSelectTab(1)
                 : _open(TrainView(

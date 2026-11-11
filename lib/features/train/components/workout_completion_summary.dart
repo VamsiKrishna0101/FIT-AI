@@ -4,22 +4,95 @@ import 'package:intl/intl.dart';
 import '../../../core/localization/fitness_copy.dart';
 import '../../../core/theme/ds_colors.dart';
 import '../../../core/theme/ds_motion.dart';
+import '../../onboarding/components/coach_mascot.dart';
+import '../../onboarding/components/coach_speech.dart';
 import '../models/training_session.dart';
 import '../models/workout_exercise_models.dart';
 import 'exercise_thumbnail.dart';
 import 'training_widgets.dart';
+
+/// How this session compares with the last time the same exercises were done.
+class WorkoutComparison {
+  /// Extra kilograms lifted (weight × reps) on exercises done both times.
+  final double volumeGain;
+
+  /// Extra reps on those exercises, used when the session had no load.
+  final int repsGain;
+
+  /// No exercise in this session had been logged before.
+  final bool firstTime;
+  const WorkoutComparison(
+      {this.volumeGain = 0, this.repsGain = 0, this.firstTime = false});
+
+  /// Compares each exercise logged today with its previous session, using
+  /// [previous] (the per-exercise "last time" lookup the session already uses).
+  static Future<WorkoutComparison?> of(
+      TrainingDay day,
+      Future<Map<String, dynamic>> Function(String exerciseId)
+          previous) async {
+    double today = 0, before = 0;
+    int todayReps = 0, beforeReps = 0;
+    var compared = 0;
+    for (final item in day.items) {
+      final logs = day.logs(item.id);
+      if (logs.isEmpty) continue;
+      final Map<String, dynamic> last;
+      try {
+        last = await previous(item.exercise.id);
+      } catch (_) {
+        return null;
+      }
+      final sets = (last['sets'] as List? ?? []).whereType<Map>();
+      if (sets.isEmpty) continue;
+      compared++;
+      num weight(Map log) => log['weight'] as num? ?? 0;
+      num reps(Map log) => log['reps'] as num? ?? 0;
+      today += logs.fold<double>(0, (sum, l) => sum + weight(l) * reps(l));
+      before += sets.fold<double>(0, (sum, l) => sum + weight(l) * reps(l));
+      todayReps += logs.fold<int>(0, (sum, l) => sum + reps(l).toInt());
+      beforeReps += sets.fold<int>(0, (sum, l) => sum + reps(l).toInt());
+    }
+    if (compared == 0) {
+      return day.loggedSets > 0 ? const WorkoutComparison(firstTime: true) : null;
+    }
+    return WorkoutComparison(
+        volumeGain: today - before, repsGain: todayReps - beforeReps);
+  }
+}
 
 /// A completed session uses the same surfaces and scale as the Train dashboard.
 class WorkoutCompletionSummary extends StatelessWidget {
   final TrainingDay day;
   final VoidCallback onEdit, onRetry;
   final VoidCallback? onAddPhoto;
+
+  /// Mochi's cheer upgrades when this session beat the last one.
+  final Future<WorkoutComparison?>? comparison;
   const WorkoutCompletionSummary(
       {super.key,
       required this.day,
       required this.onEdit,
       this.onAddPhoto,
+      this.comparison,
       required this.onRetry});
+
+  static (String, Map<String, Object>) _cheer(
+      WorkoutComparison? result, String Function(double) kg) {
+    if (result == null) {
+      return ("Workout done! That's how progress is made", const {});
+    }
+    if (result.firstTime) return ('First one logged. Great start ✅', const {});
+    if (result.volumeGain >= 1) {
+      return (
+        '+{amount} kg more than last time 💪',
+        {'amount': kg(result.volumeGain)}
+      );
+    }
+    if (result.volumeGain.abs() < 1 && result.repsGain > 0) {
+      return ('{count} more reps than last time 💪', {'count': result.repsGain});
+    }
+    return ("Workout done! That's how progress is made", const {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +139,25 @@ class WorkoutCompletionSummary extends StatelessWidget {
       key: const ValueKey('workout-summary-scroll'),
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
       children: [
+        // Mochi celebrates a session that actually logged work, and says how
+        // much more it was than last time when the comparison arrives.
+        if (day.loggedSets > 0) ...[
+          FutureBuilder<WorkoutComparison?>(
+              future: comparison,
+              builder: (context, snapshot) {
+                final (line, values) = _cheer(snapshot.data,
+                    (value) => NumberFormat.decimalPattern(locale)
+                        .format(value.round()));
+                return CoachSpeech(
+                    key: const ValueKey('workout-summary-coach'),
+                    hero: false,
+                    mood: CoachMood.cheer,
+                    mascotSize: 56,
+                    text: line,
+                    values: values);
+              }),
+          const SizedBox(height: 14),
+        ],
         TrainingSurface(
           key: const ValueKey('workout-summary-overview'),
           child:

@@ -84,25 +84,21 @@ import Flutter
             }
             
         case "updateRestState":
+            // Merge into the context this phone last SENT (applicationContext),
+            // never the one received from the watch, so the workout snapshot survives.
+            var context = session.applicationContext
             if let payload = call.arguments as? [String: Any] {
-                var context = session.receivedApplicationContext
                 context["rest"] = payload
-                try? session.updateApplicationContext(context)
-                if session.isReachable {
-                    session.sendMessage(["type": "REST_UPDATE", "rest": payload], replyHandler: nil, errorHandler: nil)
-                }
-                result(true)
             } else {
-                // Clear rest
-                var context = session.receivedApplicationContext
                 context.removeValue(forKey: "rest")
-                try? session.updateApplicationContext(context)
-                if session.isReachable {
-                    session.sendMessage(["type": "REST_UPDATE", "rest": NSNull()], replyHandler: nil, errorHandler: nil)
-                }
-                result(true)
             }
-            
+            try? session.updateApplicationContext(context)
+            if session.isReachable {
+                let rest: Any = (call.arguments as? [String: Any]) ?? NSNull()
+                session.sendMessage(["type": "REST_UPDATE", "rest": rest], replyHandler: nil, errorHandler: nil)
+            }
+            result(true)
+
         case "clearSession":
             try? session.updateApplicationContext([:])
             if session.isReachable {
@@ -133,6 +129,13 @@ import Flutter
         }
     }
     
+    // Actions queued by the watch with transferUserInfo while the phone was unreachable.
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String : Any] = [:]) {
+        DispatchQueue.main.async { [weak self] in
+            self?.routeWatchAction(userInfo)
+        }
+    }
+
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) {
         DispatchQueue.main.async { [weak self] in
             self?.routeWatchAction(applicationContext)

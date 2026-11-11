@@ -98,6 +98,20 @@ void main() {
 
       await sub.cancel();
     });
+
+    test('watch payload carries rest-alert and heart-rate settings', () {
+      const snapshot = WatchWorkoutSnapshot(
+        sessionId: 's1',
+        date: '2026-11-11',
+        title: 'Legs',
+        activeItemIndex: 0,
+        items: [],
+      );
+      final payload = WatchSyncService.shared.watchPayload(snapshot);
+      expect(payload['sessionId'], 's1');
+      expect(payload['hapticRestAlerts'], isA<bool>());
+      expect(payload['heartRateEnabled'], isA<bool>());
+    });
   });
 }
 

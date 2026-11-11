@@ -325,13 +325,18 @@ class _ProgressOverviewViewState extends State<ProgressOverviewView> {
           days: days,
           onOpen: () => _open('Training', '', 'training', initial: data.json)),
       if ((progressNumber(data.summary['sets']) ?? 0) == 0)
-        Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
+        Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: FilledButton.icon(
                 key: const ValueKey('progress-open-training'),
                 onPressed: () => Navigator.of(context).push(AppPageRoute(
                     builder: (_) => const TrainView(standalone: true))),
-                child: Text(fitnessText(context, 'Open training')))),
+                style: FilledButton.styleFrom(
+                    backgroundColor: DSColors.silver,
+                    foregroundColor: DSColors.bg,
+                    minimumSize: const Size.fromHeight(44)),
+                icon: const Icon(Icons.fitness_center, size: 18),
+                label: Text(fitnessText(context, 'Open training')))),
       ProgressHeading('Muscle training',
           topPadding: 12,
           action: 'View all',

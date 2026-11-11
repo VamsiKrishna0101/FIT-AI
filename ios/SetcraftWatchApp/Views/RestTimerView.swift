@@ -1,4 +1,5 @@
 import SwiftUI
+import WatchKit
 
 struct RestTimerView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
@@ -43,7 +44,6 @@ struct RestTimerView: View {
             // Rest Controls: +30s and Skip
             HStack(spacing: 8) {
                 Button(action: {
-                    remainingSeconds += 30
                     workoutManager.controlRest(operation: "EXTEND")
                 }) {
                     Text("+30s")
@@ -70,26 +70,33 @@ struct RestTimerView: View {
             }
         }
         .onAppear {
-            let now = Int(Date().timeIntervalSince1970 * 1000)
-            let diff = max(0, (rest.endTimeEpochMs - now) / 1000)
-            remainingSeconds = diff
-            
+            refreshRemaining()
             timer?.invalidate()
             timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-                if remainingSeconds > 0 {
-                    remainingSeconds -= 1
-                    if remainingSeconds <= 3 && remainingSeconds > 0 {
-                        WKInterfaceDevice.current().play(.click)
-                    } else if remainingSeconds == 0 {
-                        WKInterfaceDevice.current().play(.notification)
-                    }
+                let previous = remainingSeconds
+                refreshRemaining()
+                guard workoutManager.hapticRestAlerts, remainingSeconds != previous else { return }
+                if remainingSeconds <= 3 && remainingSeconds > 0 {
+                    WKInterfaceDevice.current().play(.click)
+                } else if remainingSeconds == 0 && previous > 0 {
+                    WKInterfaceDevice.current().play(.notification)
                 }
             }
         }
+        .onChange(of: rest.endTimeEpochMs) { _ in refreshRemaining() }
+        .onChange(of: rest.isPaused) { _ in refreshRemaining() }
         .onDisappear {
             timer?.invalidate()
             timer = nil
         }
     }
-}
 
+    private func refreshRemaining() {
+        if rest.isPaused {
+            remainingSeconds = max(0, rest.remainingSeconds)
+            return
+        }
+        let now = Int(Date().timeIntervalSince1970 * 1000)
+        remainingSeconds = max(0, Int((Double(rest.endTimeEpochMs - now) / 1000).rounded(.up)))
+    }
+}
