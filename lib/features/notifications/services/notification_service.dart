@@ -12,6 +12,7 @@ import '../../../core/storage/secure_session_store.dart';
 import '../repositories/notifications_repository.dart';
 import 'rest_notification_service.dart';
 import '../../../core/localization/fitness_copy.dart';
+import '../../onboarding/components/coach_mascot.dart';
 
 @pragma('vm:entry-point')
 Future<void> fitaiNotificationBackground(RemoteMessage message) async {
@@ -229,18 +230,10 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       backgroundColor: const Color(0xFFE0E3E5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title,
-                style: const TextStyle(
-                    color: Color(0xFF181A1C), fontWeight: FontWeight.w500)),
-            if (message.notification?.body != null)
-              Text(message.notification!.body!,
-                  style:
-                      const TextStyle(color: Color(0xFF44484C), fontSize: 12)),
-          ]),
+      content: NotificationBannerContent(
+          title: title,
+          body: message.notification?.body,
+          type: message.data['type']?.toString()),
       action: SnackBarAction(
           label: fitnessText(messengerKey.currentContext!, 'Open'),
           textColor: const Color(0xFF181A1C),
@@ -285,5 +278,41 @@ class NotificationService extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _opened.close();
     super.dispose();
+  }
+}
+
+/// In-app banner for a push received while Setcraft is open.
+/// Mochi, the AI coach, delivers every coaching alert; billing notices stay plain.
+class NotificationBannerContent extends StatelessWidget {
+  static const _billingTypes = {'TRIAL_ENDING', 'TRIAL_EXPIRED'};
+  final String title;
+  final String? body;
+  final String? type;
+  const NotificationBannerContent(
+      {super.key, required this.title, this.body, this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  color: Color(0xFF181A1C), fontWeight: FontWeight.w500)),
+          if (body != null)
+            Text(body!,
+                style: const TextStyle(color: Color(0xFF44484C), fontSize: 12)),
+        ]);
+    if (_billingTypes.contains(type)) return text;
+    return Row(children: [
+      const ExcludeSemantics(
+          child: CoachMascot(
+              key: ValueKey('notification-mochi'),
+              size: 36,
+              mood: CoachMood.cheer)),
+      const SizedBox(width: 12),
+      Expanded(child: text),
+    ]);
   }
 }

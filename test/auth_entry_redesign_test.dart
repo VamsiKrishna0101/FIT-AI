@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:setcraft/core/config/google_auth_config.dart';
 import 'package:setcraft/core/components/liquid_chrome_button.dart';
 import 'package:setcraft/core/localization/app_language.dart';
 import 'package:setcraft/core/localization/language_manager.dart';
@@ -90,11 +91,12 @@ void main() {
     expect(find.text('Coming soon'), findsNothing);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
   test(
-      'Google remains unavailable on iOS until its native client is configured',
+      'Google is available on iOS with the native client from GoogleService-Info.plist',
       () {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    expect(SocialSignIn().available(SocialProvider.google), isFalse);
+    expect(GoogleAuthConfig.iosClientId, endsWith('.apps.googleusercontent.com'));
+    expect(SocialSignIn().available(SocialProvider.google), isTrue);
   });
   testWidgets(
       'provider cancellation restores controls without creating a session',

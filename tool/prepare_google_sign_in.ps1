@@ -21,12 +21,23 @@ $source = @'
 /// Regenerate with tool/prepare_google_sign_in.ps1 when Firebase config changes.
 abstract final class GoogleAuthConfig {
   static const androidEnabled = true;
+
+  /// iOS OAuth client from ios/Runner/GoogleService-Info.plist (CLIENT_ID).
+  static const iosClientId =
+      '__IOS_CLIENT_ID__';
   static const serverClientId =
       '__WEB_CLIENT_ID__';
 }
 '@
+$iosClientId = ''
+$iosPlistPath = Join-Path $mobileRoot 'ios\Runner\GoogleService-Info.plist'
+if (Test-Path -LiteralPath $iosPlistPath) {
+    $iosMatch = [regex]::Match((Get-Content -Raw -LiteralPath $iosPlistPath),
+        '<key>CLIENT_ID</key>\s*<string>([^<]+)</string>')
+    if ($iosMatch.Success) { $iosClientId = $iosMatch.Groups[1].Value }
+}
 $sourcePath = Join-Path $mobileRoot 'lib\core\config\google_auth_config.dart'
-$source = $source.Replace('__WEB_CLIENT_ID__', $webClients[0]) + "`n"
+$source = $source.Replace('__WEB_CLIENT_ID__', $webClients[0]).Replace('__IOS_CLIENT_ID__', $iosClientId) + "`n"
 [System.IO.File]::WriteAllText($sourcePath, $source, [System.Text.UTF8Encoding]::new($false))
 $defines = [ordered]@{
     SETCRAFT_GOOGLE_SIGN_IN = $true

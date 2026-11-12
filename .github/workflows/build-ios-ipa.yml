@@ -46,6 +46,23 @@ jobs:
           fi
           flutter pub get --enforce-lockfile
 
+      - name: Write Firebase iOS config
+        env:
+          GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          # GoogleService-Info.plist is git-ignored. Without it Firebase never starts
+          # on iPhone, which breaks Sign in with Apple, Google sign-in and push.
+          if [ -z "$GOOGLE_SERVICE_INFO_PLIST_BASE64" ]; then
+            echo "::error::Missing secret GOOGLE_SERVICE_INFO_PLIST_BASE64 (base64 of ios/Runner/GoogleService-Info.plist)."
+            exit 1
+          fi
+          APP_DIR="."
+          if [ -d "mobile/ios" ]; then
+            APP_DIR="mobile"
+          fi
+          echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > "$APP_DIR/ios/Runner/GoogleService-Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :BUNDLE_ID' "$APP_DIR/ios/Runner/GoogleService-Info.plist" | grep -qx 'com.setcraft.app'
+
       - name: Build iOS Application (Release, No Codesign)
         env:
           BACKEND_URL: ${{ github.event.inputs.backend_url || 'https://api.setcraft.fit' }}

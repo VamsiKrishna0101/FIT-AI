@@ -138,7 +138,7 @@ void main() {
     expect(
         find.byType(BackdropFilter),
         defaultTargetPlatform == TargetPlatform.android
-            ? findsNothing
+            ? findsOneWidget
             : findsNWidgets(2));
     expect(
         find.byKey(const ValueKey('navigation-active-pill')), findsOneWidget);
@@ -171,11 +171,11 @@ void main() {
       expect(bar.left, 0);
       expect(bar.right, width);
       expect(bar.bottom, 852);
-      expect(capsule.left, greaterThanOrEqualTo(24));
-      expect(capsule.right, lessThanOrEqualTo(width - 24));
-      expect(capsule.width, lessThanOrEqualTo(400));
-      expect(capsule.height, closeTo(54, .01));
-      expect(capsule.bottom, closeTo(852 - 34 - 16, .01));
+      expect(capsule.left, greaterThanOrEqualTo(32));
+      expect(capsule.right, lessThanOrEqualTo(width - 32));
+      expect(capsule.width, lessThanOrEqualTo(372));
+      expect(capsule.height, closeTo(50, .01));
+      expect(capsule.bottom, closeTo(852 - 34 - 12, .01));
       expect(tabs.bottom, closeTo(capsule.bottom - 3, .01));
       expect(
           tester
@@ -184,8 +184,8 @@ void main() {
           closeTo(bar.bottom, .01));
       for (var i = 0; i < 4; i++) {
         final tap = tester.getRect(find.byKey(ValueKey('navigation-tab-$i')));
-        expect(tap.height, greaterThanOrEqualTo(48));
-        expect(tap.width, greaterThanOrEqualTo(48));
+        expect(tap.height, greaterThanOrEqualTo(44));
+        expect(tap.width, greaterThanOrEqualTo(44));
       }
       for (final label in ['Train', 'Body', 'Progress']) {
         await tester.tap(find.byTooltip(label));

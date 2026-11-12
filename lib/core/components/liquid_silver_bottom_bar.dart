@@ -19,8 +19,18 @@ bool get _supportsLiquidOptics =>
     defaultTargetPlatform == TargetPlatform.iOS;
 
 /// Height of one tab (icon over label) and the glass margin around the row.
-const double _tabHeight = 48;
+/// 44pt keeps Apple's minimum tap height while trimming the dock's bulk.
+const double _tabHeight = 44;
 const double _shellInset = 3;
+
+/// Saturation lift applied to the frosted backdrop on Android, so colours
+/// glow through the glass the way they do on iOS.
+const List<double> _androidVibrancy = [
+  1.33, -.30, -.03, 0, 0, //
+  -.09, 1.12, -.03, 0, 0, //
+  -.09, -.30, 1.39, 0, 0, //
+  0, 0, 0, 1, 0,
+];
 const Color _unselected = Color(0xFFA1A1A6);
 
 /// An App Store style floating tab bar: clear glass capsule, icon over a
@@ -204,17 +214,17 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
     final highContrast = MediaQuery.highContrastOf(context);
     final direction = Directionality.of(context);
     // Float clear of the home indicator with visible page beneath the glass.
-    final bottom = MediaQuery.paddingOf(context).bottom + 16;
+    final bottom = MediaQuery.paddingOf(context).bottom + 12;
     return Padding(
       key: const ValueKey('navigation-bar'),
-      padding: EdgeInsets.fromLTRB(24, 8, 24, bottom),
+      padding: EdgeInsets.fromLTRB(32, 8, 32, bottom),
       child: MediaQuery.removePadding(
         context: context,
         removeBottom: true,
         child: Center(
           heightFactor: 1,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 372),
             child: LayoutBuilder(builder: (context, constraints) {
               final size = Size(
                   constraints.maxWidth - _shellInset * 2, _tabHeight);
@@ -349,8 +359,8 @@ class _TabFace extends StatelessWidget {
     return SizedBox(
       height: _tabHeight,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        NavigationGlyph(kind: kind, color: color, size: 22),
-        const SizedBox(height: 2),
+        NavigationGlyph(kind: kind, color: color, size: 20),
+        const SizedBox(height: 1.5),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: FittedBox(
@@ -382,10 +392,16 @@ class _GlassCapsule extends StatelessWidget {
           // A wide, faint shadow: the glass floats rather than casting a hard edge.
           boxShadow: const [
             BoxShadow(
-                color: Color(0x40000000),
-                blurRadius: 30,
-                spreadRadius: -6,
-                offset: Offset(0, 10)),
+                color: Color(0x47000000),
+                blurRadius: 34,
+                spreadRadius: -8,
+                offset: Offset(0, 14)),
+            // A tight contact shadow grounds the capsule just above the page.
+            BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 8,
+                spreadRadius: -2,
+                offset: Offset(0, 3)),
           ],
         ),
         child: _NavigationGlass(
@@ -445,10 +461,11 @@ class _NavigationGlass extends StatelessWidget {
                       pressure)!,
                 ]
               : android
+                  // Frosted by a real blur now, so the tint can stay light.
                   ? const [
-                      Color(0xA62A2A2D),
-                      Color(0x991C1C1E),
-                      Color(0xA6161618),
+                      Color(0x7A2E2E31),
+                      Color(0x661C1C1E),
+                      Color(0x75161618),
                     ]
                   : const [
                       Color(0x662C2C2E),
@@ -482,10 +499,18 @@ class _NavigationGlass extends StatelessWidget {
         child: finish,
       );
     } else if (android) {
-      // The shell and lens otherwise require two backdrop passes on every
-      // scroll frame. Keep their translucent finish, rim and moving selection
-      // without that GPU cost on Android.
-      surface = finish;
+      // One frosted, saturated backdrop pass for the shell only; the lens
+      // stays a milky finish on top so scrolling never pays for two passes.
+      surface = lens
+          ? finish
+          : BackdropFilter(
+              filter: ui.ImageFilter.compose(
+                outer: ui.ImageFilter.blur(
+                    sigmaX: 22, sigmaY: 22, tileMode: TileMode.mirror),
+                inner: const ColorFilter.matrix(_androidVibrancy),
+              ),
+              child: finish,
+            );
     } else {
       final blurSigma = lens ? .6 : 16.0;
       surface = BackdropFilter(
@@ -699,6 +724,19 @@ class _GlassRim extends CustomPainter {
         ],
         stops: const [0, .32, .70, 1],
       ).createShader(bounds);
+      // A soft inner sheen across the top half, like light pooling in glass.
+      canvas.drawRRect(
+          rim,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: .09),
+                Colors.white.withValues(alpha: 0),
+              ],
+              stops: const [0, .55],
+            ).createShader(bounds));
     }
     canvas.drawRRect(rim, paint);
   }

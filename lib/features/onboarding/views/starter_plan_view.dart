@@ -13,6 +13,7 @@ import '../../subscription/subscription_view.dart';
 import '../data/starter_plan_repository.dart';
 import '../components/starter_plan_reveal.dart';
 import '../../planner/views/widgets/plan_particle_orb.dart';
+import '../../auth/views/auth_view.dart';
 import '../../profile/repositories/settings_repository.dart';
 import '../data/discovery_repository.dart';
 import 'discovery_onboarding_gate.dart';
@@ -108,12 +109,14 @@ class StarterPlanView extends StatefulWidget {
   final Map<String, dynamic>? initialRun;
   final ValueChanged<String?> onComplete;
   final Future<Map<String, dynamic>> Function()? profileLoader;
+  final Future<void> Function()? onSignOut;
   const StarterPlanView(
       {super.key,
       this.repository,
       this.subscription,
       this.initialRun,
       this.profileLoader,
+      this.onSignOut,
       this.requestAiConsent = ensureAiSharingConsent,
       required this.onComplete});
   @override
@@ -130,7 +133,7 @@ class _StarterPlanViewState extends State<StarterPlanView>
   String? _errorCode;
   SubscriptionPreparation? _billingPreparation;
   Timer? _timer;
-  bool _busy = false, _polling = false, _foreground = true;
+  bool _busy = false, _polling = false, _foreground = true, _signingOut = false;
   bool _presentReady = false, _membershipOpen = false;
   bool _refreshingPlan = false, _unlockAfterRefresh = false;
   static const _refreshableCodes = {
@@ -395,11 +398,40 @@ class _StarterPlanViewState extends State<StarterPlanView>
     await _unlock(allowRefresh: false);
   }
 
+  Future<void> _signOut() async {
+    if (_signingOut || _busy || _membershipOpen) return;
+    _timer?.cancel();
+    setState(() {
+      _signingOut = true;
+      _error = null;
+    });
+    try {
+      await (widget.onSignOut ?? SettingsRepository().signOut)();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil<void>(
+        AppPageRoute<void>(page: const AuthView(initialSignIn: false)),
+        (_) => false,
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _signingOut = false;
+          _error = 'Could not sign out. Please try again.';
+        });
+      }
+    }
+  }
+
   Future<void> _showMembership() async {
-    if (_membershipOpen || _busy || !_ready || !_foreground) return;
+    if (_membershipOpen || _busy || _signingOut || !_foreground) return;
     if (!await _sameOwner() || !mounted || !_foreground) return;
     if (_subscription.access?.hasAccess == true) {
-      await _unlock();
+      if (_ready) {
+        await _unlock();
+      } else if (_failed || _error != null) {
+        widget.onComplete(null);
+      }
+      // A member waiting on a building plan keeps waiting; it opens when ready.
       return;
     }
     final navigator = Navigator.of(context);
@@ -410,17 +442,25 @@ class _StarterPlanViewState extends State<StarterPlanView>
           page: SubscriptionView(
         service: _subscription,
         preparation: _billingPreparation,
-        beforePurchase: () async {
-          final valid = await _beforePurchase();
-          if (!valid && mounted && route.isCurrent) navigator.pop(false);
-          return valid && route.isCurrent;
-        },
+        beforePurchase: _ready
+            ? () async {
+                final valid = await _beforePurchase();
+                if (!valid && mounted && route.isCurrent) navigator.pop(false);
+                return valid && route.isCurrent;
+              }
+            : null,
         onContinue: () {
           if (route.isCurrent) navigator.pop(true);
         },
       ));
       final verified = await navigator.push<bool>(route);
-      if (verified == true && await _sameOwner()) await _unlock();
+      if (verified == true && await _sameOwner()) {
+        if (_ready) {
+          await _unlock();
+        } else {
+          widget.onComplete(null);
+        }
+      }
     } finally {
       if (mounted) setState(() => _membershipOpen = false);
     }
@@ -474,6 +514,13 @@ class _StarterPlanViewState extends State<StarterPlanView>
     if (mounted) _begin(retry: true);
   }
 
+  /// Back from the plan screen returns to the saved answers, then rebuilds.
+  Future<void> _goBack() async {
+    if (_busy || _membershipOpen || _signingOut) return;
+    _timer?.cancel();
+    await _review();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     setState(() => _foreground = state == AppLifecycleState.resumed);
@@ -511,67 +558,81 @@ class _StarterPlanViewState extends State<StarterPlanView>
           // The reveal opens with a confetti burst above Mochi's cheer.
           body: Stack(fit: StackFit.expand, children: [
             SafeArea(
-              child: Center(
-                  child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Padding(
-                      padding: EdgeInsets.fromLTRB(24, 16, 24, 12),
-                      child: Text('SETCRAFT',
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              fontStyle: FontStyle.italic,
-                              color: Color(0xFF606066),
-                              letterSpacing: -.8))),
-                  Expanded(
-                      child: ListView(
-                          key: const ValueKey('starter-preview-scroll'),
-                          padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
-                          children: [
-                        const CoachSpeech(
-                            key: ValueKey('starter-coach'),
-                            mood: CoachMood.cheer,
-                            text: 'Done! I built this week around your answers'),
-                        const SizedBox(height: 24),
-                        StarterPlanPreview(
-                            preview: _preview!,
-                            profile: _profile,
-                            locked: _subscription.access?.hasAccess != true)
-                      ])),
-                  Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 16),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_error != null)
-                              Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: FitnessText(_error!,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                          fontSize: 12,
-                                          height: 1.4,
-                                          color: FitnessTheme.muted))),
-                            LiquidChromeButton(
-                                key: const ValueKey('starter-unlock'),
-                                title: _subscription.access?.hasAccess == true
-                                    ? 'Open my plan'
-                                    : 'Unlock full plan',
-                                loadingTitle: 'Opening your plan',
-                                pill: true,
-                                solid: true,
-                                showArrow: false,
-                                isLoading: _busy || _membershipOpen,
-                                onPressed: _busy || _membershipOpen
-                                    ? null
-                                    : _showMembership),
-                          ])),
-                ]),
-          ))),
+                child: Center(
+                    child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
+                        child: Row(children: [
+                          const Expanded(
+                              child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text('SETCRAFT',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w900,
+                                              fontStyle: FontStyle.italic,
+                                              color: Color(0xFF606066),
+                                              letterSpacing: -.8))))),
+                          const SizedBox(width: 8),
+                          _SignOutAction(
+                              busy: _busy || _membershipOpen || _signingOut,
+                              onPressed: _signOut),
+                        ])),
+                    Expanded(
+                        child: ListView(
+                            key: const ValueKey('starter-preview-scroll'),
+                            padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
+                            children: [
+                          const CoachSpeech(
+                              key: ValueKey('starter-coach'),
+                              mood: CoachMood.cheer,
+                              text:
+                                  'Done! I built this week around your answers'),
+                          const SizedBox(height: 24),
+                          StarterPlanPreview(
+                              preview: _preview!,
+                              profile: _profile,
+                              locked: _subscription.access?.hasAccess != true)
+                        ])),
+                    Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 10, 24, 16),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_error != null)
+                                Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: FitnessText(_error!,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            height: 1.4,
+                                            color: FitnessTheme.muted))),
+                              LiquidChromeButton(
+                                  key: const ValueKey('starter-unlock'),
+                                  title: _subscription.access?.hasAccess == true
+                                      ? 'Open my plan'
+                                      : 'Unlock full plan',
+                                  loadingTitle: 'Opening your plan',
+                                  pill: true,
+                                  solid: true,
+                                  showArrow: false,
+                                  isLoading: _busy || _membershipOpen,
+                                  onPressed: _busy || _membershipOpen
+                                      ? null
+                                      : _showMembership),
+                            ])),
+                  ]),
+            ))),
             const Positioned.fill(child: ConfettiBurst()),
           ]),
         ))
@@ -579,8 +640,20 @@ class _StarterPlanViewState extends State<StarterPlanView>
           child: Scaffold(
           appBar: AppBar(
               centerTitle: true,
+              automaticallyImplyLeading: false,
+              leading: IconButton(
+                  key: const ValueKey('starter-back'),
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed:
+                      _busy || _membershipOpen || _signingOut ? null : _goBack,
+                  icon: const Icon(Icons.arrow_back_rounded)),
               title: const FitnessText('Your plan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              actions: [
+                _SignOutAction(
+                    busy: _busy || _membershipOpen || _signingOut,
+                    onPressed: _signOut),
+              ]),
           body: SafeArea(
               child: Column(children: [
             Expanded(
@@ -600,7 +673,7 @@ class _StarterPlanViewState extends State<StarterPlanView>
                     const SizedBox(height: 16),
                     FitnessText(
                         _failed || _error != null
-                            ? 'We could not finish your plan'
+                            ? 'Your preferences are saved'
                             : _refreshingPlan
                                 ? 'Updating your plan…'
                                 : 'Building your first week',
@@ -667,33 +740,55 @@ class _StarterPlanViewState extends State<StarterPlanView>
                           child: const FitnessText('Refresh my plan')),
                     const SizedBox(height: 8),
                   ],
-                  if (_failed || _error != null || _refreshingPlan)
+                  ...[
+                    // Membership is always reachable, whatever the plan state.
                     LiquidChromeButton(
+                        key: const ValueKey('starter-view-membership'),
                         pill: true,
                         solid: true,
                         showArrow: false,
-                        title: _canRetry
-                            ? 'Try again'
-                            : _membershipIssue
-                                ? 'View membership'
-                                : 'Help & Support',
+                        title: 'View membership',
                         loadingTitle: _refreshingPlan
                             ? 'Updating your plan…'
-                            : 'Checking your plan…',
-                        isLoading: _busy || _refreshingPlan,
-                        onPressed: _busy || _refreshingPlan
+                            : 'Opening membership…',
+                        isLoading: _busy || _refreshingPlan || _membershipOpen,
+                        onPressed: _busy || _refreshingPlan || _membershipOpen
                             ? null
-                            : _canRetry
-                                ? () => _begin(retry: true)
-                                : () => Navigator.of(context).push(
-                                    AppPageRoute<void>(
-                                        page: _membershipIssue
-                                            ? SubscriptionView(
-                                                service: _subscription)
-                                            : const HelpSupportView()))),
+                            : _showMembership),
+                    if (_canRetry && (_failed || _error != null))
+                      TextButton(
+                          onPressed: _busy ? null : () => _begin(retry: true),
+                          child: const FitnessText('Try again')),
+                    if (!_canRetry && !_membershipIssue)
+                      TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  AppPageRoute<void>(
+                                      page: const HelpSupportView())),
+                          child: const FitnessText('Help & Support')),
+                  ],
                 ])),
           ])),
         ));
+}
+
+class _SignOutAction extends StatelessWidget {
+  final bool busy;
+  final VoidCallback onPressed;
+  const _SignOutAction({required this.busy, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) => TextButton(
+        key: const ValueKey('starter-sign-out'),
+        onPressed: busy ? null : onPressed,
+        style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFCCCCD0),
+            minimumSize: const Size(44, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 12)),
+        child: const FitnessText('Sign out',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      );
 }
 
 class StarterPlanPreview extends StatelessWidget {

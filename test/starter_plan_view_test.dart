@@ -1,3 +1,4 @@
+import 'package:setcraft/features/auth/views/auth_view.dart';
 import 'package:setcraft/features/body_scan/views/body_entry_view.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
@@ -601,4 +602,93 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('Fallback screen shows View membership and top-right Sign out',
+      (tester) async {
+    final repo = StarterRepo()
+      ..value = {
+        'id': 'starter-run',
+        'status': 'FAILED',
+        'errorCode': 'GENERATION_FAILED',
+        'canRetry': false
+      };
+    final service = TrialService();
+    var signedOut = false;
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: StarterPlanView(
+        requestAiConsent: (_) async => true,
+        repository: repo,
+        subscription: service,
+        onComplete: (_) {},
+        onSignOut: () async {
+          signedOut = true;
+        },
+        profileLoader: () async => {'gender': 'FEMALE'},
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('We could not finish your plan'), findsNothing);
+    expect(find.byKey(const ValueKey('starter-view-membership')), findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-sign-out')), findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-back')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('starter-view-membership')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SubscriptionView), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('membership-close')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('starter-sign-out')));
+    await tester.pumpAndSettle();
+    expect(signedOut, true);
+    expect(find.byType(AuthView), findsOneWidget);
+  });
+
+  testWidgets('Building screen keeps Back and View membership available',
+      (tester) async {
+    final repo = StarterRepo()
+      ..value = {'id': 'starter-run', 'status': 'RUNNING'};
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: StarterPlanView(
+        requestAiConsent: (_) async => true,
+        repository: repo,
+        subscription: TrialService(),
+        onComplete: (_) {},
+        profileLoader: () async => {},
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const ValueKey('starter-back')), findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-view-membership')), findsOneWidget);
+    expect(find.byKey(const ValueKey('starter-sign-out')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Preview shows injury adaptation note and top-right Sign out',
+      (tester) async {
+    final repo = StarterRepo();
+    ((repo.value['plan'] as Map)['preview'] as Map)['adaptationNote'] =
+        'Adapted for your movement needs: shoulder-safe.';
+    final service = TrialService();
+    var signedOut = false;
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: StarterPlanView(
+        requestAiConsent: (_) async => true,
+        repository: repo,
+        subscription: service,
+        onComplete: (_) {},
+        onSignOut: () async {
+          signedOut = true;
+        },
+        profileLoader: () async => {'gender': 'FEMALE'},
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('starter-adaptation-note')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('starter-sign-out')));
+    await tester.pumpAndSettle();
+    expect(signedOut, true);
+    expect(find.byType(AuthView), findsOneWidget);
+  });
 }

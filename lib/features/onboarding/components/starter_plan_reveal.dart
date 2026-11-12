@@ -142,6 +142,20 @@ class StarterPlanReveal extends StatelessWidget {
           ].join(' · '),
           style: const TextStyle(
               fontSize: 13, height: 1.5, color: FitnessTheme.muted)),
+      if (preview['adaptationNote'] is String &&
+          (preview['adaptationNote'] as String).trim().isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Container(
+            key: const ValueKey('starter-adaptation-note'),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+                color: const Color(0xFF171719),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF28292C), width: .8)),
+            child: Text(preview['adaptationNote'] as String,
+                style: const TextStyle(
+                    fontSize: 12, height: 1.4, color: FitnessTheme.silver))),
+      ],
       const SizedBox(height: 28),
       if (samples.isNotEmpty) ...[
         const FitnessText('Your first workout',
