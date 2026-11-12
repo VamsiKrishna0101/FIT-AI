@@ -42,7 +42,7 @@ class LegalDocument {
 const privacyPolicy = LegalDocument(
   title: 'Privacy Policy',
   updated: 'Last updated November 10, 2026',
-  webUrl: 'https://setcraft.fit/privacy.html',
+  webUrl: 'https://sites.google.com/view/setcraft-legal',
   sections: [
     LegalSection('Overview', [
       LegalBlock.p(
@@ -150,7 +150,7 @@ const privacyPolicy = LegalDocument(
 const termsOfUse = LegalDocument(
   title: 'Terms of Use',
   updated: 'Last updated November 10, 2026',
-  webUrl: 'https://setcraft.fit/terms.html',
+  webUrl: 'https://sites.google.com/view/setcraft-legal/terms-of-use',
   sections: [
     LegalSection('Acceptance of Terms', [
       LegalBlock.p(

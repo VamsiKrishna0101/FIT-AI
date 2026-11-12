@@ -448,7 +448,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                                                           .only(bottom: 10),
                                                       child: FitnessText(
                                                           trial
-                                                              ? '14 days free, then {price}'
+                                                              ? '14 days free, then {price}. Auto-renews.'
                                                               : 'Billed {price} · auto-renews',
                                                           values: {
                                                             'price': renewal
@@ -1017,7 +1017,7 @@ class _TrialTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     const rows = [
       ('Day 1', 'Explore your full plan', Icons.lock_open_rounded),
-      ('Day 12', 'Two days left in your trial', Icons.hourglass_bottom_rounded),
+      ('Day 12', "We'll email you a reminder", Icons.mark_email_unread_rounded),
       ('Day 14', 'Your membership begins', Icons.check_rounded),
     ];
     return Column(key: const ValueKey('membership-trial-timeline'), children: [

@@ -267,6 +267,17 @@ class SubscriptionService extends ChangeNotifier {
       if (owner != await SecureSessionStore.shared.userId) return;
       offers.clear();
       if (offering != null) {
+        // Only advertise a trial the store will actually honour: a free
+        // 14-day introductory offer the customer has not already used.
+        var eligibility = <String, rc.IntroEligibility>{};
+        try {
+          eligibility = await rc.Purchases.checkTrialOrIntroductoryPriceEligibility([
+            for (final package in [offering.monthly, offering.annual])
+              if (package != null) package.storeProduct.identifier,
+          ]);
+        } catch (failure) {
+          debugPrint('RevenueCat trial eligibility unavailable');
+        }
         for (final entry in {
           'monthly': offering.monthly,
           'annual': offering.annual
@@ -285,7 +296,11 @@ class SubscriptionService extends ChangeNotifier {
                   currencyCode: p.currencyCode),
               price: p.priceString,
               amount: p.price,
-              trialDays: (p.introductoryPrice != null || entry.key == 'annual') ? 14 : 0);
+              trialDays: revenueCatTrialDays(p.introductoryPrice,
+                          eligibility[p.identifier]?.status) ==
+                      14
+                  ? 14
+                  : 0);
         }
       }
       if (offers.isEmpty) {
@@ -313,13 +328,13 @@ class SubscriptionService extends ChangeNotifier {
               product: ProductDetails(
                   id: 'setcraft_monthly',
                   title: 'Setcraft Pro Monthly',
-                  description: 'Full monthly access to Setcraft Pro.',
+                  description: 'Monthly access with 14-day free trial.',
                   price: monthlyPrice,
                   rawPrice: monthlyNum,
                   currencyCode: currency),
               price: monthlyPrice,
               amount: monthlyNum,
-              trialDays: 0);
+              trialDays: 14);
         } catch (e) {
           debugPrint('Fallback pricing error: ');
         }
@@ -578,11 +593,10 @@ class SubscriptionService extends ChangeNotifier {
             rethrow;
           }
         } else {
-          try {
-            await api.post<Map<String, dynamic>>('/api/subscription/start-trial');
-          } catch (e) {
-            debugPrint('Start trial error: $e');
-          }
+          // Trials always go through the App Store / Google Play checkout so a
+          // payment method is on file. Never fall back to a server-side trial.
+          throw StateError(
+              'Subscriptions are temporarily unavailable. Please try again in a moment.');
         }
         await _syncRevenueCat(owner);
         await refresh();
@@ -728,8 +742,8 @@ class SubscriptionService extends ChangeNotifier {
       });
   Future<void> openLegal(String key) => _run(() async {
         final fallback = key == 'termsUrl'
-            ? 'https://setcraft.fit/terms.html'
-            : 'https://setcraft.fit/privacy.html';
+            ? 'https://sites.google.com/view/setcraft-legal/terms-of-use'
+            : 'https://sites.google.com/view/setcraft-legal';
         final raw = (access?.data[key] as String?) ?? fallback;
         final uri = Uri.tryParse(raw);
         if (uri == null ||
@@ -776,4 +790,20 @@ class SubscriptionService extends ChangeNotifier {
     _purchases?.cancel();
     super.dispose();
   }
+}
+
+/// Days of a free introductory trial, or 0 if the offer is not a free trial
+/// or the store says this customer already used it.
+int revenueCatTrialDays(rc.IntroductoryPrice? intro,
+    [rc.IntroEligibilityStatus? eligibility]) {
+  if (intro == null || intro.price != 0) return 0;
+  if (eligibility == rc.IntroEligibilityStatus.introEligibilityStatusIneligible ||
+      eligibility == rc.IntroEligibilityStatus.introEligibilityStatusNoIntroOfferExists) {
+    return 0;
+  }
+  return switch (intro.periodUnit) {
+    rc.PeriodUnit.day => intro.periodNumberOfUnits * intro.cycles,
+    rc.PeriodUnit.week => intro.periodNumberOfUnits * intro.cycles * 7,
+    _ => 0,
+  };
 }

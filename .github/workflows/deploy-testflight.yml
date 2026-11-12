@@ -196,7 +196,7 @@ jobs:
           flutter build ipa --release \
             --build-name="1.0.0" \
             --build-number="$BUILD_NUM" \
-            --dart-define="BACKEND_BASE_URL=$BACKEND_URL" \
+            --dart-define="SETCRAFT_API_BASE_URL=$BACKEND_URL" \
             --export-options-plist=$RUNNER_TEMP/ExportOptions.plist \
             -v
 

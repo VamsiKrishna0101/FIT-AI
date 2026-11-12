@@ -31,6 +31,16 @@ const membershipCopy = <String, List<String>>{
     "Prueba por {price}",
     "Prova a {price}"
   ],
+  "We'll email you a reminder": [
+    "Wir erinnern dich per E-Mail",
+    "Nous vous enverrons un rappel par e-mail",
+    "Vi påminner dig via e-post",
+    "Vi minner deg på det via e-post",
+    "Vi minder dig om det via e-mail",
+    "We sturen je een herinnering per e-mail",
+    "Te enviaremos un recordatorio por correo",
+    "Ti invieremo un promemoria via email"
+  ],
   "14 days free, then {price}. Auto-renews.": [
     "14 Tage kostenlos, danach {price}. Automatische Verlängerung.",
     "14 jours gratuits, puis {price}. Renouvellement automatique.",

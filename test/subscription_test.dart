@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -269,6 +270,29 @@ void main() {
                   textScaler: TextScaler.linear(scale)),
               child: child!),
           home: child);
+  test('RevenueCat trial is shown only for an eligible free 14-day offer', () {
+    const twoWeeks = rc.IntroductoryPrice(0, 'Free', 'P2W', 1, rc.PeriodUnit.week, 2);
+    const fourteenDays = rc.IntroductoryPrice(0, 'Free', 'P14D', 1, rc.PeriodUnit.day, 14);
+    const paidIntro = rc.IntroductoryPrice(0.99, '\$0.99', 'P2W', 1, rc.PeriodUnit.week, 2);
+    const oneWeek = rc.IntroductoryPrice(0, 'Free', 'P1W', 1, rc.PeriodUnit.week, 1);
+    const monthIntro = rc.IntroductoryPrice(0, 'Free', 'P1M', 1, rc.PeriodUnit.month, 1);
+    expect(revenueCatTrialDays(twoWeeks), 14);
+    expect(revenueCatTrialDays(fourteenDays), 14);
+    expect(revenueCatTrialDays(twoWeeks,
+        rc.IntroEligibilityStatus.introEligibilityStatusEligible), 14);
+    // Android always reports unknown eligibility; the store still decides.
+    expect(revenueCatTrialDays(twoWeeks,
+        rc.IntroEligibilityStatus.introEligibilityStatusUnknown), 14);
+    expect(revenueCatTrialDays(twoWeeks,
+        rc.IntroEligibilityStatus.introEligibilityStatusIneligible), 0);
+    expect(revenueCatTrialDays(twoWeeks,
+        rc.IntroEligibilityStatus.introEligibilityStatusNoIntroOfferExists), 0);
+    expect(revenueCatTrialDays(null), 0);
+    expect(revenueCatTrialDays(paidIntro), 0);
+    expect(revenueCatTrialDays(oneWeek), 7);
+    expect(revenueCatTrialDays(monthIntro), 0);
+  });
+
   test('malformed and expired access cannot unlock the app', () {
     expect(SubscriptionAccess(accessData('trial')).hasAccess, true);
     expect(
@@ -381,7 +405,7 @@ void main() {
     final service = PreviewMembership();
     await tester.pumpWidget(app(SubscriptionView(service: service)));
     await tester.pumpAndSettle();
-    expect(find.text('14 days free, then €99.99/year'), findsOneWidget);
+    expect(find.text('14 days free, then €99.99/year. Auto-renews.'), findsOneWidget);
     expect(find.text('Not now'), findsNothing);
     expect(find.byIcon(Icons.check_rounded), findsOneWidget);
     expect(find.byIcon(Icons.remove_rounded), findsNothing);
@@ -391,7 +415,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('membership-monthly')));
     await tester.pumpAndSettle();
-    expect(find.text('14 days free, then €12.99/month'), findsOneWidget);
+    expect(find.text('14 days free, then €12.99/month. Auto-renews.'), findsOneWidget);
     await tester.tap(find.text('Start my 14-day trial'));
     await tester.pumpAndSettle();
     expect(service.selected, 'monthly');
