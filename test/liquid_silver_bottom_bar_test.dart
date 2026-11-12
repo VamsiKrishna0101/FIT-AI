@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:setcraft/core/components/navigation_glyph.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -135,15 +134,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(nativeRequests, 0);
     expect(find.byType(UiKitView), findsNothing);
-    expect(
-        find.byType(BackdropFilter),
-        defaultTargetPlatform == TargetPlatform.android
-            ? findsOneWidget
-            : findsNWidgets(2));
+    // One frosted pass, identical on both platforms.
+    expect(find.byType(BackdropFilter), findsOneWidget);
     expect(
         find.byKey(const ValueKey('navigation-active-pill')), findsOneWidget);
-    // App Store style: a label under each icon (drawn again inside the lens).
-    expect(find.text('Today'), findsNWidgets(2));
+    // Each tab face is drawn exactly once: no duplicated icons in a lens.
+    expect(find.text('Today'), findsOneWidget);
     expect(find.byTooltip('Today'), findsOneWidget);
     await tester.tap(find.byTooltip('Body'));
     await tester.pumpAndSettle();
@@ -195,7 +191,7 @@ void main() {
     });
   }
 
-  testWidgets('The glass lens moves and stretches while icons stay still',
+  testWidgets('The selection glides without changing shape while icons stay',
       (tester) async {
     phone(tester);
     await tester.pumpWidget(const _NavigationPreview());
@@ -212,7 +208,7 @@ void main() {
     expect(moving.center.dx, greaterThan(before.center.dx));
     expect(moving.center.dx,
         lessThan(tester.getCenter(find.byTooltip('Progress')).dx));
-    expect(moving.width, greaterThan(before.width));
+    expect(moving.size, before.size);
     expect(iconColor(tester, 'Progress'), isNot(DSColors.navGlassText));
     await capture(tester, 'navigation-liquid-glass-moving');
     await tester.pumpAndSettle();
@@ -344,7 +340,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Holding a tab lifts the lens and releasing restores its shape',
+  testWidgets('Holding a tab never swells the selection past the dock',
       (tester) async {
     phone(tester);
     await tester.pumpWidget(const _NavigationPreview());
@@ -356,8 +352,12 @@ void main() {
     final iconBefore = tester.getRect(icon);
     final touch = await tester.startGesture(tester.getCenter(icon));
     await tester.pumpAndSettle();
-    expect(tester.getSize(lens).width, greaterThan(resting.width));
-    expect(tester.getSize(lens).height, greaterThan(resting.height));
+    expect(tester.getSize(lens), resting);
+    final capsule =
+        tester.getRect(find.byKey(const ValueKey('navigation-capsule')));
+    final held = tester.getRect(lens);
+    expect(held.top, greaterThanOrEqualTo(capsule.top));
+    expect(held.bottom, lessThanOrEqualTo(capsule.bottom));
     expect(tester.getRect(icon), iconBefore);
     await capture(tester, 'navigation-glass-pressed');
     await touch.up();

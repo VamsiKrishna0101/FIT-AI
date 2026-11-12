@@ -10,6 +10,7 @@ import '../../core/theme/fitness_theme.dart';
 import '../auth/views/auth_view.dart';
 import '../profile/repositories/settings_repository.dart';
 import '../profile/views/privacy_settings_view.dart';
+import '../../core/branding/setcraft_brand.dart';
 import 'subscription_service.dart';
 
 /// Clear store pricing with a short timeline for eligible native trials.
@@ -238,16 +239,11 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                                               24, 8, 16, 12),
                                           child: Row(children: [
                                             const Expanded(
-                                                child: Text('SETCRAFT',
-                                                    style: TextStyle(
-                                                        fontSize: 22,
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                        fontStyle:
-                                                            FontStyle.italic,
-                                                        color:
-                                                            Color(0xFF606066),
-                                                        letterSpacing: -.8))),
+                                                child: Align(
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child:
+                                                        SetcraftWordmark())),
                                             if (!widget.blocking &&
                                                 Navigator.canPop(context))
                                               IconButton(

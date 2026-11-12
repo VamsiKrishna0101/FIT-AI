@@ -86,3 +86,36 @@ class SetcraftLockup extends StatelessWidget {
         ),
       );
 }
+
+/// The one in-app wordmark: the ring mark beside spaced capitals, matching
+/// the launch lockup. Use this instead of styling 'SETCRAFT' by hand.
+class SetcraftWordmark extends StatelessWidget {
+  final double markSize, fontSize;
+  final Color color;
+  const SetcraftWordmark(
+      {super.key,
+      this.markSize = 22,
+      this.fontSize = 12,
+      this.color = const Color(0xFFF5F5F2)});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        label: SetcraftBrand.name,
+        header: true,
+        child: ExcludeSemantics(
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            SetcraftMark(size: markSize),
+            SizedBox(width: markSize * .36),
+            Text('SETCRAFT',
+                maxLines: 1,
+                textScaler: TextScaler.noScaling,
+                style: TextStyle(
+                    color: color,
+                    fontSize: fontSize,
+                    height: 1,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: fontSize * .22)),
+          ]),
+        ),
+      );
+}

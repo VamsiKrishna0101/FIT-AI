@@ -11,6 +11,7 @@ import '../components/welcome_training_intro.dart';
 import '../components/welcome_coach_stage.dart';
 import '../viewmodels/onboarding_controller.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
+import '../../../core/branding/setcraft_brand.dart';
 import 'onboarding_journey.dart';
 
 /// Mochi greets the user on a clean canvas, above one promise and one action.
@@ -83,14 +84,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(children: [
-                        const Text('SETCRAFT',
-                            textScaler: TextScaler.noScaling,
-                            style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                fontStyle: FontStyle.italic,
-                                letterSpacing: -.5,
-                                color: Color(0xFF8E8E96))),
+                        const SetcraftWordmark(),
                         const Spacer(),
                         TextButton(
                             key: const ValueKey('onboarding-language'),
@@ -119,9 +113,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                           height: 54,
                           textStyle: const TextStyle(
                               fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              fontStyle: FontStyle.italic,
-                              letterSpacing: -.2),
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: .1),
                           isLoading: _saving || !_viewModel.ready,
                           onPressed:
                               _saving || !_viewModel.ready ? null : _continue),

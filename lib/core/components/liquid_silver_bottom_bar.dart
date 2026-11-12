@@ -1,40 +1,36 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart' as glass;
 import '../theme/ds_colors.dart';
 import '../theme/ds_motion.dart';
 import 'navigation_glyph.dart';
-
-/// Use backdrop refraction on iOS when Impeller supports shader filters.
-/// Android paints the translucent finish without live backdrop passes.
-bool get _supportsLiquidOptics =>
-    ui.ImageFilter.isShaderFilterSupported &&
-    defaultTargetPlatform == TargetPlatform.iOS;
 
 /// Height of one tab (icon over label) and the glass margin around the row.
 /// 44pt keeps Apple's minimum tap height while trimming the dock's bulk.
 const double _tabHeight = 44;
 const double _shellInset = 3;
+const double _pillInset = 2;
+const Color _unselected = Color(0xFF8E8E93);
 
-/// Saturation lift applied to the frosted backdrop on Android, so colours
-/// glow through the glass the way they do on iOS.
-const List<double> _androidVibrancy = [
-  1.33, -.30, -.03, 0, 0, //
-  -.09, 1.12, -.03, 0, 0, //
-  -.09, -.30, 1.39, 0, 0, //
-  0, 0, 0, 1, 0,
-];
-const Color _unselected = Color(0xFFA1A1A6);
+/// Gentle, neutral saturation lift so page colours glow through the frost
+/// without tinting greys.
+List<double> _saturation(double s) {
+  const r = .2126, g = .7152, b = .0722;
+  final i = 1 - s;
+  return [
+    i * r + s, i * g, i * b, 0, 0, //
+    i * r, i * g + s, i * b, 0, 0, //
+    i * r, i * g, i * b + s, 0, 0, //
+    0, 0, 0, 1, 0,
+  ];
+}
 
-/// An App Store style floating tab bar: clear glass capsule, icon over a
-/// small label, and a lighter glass pill that slides to the selected tab.
+/// A calm floating tab bar: one dark frosted capsule, a soft hairline rim,
+/// and a quiet filled pill that glides behind the selected tab.
+/// Identical on iOS and Android.
 class LiquidSilverBottomBar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
@@ -66,10 +62,8 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
   int? _previewIndex, _pointer;
   final _pointers = <int>{};
   double? _previewPosition;
-  double _dragStretch = 0;
   bool _pressed = false, _dragging = false, _dragCancelled = false;
-  bool _refreshScheduled = false;
-  bool _deferredRefresh = false;
+  bool _refreshScheduled = false, _deferredRefresh = false;
 
   @override
   void initState() {
@@ -119,7 +113,6 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
     _previewPosition = null;
     _pressed = false;
     _dragging = false;
-    _dragStretch = 0;
     _scheduleRefresh();
   }
 
@@ -144,16 +137,13 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
             ? 3 - physicalPosition
             : physicalPosition
         : index.toDouble();
-    final travel =
-        (position - (_previewPosition ?? widget.selectedIndex)).abs();
-    // A light detent each time the dragged lens crosses into another tab.
+    // A light detent each time the dragged pill crosses into another tab.
     if (dragging && _previewIndex != null && index != _previewIndex) {
       HapticFeedback.selectionClick();
     }
     setState(() {
       _previewIndex = index;
       _previewPosition = position;
-      _dragStretch = dragging ? (travel * .25).clamp(0.0, .12) : 0;
       _pressed = true;
       _dragging = dragging;
     });
@@ -226,83 +216,60 @@ class _LiquidSilverBottomBarState extends State<LiquidSilverBottomBar>
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 372),
             child: LayoutBuilder(builder: (context, constraints) {
-              final size = Size(
-                  constraints.maxWidth - _shellInset * 2, _tabHeight);
-              // The lens paints above the icons so its optics bend them, and
-              // outside the dock's clip so a pressed lens can swell past it.
-              return Stack(clipBehavior: Clip.none, children: [
-                _GlassCapsule(
-                  key: const ValueKey('navigation-capsule'),
-                  highContrast: highContrast,
-                  child: Padding(
-                    padding: const EdgeInsets.all(_shellInset),
-                    child: SizedBox(
-                      key: const ValueKey('navigation-tabs'),
-                      height: size.height,
-                      child: Listener(
-                        onPointerDown: (event) => _down(event, size, direction),
-                        onPointerUp: _up,
-                        onPointerCancel: _cancel,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onHorizontalDragStart: (event) => _preview(
-                              event.localPosition, size, direction,
-                              dragging: true),
-                          onHorizontalDragUpdate: (event) => _preview(
-                              event.localPosition, size, direction,
-                              dragging: true),
-                          onHorizontalDragEnd: (_) => _release(),
-                          onHorizontalDragCancel: _clearPreview,
-                          child: Row(children: [
+              final size =
+                  Size(constraints.maxWidth - _shellInset * 2, _tabHeight);
+              return _GlassCapsule(
+                key: const ValueKey('navigation-capsule'),
+                highContrast: highContrast,
+                child: Padding(
+                  padding: const EdgeInsets.all(_shellInset),
+                  child: SizedBox(
+                    key: const ValueKey('navigation-tabs'),
+                    height: size.height,
+                    child: Listener(
+                      onPointerDown: (event) => _down(event, size, direction),
+                      onPointerUp: _up,
+                      onPointerCancel: _cancel,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onHorizontalDragStart: (event) => _preview(
+                            event.localPosition, size, direction,
+                            dragging: true),
+                        onHorizontalDragUpdate: (event) => _preview(
+                            event.localPosition, size, direction,
+                            dragging: true),
+                        onHorizontalDragEnd: (_) => _release(),
+                        onHorizontalDragCancel: _clearPreview,
+                        // The pill sits behind the icons, so every tab face
+                        // is drawn exactly once and never doubles up.
+                        child: Stack(children: [
+                          _SelectionPill(
+                            position: _previewPosition ??
+                                widget.selectedIndex.toDouble(),
+                            dragging: _dragging,
+                            pressed: _pressed,
+                            reducedMotion: reduced,
+                            highContrast: highContrast,
+                            direction: direction,
+                            width: size.width,
+                            height: size.height,
+                          ),
+                          Row(children: [
                             for (var index = 0; index < 4; index++)
                               Expanded(child: _tab(index, duration)),
                           ]),
-                        ),
+                        ]),
                       ),
                     ),
                   ),
                 ),
-                Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.all(_shellInset),
-                    child: Stack(clipBehavior: Clip.none, children: [
-                      _LiquidSelection(
-                        position:
-                            _previewPosition ?? widget.selectedIndex.toDouble(),
-                        dragging: _dragging,
-                        pressed: _pressed,
-                        dragStretch: _dragStretch,
-                        reducedMotion: reduced,
-                        highContrast: highContrast,
-                        direction: direction,
-                        width: size.width,
-                        height: size.height,
-                        icons: _lensIcons,
-                      ),
-                    ]),
-                  ),
-                ),
-              ]);
+              );
             }),
           ),
         ),
       ),
     );
   }
-
-  /// Crisp tab faces shown only inside the lens, magnified while it is held.
-  Widget _lensIcons(double scale) => Row(children: [
-        for (var index = 0; index < 4; index++)
-          Expanded(
-            child: Transform.scale(
-              scale: scale,
-              child: _TabFace(
-                  kind: _icons[index],
-                  label: widget.labels[index],
-                  color: DSColors.navGlassText),
-            ),
-          ),
-      ]);
 
   Widget _tab(int index, Duration duration) {
     final selected = (_previewIndex ?? widget.selectedIndex) == index;
@@ -354,13 +321,13 @@ class _TabFace extends StatelessWidget {
             fontSize: 10,
             height: 1.2,
             fontWeight: FontWeight.w600,
-            letterSpacing: .1,
+            letterSpacing: .2,
             color: color);
     return SizedBox(
       height: _tabHeight,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         NavigationGlyph(kind: kind, color: color, size: 20),
-        const SizedBox(height: 1.5),
+        const SizedBox(height: 2),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: FittedBox(
@@ -379,6 +346,7 @@ class _TabFace extends StatelessWidget {
   }
 }
 
+/// One frosted pass, one soft shadow, one hairline rim.
 class _GlassCapsule extends StatelessWidget {
   const _GlassCapsule(
       {super.key, required this.highContrast, required this.child});
@@ -386,177 +354,75 @@ class _GlassCapsule extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(100),
-          // A wide, faint shadow: the glass floats rather than casting a hard edge.
-          boxShadow: const [
-            BoxShadow(
-                color: Color(0x47000000),
-                blurRadius: 34,
-                spreadRadius: -8,
-                offset: Offset(0, 14)),
-            // A tight contact shadow grounds the capsule just above the page.
-            BoxShadow(
-                color: Color(0x26000000),
-                blurRadius: 8,
-                spreadRadius: -2,
-                offset: Offset(0, 3)),
-          ],
-        ),
-        child: _NavigationGlass(
-          highContrast: highContrast,
-          child: CustomPaint(
-            foregroundPainter: _GlassRim(highContrast: highContrast),
-            child: Material(type: MaterialType.transparency, child: child),
-          ),
-        ),
-      );
-}
-
-/// The shell refracts the page; the moving lens refracts the shell and icons.
-/// They paint as siblings so the two backdrop passes never nest.
-class _NavigationGlass extends StatelessWidget {
-  const _NavigationGlass({
-    required this.highContrast,
-    required this.child,
-    this.lens = false,
-    this.pressure = 0,
-  });
-  final bool highContrast, lens;
-  final double pressure;
-  final Widget child;
-
-  @override
   Widget build(BuildContext context) {
-    if (highContrast) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(100),
-        child: ColoredBox(
-            color: lens ? const Color(0xFF535A63) : DSColors.bgRaised,
-            child: child),
-      );
-    }
-
-    // Clear dark glass, as in the iOS 26 tab bar: the page shows through and
-    // the blur/refraction do the work. Android has no backdrop pass, so its
-    // shell is denser to keep the icons legible over busy content.
-    final android = defaultTargetPlatform == TargetPlatform.android &&
-        !_supportsLiquidOptics;
-    final finish = DecoratedBox(
-      key: ValueKey(lens ? 'navigation-lens-finish' : 'navigation-dock-finish'),
+    final radius = BorderRadius.circular(100);
+    final Widget surface = highContrast
+        ? ColoredBox(color: DSColors.bgRaised, child: child)
+        : BackdropFilter(
+            filter: ui.ImageFilter.compose(
+              outer: ui.ImageFilter.blur(
+                  sigmaX: 24, sigmaY: 24, tileMode: TileMode.mirror),
+              inner: ColorFilter.matrix(_saturation(1.25)),
+            ),
+            child: DecoratedBox(
+              key: const ValueKey('navigation-dock-finish'),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x8C1F1F22), Color(0x9E151517)],
+                ),
+              ),
+              child: child,
+            ),
+          );
+    return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(100),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: lens
-              // The selected pill is a lighter, milky glass.
-              ? [
-                  Color.lerp(const Color(0x2EFFFFFF), const Color(0x3DFFFFFF),
-                      pressure)!,
-                  Color.lerp(const Color(0x1FFFFFFF), const Color(0x2BFFFFFF),
-                      pressure)!,
-                  Color.lerp(const Color(0x24FFFFFF), const Color(0x33FFFFFF),
-                      pressure)!,
-                ]
-              : android
-                  // Frosted by a real blur now, so the tint can stay light.
-                  ? const [
-                      Color(0x7A2E2E31),
-                      Color(0x661C1C1E),
-                      Color(0x75161618),
-                    ]
-                  : const [
-                      Color(0x662C2C2E),
-                      Color(0x4D1C1C1E),
-                      Color(0x5C161618),
-                    ],
-          stops: const [0, .5, 1],
+        borderRadius: radius,
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x59000000),
+              blurRadius: 28,
+              spreadRadius: -6,
+              offset: Offset(0, 12)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: CustomPaint(
+          foregroundPainter: _Hairline(highContrast: highContrast),
+          child: Material(type: MaterialType.transparency, child: surface),
         ),
       ),
-      child: child,
-    );
-
-    final Widget surface;
-    if (_supportsLiquidOptics) {
-      surface = glass.LiquidGlass.withOwnLayer(
-        shape: const glass.LiquidRoundedRectangle(borderRadius: 100),
-        settings: glass.LiquidGlassSettings(
-          glassColor: const Color(0x08000000),
-          // Thicker glass bends the page more strongly at the rounded edges.
-          thickness: lens ? 14 + pressure * 6 : 20,
-          blur: lens ? .6 : 8,
-          refractiveIndex: lens ? 1.2 + pressure * .05 : 1.2,
-          // Dispersion splits the icon edges into RGB fringes at this scale.
-          chromaticAberration: 0,
-          lightAngle: -math.pi / 3,
-          lightIntensity: lens ? .35 + pressure * .15 : .25,
-          ambientStrength: .03,
-          // Apple's glass lifts the colours it shows through.
-          saturation: 1.4,
-        ),
-        child: finish,
-      );
-    } else if (android) {
-      // One frosted, saturated backdrop pass for the shell only; the lens
-      // stays a milky finish on top so scrolling never pays for two passes.
-      surface = lens
-          ? finish
-          : BackdropFilter(
-              filter: ui.ImageFilter.compose(
-                outer: ui.ImageFilter.blur(
-                    sigmaX: 22, sigmaY: 22, tileMode: TileMode.mirror),
-                inner: const ColorFilter.matrix(_androidVibrancy),
-              ),
-              child: finish,
-            );
-    } else {
-      final blurSigma = lens ? .6 : 16.0;
-      surface = BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: finish,
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(100),
-      child: surface,
     );
   }
 }
 
-/// A single continuous lens tracks the finger and carries velocity into a
-/// damped spring when released or retargeted. Hit targets never move with it.
-class _LiquidSelection extends StatefulWidget {
-  const _LiquidSelection({
+/// The selection glides with a critically damped spring: no bounce, no
+/// swelling, no stretch. A press only brightens it slightly.
+class _SelectionPill extends StatefulWidget {
+  const _SelectionPill({
     required this.position,
     required this.dragging,
     required this.pressed,
-    required this.dragStretch,
     required this.reducedMotion,
     required this.highContrast,
     required this.direction,
     required this.width,
     required this.height,
-    required this.icons,
   });
-  final double position, dragStretch, width, height;
+  final double position, width, height;
   final bool dragging, pressed, reducedMotion, highContrast;
   final TextDirection direction;
 
-  /// Builds the icon row at a given magnification; clipped to the lens.
-  final Widget Function(double scale) icons;
-
   @override
-  State<_LiquidSelection> createState() => _LiquidSelectionState();
+  State<_SelectionPill> createState() => _SelectionPillState();
 }
 
-class _LiquidSelectionState extends State<_LiquidSelection>
+class _SelectionPillState extends State<_SelectionPill>
     with TickerProviderStateMixin {
-  // Slightly under-damped: the lens overshoots once and settles like liquid.
   static const _spring =
-      SpringDescription(mass: 1, stiffness: 460, damping: 28);
+      SpringDescription(mass: 1, stiffness: 520, damping: 46);
   late double _target;
   late final AnimationController _motion, _press;
 
@@ -579,7 +445,7 @@ class _LiquidSelectionState extends State<_LiquidSelection>
   }
 
   @override
-  void didUpdateWidget(_LiquidSelection oldWidget) {
+  void didUpdateWidget(_SelectionPill oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.reducedMotion) {
       _motion.stop();
@@ -615,52 +481,38 @@ class _LiquidSelectionState extends State<_LiquidSelection>
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: Listenable.merge([_motion, _press]),
         builder: (context, _) {
-          final physicalPosition = widget.direction == TextDirection.rtl
+          final physical = widget.direction == TextDirection.rtl
               ? 3 - _motion.value
               : _motion.value;
           final pressure = widget.reducedMotion ? 0.0 : _press.value;
-          final stretch = widget.reducedMotion
-              ? 0.0
-              : widget.dragging
-                  ? .06 + widget.dragStretch * 1.4
-                  : (_motion.velocity.abs() * .018).clamp(0.0, .22);
           final slot = widget.width / 4;
-          // Holding swells the lens past the dock like a drop of glass;
-          // speed squashes it, wide and short, in the direction of travel.
-          final width = (slot - 4) * (1 + stretch + pressure * .12);
-          final height =
-              (widget.height - 4) * (1 + pressure * .12 - stretch * .22);
-          final center = ((physicalPosition + .5) * slot)
+          final width = slot - _pillInset * 2;
+          final height = widget.height - _pillInset * 2;
+          final center = ((physical + .5) * slot)
               .clamp(width / 2, widget.width - width / 2);
-          final lens = Rect.fromLTWH(center - width / 2,
-              (widget.height - height) / 2 - pressure * 2, width, height);
-          return Positioned.fill(
+          final fill = widget.highContrast
+              ? const Color(0xFF535A63)
+              : Color.lerp(const Color(0x24FFFFFF), const Color(0x30FFFFFF),
+                  pressure)!;
+          return Positioned(
+            left: center - width / 2,
+            top: _pillInset,
+            width: width,
+            height: height,
             child: IgnorePointer(
               child: ExcludeSemantics(
-                child: Stack(clipBehavior: Clip.none, children: [
-                  Positioned.fromRect(
-                    rect: lens,
-                    child: _NavigationGlass(
-                      lens: true,
-                      pressure: pressure,
-                      highContrast: widget.highContrast,
-                      child: CustomPaint(
-                        key: const ValueKey('navigation-active-pill'),
-                        foregroundPainter: _GlassRim(
-                            highContrast: widget.highContrast,
-                            lens: true,
-                            pressure: pressure),
-                        child: const SizedBox.expand(),
-                      ),
-                    ),
+                child: DecoratedBox(
+                  key: const ValueKey('navigation-active-pill'),
+                  decoration: BoxDecoration(
+                    color: fill,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                        color: widget.highContrast
+                            ? DSColors.silver
+                            : const Color(0x1AFFFFFF),
+                        width: widget.highContrast ? 1 : .5),
                   ),
-                  Positioned.fill(
-                    child: ClipPath(
-                      clipper: _LensClipper(lens),
-                      child: widget.icons(1 + pressure * .12),
-                    ),
-                  ),
-                ]),
+                ),
               ),
             ),
           );
@@ -668,82 +520,34 @@ class _LiquidSelectionState extends State<_LiquidSelection>
       );
 }
 
-class _LensClipper extends CustomClipper<Path> {
-  const _LensClipper(this.lens);
-  final Rect lens;
-
-  @override
-  Path getClip(Size size) => Path()
-    ..addRRect(RRect.fromRectAndRadius(lens, Radius.circular(lens.height / 2)));
-
-  @override
-  bool shouldReclip(_LensClipper oldClipper) => oldClipper.lens != lens;
-}
-
-class _GlassRim extends CustomPainter {
-  const _GlassRim(
-      {required this.highContrast, this.lens = false, this.pressure = 0});
-  final bool highContrast, lens;
-  final double pressure;
+/// A single hairline: a little brighter along the top edge, where light hits.
+class _Hairline extends CustomPainter {
+  const _Hairline({required this.highContrast});
+  final bool highContrast;
 
   @override
   void paint(Canvas canvas, Size size) {
     final bounds = (Offset.zero & size).deflate(.5);
-    final rim = RRect.fromRectAndRadius(bounds, const Radius.circular(100));
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = highContrast ? 1.2 : (lens ? .8 : .7);
+      ..strokeWidth = highContrast ? 1.2 : .6;
     if (highContrast) {
       paint.color = DSColors.silver;
-    } else if (lens) {
-      // Lens rim: bold top-left specular hit fading to a bottom-right glimmer.
-      // The alpha scales with pressure so it brightens when held.
-      paint.shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: .72 + pressure * .18),
-          Colors.white.withValues(alpha: .38 + pressure * .10),
-          Colors.white.withValues(alpha: .10),
-          Colors.white.withValues(alpha: .06),
-          Colors.white.withValues(alpha: .32 + pressure * .08),
-        ],
-        stops: const [0.0, 0.22, 0.50, 0.72, 1.0],
-      ).createShader(bounds);
     } else {
-      // Dock rim: a bright top-left catchlight and a softer bottom-right
-      // glint, the two specular edges of Apple's glass.
       paint.shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
         colors: [
-          Colors.white.withValues(alpha: .5),
-          Colors.white.withValues(alpha: .16),
-          Colors.white.withValues(alpha: .06),
-          Colors.white.withValues(alpha: .28),
+          Colors.white.withValues(alpha: .22),
+          Colors.white.withValues(alpha: .07),
         ],
-        stops: const [0, .32, .70, 1],
       ).createShader(bounds);
-      // A soft inner sheen across the top half, like light pooling in glass.
-      canvas.drawRRect(
-          rim,
-          Paint()
-            ..shader = LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withValues(alpha: .09),
-                Colors.white.withValues(alpha: 0),
-              ],
-              stops: const [0, .55],
-            ).createShader(bounds));
     }
-    canvas.drawRRect(rim, paint);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(bounds, const Radius.circular(100)), paint);
   }
 
   @override
-  bool shouldRepaint(_GlassRim oldDelegate) =>
-      highContrast != oldDelegate.highContrast ||
-      lens != oldDelegate.lens ||
-      pressure != oldDelegate.pressure;
+  bool shouldRepaint(_Hairline oldDelegate) =>
+      highContrast != oldDelegate.highContrast;
 }

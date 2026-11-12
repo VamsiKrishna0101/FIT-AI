@@ -146,6 +146,7 @@ class _StarterPlanViewState extends State<StarterPlanView>
   };
   bool get _ready => _run?['status'] == 'COMPLETED' && _run?['plan'] is Map;
   bool get _failed => _run?['status'] == 'FAILED';
+  bool get _building => !_ready && !_failed && _error == null;
   String? get _failureCode => _run?['errorCode'] as String?;
   bool get _equipmentIssue => _failed && _failureCode == 'CATALOG_GAP';
   bool get _movementIssue =>
@@ -567,21 +568,7 @@ class _StarterPlanViewState extends State<StarterPlanView>
                     Padding(
                         padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
                         child: Row(children: [
-                          const Expanded(
-                              child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text('SETCRAFT',
-                                          maxLines: 1,
-                                          style: TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w900,
-                                              fontStyle: FontStyle.italic,
-                                              color: Color(0xFF606066),
-                                              letterSpacing: -.8))))),
-                          const SizedBox(width: 8),
+                          const Spacer(),
                           _SignOutAction(
                               busy: _busy || _membershipOpen || _signingOut,
                               onPressed: _signOut),
@@ -741,18 +728,23 @@ class _StarterPlanViewState extends State<StarterPlanView>
                     const SizedBox(height: 8),
                   ],
                   ...[
-                    // Membership is always reachable, whatever the plan state.
+                    // While the plan is still building, unlocking stays
+                    // disabled; it enables the moment the plan is ready.
+                    // A failed run or error still reaches membership.
                     LiquidChromeButton(
                         key: const ValueKey('starter-view-membership'),
                         pill: true,
                         solid: true,
                         showArrow: false,
-                        title: 'View membership',
+                        title: _building ? 'Unlock full plan' : 'View membership',
                         loadingTitle: _refreshingPlan
                             ? 'Updating your plan…'
                             : 'Opening membership…',
                         isLoading: _busy || _refreshingPlan || _membershipOpen,
-                        onPressed: _busy || _refreshingPlan || _membershipOpen
+                        onPressed: _building ||
+                                _busy ||
+                                _refreshingPlan ||
+                                _membershipOpen
                             ? null
                             : _showMembership),
                     if (_canRetry && (_failed || _error != null))

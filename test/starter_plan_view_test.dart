@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:setcraft/core/components/liquid_chrome_button.dart';
 import 'package:setcraft/features/onboarding/data/starter_plan_repository.dart';
 import 'package:setcraft/features/onboarding/views/starter_plan_view.dart';
 import 'package:setcraft/features/subscription/subscription_service.dart';
@@ -643,7 +644,7 @@ void main() {
     expect(find.byType(AuthView), findsOneWidget);
   });
 
-  testWidgets('Building screen keeps Back and View membership available',
+  testWidgets('Building screen keeps Back and disables unlock until ready',
       (tester) async {
     final repo = StarterRepo()
       ..value = {'id': 'starter-run', 'status': 'RUNNING'};
@@ -660,6 +661,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const ValueKey('starter-back')), findsOneWidget);
     expect(find.byKey(const ValueKey('starter-view-membership')), findsOneWidget);
+    final unlock = tester.widget<LiquidChromeButton>(
+        find.byKey(const ValueKey('starter-view-membership')));
+    expect(unlock.onPressed, isNull);
+    expect(unlock.title, 'Unlock full plan');
     expect(find.byKey(const ValueKey('starter-sign-out')), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });

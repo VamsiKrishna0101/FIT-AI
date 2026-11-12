@@ -289,24 +289,9 @@ class _AuthViewState extends State<AuthView> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        const Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              ExcludeSemantics(
-                                                  child:
-                                                      SetcraftMark(size: 34)),
-                                              SizedBox(width: 9),
-                                              Text('SETCRAFT',
-                                                  textScaler:
-                                                      TextScaler.noScaling,
-                                                  style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.white,
-                                                      letterSpacing: 2.6)),
-                                            ]),
+                                        const Center(
+                                            child: SetcraftWordmark(
+                                                markSize: 34)),
                                         const SizedBox(height: 30),
                                         Text(copy.title(_isSignIn),
                                             textAlign: TextAlign.center,
