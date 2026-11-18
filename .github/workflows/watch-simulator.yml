@@ -24,6 +24,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.47.5'
+          cache: true
+
+      # The watch target lives in the Flutter iOS project, which references
+      # Flutter's generated Swift package; create it before xcodebuild runs.
+      - name: Generate Flutter iOS files
+        run: |
+          flutter pub get
+          flutter build ios --config-only --debug --simulator
+          ls ios/Flutter/ephemeral/Packages || true
+
       - name: Pick a watchOS simulator
         run: |
           xcodebuild -version
