@@ -32,8 +32,14 @@ jobs:
             xcodebuild -downloadPlatform watchOS
           fi
           xcrun simctl list runtimes
-          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='watchOS' and x['isAvailable']]; print(r[-1]['identifier'])")
-          DEVICE_TYPE=$(xcrun simctl list devicetypes -j | python3 -c "import json,sys; d=[x for x in json.load(sys.stdin)['devicetypes'] if 'Apple Watch Series' in x['name'] and 'mm' in x['name']]; print(d[-1]['identifier'])")
+          # Pick the newest watchOS runtime and a watch model that runtime supports.
+          read RUNTIME DEVICE_TYPE < <(xcrun simctl list runtimes -j | python3 -c "
+          import json, sys
+          rs = [r for r in json.load(sys.stdin)['runtimes'] if r['platform'] == 'watchOS' and r['isAvailable']]
+          rt = rs[-1]
+          ds = [d for d in rt.get('supportedDeviceTypes', []) if 'Apple Watch Series' in d['name']] or rt['supportedDeviceTypes']
+          print(rt['identifier'], ds[-1]['identifier'])
+          ")
           echo "Runtime: $RUNTIME  Device: $DEVICE_TYPE"
           UDID=$(xcrun simctl create "CI Watch" "$DEVICE_TYPE" "$RUNTIME")
           xcrun simctl boot "$UDID"
