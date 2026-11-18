@@ -2,8 +2,23 @@ import SwiftUI
 
 struct SessionPagingView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
-    @State private var selectedTab: Int = 1 // Default to ExerciseDetailView
-    @State private var showExerciseList: Bool = false
+    // Default to ExerciseDetailView. Debug simulator runs can pick a page with
+    // `-SetcraftDemoTab 0|2` and open the list with `-SetcraftDemoList YES`.
+    @State private var selectedTab: Int = {
+        #if DEBUG
+        if UserDefaults.standard.object(forKey: "SetcraftDemoTab") != nil {
+            return UserDefaults.standard.integer(forKey: "SetcraftDemoTab")
+        }
+        #endif
+        return 1
+    }()
+    @State private var showExerciseList: Bool = {
+        #if DEBUG
+        return UserDefaults.standard.bool(forKey: "SetcraftDemoList")
+        #else
+        return false
+        #endif
+    }()
     
     var body: some View {
         Group {

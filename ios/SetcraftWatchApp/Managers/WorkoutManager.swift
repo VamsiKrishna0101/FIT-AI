@@ -31,19 +31,67 @@ class WorkoutManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSe
     /// snapshots cannot start a second HKWorkoutSession.
     private var isStartingWorkout = false
     
+    /// Debug-only sample workout for simulator screenshots (no iPhone needed).
+    private(set) var isDemo = false
+
     override init() {
         super.init()
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "SetcraftDemo") {
+            loadDemoWorkout()
+            return
+        }
+        #endif
         if WCSession.isSupported() {
             session = WCSession.default
             session?.delegate = self
             session?.activate()
         }
     }
+
+    #if DEBUG
+    /// Launch with `-SetcraftDemo YES` (and optionally `-SetcraftDemoRest YES`).
+    private func loadDemoWorkout() {
+        isDemo = true
+        func item(_ id: String, _ name: String, _ order: Int, _ sets: Int, _ reps: String,
+                  _ kg: Double, _ status: String, _ logged: Int) -> WatchExerciseItem {
+            WatchExerciseItem(
+                id: id, exerciseName: name, orderIndex: order, targetSets: sets,
+                targetReps: reps, targetWeight: kg, restSeconds: 90, status: status,
+                loggedSets: (0..<logged).map {
+                    WatchSetLog(setNumber: $0 + 1, weight: kg, reps: 8, completed: true, rpe: nil)
+                })
+        }
+        let rest: WatchRestPayload? = UserDefaults.standard.bool(forKey: "SetcraftDemoRest")
+            ? WatchRestPayload(isActive: true, exerciseName: "Barbell Bench Press", setNumber: 2,
+                               remainingSeconds: 64, duration: 90, isPaused: false,
+                               endTimeEpochMs: Int(Date().addingTimeInterval(64).timeIntervalSince1970 * 1000))
+            : nil
+        snapshot = WatchWorkoutSnapshot(
+            type: "SNAPSHOT", sessionId: "demo", date: "2026-11-18", title: "Push Day",
+            activeItemIndex: 1,
+            items: [
+                item("1", "Incline Dumbbell Press", 0, 3, "10", 22.5, "COMPLETED", 3),
+                item("2", "Barbell Bench Press", 1, 4, "8", 60, "IN_PROGRESS", 1),
+                item("3", "Cable Fly", 2, 3, "12", 15, "PENDING", 0),
+                item("4", "Overhead Press", 3, 3, "8", 35, "PENDING", 0),
+            ],
+            rest: rest, hapticRestAlerts: true, heartRateEnabled: true)
+        activeItemIndex = 1
+        self.rest = rest
+        isSessionActive = true
+        isConnectedToPhone = true
+        heartRate = 128
+        hrZone = 2
+        activeCalories = 146
+        elapsedSeconds = 1384
+    }
+    #endif
     
     // MARK: - Workout Lifecycle
     
     func startHealthKitWorkout() {
-        guard HKHealthStore.isHealthDataAvailable(), workoutSession == nil, !isStartingWorkout else { return }
+        guard !isDemo, HKHealthStore.isHealthDataAvailable(), workoutSession == nil, !isStartingWorkout else { return }
         isStartingWorkout = true
         
         let typesToShare: Set = [

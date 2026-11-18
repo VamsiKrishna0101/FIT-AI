@@ -1,0 +1,107 @@
+name: Apple Watch Simulator Check
+
+# Builds the watch app, runs it on a watchOS simulator and saves a screenshot
+# of every screen, so the watch UI can be checked without real hardware.
+on:
+  push:
+    branches: [ ci/watch-simulator ]
+    paths:
+      - 'ios/SetcraftWatchApp/**'
+      - 'ios/Runner/WatchManager.swift'
+      - 'lib/core/watch/**'
+      - '.github/workflows/watch-simulator.yml'
+  workflow_dispatch:
+
+jobs:
+  watch-screens:
+    name: Build and screenshot watch app
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick a watchOS simulator
+        run: |
+          xcodebuild -version
+          if ! xcrun simctl list runtimes | grep -q watchOS; then
+            echo "No watchOS runtime installed; downloading it"
+            xcodebuild -downloadPlatform watchOS
+          fi
+          xcrun simctl list runtimes
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='watchOS' and x['isAvailable']]; print(r[-1]['identifier'])")
+          DEVICE_TYPE=$(xcrun simctl list devicetypes -j | python3 -c "import json,sys; d=[x for x in json.load(sys.stdin)['devicetypes'] if 'Apple Watch Series' in x['name'] and 'mm' in x['name']]; print(d[-1]['identifier'])")
+          echo "Runtime: $RUNTIME  Device: $DEVICE_TYPE"
+          UDID=$(xcrun simctl create "CI Watch" "$DEVICE_TYPE" "$RUNTIME")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          echo "WATCH_UDID=$UDID" >> "$GITHUB_ENV"
+
+      - name: Build watch app (Debug, simulator)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project ios/Runner.xcodeproj \
+            -scheme SetcraftWatchApp \
+            -configuration Debug \
+            -destination "id=$WATCH_UDID" \
+            -derivedDataPath build/watch \
+            CODE_SIGNING_ALLOWED=NO | tail -40
+          APP=$(find build/watch/Build/Products -name 'SetcraftWatchApp.app' -type d | head -1)
+          echo "Built: $APP"
+          echo "WATCH_APP=$APP" >> "$GITHUB_ENV"
+
+      - name: Install and capture every screen
+        run: |
+          mkdir -p screenshots
+          BUNDLE=com.setcraft.app.watchkitapp
+          xcrun simctl install "$WATCH_UDID" "$WATCH_APP"
+          shot() {
+            name=$1; shift
+            xcrun simctl terminate "$WATCH_UDID" $BUNDLE 2>/dev/null || true
+            xcrun simctl launch "$WATCH_UDID" $BUNDLE "$@"
+            sleep 6
+            if ! xcrun simctl spawn "$WATCH_UDID" launchctl list | grep -q "$BUNDLE"; then
+              echo "::error::Watch app is not running after launch ($name) - it may have crashed"
+              exit 1
+            fi
+            xcrun simctl io "$WATCH_UDID" screenshot "screenshots/$name.png"
+            echo "Captured $name"
+          }
+          shot 01-no-active-workout
+          shot 02-exercise-log-set     -SetcraftDemo YES
+          shot 03-heart-rate-metrics   -SetcraftDemo YES -SetcraftDemoTab 2
+          shot 04-end-workout          -SetcraftDemo YES -SetcraftDemoTab 0
+          shot 05-exercise-list        -SetcraftDemo YES -SetcraftDemoList YES
+          shot 06-rest-timer           -SetcraftDemo YES -SetcraftDemoRest YES
+          ls -la screenshots
+
+      - name: Crash logs (if any)
+        if: always()
+        run: |
+          find ~/Library/Logs/DiagnosticReports -name '*Setcraft*' -mmin -60 -print -exec head -60 {} \; 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: apple-watch-screenshots
+          path: screenshots/
+
+  watch-flutter-tests:
+    name: Watch + paywall Flutter tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.47.5'
+          cache: true
+      - run: flutter pub get
+      - run: flutter test test/watch_sync_test.dart test/watch_settings_test.dart test/subscription_test.dart
